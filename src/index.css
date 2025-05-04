@@ -1,0 +1,10 @@
+@keyframes shake {
+    0%, 100% { transform: translateX(0);  }
+    20%, 60% { transform: translateX(-4px); }
+    40%, 80% { transform: translateX( 4px); }
+}
+
+/* 1 раз = 200 мс; задаём только класс .shake */
+.shake {
+    animation: shake 0.2s 2;
+}
