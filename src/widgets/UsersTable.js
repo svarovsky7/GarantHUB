@@ -2,32 +2,36 @@ import React from 'react';
 import { GridActionsCellItem } from '@mui/x-data-grid';
 import DeleteIcon from '@mui/icons-material/Delete';
 
-import { useUsers, useDeleteUser } from '../entities/user';
-import { useRoles } from '../entities/role';
+import { useUsers, useDeleteUser } from '@/entities/user';      // FIX-path
+import { useRoles } from '@/entities/role';                     // FIX-path
 
-import RoleSelect    from '../features/user/RoleSelect';
-import AdminDataGrid from '../shared/ui/AdminDataGrid';
-import { useNotify } from '../shared/hooks/useNotify';
+import RoleSelect    from '@/features/user/RoleSelect';         // FIX-path
+import AdminDataGrid from '@/shared/ui/AdminDataGrid';          // FIX-path
+import { useNotify } from '@/shared/hooks/useNotify';           // FIX-path
 
 export default function UsersTable() {
-    const notify                              = useNotify();
-    const { data: users = [], isPending: uL } = useUsers();
-    const { data: roles = [], isPending: rL } = useRoles();
-    const delUser                             = useDeleteUser();
+    const notify                                    = useNotify();
+    const { data: users = [],  isPending: uLoad }   = useUsers();
+    const { data: roles = [],  isPending: rLoad }   = useRoles();
+    const delUser                                   = useDeleteUser();
 
+    /* порядок колонок: ID → Имя пользователя → E-mail → Роль */
     const columns = [
-        { field: 'id',    headerName: 'ID',     width: 70 },
-        { field: 'email', headerName: 'E-mail', flex : 1 },
+        { field: 'id',   headerName: 'ID',               width: 70 },
+        { field: 'name', headerName: 'Имя пользователя', flex:  1 },
+        { field: 'email',headerName: 'E-mail',           flex:  1 },
         {
-            field      : 'role',
-            headerName : 'Роль',
-            flex       : 0.7,
-            renderCell : ({ row }) => <RoleSelect user={row} roles={roles} />,
+            field     : 'role',
+            headerName: 'Роль',
+            flex      : 0.7,
+            renderCell: ({ row }) => (
+                <RoleSelect user={row} roles={roles} disabled={rLoad} />
+            ),
         },
         {
             field : 'actions',
             type  : 'actions',
-            width : 110,
+            width : 100,
             getActions: ({ row }) => [
                 <GridActionsCellItem
                     key="del"
@@ -50,8 +54,7 @@ export default function UsersTable() {
             title="Пользователи"
             rows={users}
             columns={columns}
-            loading={uL || rL}
-            /* onAdd не нужен — создание пользователей производится через регистрацию */
+            loading={uLoad || rLoad}
         />
     );
 }

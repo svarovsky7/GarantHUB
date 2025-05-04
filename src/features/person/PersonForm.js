@@ -1,18 +1,26 @@
+/* features/person/PersonForm.js */
 import React from 'react';
 import {
-    Stack, TextField, Button, CircularProgress,
+    Stack,
+    TextField,
+    MenuItem,
+    Button,
+    CircularProgress,
 } from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import { useAddPerson, useUpdatePerson } from '../../entities/person';
-import { useNotify } from '../../shared/hooks/useNotify';
+import { useProjects } from '@entities/project';
+import { useAddPerson, useUpdatePerson } from '@entities/person';
+import { useNotify } from '@shared/hooks/useNotify';
 
+/* схема валидации */
 const schema = z.object({
-    full_name: z.string().min(1, 'Обязательно'),
-    phone: z.union([z.literal(''), z.string().min(5)]).default(''),
-    email: z.union([z.literal(''), z.string().email('Неверный e-mail')]).default(''),
+    project_id: z.preprocess((v) => Number(v), z.number().int().positive('Выберите проект')),
+    full_name : z.string().min(1, 'Обязательно'),
+    phone     : z.union([z.literal(''), z.string().min(5)]).default(''),
+    email     : z.union([z.literal(''), z.string().email('Неверный e-mail')]).default(''),
 });
 
 export default function PersonForm({ initialData, onSuccess, onCancel }) {
@@ -22,20 +30,28 @@ export default function PersonForm({ initialData, onSuccess, onCancel }) {
     const add    = useAddPerson();
     const update = useUpdatePerson();
 
+    const { data: projects = [] } = useProjects();
+
     const {
-        control, handleSubmit, setError,
+        control,
+        handleSubmit,
+        setError,
+        reset,
         formState: { errors, isSubmitting },
     } = useForm({
         resolver: zodResolver(schema),
         defaultValues: {
-            full_name: initialData?.full_name ?? '',
-            phone    : initialData?.phone     ?? '',
-            email    : initialData?.email     ?? '',
+            project_id: initialData?.project_id ?? '',
+            full_name : initialData?.full_name  ?? '',
+            phone     : initialData?.phone      ?? '',
+            email     : initialData?.email      ?? '',
         },
         mode: 'onTouched',
     });
 
-    const submit = async (data) => {
+    const submit = async (raw) => {
+        const data = { ...raw, project_id: Number(raw.project_id) };
+
         try {
             if (isEdit) {
                 await update.mutateAsync({ id: initialData.id, updates: data });
@@ -43,13 +59,16 @@ export default function PersonForm({ initialData, onSuccess, onCancel }) {
             } else {
                 await add.mutateAsync(data);
                 notify.success('Запись создана');
+                reset({ ...data, full_name: '', phone: '', email: '' });
             }
             onSuccess?.();
         } catch (err) {
-            if (/уже существует/i.test(err.message)) {
-                setError('full_name', { type: 'duplicate', message: 'Такое ФИО уже есть', shouldFocus: true });
-                const el = document.getElementById('person-full_name');
-                el?.classList.remove('shake'); void el?.offsetWidth; el?.classList.add('shake');
+            if (/ФИО уже существует/i.test(err.message)) {    // CHANGE
+                setError('full_name', {
+                    type        : 'duplicate',
+                    message     : 'Такое ФИО уже есть в этом проекте',
+                    shouldFocus : true,
+                });
             }
             notify.error(err.message);
         }
@@ -57,20 +76,51 @@ export default function PersonForm({ initialData, onSuccess, onCancel }) {
 
     return (
         <form onSubmit={handleSubmit(submit)} noValidate>
-            <Stack spacing={2} sx={{ maxWidth: 420 }}>
+            <Stack spacing={2} sx={{ maxWidth: 440 }}>
+                {/* проект */}
+                <Controller
+                    name="project_id"
+                    control={control}
+                    render={({ field }) => (
+                        <TextField
+                            {...field}
+                            select
+                            label="Проект"
+                            required
+                            fullWidth
+                            autoComplete="off"
+                            error={!!errors.project_id}
+                            helperText={errors.project_id?.message}
+                        >
+                            {projects.map((p) => (
+                                <MenuItem key={p.id} value={p.id}>
+                                    {p.name}
+                                </MenuItem>
+                            ))}
+                        </TextField>
+                    )}
+                />
 
-                {['full_name', 'phone', 'email'].map((field) => (
+                {/* ФИО, телефон, email */}
+                {['full_name', 'phone', 'email'].map((f) => (
                     <Controller
-                        key={field} name={field} control={control}
-                        render={({ field: f }) => (
+                        key={f}
+                        name={f}
+                        control={control}
+                        render={({ field }) => (
                             <TextField
-                                {...f}
-                                id={`person-${field}`}
-                                label={{ full_name: 'ФИО', phone: 'Телефон', email: 'E-mail' }[field]}
-                                required={field === 'full_name'}
-                                error={!!errors[field]}
-                                helperText={errors[field]?.message}
+                                {...field}
+                                id={`person-${f}`}
+                                label={{
+                                    full_name: 'ФИО',
+                                    phone    : 'Телефон',
+                                    email    : 'E-mail',
+                                }[f]}
+                                required={f === 'full_name'}
                                 fullWidth
+                                autoComplete="off"
+                                error={!!errors[f]}
+                                helperText={errors[f]?.message}
                             />
                         )}
                     />
@@ -78,7 +128,9 @@ export default function PersonForm({ initialData, onSuccess, onCancel }) {
 
                 <Stack direction="row" spacing={2} justifyContent="flex-end">
                     <Button
-                        type="submit" variant="contained" disabled={isSubmitting}
+                        type="submit"
+                        variant="contained"
+                        disabled={isSubmitting}
                         startIcon={isSubmitting && <CircularProgress size={18} />}
                     >
                         Сохранить

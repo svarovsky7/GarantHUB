@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { GridActionsCellItem } from '@mui/x-data-grid';
 import EditIcon   from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -15,31 +15,50 @@ import AdminDataGrid  from '@/shared/ui/AdminDataGrid';
 import { useNotify }  from '@/shared/hooks/useNotify';
 
 export default function ContractorAdmin() {
-    const notify                                = useNotify();
-    const { data: contractors = [], isPending } = useContractors({ individual: false });
+    const notify = useNotify();
+
+    /* -------- данные -------- */
+    const {
+        data: contractors = [],
+        isPending,
+        error,
+    } = useContractors();                       // аргумент больше не передаём
 
     const add    = useAddContractor();
     const update = useUpdateContractor();
     const remove = useDeleteContractor();
 
-    const [modal, setModal] = useState(null);   // {mode:'add'|'edit', data?}
+    const [modal, setModal] = useState(null); // { mode:'add'|'edit', data? }
 
-    /* ───── columns ─────────────────────────────────────── */
+    /* -------- отладка результата запроса -------- */
+    useEffect(() => {
+        if (error) {
+            // eslint-disable-next-line no-console
+            console.error('[ContractorAdmin] load error:', error);
+            notify.error(`Ошибка загрузки контрагентов: ${error.message}`);
+        } else if (!isPending && contractors.length === 0) {
+            // eslint-disable-next-line no-console
+            console.warn('[ContractorAdmin] contractors list is empty');
+            notify.info('Записей не найдено');
+        }
+    }, [error, isPending, contractors, notify]);
+
+    /* -------- колонки -------- */
     const columns = [
         { field: 'id',   headerName: 'ID',       width: 80 },
-        { field: 'name', headerName: 'Название', flex: 1 },
+        { field: 'name', headerName: 'Название', flex : 1 },
         { field: 'inn',  headerName: 'ИНН',      width: 140 },
         {
             field     : 'phone',
             headerName: 'Телефон',
             width     : 160,
-            renderCell: ({ value }) => value ?? '—',           // CHANGE
+            renderCell: ({ value }) => value ?? '—',
         },
         {
             field     : 'email',
             headerName: 'E-mail',
             flex      : 1,
-            renderCell: ({ value }) => value ?? '—',           // CHANGE
+            renderCell: ({ value }) => value ?? '—',
         },
         {
             field : 'actions',
@@ -68,19 +87,16 @@ export default function ContractorAdmin() {
         },
     ];
 
-    /* ───── helpers ─────────────────────────────────────── */
+    /* -------- helpers -------- */
     const close = () => setModal(null);
     const ok    = (msg) => { close(); notify.success(msg); };
 
+    /* -------- UI -------- */
     return (
         <>
             {modal?.mode === 'add' && (
                 <ContractorForm
-                    onSubmit={(d) =>
-                        add.mutate(
-                            { ...d, is_individual: false },
-                            { onSuccess: () => ok('Компания добавлена') },
-                        )}
+                    onSuccess={() => ok('Компания создана')}
                     onCancel={close}
                 />
             )}
@@ -88,11 +104,7 @@ export default function ContractorAdmin() {
             {modal?.mode === 'edit' && (
                 <ContractorForm
                     initialData={modal.data}
-                    onSubmit={(d) =>
-                        update.mutate(
-                            { id: modal.data.id, updates: { ...d, is_individual: false } },
-                            { onSuccess: () => ok('Компания обновлена') },
-                        )}
+                    onSuccess={() => ok('Компания обновлена')}
                     onCancel={close}
                 />
             )}

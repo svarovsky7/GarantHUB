@@ -1,6 +1,13 @@
+/**
+ * Форма контрагента.
+ * Блокирует дубль по (Название + ИНН).
+ */
 import React from 'react';
 import {
-    Stack, TextField, Button, CircularProgress,
+    Stack,
+    TextField,
+    Button,
+    CircularProgress,
 } from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
@@ -9,56 +16,61 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import {
     useAddContractor,
     useUpdateContractor,
-} from '../../entities/contractor';
-import { useNotify } from '../../shared/hooks/useNotify';
+} from '@/entities/contractor';
+import { useNotify } from '@/shared/hooks/useNotify';
 
 const schema = z.object({
-    name : z.string().min(1, 'Обязательно'),
-    inn  : z.string().min(5,  'Обязательно'),
-    phone: z.union([z.literal(''), z.string().min(5)]).default(''),
-    email: z.union([z.literal(''), z.string().email('Неверный e-mail')]).default(''),
+    name : z.string().trim().min(1, 'Обязательно'),
+    inn  : z.string().trim().min(10, 'Мин. 10 символов'),
+    phone: z.string().trim().optional(),
+    email: z.union([z.literal(''), z.string().email('Неверный e-mail')]),
+    comment: z.string().trim().optional(),
 });
 
-export default function ContractorForm({ initialData, onSuccess, onCancel }) {
+export default function ContractorForm({
+                                           initialData = null,
+                                           onSuccess,
+                                           onCancel,
+                                       }) {
     const notify = useNotify();
-    const isEdit = Boolean(initialData?.id);
-
     const add    = useAddContractor();
     const update = useUpdateContractor();
+    const isEdit = !!initialData;
 
     const {
-        control, handleSubmit, setError,
+        control,
+        handleSubmit,
+        setError,
+        reset,
         formState: { errors, isSubmitting },
     } = useForm({
         resolver: zodResolver(schema),
         defaultValues: {
-            name : initialData?.name  ?? '',
-            inn  : initialData?.inn   ?? '',
-            phone: initialData?.phone ?? '',
-            email: initialData?.email ?? '',
+            name   : initialData?.name    ?? '',
+            inn    : initialData?.inn     ?? '',
+            phone  : initialData?.phone   ?? '',
+            email  : initialData?.email   ?? '',
+            comment: initialData?.comment ?? '',
         },
-        mode: 'onTouched',
     });
 
-    const submit = async (data) => {
+    const submit = async (raw) => {
+        const vals = { ...raw, name: raw.name.trim() };
         try {
             if (isEdit) {
-                await update.mutateAsync({ id: initialData.id, updates: data });
-                notify.success('Компания обновлена');
+                await update.mutateAsync({ id: initialData.id, updates: vals });
+                notify.success('Контрагент обновлён');
             } else {
-                await add.mutateAsync({ ...data, is_individual: false });
-                notify.success('Компания добавлена');
+                await add.mutateAsync(vals);
+                notify.success('Контрагент создан');
+                reset({ ...vals, name: '', inn: '' }); // очистка ключевых
             }
             onSuccess?.();
         } catch (err) {
-            if (/уже существует/i.test(err.message)) {
+            if (/Компания с таким/i.test(err.message)) {      // CHANGE
                 ['name', 'inn'].forEach((f) =>
-                    setError(f, { type: 'duplicate', message: 'Уже есть в базе', shouldFocus: true }),
+                    setError(f, { type: 'duplicate', message: 'Пара уже занята' }),
                 );
-                ['name', 'inn'].forEach((id) => {
-                    const el = document.getElementById(`contractor-${id}`);
-                    el?.classList.remove('shake'); void el?.offsetWidth; el?.classList.add('shake');
-                });
             }
             notify.error(err.message);
         }
@@ -66,25 +78,27 @@ export default function ContractorForm({ initialData, onSuccess, onCancel }) {
 
     return (
         <form onSubmit={handleSubmit(submit)} noValidate>
-            <Stack spacing={2} sx={{ maxWidth: 420 }}>
-
-                {['name', 'inn', 'phone', 'email'].map((field) => (
+            <Stack spacing={2} sx={{ maxWidth: 480 }}>
+                {['name', 'inn', 'phone', 'email', 'comment'].map((f) => (
                     <Controller
-                        key={field} name={field} control={control}
-                        render={({ field: f }) => (
+                        key={f}
+                        name={f}
+                        control={control}
+                        render={({ field }) => (
                             <TextField
-                                {...f}
-                                id={`contractor-${field}`}
+                                {...field}
                                 label={{
-                                    name : 'Название компании',
-                                    inn  : 'ИНН',
-                                    phone: 'Телефон',
-                                    email: 'E-mail',
-                                }[field]}
-                                required={field === 'name' || field === 'inn'}
-                                error={!!errors[field]}
-                                helperText={errors[field]?.message}
+                                    name   : 'Название компании *',
+                                    inn    : 'ИНН *',
+                                    phone  : 'Телефон',
+                                    email  : 'E-mail',
+                                    comment: 'Комментарий',
+                                }[f]}
+                                required={['name', 'inn'].includes(f)}
                                 fullWidth
+                                autoComplete="off"
+                                error={!!errors[f]}
+                                helperText={errors[f]?.message}
                             />
                         )}
                     />
@@ -92,7 +106,9 @@ export default function ContractorForm({ initialData, onSuccess, onCancel }) {
 
                 <Stack direction="row" spacing={2} justifyContent="flex-end">
                     <Button
-                        type="submit" variant="contained" disabled={isSubmitting}
+                        type="submit"
+                        variant="contained"
+                        disabled={isSubmitting}
                         startIcon={isSubmitting && <CircularProgress size={18} />}
                     >
                         Сохранить

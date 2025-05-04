@@ -1,73 +1,85 @@
-import { supabase } from '@shared/api/supabaseClient';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+/**
+ * CRUD-хуки для таблицы contractors.
+ * Запрещены дубликаты по паре (inn, lower(name)).
+ */
+import { supabase } from '@/shared/api/supabaseClient';
+import {
+    useQuery,
+    useMutation,
+    useQueryClient,
+} from '@tanstack/react-query';
 
-const FIELDS = 'id,name,inn,phone,email,is_individual';
+/* ────────────── SELECT ────────────── */
+const FIELDS = `
+  id,
+  name,
+  inn,
+  phone,
+  email,
+  comment:description,
+  created_at
+`;
 
+/* '' → null, comment → description, trim name */
 const sanitize = (o) =>
     Object.fromEntries(
         Object.entries(o)
-            .filter(([k]) => ['name', 'inn', 'phone', 'email', 'is_individual'].includes(k))
-            .map(([k, v]) => [k, v || null]),
+            .filter(([k]) =>
+                ['name', 'inn', 'phone', 'email', 'comment'].includes(k),
+            )
+            .map(([k, v]) => [
+                k === 'comment' ? 'description' : k,
+                k === 'name' ? v.trim() : v === '' ? null : v,
+            ]),
     );
 
-/* ---------- READ ---------- */
-export const useContractors = ({ individual = false } = {}) =>
-    useQuery({
-        queryKey: ['contractors', individual],
-        queryFn: async () => {
-            const { data, error } = await supabase
-                .from('contractors')
-                .select(FIELDS)
-                .eq('is_individual', individual)
-                .order('id');
-            if (error) throw error;
-            return data ?? [];
-        },
-    });
-
-/* ---------- CREATE ---------- */
-const createContractor = async (payload) => {
-    const { data: dup } = await supabase
+/* ────────────── DUPLICATE CHECK ────────────── */
+/**
+ * true  → дубль найден
+ * false → можно вставлять/обновлять
+ */
+const isDuplicate = async ({ name, inn }, excludeId = null) => {
+    const n = name.trim();
+    const { data } = await supabase
         .from('contractors')
-        .select('id')
-        .eq('name', payload.name)
-        .eq('inn', payload.inn)
-        .limit(1)
-        .maybeSingle();
-    if (dup) throw new Error('Контрагент с таким названием и ИНН уже существует');
+        .select('id', { head: true })               // COUNT(*) не нужен
+        .or(`and(inn.eq.${inn},name.ilike.${n})`)   // CHANGE
+        .neq('id', excludeId);
+
+    return !!data;                                // true ⇢ есть записи
+};
+
+/* ────────────── CREATE ────────────── */
+const insert = async (payload) => {
+    if (await isDuplicate(payload))
+        throw new Error('Компания с таким названием и ИНН уже существует');
 
     const { data, error } = await supabase
         .from('contractors')
         .insert(sanitize(payload))
         .select(FIELDS)
         .single();
+
     if (error) throw error;
     return data;
 };
 
-export const useAddContractor = () => {
-    const qc = useQueryClient();
-    return useMutation({
-        mutationFn: createContractor,
-        // CHANGE: предикат — обновляем любые вариации ключа 'contractors'
-        onSuccess: () =>
-            qc.invalidateQueries({ predicate: (q) => q.queryKey[0] === 'contractors' }),
-    });
-};
+/* ────────────── UPDATE ────────────── */
+const patch = async ({ id, updates }) => {
+    // берём итоговые значения (старые + новые) для проверки дубликата
+    const { data: current } = await supabase
+        .from('contractors')
+        .select('name,inn')
+        .eq('id', id)
+        .single();
 
-/* ---------- UPDATE ---------- */
-const updateContractor = async ({ id, updates }) => {
-    if (updates.name && updates.inn) {
-        const { data: dup } = await supabase
-            .from('contractors')
-            .select('id')
-            .eq('name', updates.name)
-            .eq('inn', updates.inn)
-            .neq('id', id)
-            .limit(1)
-            .maybeSingle();
-        if (dup) throw new Error('Другой контрагент с таким названием и ИНН уже есть');
-    }
+    const pair = {
+        name: updates.name ?? current.name,
+        inn : updates.inn  ?? current.inn,
+    };
+
+    if (await isDuplicate(pair, id))
+        throw new Error('Компания с таким названием и ИНН уже существует');
 
     const { data, error } = await supabase
         .from('contractors')
@@ -75,28 +87,47 @@ const updateContractor = async ({ id, updates }) => {
         .eq('id', id)
         .select(FIELDS)
         .single();
+
     if (error) throw error;
     return data;
 };
 
-export const useUpdateContractor = () => {
-    const qc = useQueryClient();
-    return useMutation({
-        mutationFn: updateContractor,
-        onSuccess: () =>
-            qc.invalidateQueries({ predicate: (q) => q.queryKey[0] === 'contractors' }),
-    });
+/* ────────────── DELETE ────────────── */
+const remove = async (id) => {
+    const { error } = await supabase.from('contractors').delete().eq('id', id);
+    if (error) throw error;
 };
 
-/* ---------- DELETE ---------- */
-export const useDeleteContractor = () => {
-    const qc = useQueryClient();
-    return useMutation({
-        mutationFn: async (id) => {
-            const { error } = await supabase.from('contractors').delete().eq('id', id);
+/* ────────────── React-Query хуки ────────────── */
+export const useContractors = () =>
+    useQuery({
+        queryKey: ['contractors'],
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from('contractors')
+                .select(FIELDS)
+                .order('name');
             if (error) throw error;
+            return data ?? [];
         },
-        onSuccess: () =>
-            qc.invalidateQueries({ predicate: (q) => q.queryKey[0] === 'contractors' }),
     });
-};
+
+const invalidate =
+    (fn) =>
+        () => {
+            const qc = useQueryClient();
+            return useMutation({
+                mutationFn: fn,
+                onSuccess: () => qc.invalidateQueries(['contractors']),
+            });
+        };
+
+export const useAddContractor    = invalidate(insert);
+export const useUpdateContractor = invalidate(patch);
+export const useDeleteContractor = invalidate(remove);
+
+/* ───────────  (SQL — добавьте один раз) ───────────
+ALTER TABLE contractors
+  ADD CONSTRAINT contractors_name_inn_unique
+  UNIQUE (inn, lower(name));                        -- CHANGE
+--------------------------------------------------- */

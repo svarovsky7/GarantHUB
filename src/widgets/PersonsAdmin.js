@@ -8,27 +8,48 @@ import {
     useAddPerson,
     useUpdatePerson,
     useDeletePerson,
-} from '@/entities/person';                // CHANGE
+} from '@/entities/person';
+import { useProjects } from '@/entities/project';
 
-import PersonForm     from '@/features/person/PersonForm';   // CHANGE
-import AdminDataGrid  from '@/shared/ui/AdminDataGrid';      // CHANGE
-import { useNotify }  from '@/shared/hooks/useNotify';       // CHANGE
+import PersonForm     from '@/features/person/PersonForm';
+import AdminDataGrid  from '@/shared/ui/AdminDataGrid';
+import { useNotify }  from '@/shared/hooks/useNotify';
 
 export default function PersonsAdmin() {
-    const notify                              = useNotify();
-    const { data: persons = [], isPending }   = usePersons();
+    const notify = useNotify();
+
+    /* --- данные --- */
+    const { data: persons  = [], isPending } = usePersons();
+    const { data: projects = [] }            = useProjects();
 
     const add    = useAddPerson();
     const update = useUpdatePerson();
     const remove = useDeletePerson();
 
-    const [modal, setModal] = useState(null); // {mode:'add'|'edit', data?}
+    const [modal, setModal] = useState(null); // { mode:'add'|'edit', data }
 
+    /* быстрый поиск имени проекта */
+    const nameById = (id) =>
+        projects.find((p) => p.id === id)?.name ?? '—';
+
+    /* ---- колонки ---- */
     const columns = [
-        { field: 'id',        headerName: 'ID',    width: 80 },
-        { field: 'full_name', headerName: 'ФИО',   flex : 1 },
-        { field: 'phone',     headerName: 'Телефон', width: 160 },  // CHANGE: valueGetter убран
-        { field: 'email',     headerName: 'E-mail',  flex : 1 },    // CHANGE
+        { field: 'id',        headerName: 'ID', width: 80 },
+        {
+            field     : 'project_name',                // <-- НОВОЕ “плоское” поле
+            headerName: 'Проект',
+            flex      : 1,
+            /* показываем: вложенный объект, массив или fallback */
+            renderCell: ({ row }) =>
+                row?.project?.name
+                ?? (Array.isArray(row.project) ? row.project[0]?.name : null)
+                ?? nameById(row.project_id),
+            sortable: false,
+            filterable: false,
+        },
+        { field: 'full_name', headerName: 'ФИО',     flex : 1 },
+        { field: 'phone',     headerName: 'Телефон', width: 160 },
+        { field: 'email',     headerName: 'E-mail',  flex : 1 },
         {
             field : 'actions',
             type  : 'actions',
@@ -56,26 +77,21 @@ export default function PersonsAdmin() {
         },
     ];
 
+    /* ---- helpers ---- */
     const close = () => setModal(null);
     const ok    = (msg) => { close(); notify.success(msg); };
 
+    /* ---- UI ---- */
     return (
         <>
             {modal?.mode === 'add' && (
-                <PersonForm
-                    onSubmit={(d) => add.mutate(d, { onSuccess: () => ok('Запись создана') })}
-                    onCancel={close}
-                />
+                <PersonForm onSuccess={() => ok('Запись создана')} onCancel={close} />
             )}
 
             {modal?.mode === 'edit' && (
                 <PersonForm
                     initialData={modal.data}
-                    onSubmit={(d) =>
-                        update.mutate(
-                            { id: modal.data.id, updates: d },
-                            { onSuccess: () => ok('Запись обновлена') },
-                        )}
+                    onSuccess={() => ok('Запись обновлена')}
                     onCancel={close}
                 />
             )}

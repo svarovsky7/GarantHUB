@@ -6,15 +6,13 @@ import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import { useProjects } from '../../entities/project';
-import { usePersons  } from '../../entities/person';
-import { useAddUnit, useUpdateUnit } from '../../entities/unit';
-import { useNotify } from '../../shared/hooks/useNotify';
+import { useProjects }   from '@/entities/project';
+import { useAddUnit, useUpdateUnit } from '@/entities/unit';
+import { useNotify } from '@/shared/hooks/useNotify';
 
-/* ----- схема ----- */
+/* ───── схема ───── */
 const schema = z.object({
     project_id: z.coerce.number().min(1, 'Обязательно'),
-    person_id : z.union([z.literal(''), z.coerce.number().int()]).default(''),
     name      : z.string().min(1, 'Обязательно'),
     building  : z.coerce.string().optional(),
     section   : z.coerce.string().optional(),
@@ -22,11 +20,9 @@ const schema = z.object({
 });
 
 export default function UnitForm({ initialData, onSuccess, onCancel }) {
-    const notify = useNotify();
-    const isEdit = Boolean(initialData?.id);
-
+    const notify  = useNotify();
+    const isEdit  = Boolean(initialData?.id);
     const { data: projects = [] } = useProjects();
-    const { data: persons  = [] } = usePersons();
 
     const add    = useAddUnit();
     const update = useUpdateUnit();
@@ -38,7 +34,6 @@ export default function UnitForm({ initialData, onSuccess, onCancel }) {
         resolver: zodResolver(schema),
         defaultValues: {
             project_id: initialData?.project_id?.toString() ?? '',
-            person_id : initialData?.person_id?.toString()  ?? '',
             name      : initialData?.name      ?? '',
             building  : initialData?.building  ?? '',
             section   : initialData?.section   ?? '',
@@ -48,48 +43,46 @@ export default function UnitForm({ initialData, onSuccess, onCancel }) {
     });
 
     const submit = async (data) => {
-        const payload = {
-            ...data,
-            project_id: Number(data.project_id),
-            person_id : data.person_id === '' ? null : Number(data.person_id),
-        };
+        const payload = { ...data, project_id: Number(data.project_id) };
 
         try {
             if (isEdit) {
                 await update.mutateAsync({ id: initialData.id, updates: payload });
                 notify.success('Объект обновлён');
+                onSuccess?.(initialData);
             } else {
-                await add.mutateAsync(payload);
+                const newUnit = await add.mutateAsync(payload);
                 notify.success('Объект создан');
+                onSuccess?.(newUnit);         // передаём наверх
             }
-            onSuccess?.();
         } catch (err) {
             if (/уже существует/i.test(err.message)) {
                 ['project_id', 'name'].forEach((f) =>
                     setError(f, { type: 'duplicate', message: 'Дубликат', shouldFocus: true }),
                 );
-                ['project_id', 'name'].forEach((id) => {
-                    const el = document.getElementById(`unit-${id}`);
-                    el?.classList.remove('shake'); void el?.offsetWidth; el?.classList.add('shake');
-                });
             }
             notify.error(err.message);
         }
     };
 
     return (
-        <form onSubmit={handleSubmit(submit)} noValidate>
+        /* CHANGE: выключаем автозаполнение всей формы */
+        <form onSubmit={handleSubmit(submit)} noValidate autoComplete="off">
             <Stack spacing={2} sx={{ maxWidth: 420 }}>
 
+                {/* ----- Проект ----- */}
                 <Controller
                     name="project_id" control={control}
                     render={({ field }) => (
                         <TextField
-                            {...field} select required fullWidth
+                            {...field}
+                            select required fullWidth
                             id="unit-project_id"
                             label="Проект"
                             error={!!errors.project_id}
                             helperText={errors.project_id?.message}
+                            autoComplete="off"                                  /* CHANGE */
+                            inputProps={{ autoCorrect:'off', spellCheck:'false' }} /* CHANGE */
                         >
                             <MenuItem value="">—</MenuItem>
                             {projects.map((p) => (
@@ -99,35 +92,32 @@ export default function UnitForm({ initialData, onSuccess, onCancel }) {
                     )}
                 />
 
-                <Controller
-                    name="person_id" control={control}
-                    render={({ field }) => (
-                        <TextField {...field} select fullWidth label="Физическое лицо" id="unit-person_id">
-                            <MenuItem value="">—</MenuItem>
-                            {persons.map((pr) => (
-                                <MenuItem key={pr.id} value={pr.id}>{pr.full_name}</MenuItem>
-                            ))}
-                        </TextField>
-                    )}
-                />
-
+                {/* ----- Квартира / Лот ----- */}
                 <Controller
                     name="name" control={control}
                     render={({ field }) => (
                         <TextField
-                            {...field} label="Квартира / Лот" required fullWidth id="unit-name"
+                            {...field}
+                            label="Квартира / Лот"
+                            required fullWidth id="unit-name"
                             error={!!errors.name} helperText={errors.name?.message}
+                            autoComplete="off" inputProps={{ autoCorrect:'off', spellCheck:'false' }} /* CHANGE */
                         />
                     )}
                 />
 
+                {/* Корпус / Секция / Этаж */}
                 {['building', 'section', 'floor'].map((field) => (
                     <Controller
                         key={field} name={field} control={control}
                         render={({ field: f }) => (
-                            <TextField {...f} label={{
-                                building: 'Корпус', section: 'Секция', floor: 'Этаж',
-                            }[field]} fullWidth />
+                            <TextField
+                                {...f}
+                                label={{ building:'Корпус', section:'Секция', floor:'Этаж' }[field]}
+                                fullWidth
+                                autoComplete="off"                                /* CHANGE */
+                                inputProps={{ autoCorrect:'off', spellCheck:'false' }} /* CHANGE */
+                            />
                         )}
                     />
                 ))}
@@ -139,7 +129,9 @@ export default function UnitForm({ initialData, onSuccess, onCancel }) {
                     >
                         Сохранить
                     </Button>
-                    <Button variant="text" onClick={onCancel} disabled={isSubmitting}>Отмена</Button>
+                    <Button variant="text" onClick={onCancel} disabled={isSubmitting}>
+                        Отмена
+                    </Button>
                 </Stack>
             </Stack>
         </form>
