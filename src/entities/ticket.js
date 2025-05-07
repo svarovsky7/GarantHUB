@@ -9,14 +9,14 @@ import {
     useQueryClient,
 } from '@tanstack/react-query';
 import dayjs from 'dayjs';
-import slug from 'slugify';                        // CHANGE: ascii-slug
+import slug from 'slugify'; // библиотека для ASCII-slug
 
 /* ---------- helper: ASCII-slug без % и юникода ---------- */
 const toSlug = (str) =>
     slug(str, {
-        lower: true,          // «Ситибей 1» → «sitibey-1»
-        strict: true,         // удаляет всё, что не [a-z0-9_-]
-        locale: 'ru',         // корректная транслитерация кириллицы
+        lower: true,  // «Ситибей 1» → «sitibey-1»
+        strict: true, // удаляет всё, что не [a-z0-9_-]
+        locale: 'ru', // корректная транслитерация кириллицы
     });
 
 /* ======================= SELECT-строка ====================== */
@@ -38,7 +38,7 @@ export const TICKET_SELECT = `
   ),
   type:ticket_types ( id, name ),
   attachments:attachments (
-    id, file_url, file_type, storage_path           -- CHANGE: storage_path
+    id, file_url, file_type, storage_path
   )
 `;
 
@@ -66,42 +66,27 @@ const sanitize = (raw) => {
     return Object.fromEntries(
         Object.entries(raw)
             .filter(([, v]) => v !== undefined && v !== null && v !== '')
-            .map(([k, v]) =>
-                numeric.includes(k) ? [k, Number(v)] : [k, v],
-            ),
+            .map(([k, v]) => (numeric.includes(k) ? [k, Number(v)] : [k, v])),
     );
 };
 
 /**
- * Безопасный slug для имени файла
- * @param {string} name
- */
-const slugify = (name) =>
-    encodeURIComponent(
-        name.trim().toLowerCase().replace(/\s+/g, '-'),
-    );
-
-/**
  * Загружает файлы в bucket `attachments`
- * @param {File[]} files
- * @param {string} projectName
- * @param {number} ticketId
+ * @param {File[]}  files
+ * @param {string}  projectName
+ * @param {number}  ticketId
  * @returns {Promise<Array<{path:string, publicUrl:string, mimeType:string}>>}
  */
-const uploadAttachments = async (
-    files,
-    projectName,
-    ticketId,
-) => {
+const uploadAttachments = async (files, projectName, ticketId) => {
     if (!files?.length) return [];
 
-    const bucket = supabase.storage.from('attachments');
+    const bucket   = supabase.storage.from('attachments');
     const projSlug = toSlug(projectName);
 
     return Promise.all(
         files.map(async (file) => {
-            const [name, ext] = file.name.split(/(?=\.[^.]+$)/); // «приказ.doc»
-            const filePath = `${projSlug}/${ticketId}/${Date.now()}_${toSlug(
+            const [name, ext] = file.name.split(/(?=\.[^.]+$)/);
+            const filePath    = `${projSlug}/${ticketId}/${Date.now()}_${toSlug(
                 name,
             )}${ext}`;
 
@@ -110,11 +95,11 @@ const uploadAttachments = async (
                 file,
                 { contentType: file.type, upsert: false },
             );
-            if (uploadErr) throw uploadErr;               // пробрасываем 4xx/5xx
+            if (uploadErr) throw uploadErr;
 
             const {
                 data: { publicUrl },
-            } = bucket.getPublicUrl(filePath);            // приватный → createSignedUrl
+            } = bucket.getPublicUrl(filePath); // ← приватный bucket → createSignedUrl
             return { path: filePath, publicUrl, mimeType: file.type };
         }),
     );
@@ -127,16 +112,11 @@ export const createTicket = async (payload) => {
     const fields = sanitize(raw);
 
     if (!fields.title)
-        fields.title = (fields.description ?? 'Новая заявка').slice(
-            0,
-            120,
-        );
-    if (fields.is_warranty === undefined)
-        fields.is_warranty = false;
+        fields.title = (fields.description ?? 'Новая заявка').slice(0, 120);
+    if (fields.is_warranty === undefined) fields.is_warranty = false;
     if (!fields.received_at)
         fields.received_at = dayjs().format('YYYY-MM-DD');
-    if (!fields.status_id)
-        fields.status_id = await getDefaultStatusId();
+    if (!fields.status_id) fields.status_id = await getDefaultStatusId();
 
     /* 1. создаём запись тикета */
     const { data: ticket, error } = await supabase
@@ -146,7 +126,7 @@ export const createTicket = async (payload) => {
         .single();
     if (error) throw error;
 
-    /* 2. грузим вложения (если есть) */
+    /* 2. загружаем вложения (если есть) */
     if (attachments.length) {
         const { data: project, error: projErr } = await supabase
             .from('projects')
@@ -161,12 +141,12 @@ export const createTicket = async (payload) => {
             ticket.id,
         );
 
-        /* 3. пишем метаданные в attachments */
+        /* 3. сохраняем метаданные */
         const rows = stored.map((f) => ({
-            ticket_id: ticket.id,
-            file_url: f.publicUrl,
-            file_type: f.mimeType,
-            storage_path: f.path, // CHANGE
+            ticket_id   : ticket.id,
+            file_url    : f.publicUrl,
+            file_type   : f.mimeType,
+            storage_path: f.path,
         }));
         const { error: attErr } = await supabase
             .from('attachments')
@@ -196,8 +176,8 @@ export const useTickets = (enabled = true) =>
 export const useTicketsByUnit = (unitId, isWarranty) =>
     useQuery({
         queryKey: ['tickets', 'unit', unitId, isWarranty],
-        enabled: !!unitId,
-        queryFn: async () => {
+        enabled : !!unitId,
+        queryFn : async () => {
             const { data, error } = await supabase
                 .from('tickets')
                 .select(TICKET_SELECT)
@@ -212,8 +192,8 @@ export const useTicketsByUnit = (unitId, isWarranty) =>
 export const useTicketsByProject = (projectId, isWarranty) =>
     useQuery({
         queryKey: ['tickets', 'project', projectId, isWarranty],
-        enabled: !!projectId,
-        queryFn: async () => {
+        enabled : !!projectId,
+        queryFn : async () => {
             const { data, error } = await supabase
                 .from('tickets')
                 .select(TICKET_SELECT)
@@ -228,11 +208,8 @@ export const useTicketsByProject = (projectId, isWarranty) =>
 export const useAddTicket = () => {
     const qc = useQueryClient();
     return useMutation({
-        mutationFn: createTicket,
-        onSuccess: () =>
-            qc.invalidateQueries({
-                queryKey: ['tickets', 'all'],
-                exact: true,
-            }),
+        mutationFn : createTicket,
+        onSuccess  : () =>
+            qc.invalidateQueries({ queryKey: ['tickets', 'all'], exact: true }),
     });
 };

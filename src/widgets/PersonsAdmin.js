@@ -1,3 +1,7 @@
+// src/widgets/PersonsAdmin.js
+// -------------------------------------------------------------
+// CRUD-таблица физлиц
+// -------------------------------------------------------------
 import React, { useState } from 'react';
 import { GridActionsCellItem } from '@mui/x-data-grid';
 import EditIcon   from '@mui/icons-material/Edit';
@@ -5,15 +9,13 @@ import DeleteIcon from '@mui/icons-material/Delete';
 
 import {
     usePersons,
-    useAddPerson,
-    useUpdatePerson,
     useDeletePerson,
 } from '@/entities/person';
 import { useProjects } from '@/entities/project';
 
-import PersonForm     from '@/features/person/PersonForm';
-import AdminDataGrid  from '@/shared/ui/AdminDataGrid';
-import { useNotify }  from '@/shared/hooks/useNotify';
+import PersonForm    from '@/features/person/PersonForm';
+import AdminDataGrid from '@/shared/ui/AdminDataGrid';
+import { useNotify } from '@/shared/hooks/useNotify';
 
 export default function PersonsAdmin() {
     const notify = useNotify();
@@ -22,8 +24,6 @@ export default function PersonsAdmin() {
     const { data: persons  = [], isPending } = usePersons();
     const { data: projects = [] }            = useProjects();
 
-    const add    = useAddPerson();
-    const update = useUpdatePerson();
     const remove = useDeletePerson();
 
     const [modal, setModal] = useState(null); // { mode:'add'|'edit', data }
@@ -34,22 +34,21 @@ export default function PersonsAdmin() {
 
     /* ---- колонки ---- */
     const columns = [
-        { field: 'id',        headerName: 'ID', width: 80 },
+        { field: 'id', headerName: 'ID', width: 80 },
         {
-            field     : 'project_name',                // <-- НОВОЕ “плоское” поле
+            field     : 'project_name',
             headerName: 'Проект',
             flex      : 1,
-            /* показываем: вложенный объект, массив или fallback */
             renderCell: ({ row }) =>
                 row?.project?.name
                 ?? (Array.isArray(row.project) ? row.project[0]?.name : null)
                 ?? nameById(row.project_id),
-            sortable: false,
+            sortable  : false,
             filterable: false,
         },
-        { field: 'full_name', headerName: 'ФИО',     flex : 1 },
+        { field: 'full_name', headerName: 'ФИО', flex: 1 },
         { field: 'phone',     headerName: 'Телефон', width: 160 },
-        { field: 'email',     headerName: 'E-mail',  flex : 1 },
+        { field: 'email',     headerName: 'E-mail',  flex: 1 },
         {
             field : 'actions',
             type  : 'actions',

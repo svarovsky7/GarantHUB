@@ -1,3 +1,7 @@
+// src/widgets/ContractorAdmin.js
+// -------------------------------------------------------------
+// CRUD-таблица контрагентов
+// -------------------------------------------------------------
 import React, { useState, useEffect } from 'react';
 import { GridActionsCellItem } from '@mui/x-data-grid';
 import EditIcon   from '@mui/icons-material/Edit';
@@ -5,9 +9,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 
 import {
     useContractors,
-    useAddContractor,
-    useUpdateContractor,
-    useDeleteContractor,
+    useDeleteContractor, // ← используем только remove
 } from '@/entities/contractor';
 
 import ContractorForm from '@/features/contractor/ContractorForm';
@@ -22,23 +24,19 @@ export default function ContractorAdmin() {
         data: contractors = [],
         isPending,
         error,
-    } = useContractors();                       // аргумент больше не передаём
+    } = useContractors();
 
-    const add    = useAddContractor();
-    const update = useUpdateContractor();
     const remove = useDeleteContractor();
 
     const [modal, setModal] = useState(null); // { mode:'add'|'edit', data? }
 
-    /* -------- отладка результата запроса -------- */
+    /* -------- обработка ошибок / пустоты -------- */
     useEffect(() => {
         if (error) {
             // eslint-disable-next-line no-console
             console.error('[ContractorAdmin] load error:', error);
             notify.error(`Ошибка загрузки контрагентов: ${error.message}`);
         } else if (!isPending && contractors.length === 0) {
-            // eslint-disable-next-line no-console
-            console.warn('[ContractorAdmin] contractors list is empty');
             notify.info('Записей не найдено');
         }
     }, [error, isPending, contractors, notify]);
@@ -95,10 +93,7 @@ export default function ContractorAdmin() {
     return (
         <>
             {modal?.mode === 'add' && (
-                <ContractorForm
-                    onSuccess={() => ok('Компания создана')}
-                    onCancel={close}
-                />
+                <ContractorForm onSuccess={() => ok('Компания создана')} onCancel={close} />
             )}
 
             {modal?.mode === 'edit' && (
