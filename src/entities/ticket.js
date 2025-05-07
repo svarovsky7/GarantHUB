@@ -1,17 +1,25 @@
 // src/entities/ticket.js
 // -------------------------------------------------------------
-// CRUD тикетов + загрузка вложений прямо в Google Drive
+// CRUD тикетов + загрузка вложений в Supabase Storage
 // -------------------------------------------------------------
-
-import { supabase } from '@shared/api/supabaseClient';
+import { supabase } from '@/shared/api/supabaseClient';
 import {
     useQuery,
     useMutation,
     useQueryClient,
 } from '@tanstack/react-query';
 import dayjs from 'dayjs';
+import slug from 'slugify';                        // CHANGE: ascii-slug
 
-/* ======================= SELECT-строка ======================= */
+/* ---------- helper: ASCII-slug без % и юникода ---------- */
+const toSlug = (str) =>
+    slug(str, {
+        lower: true,          // «Ситибей 1» → «sitibey-1»
+        strict: true,         // удаляет всё, что не [a-z0-9_-]
+        locale: 'ru',         // корректная транслитерация кириллицы
+    });
+
+/* ======================= SELECT-строка ====================== */
 
 export const TICKET_SELECT = `
   id,
@@ -30,7 +38,7 @@ export const TICKET_SELECT = `
   ),
   type:ticket_types ( id, name ),
   attachments:attachments (
-    id, file_url, file_type, drive_file_id
+    id, file_url, file_type, storage_path           -- CHANGE: storage_path
   )
 `;
 
@@ -48,49 +56,87 @@ const getDefaultStatusId = async () => {
 };
 
 const sanitize = (raw) => {
-    const numeric = ['project_id', 'unit_id', 'type_id', 'status_id', 'floor'];
+    const numeric = [
+        'project_id',
+        'unit_id',
+        'type_id',
+        'status_id',
+        'floor',
+    ];
     return Object.fromEntries(
         Object.entries(raw)
             .filter(([, v]) => v !== undefined && v !== null && v !== '')
-            .map(([k, v]) => (numeric.includes(k) ? [k, Number(v)] : [k, v])),
+            .map(([k, v]) =>
+                numeric.includes(k) ? [k, Number(v)] : [k, v],
+            ),
     );
 };
 
 /**
- * Загружает файлы на Google Drive через наш serverless-эндпоинт
+ * Безопасный slug для имени файла
+ * @param {string} name
+ */
+const slugify = (name) =>
+    encodeURIComponent(
+        name.trim().toLowerCase().replace(/\s+/g, '-'),
+    );
+
+/**
+ * Загружает файлы в bucket `attachments`
  * @param {File[]} files
  * @param {string} projectName
  * @param {number} ticketId
- * @returns {Promise<Array<{id:string, webViewLink:string, mimeType:string}>>}
+ * @returns {Promise<Array<{path:string, publicUrl:string, mimeType:string}>>}
  */
-const uploadAttachmentsToDrive = async (files, projectName, ticketId) => {   // CHANGE
+const uploadAttachments = async (
+    files,
+    projectName,
+    ticketId,
+) => {
     if (!files?.length) return [];
 
-    const body = new FormData();
-    files.forEach((f) => body.append('files', f, f.name));
-    body.append('project_name', projectName);
-    body.append('ticket_id',    ticketId.toString());
+    const bucket = supabase.storage.from('attachments');
+    const projSlug = toSlug(projectName);
 
-    const res = await fetch(import.meta.env.REACT_APP_API_DRIVE_UPLOAD, {           // CHANGE
-        method: 'POST',
-        body,
-    });
+    return Promise.all(
+        files.map(async (file) => {
+            const [name, ext] = file.name.split(/(?=\.[^.]+$)/); // «приказ.doc»
+            const filePath = `${projSlug}/${ticketId}/${Date.now()}_${toSlug(
+                name,
+            )}${ext}`;
 
-    if (!res.ok) throw new Error(await res.text());
-    return res.json(); // [{ id, webViewLink, mimeType }]
+            const { error: uploadErr } = await bucket.upload(
+                filePath,
+                file,
+                { contentType: file.type, upsert: false },
+            );
+            if (uploadErr) throw uploadErr;               // пробрасываем 4xx/5xx
+
+            const {
+                data: { publicUrl },
+            } = bucket.getPublicUrl(filePath);            // приватный → createSignedUrl
+            return { path: filePath, publicUrl, mimeType: file.type };
+        }),
+    );
 };
 
 /* ============================ CRUD =========================== */
 
 export const createTicket = async (payload) => {
-    const { attachments = [], ...raw } = payload;         // CHANGE
+    const { attachments = [], ...raw } = payload;
     const fields = sanitize(raw);
 
     if (!fields.title)
-        fields.title = (fields.description ?? 'Новая заявка').slice(0, 120);
-    if (fields.is_warranty === undefined) fields.is_warranty = false;
-    if (!fields.received_at) fields.received_at = dayjs().format('YYYY-MM-DD');
-    if (!fields.status_id)  fields.status_id  = await getDefaultStatusId();
+        fields.title = (fields.description ?? 'Новая заявка').slice(
+            0,
+            120,
+        );
+    if (fields.is_warranty === undefined)
+        fields.is_warranty = false;
+    if (!fields.received_at)
+        fields.received_at = dayjs().format('YYYY-MM-DD');
+    if (!fields.status_id)
+        fields.status_id = await getDefaultStatusId();
 
     /* 1. создаём запись тикета */
     const { data: ticket, error } = await supabase
@@ -100,7 +146,7 @@ export const createTicket = async (payload) => {
         .single();
     if (error) throw error;
 
-    /* 2. грузим файлы в Drive (если есть) */
+    /* 2. грузим вложения (если есть) */
     if (attachments.length) {
         const { data: project, error: projErr } = await supabase
             .from('projects')
@@ -109,18 +155,18 @@ export const createTicket = async (payload) => {
             .single();
         if (projErr) throw projErr;
 
-        const driveFiles = await uploadAttachmentsToDrive(
+        const stored = await uploadAttachments(
             attachments,
             project.name,
             ticket.id,
         );
 
         /* 3. пишем метаданные в attachments */
-        const rows = driveFiles.map((f) => ({
-            ticket_id:    ticket.id,
-            file_url:     f.webViewLink,
-            file_type:    f.mimeType,
-            drive_file_id: f.id,                 // CHANGE
+        const rows = stored.map((f) => ({
+            ticket_id: ticket.id,
+            file_url: f.publicUrl,
+            file_type: f.mimeType,
+            storage_path: f.path, // CHANGE
         }));
         const { error: attErr } = await supabase
             .from('attachments')
@@ -184,6 +230,9 @@ export const useAddTicket = () => {
     return useMutation({
         mutationFn: createTicket,
         onSuccess: () =>
-            qc.invalidateQueries({ queryKey: ['tickets', 'all'], exact: true }),
+            qc.invalidateQueries({
+                queryKey: ['tickets', 'all'],
+                exact: true,
+            }),
     });
 };
