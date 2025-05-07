@@ -2,40 +2,48 @@
 // --------------------------------------------
 import React from 'react';
 import {
-    ImageList,
-    ImageListItem,
-    Box,
-    Typography,
+    List,
+    ListItem,
+    ListItemAvatar,
+    Avatar,
+    ListItemText,
     IconButton,
 } from '@mui/material';
 import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined';
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined';
 
 /**
- * Создаёт временные object-URL-ы для превью файлов.
+ * Создаёт object-URL-ы для превью и очищает их.
+ * @param {File[]} files
+ * @returns {{url:string,name:string,type:string}[]}
  */
 function useObjectURLs(files) {
-    const [urls, setUrls] = React.useState([]);
+    const [items, setItems] = React.useState([]);
     React.useEffect(() => {
-        if (!files?.length) return setUrls([]);
+        if (!files?.length) return setItems([]);
 
         const list = files.map((f) => ({
-            url: URL.createObjectURL(f),
+            url: f.type.startsWith('image/')
+                ? URL.createObjectURL(f)
+                : '', // preview только для изображений
             name: f.name,
             type: f.type,
         }));
-        setUrls(list);
+        setItems(list);
 
-        return () => list.forEach(({ url }) => URL.revokeObjectURL(url));
+        return () => list.forEach(({ url }) => url && URL.revokeObjectURL(url));
     }, [files]);
 
-    return urls;
+    return items;
 }
 
 /**
- * Статичный список превью + кнопка удалить.
+ * Список прикреплённых файлов.
  *
- * @param {{files:File[], onRemove:(idx:number)=>void}} props
+ * @param {{
+ *   files: File[],
+ *   onRemove: (idx:number)=>void
+ * }} props
  */
 export default function AttachmentPreviewList({ files, onRemove }) {
     const items = useObjectURLs(files);
@@ -43,51 +51,37 @@ export default function AttachmentPreviewList({ files, onRemove }) {
     if (!items.length) return null;
 
     return (
-        <ImageList cols={3} gap={12} sx={{ mt: 2 }}>
+        <List dense sx={{ mt: 1 }}>
             {items.map(({ url, name, type }, idx) => (
-                <ImageListItem key={url} sx={{ position: 'relative' }}>
-                    {type.startsWith('image/') ? (
-                        <img
-                            src={url}
-                            alt={name}
-                            loading="lazy"
-                            style={{ borderRadius: 8 }}
-                        />
-                    ) : (
-                        <Box
-                            sx={{
-                                height: 120,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                border: '1px dashed',
-                                borderRadius: 2,
-                            }}
+                <ListItem
+                    key={`${name}-${idx}`}
+                    secondaryAction={
+                        <IconButton
+                            edge="end"
+                            aria-label="Удалить"
+                            onClick={() => onRemove(idx)}
                         >
-                            <InsertDriveFileOutlinedIcon fontSize="large" />
-                        </Box>
-                    )}
-
-                    {/* --- delete button --- */}
-                    <IconButton
-                        size="small"
-                        aria-label="Удалить"
-                        onClick={() => onRemove(idx)}
-                        sx={{
-                            position: 'absolute',
-                            top: 4,
-                            right: 4,
-                            bgcolor: 'rgba(255,255,255,0.7)',
-                        }}
-                    >
-                        <DeleteForeverOutlinedIcon fontSize="small" />
-                    </IconButton>
-
-                    <Typography variant="caption" noWrap>
-                        {name}
-                    </Typography>
-                </ImageListItem>
+                            <DeleteForeverOutlinedIcon />
+                        </IconButton>
+                    }
+                >
+                    <ListItemAvatar>
+                        {type.startsWith('image/') && url ? (
+                            <Avatar
+                                variant="rounded"
+                                src={url}
+                                alt={name}
+                                sx={{ width: 48, height: 48 }}
+                            />
+                        ) : (
+                            <Avatar variant="rounded" sx={{ width: 48, height: 48 }}>
+                                <InsertDriveFileOutlinedIcon />
+                            </Avatar>
+                        )}
+                    </ListItemAvatar>
+                    <ListItemText primary={name} />
+                </ListItem>
             ))}
-        </ImageList>
+        </List>
     );
 }
