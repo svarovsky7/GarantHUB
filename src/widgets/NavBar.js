@@ -31,7 +31,7 @@ const NavBar = () => {
                 </Typography>
 
                 <Button color="inherit" component={RouterLink} to="/units">Объекты</Button>
-                <Button color="inherit" component={RouterLink} to="/tickets">Заявки</Button>
+                <Button color="inherit" component={RouterLink} to="/tickets">Замечания</Button>
                 <Button                                      /* CHANGE */
                     color="inherit"
                     component={RouterLink}

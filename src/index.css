@@ -1,10 +1,163 @@
-@keyframes shake {
-    0%, 100% { transform: translateX(0);  }
-    20%, 60% { transform: translateX(-4px); }
-    40%, 80% { transform: translateX( 4px); }
+/* ====== TicketsTable – визуальное улучшение ==================== */
+.tickets-table-wrapper { overflow-x: auto; max-width: 100%; }
+
+/* «карточный» вид с лёгкими тенями */
+.tickets-table {
+    width: 100%;
+    border-collapse: separate;      /* CHANGE: отдельные границы ⇒ скругления работают */
+    border-spacing: 0;
+    font-size: var(--font-size);
+    table-layout: fixed;
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0,0,0,.05);
 }
 
-/* 1 раз = 200 мс; задаём только класс .shake */
-.shake {
-    animation: shake 0.2s 2;
+.tickets-table thead th {
+    background: var(--bg-header);
+    position: sticky;               /* CHANGE: «прилипший» шапка при скролле */
+    top: 0;
+    z-index: 2;
+}
+
+.tickets-table th,
+.tickets-table td {
+    padding: 10px 12px;             /* CHANGE: больше «воздуха» */
+    border-bottom: 1px solid var(--border-color);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tickets-table tbody tr:last-child td { border-bottom: none; }
+.tickets-table tbody tr:nth-child(even) { background: var(--bg-even-row); }
+
+.tickets-table tbody tr:hover {
+    background: #eef5ff;
+}
+
+/* выравнивание по содержимому */
+.align-right  { text-align: right; }
+.align-center { text-align: center; }
+
+/* ====== сортировка ================================================= */
+.sortable        { cursor: pointer; user-select: none; }
+.sort-icon       { margin-left: 6px; font-size: .65em; vertical-align: middle; }
+.sort-icon--inactive { opacity: .3; }
+.sorted-asc  > .sort-icon,
+.sorted-desc > .sort-icon { color: var(--accent); opacity: 1; }
+
+/* ====== toolbar (поиск) =========================================== */
+.table-toolbar {
+    margin: 0 0 8px;
+    display: flex;
+    justify-content: flex-start;
+}
+
+.table-toolbar input[type='text'] {
+    width: 250px;                   /* CHANGE: фикс ширина — не «прыгает» */
+    padding: 6px 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+.table-toolbar input[type='text']:focus {
+    outline: 2px solid var(--accent);
+}
+/* Обертка таблицы для поддержки горизонтального скролла */
+.tickets-table-wrapper {
+    overflow-x: auto;
+    max-width: 100%;
+}
+
+/* Основные стили таблицы */
+.tickets-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: Arial, sans-serif;
+    background-color: #fff;
+}
+
+/* Стили для заголовков и ячеек */
+.tickets-table th,
+.tickets-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+/* Стили для заголовков */
+.tickets-table th {
+    background-color: #f5f5f5;
+    font-weight: 600;
+    position: relative;
+}
+
+/* Hover-эффект для строк */
+.tickets-table tr:hover {
+    background-color: #fafafa;
+}
+
+/* Иконки сортировки */
+.sort-icon {
+    margin-left: 8px;
+    font-size: 12px;
+    color: #666;
+}
+
+/* Стили для полей фильтрации */
+.filter-input {
+    margin-top: 8px;
+    padding: 4px;
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+/* Стили для ячейки с действиями */
+.actions-cell {
+    display: flex;
+    gap: 8px;
+}
+
+/* Стили для кнопок действий */
+.action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px;
+    transition: color 0.2s;
+}
+
+.action-btn:hover {
+    color: #1976d2;
+}
+
+/* Skeleton-загрузчик */
+.skeleton {
+    height: 20px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+}
+
+/* Анимация для skeleton-загрузчика */
+@keyframes skeleton-loading {
+    0% {
+        background-position: -200px 0;
+    }
+    100% {
+        background-position: 200px 0;
+    }
+}
+
+/* Стили для сообщения "Данные отсутствуют" */
+.no-data {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+    font-style: italic;
 }

@@ -385,6 +385,13 @@
     "column_default": null
   },
   {
+    "table_name": "tickets",
+    "column_name": "is_warranty",
+    "data_type": "boolean",
+    "is_nullable": "NO",
+    "column_default": "false"
+  },
+  {
     "table_name": "unit_persons",
     "column_name": "unit_id",
     "data_type": "integer",
