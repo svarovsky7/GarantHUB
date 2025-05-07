@@ -2,32 +2,39 @@ import React, { useState } from 'react';
 import { supabase } from '@shared/api/supabaseClient';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import {
-    Paper, TextField, Button, Stack, Typography, Link
+    Paper, TextField, Button, Stack,
+    Typography, Link, CircularProgress,
 } from '@mui/material';
+import { useSnackbar } from 'notistack';
 
 const RegisterPage = () => {
-    const nav = useNavigate();
-    const [email, setEmail]       = useState('');
+    const nav                = useNavigate();
+    const { enqueueSnackbar } = useSnackbar();
+
+    const [email,    setEmail]    = useState('');
     const [password, setPassword] = useState('');
-    const [name, setName]         = useState('');
-    const [msg, setMsg]           = useState('');
-    const [err, setErr]           = useState('');
+    const [name,     setName]     = useState('');
+    const [loading,  setLoading]  = useState(false);
 
     const signUp = async (e) => {
         e.preventDefault();
-        setMsg(''); setErr('');
+        setLoading(true);
 
-        /* ---------- регистрация ---------- */
-        const { error } = await supabase.auth.signUp({           // CHANGE: полагаемся на триггер
+        const { error } = await supabase.auth.signUp({
             email,
             password,
-            options: { data: { name } }
+            options: { data: { name } },
         });
 
-        if (error) return setErr(error.message);
+        setLoading(false);
 
-        setMsg('Подтвердите e-mail и войдите.');
-        setTimeout(() => nav('/login', { replace: true }), 3000);
+        if (error) {
+            enqueueSnackbar(error.message, { variant: 'error' });
+            return;
+        }
+
+        enqueueSnackbar('Подтвердите e-mail и войдите.', { variant: 'success' });
+        setTimeout(() => nav('/login', { replace: true }), 2500);
     };
 
     return (
@@ -39,7 +46,7 @@ const RegisterPage = () => {
                     <TextField
                         label="Имя"
                         value={name}
-                        onChange={e => setName(e.target.value)}
+                        onChange={(e) => setName(e.target.value)}
                         required
                         fullWidth
                     />
@@ -47,7 +54,7 @@ const RegisterPage = () => {
                         label="E-mail"
                         type="email"
                         value={email}
-                        onChange={e => setEmail(e.target.value)}
+                        onChange={(e) => setEmail(e.target.value)}
                         required
                         fullWidth
                     />
@@ -55,16 +62,20 @@ const RegisterPage = () => {
                         label="Пароль"
                         type="password"
                         value={password}
-                        onChange={e => setPassword(e.target.value)}
+                        onChange={(e) => setPassword(e.target.value)}
                         required
                         fullWidth
                         inputProps={{ minLength: 6 }}
                     />
 
-                    <Button variant="contained" type="submit">Создать аккаунт</Button>
-
-                    {msg && <Typography color="green">{msg}</Typography>}
-                    {err && <Typography color="error">{err}</Typography>}
+                    <Button
+                        variant="contained"
+                        type="submit"
+                        disabled={loading}
+                        startIcon={loading && <CircularProgress size={18} />}
+                    >
+                        Создать аккаунт
+                    </Button>
 
                     <Typography align="center" variant="body2">
                         Уже зарегистрированы?{' '}

@@ -1,22 +1,31 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams, Link as RouterLink } from 'react-router-dom';
 import {
     Paper, Typography, Breadcrumbs, Link as MuiLink,
     Table, TableHead, TableRow, TableCell,
     TableBody, Skeleton,
 } from '@mui/material';
-import { useUnit }         from '../../entities/unit';
+import { useSnackbar }      from 'notistack';
+import { useUnit }          from '../../entities/unit';
 import { useTicketsByUnit } from '../../entities/ticket';
 
 const UnitDetailPage = () => {
+    const { enqueueSnackbar } = useSnackbar();
     const { unitId } = useParams();
+
     const { data: unit, isPending: uLoad, error: uErr }   = useUnit(unitId);
     const { data: tickets = [], isPending: tLoad, error: tErr } =
         useTicketsByUnit(unitId);
 
-    if (uLoad || tLoad) return <Skeleton variant="rectangular" height={240} />;
-    if (uErr  || tErr)  return <Typography color="error">Ошибка загрузки.</Typography>;
-    if (!unit)          return <Typography>Объект не найден.</Typography>;
+    useEffect(() => {
+        if (uErr || tErr)
+            enqueueSnackbar('Ошибка загрузки данных.', { variant: 'error' });
+    }, [uErr, tErr, enqueueSnackbar]);
+
+    if (uLoad || tLoad)
+        return <Skeleton variant="rectangular" height={240} />;
+    if (!unit)
+        return <Typography>Объект не найден.</Typography>;
 
     return (
         <Paper sx={{ p: 3 }}>
@@ -37,7 +46,6 @@ const UnitDetailPage = () => {
             </Breadcrumbs>
 
             <Typography variant="h5" gutterBottom>{unit.name}</Typography>
-            {/* serial удалён — такой колонки нет */}               {/* CHANGE */}
             <Typography mb={2}>Проект: {unit.project?.name ?? '—'}</Typography>
 
             <Typography variant="h6" gutterBottom>Заявки</Typography>
@@ -50,7 +58,7 @@ const UnitDetailPage = () => {
                         <TableRow>
                             <TableCell>ID</TableCell>
                             <TableCell>Название</TableCell>
-                            <TableCell>Статус ID</TableCell>       {/* CHANGE */}
+                            <TableCell>Статус ID</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -58,7 +66,7 @@ const UnitDetailPage = () => {
                             <TableRow key={t.id}>
                                 <TableCell>{t.id}</TableCell>
                                 <TableCell>{t.title}</TableCell>
-                                <TableCell>{t.status_id}</TableCell> {/* CHANGE */}
+                                <TableCell>{t.status_id}</TableCell>
                             </TableRow>
                         ))}
                     </TableBody>

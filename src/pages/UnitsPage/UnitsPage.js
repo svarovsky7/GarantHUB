@@ -1,53 +1,56 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useSearchParams, Link as RouterLink } from 'react-router-dom';
 import {
     Paper, Typography, Breadcrumbs, Link as MuiLink,
-    Table, TableHead, TableRow, TableCell, TableBody, Skeleton, // CHANGE
+    Table, TableHead, TableRow, TableCell, TableBody, Skeleton,
 } from '@mui/material';
+import { useSnackbar }     from 'notistack';
 import { useUnitsByProject } from '../../entities/unit';
-import { useQuery }          from '@tanstack/react-query';
-import { supabase }          from '@shared/api/supabaseClient';
+import { useQuery }        from '@tanstack/react-query';
+import { supabase }        from '@shared/api/supabaseClient';
 
 const UnitsPage = () => {
-    /* ——— 1. id проекта из query-string ——— */
-    const [sp]      = useSearchParams();
-    const projectId = sp.get('project');            // строка | null
+    const { enqueueSnackbar } = useSnackbar();
+    const [sp] = useSearchParams();
+    const projectId = sp.get('project');
 
-    /* ——— 2. объекты (с фильтром или без) ——— */
+    /* ——— Units ——— */
     const {
         data: units = [],
         isPending: unitsPending,
         error:     unitsErr,
     } = useUnitsByProject(projectId);
 
-    /* ——— 3. имя проекта (если выбран фильтр) ——— */
+    /* ——— Project name (breadcrumb) ——— */
     const {
         data: projectData,
         isPending: projPending,
         error:     projErr,
     } = useQuery({
         queryKey: ['projectName', projectId],
-        queryFn: async () => {
+        queryFn : async () => {
             const { data, error } = await supabase
                 .from('projects')
                 .select('name')
                 .eq('id', projectId)
                 .single();
             if (error) throw error;
-            return data;                            // { name: '...' }
+            return data;           // { name }
         },
         enabled: !!projectId,
     });
 
+    /* ——— toast-ошибки ——— */
+    useEffect(() => {
+        if (unitsErr) enqueueSnackbar('Ошибка загрузки объектов.', { variant: 'error' });
+        if (projErr)  enqueueSnackbar('Ошибка загрузки проекта.',  { variant: 'error' });
+    }, [unitsErr, projErr, enqueueSnackbar]);
+
+    if (unitsPending || projPending)
+        return <Skeleton variant="rectangular" height={240} />;
+
     const projectName = projectData?.name;
 
-    /* ——— 4. состояния загрузки / ошибок ——— */
-    if (unitsPending || projPending)
-        return <Skeleton variant="rectangular" height={240} />;      // CHANGE
-    if (unitsErr)  return <Typography color="error">Ошибка загрузки объектов.</Typography>;
-    if (projErr)   return <Typography color="error">Ошибка загрузки проекта.</Typography>;
-
-    /* ——— 5. UI ——— */
     return (
         <Paper sx={{ p: 3 }}>
             {projectId && (
@@ -89,8 +92,7 @@ const UnitsPage = () => {
                     ))}
                     {units.length === 0 && (
                         <TableRow>
-                            {/* colSpan пересчитан: 4 колонки с фильтром, 5 — без него */}
-                            <TableCell colSpan={projectId ? 4 : 5} /* CHANGE */>
+                            <TableCell colSpan={projectId ? 4 : 5}>
                                 Нет объектов{projectId ? ' в этом проекте.' : '.'}
                             </TableCell>
                         </TableRow>

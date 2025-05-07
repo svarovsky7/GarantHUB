@@ -1,7 +1,3 @@
-// src/pages/TicketsPage/TicketsPage.js
-// -------------------------------------------------------------
-// SPA-страница "Создание замечания". Реиспользует TicketForm.
-// -------------------------------------------------------------
 import React from 'react';
 import { Box, Typography } from '@mui/material';
 import TicketForm from '@/features/ticket/TicketForm';
@@ -13,7 +9,7 @@ export default function TicketsPage() {
                 <Typography variant="h4" sx={{ fontWeight: 700, mb: 3 }}>
                     Новое замечание
                 </Typography>
-                <TicketForm /> {/* CHANGE: теперь отдельный контрол */}
+                <TicketForm />
             </Box>
         </Box>
     );

@@ -3,56 +3,45 @@ import { supabase } from '@shared/api/supabaseClient';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import {
     Paper, TextField, Button, Stack,
-    Typography, Link, CircularProgress
+    Typography, Link, CircularProgress,
 } from '@mui/material';
+import { useSnackbar } from 'notistack';
 
 const LoginPage = () => {
-    const nav = useNavigate();
+    const nav                 = useNavigate();
+    const { enqueueSnackbar } = useSnackbar();
 
-    const [email, setEmail]       = useState('');
+    const [email,    setEmail]    = useState('');
     const [password, setPassword] = useState('');
-    const [msg, setMsg]           = useState('');
-    const [loading, setLoading]   = useState(false);
-
-    /* ---------- helper ---------- */
-    const log = (...a) => console.log('%c[LoginPage]', 'color:mediumvioletred', ...a); // CHANGE
+    const [loading,  setLoading]  = useState(false);
 
     const login = async (e) => {
         e.preventDefault();
-        setMsg('');
         setLoading(true);
 
-        log('submit', { email });
+        const { error } = await supabase.auth
+            .signInWithPassword({ email, password });
 
-        /* ---------- network call ---------- */
-        try {
-            const { data, error } = await supabase.auth
-                .signInWithPassword({ email, password });
+        setLoading(false);
 
-            log('signInWithPassword →', { data, error });
-
-            if (error) {
-                setMsg(error.message);
-            } else {
-                /* ---------- EXPECT: onAuthStateChange через пару мс ---------- */
-                nav('/', { replace: true });
-            }
-        } catch (ex) {
-            log('unexpected exception', ex);
-            setMsg(ex.message);
-        } finally {
-            setLoading(false);
+        if (error) {
+            enqueueSnackbar(error.message, { variant: 'error' });
+            return;
         }
+
+        enqueueSnackbar('Успешный вход.', { variant: 'success' });
+        nav('/', { replace: true });
     };
 
     const magic = async () => {
-        setMsg('');
         setLoading(true);
-        log('magic-link request', email);
-
         const { error } = await supabase.auth.signInWithOtp({ email });
         setLoading(false);
-        setMsg(error ? error.message : 'Magic-link отправлена на почту.');
+
+        enqueueSnackbar(
+            error ? error.message : 'Magic-link отправлена на почту.',
+            { variant: error ? 'error' : 'success' },
+        );
     };
 
     return (
@@ -65,7 +54,7 @@ const LoginPage = () => {
                         label="E-mail"
                         type="email"
                         value={email}
-                        onChange={e => setEmail(e.target.value)}
+                        onChange={(e) => setEmail(e.target.value)}
                         required
                         fullWidth
                     />
@@ -73,7 +62,7 @@ const LoginPage = () => {
                         label="Пароль"
                         type="password"
                         value={password}
-                        onChange={e => setPassword(e.target.value)}
+                        onChange={(e) => setPassword(e.target.value)}
                         required
                         fullWidth
                     />
@@ -95,8 +84,6 @@ const LoginPage = () => {
                             Magic-link
                         </Button>
                     </Stack>
-
-                    {msg && <Typography color="error">{msg}</Typography>}
 
                     <Typography align="center" variant="body2">
                         Нет аккаунта?{' '}

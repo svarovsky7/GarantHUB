@@ -1,18 +1,24 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import {
     Paper, Typography, List, ListItemButton,
     ListItemText, Stack, Skeleton,
 } from '@mui/material';
-import { useProjects } from '../../entities/project';
+import { useSnackbar }  from 'notistack';
+import { useProjects }  from '../../entities/project';
 import { useAuthStore } from '../../shared/store/authStore';
 
 const DashboardPage = () => {
-    const { data: projects = [], isPending, error } = useProjects();
-    const profile = useAuthStore(s => s.profile);
+    const { enqueueSnackbar }                            = useSnackbar();
+    const { data: projects = [], isPending, error }      = useProjects();
+    const profile                                        = useAuthStore(s => s.profile);
 
-    if (isPending) return <Skeleton variant="rectangular" height={160} />; // CHANGE
-    if (error)     return <Typography color="error">Ошибка загрузки проектов.</Typography>;
+    useEffect(() => {
+        if (error) enqueueSnackbar('Ошибка загрузки проектов.', { variant: 'error' });
+    }, [error, enqueueSnackbar]);
+
+    if (isPending)
+        return <Skeleton variant="rectangular" height={160} />;
 
     return (
         <Stack spacing={3}>
@@ -35,7 +41,7 @@ const DashboardPage = () => {
                                 component={RouterLink}
                                 to={`/units?project=${p.id}`}
                             >
-                                <ListItemText primary={p.name} /> {/* CHANGE: description убран */}
+                                <ListItemText primary={p.name} />
                             </ListItemButton>
                         ))}
                     </List>
