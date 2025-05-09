@@ -1,22 +1,20 @@
+// src/app/App.js
 import React, { useEffect, useCallback } from 'react';
-import { QueryClientProvider } from '@tanstack/react-query';
-import { ThemeProvider, CssBaseline, createTheme } from '@mui/material';
+import { Container, Box } from '@mui/material';
 
 import { supabase }     from '@shared/api/supabaseClient';
-import { queryClient }  from '@shared/config/queryClient';
 import { useAuthStore } from '@shared/store/authStore';
 
+import NavBar    from '@/widgets/NavBar';
 import AppRouter from './Router';
 
-const theme = createTheme({ palette: { mode: 'light' } });
-const log   = (...a) => console.log('%c[App]', 'color:teal', ...a);
-
-/* ------------------------------------------------------------------ */
+/* короткий лог-хелпер */
+const log = (...a) => console.log('%c[App]', 'color:teal', ...a);
 
 const App = () => {
     const setProfile = useAuthStore((s) => s.setProfile);
 
-    /* ---------- профиль ---------- */
+    /* ---------- загрузка профиля ---------- */
     const loadProfile = useCallback(
         /** @param {import('@supabase/supabase-js').User} user */
         async (user, tag = '') => {
@@ -33,18 +31,19 @@ const App = () => {
                     id:    user.id,
                     email: user.email,
                     name:  user.user_metadata?.name ?? null,
-                    role:  'USER',
-                },
+                    role:  'USER'
+                }
             );
         },
-        [setProfile],
+        [setProfile]
     );
 
-    /* ---------- инициализация, подписка на авторизацию ---------- */
+    /* ---------- подписка на изменения сессии ---------- */
     useEffect(() => {
         setProfile(null);
         log('mount → auth init');
 
+        /* проверяем текущую сессию */
         (async () => {
             const { data, error } = await supabase.auth.getSession();
             log('getSession', { data, error });
@@ -52,24 +51,29 @@ const App = () => {
             loadProfile(data.session.user, 'init');
         })();
 
-        const { data: { subscription } = {} } =
-            supabase.auth.onAuthStateChange((event, session) => {
-                log('auth event', event, session);
-                if (!session?.user) return setProfile(null);
-                loadProfile(session.user, `event:${event}`);
-            });
+        /* подписка на события входа/выхода */
+        const {
+            data: { subscription } = {}
+        } = supabase.auth.onAuthStateChange((event, session) => {
+            log('auth event', event, session);
+            if (!session?.user) return setProfile(null);
+            loadProfile(session.user, `event:${event}`);
+        });
 
         return () => subscription?.unsubscribe?.();
-    }, [setProfile, loadProfile]);
+    }, [loadProfile, setProfile]);
 
     /* ---------- UI ---------- */
     return (
-        <QueryClientProvider client={queryClient}>
-            <ThemeProvider theme={theme}>
-                <CssBaseline />
+        <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+            {/* шапка */}
+            <NavBar />
+
+            {/* основной контент */}
+            <Container maxWidth="lg" sx={{ flexGrow: 1, py: 3 }}>
                 <AppRouter />
-            </ThemeProvider>
-        </QueryClientProvider>
+            </Container>
+        </Box>
     );
 };
 

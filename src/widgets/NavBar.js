@@ -20,6 +20,7 @@ const NavBar = () => {
     return (
         <AppBar position="static">
             <Toolbar sx={{ gap: 2 }}>
+                {/* Логотип / переход на главную */}
                 <Typography
                     variant="h6"
                     component={RouterLink}
@@ -30,21 +31,43 @@ const NavBar = () => {
                     Garantie&nbsp;Hub
                 </Typography>
 
-                <Button color="inherit" component={RouterLink} to="/units">Объекты</Button>
-                <Button color="inherit" component={RouterLink} to="/tickets">Замечания</Button>
-                <Button                                      /* CHANGE */
+                {/* Основная навигация */}
+                <Button color="inherit" component={RouterLink} to="/units">
+                    Объекты
+                </Button>
+
+                <Button color="inherit" component={RouterLink} to="/tickets">
+                    Замечания
+                </Button>
+
+                {/* CHANGE: прямая ссылка на новую страницу перечня */}
+                <Button
+                    color="inherit"
+                    component={RouterLink}
+                    to="/tickets/list"
+                >
+                    Перечень&nbsp;замечаний
+                </Button>
+
+                <Button
                     color="inherit"
                     component={RouterLink}
                     to="/tickets/new"
                 >
                     Новое&nbsp;замечание
                 </Button>
+
                 {isAdmin && (
-                    <Button color="inherit" component={RouterLink} to="/admin">
+                    <Button
+                        color="inherit"
+                        component={RouterLink}
+                        to="/admin"
+                    >
                         Администрирование
                     </Button>
                 )}
 
+                {/* гибкий отступ, чтобы кнопки справа «прилипли» к краю */}
                 <span style={{ flexGrow: 1 }} />
 
                 {profile && (
