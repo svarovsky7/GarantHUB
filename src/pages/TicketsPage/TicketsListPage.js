@@ -1,464 +1,333 @@
-/* eslint-disable react/prop-types */
-/**
- * Обновлённая страница «Журнал замечаний» (MUI v5 + TanStack Query v5).
- * Теперь соответствует макету (см. CANVAticketsList.html) и поддерживает
- * сворачиваемую панель фильтров. :contentReference[oaicite:0]{index=0}:contentReference[oaicite:1]{index=1}
- */
-
-import React, { useState, useEffect, useMemo } from 'react';
+// src/pages/TicketsListPage/TicketsListPage.js
+//------------------------------------------------
+import React from 'react';
 import {
     Box,
-    Grid,
+    Stack,
     Paper,
-    Typography,
     TextField,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
-    Button,
-    Collapse,
+    Tooltip,
+    Typography,
+    IconButton,
+    CircularProgress,
+    Autocomplete,
+    TableContainer,
     Table,
     TableHead,
     TableRow,
     TableCell,
     TableBody,
-    TableSortLabel,
-    Skeleton,
-    Snackbar,
-    Alert,
-    IconButton
+    TableSortLabel,        // ⬅️ добавили
 } from '@mui/material';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import FileDownloadIcon from '@mui/icons-material/FileDownload';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { saveAs } from 'file-saver';
-
 import {
-    useQuery,
-    useQueryClient,
-    keepPreviousData
-} from '@tanstack/react-query';
+    LocalizationProvider,
+    DatePicker,
+} from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import dayjs from 'dayjs';
+import 'dayjs/locale/ru';
 
-import { supabase } from '@/shared/api/supabaseClient';
+import DownloadIcon from '@mui/icons-material/Download';
 
-/* ---------- Supabase helpers ---------- */
-async function fetchTickets(filters, sort) {
-    let q = supabase.from('tickets').select(`
-        id, created_at, received_at, is_warranty,
-        units:unit_id            ( name ),
-        ticket_statuses:status_id( name ),
-        profiles:responsible_user_id( name )
-    `);
+import { useTickets } from '@/entities/ticket';
+import { useProjects } from '@/entities/project';
+import { useTicketTypes } from '@/entities/ticketType';
+import { useNotify } from '@/shared/hooks/useNotify';
 
-    if (filters.id)            q = q.eq('id', filters.id);
-    if (filters.unitId !== undefined) q = q.eq('unit_id', filters.unitId);
-    if (filters.statusId)      q = q.eq('status_id', filters.statusId);
-    if (filters.responsibleId) q = q.eq('responsible_user_id', filters.responsibleId);
-    if (filters.createdFrom)   q = q.gte('created_at', filters.createdFrom);
-    if (filters.createdTo)     q = q.lte('created_at', filters.createdTo);
-    if (filters.receivedFrom)  q = q.gte('received_at', filters.receivedFrom);
-    if (filters.receivedTo)    q = q.lte('received_at', filters.receivedTo);
-    if (filters.isWarranty !== undefined) q = q.eq('is_warranty', filters.isWarranty);
+dayjs.locale('ru');
 
-    q = q.order(sort.field, { ascending: sort.order === 'asc' });
+/* ---------- литералы ---------- */
+const warrantyOptions = [
+    { id: 'all',   label: 'Все' },
+    { id: 'true',  label: 'Да'  },
+    { id: 'false', label: 'Нет' },
+];
 
-    const { data, error } = await q;
-    if (error) throw error;
-
-    return data.map((r) => ({
-        id:               r.id,
-        created_at:       r.created_at,
-        received_at:      r.received_at,
-        is_warranty:      r.is_warranty,
-        unit_name:        r.units?.name            ?? '—',
-        status_name:      r.ticket_statuses?.name  ?? '—',
-        responsible_name: r.profiles?.name         ?? '—'
-    }));
+/* ---------- утилиты для сортировки ---------- */
+function descendingComparator(a, b, orderBy) {
+    if (b[orderBy] < a[orderBy]) return -1;
+    if (b[orderBy] > a[orderBy]) return 1;
+    return 0;
+}
+function getComparator(order, orderBy) {
+    return order === 'desc'
+        ? (a, b) => descendingComparator(a, b, orderBy)
+        : (a, b) => -descendingComparator(a, b, orderBy);
+}
+function stableSort(array, comparator) {
+    return array
+        .map((el, idx) => [el, idx])
+        .sort((a, b) => {
+            const cmp = comparator(a[0], b[0]);
+            if (cmp !== 0) return cmp;
+            return a[1] - b[1];
+        })
+        .map((el) => el[0]);
 }
 
-async function fetchUnits() {
-    const { data, error } = await supabase.from('units')
-        .select('id, name')
-        .order('name', { ascending: true });
-    if (error) throw error;
-    return data;
-}
+/* ==================================================================== */
 
-/* ---------- Component ---------- */
 export default function TicketsListPage() {
-    const defaultFilters = {
-        id: '',
-        unitId: undefined,
-        statusId: '',
-        responsibleId: '',
-        createdFrom: '',
-        createdTo: '',
-        receivedFrom: '',
-        receivedTo: '',
-        isWarranty: undefined
-    };
+    const notify = useNotify();
 
-    const queryClient           = useQueryClient();
-    const [filters, setFilters] = useState(defaultFilters);
-    const [localFlt, setLocalF] = useState(defaultFilters);
-    const [sort, setSort]       = useState({ field: 'created_at', order: 'desc' });
-    const [openFilters, setOpenFilters] = useState(true);
-    const [sb, setSb]           = useState({ open: false, msg: '' });
-
-    /* tickets */
+    /* -------- загрузка данных -------- */
     const {
         data: tickets = [],
         isLoading,
-        error
-    } = useQuery({
-        queryKey: ['tickets', filters, sort],
-        queryFn : () => fetchTickets(filters, sort),
-        staleTime: 10_000,
-        placeholderData: keepPreviousData
-    });
+        isError,
+        error,
+    } = useTickets();
+    const { data: projects = [] } = useProjects();
+    const { data: types    = [] } = useTicketTypes();
 
-    /* units */
-    const { data: units = [] } = useQuery({
-        queryKey: ['units'],
-        queryFn : fetchUnits,
-        staleTime: 600_000
-    });
+    /* -------- фильтры -------- */
+    const [dateFrom, setDateFrom] = React.useState(null);
+    const [dateTo,   setDateTo]   = React.useState(null);
+    const [project,  setProject]  = React.useState(null);
+    const [type,     setType]     = React.useState(null);
+    const [warranty, setWarranty] = React.useState('all');
 
-    useEffect(() => {
-        if (error) setSb({ open: true, msg: error.message ?? 'Ошибка загрузки' });
-    }, [error]);
+    /* -------- сортировка -------- */
+    const [orderBy, setOrderBy]   = React.useState('created');
+    const [order,   setOrder]     = React.useState('desc');
 
-    /* helpers */
-    const sortDir = (f) => (sort.field === f ? sort.order : false);
-    const toggleSort = (field) =>
-        setSort((p) =>
-            p.field === field ? { field, order: p.order === 'asc' ? 'desc' : 'asc' }
-                : { field, order: 'asc' });
+    /* -------- snackbar при ошибке -------- */
+    React.useEffect(() => {
+        if (isError) notify.error(error.message);
+    }, [isError, error, notify]);
 
-    const applyFilters = () => setFilters(localFlt);
-    const resetFilters = () => { setLocalF(defaultFilters); setFilters(defaultFilters); };
+    /* ------------------------------------------------------------------ */
+    /*                        подготовка строк                            */
+    /* ------------------------------------------------------------------ */
+    const filteredTickets = React.useMemo(
+        () =>
+            tickets.filter((t) => {
+                if (dateFrom && dayjs(t.created_at).isBefore(dateFrom, 'day')) return false;
+                if (dateTo   && dayjs(t.created_at).isAfter (dateTo,   'day')) return false;
+                if (project  && t.unit?.project?.id !== project.id)            return false;
+                if (type     && t.type?.id          !== type.id)               return false;
+                if (warranty !== 'all' && t.is_warranty !== (warranty === 'true')) return false;
+                return true;
+            }),
+        [tickets, dateFrom, dateTo, project, type, warranty]
+    );
 
-    const exportCsv = () => {
-        const header = 'id;created_at;received_at;unit;status;responsible;is_warranty\n';
-        const rows = tickets
-            .map((t) =>
+    /** плоские строки для таблицы */
+    const rawRows = React.useMemo(
+        () =>
+            filteredTickets.map((t) => ({
+                id:       t.id,
+                created:  t.created_at ?? t.created ?? null,
+                project:  t.unit?.project?.name ?? '',
+                unit:     t.unit?.name ?? '',
+                type:     t.type?.name ?? '',
+                status:   t.status?.name ?? t.status_id ?? '',
+                warranty: t.is_warranty,
+            })),
+        [filteredTickets]
+    );
+
+    /* — отсортированные строки — */
+    const rows = React.useMemo(
+        () => stableSort(rawRows, getComparator(order, orderBy)),
+        [rawRows, order, orderBy]
+    );
+
+    /* ------------------------------------------------------------------ */
+    /*                            экспорт CSV                             */
+    /* ------------------------------------------------------------------ */
+    const handleExport = () => {
+        const csv = [
+            'Дата;Проект;Объект;ID;Тип;Статус;Гарантия',
+            ...rows.map((r) =>
                 [
-                    t.id,
-                    t.created_at,
-                    t.received_at,
-                    t.unit_name,
-                    t.status_name,
-                    t.responsible_name,
-                    t.is_warranty ? 'yes' : 'no'
+                    r.created ? dayjs(r.created).format('DD.MM.YYYY HH:mm') : '',
+                    r.project,
+                    r.unit,
+                    r.id,
+                    r.type,
+                    r.status,
+                    r.warranty ? 'Да' : 'Нет',
                 ].join(';')
-            )
-            .join('\n');
-        saveAs(
-            new Blob([header + rows], { type: 'text/csv;charset=utf-8;' }),
-            `tickets_${Date.now()}.csv`
-        );
+            ),
+        ].join('\n');
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href = url;
+        a.download = `tickets_${dayjs().format('YYYYMMDD_HHmm')}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        notify.success('Экспорт завершён');
     };
 
-    const ticketsCount = useMemo(() => tickets.length, [tickets]);
+    /* ------------------- обработчик заголовков ------------------- */
+    const createSortHandler = (property) => () => {
+        if (orderBy === property) {
+            setOrder(order === 'asc' ? 'desc' : 'asc');
+        } else {
+            setOrderBy(property);
+            setOrder('asc');
+        }
+    };
 
-    /* ---------- Render ---------- */
+    /* ------------------------------------------------------------------ */
+    /*                               UI                                   */
+    /* ------------------------------------------------------------------ */
     return (
-        <Box sx={{ p: { xs: 2, md: 4 } }}>
-            {/* Header */}
-            <Box sx={{ mb: 6 }}>
-                <Typography variant="h4" fontWeight={700} color="text.primary" gutterBottom>
-                    Журнал замечаний
+        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ru">
+            <Stack spacing={3}>
+                <Typography variant="h4" fontWeight={700}>
+                    Перечень замечаний
                 </Typography>
-                <Typography variant="subtitle1" color="text.secondary">
-                    Полный список всех замечаний с возможностью фильтрации
-                </Typography>
-            </Box>
 
-            {/* Filters section (card + toggle) */}
-            <Paper
-                elevation={0}
-                sx={{
-                    mb: 6,
-                    p: 3,
-                    borderRadius: 2,
-                    backgroundColor: '#fff',
-                    boxShadow: '0 1px 4px rgba(0,0,0,.08)'
-                }}
-            >
-                <Box
-                    sx={{
-                        mb: 2,
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center'
-                    }}
-                >
-                    <Typography variant="h6" fontWeight={600}>
-                        Фильтры
-                    </Typography>
-
-                    <Button
-                        size="small"
-                        color="primary"
-                        endIcon={
-                            openFilters ? <ExpandLessIcon /> : <ExpandMoreIcon />
-                        }
-                        onClick={() => setOpenFilters((p) => !p)}
-                        sx={{ fontWeight: 500 }}
+                {/* ---------------- панель фильтров ---------------- */}
+                <Paper sx={{ p: 2 }}>
+                    <Stack
+                        direction={{ xs: 'column', md: 'row' }}
+                        spacing={2}
+                        useFlexGap
+                        flexWrap="wrap"
                     >
-                        {openFilters ? 'Скрыть фильтры' : 'Показать фильтры'}
-                    </Button>
-                </Box>
+                        {/* ...фильтры без изменений... */}
+                        <DatePicker
+                            label="Создано с"
+                            value={dateFrom}
+                            onChange={setDateFrom}
+                            slotProps={{ textField: { size: 'small' } }}
+                        />
+                        <DatePicker
+                            label="Создано по"
+                            value={dateTo}
+                            onChange={setDateTo}
+                            slotProps={{ textField: { size: 'small' } }}
+                        />
+                        <Autocomplete
+                            options={projects}
+                            getOptionLabel={(o) => o.name}
+                            isOptionEqualToValue={(o, v) => o.id === v.id}
+                            value={project}
+                            onChange={(_, v) => setProject(v)}
+                            renderInput={(p) => (
+                                <TextField {...p} label="Проект" size="small" />
+                            )}
+                            sx={{ minWidth: 200 }}
+                        />
+                        <Autocomplete
+                            options={types}
+                            getOptionLabel={(o) => o.name}
+                            isOptionEqualToValue={(o, v) => o.id === v.id}
+                            value={type}
+                            onChange={(_, v) => setType(v)}
+                            renderInput={(p) => (
+                                <TextField {...p} label="Тип" size="small" />
+                            )}
+                            sx={{ minWidth: 200 }}
+                        />
+                        <Autocomplete
+                            options={warrantyOptions}
+                            getOptionLabel={(o) => o.label}
+                            isOptionEqualToValue={(o, v) => o.id === v.id}
+                            value={warrantyOptions.find((o) => o.id === warranty)}
+                            onChange={(_, v) => setWarranty(v?.id ?? 'all')}
+                            renderInput={(p) => (
+                                <TextField {...p} label="Гарантия" size="small" />
+                            )}
+                            sx={{ minWidth: 160 }}
+                        />
+                        <Box flexGrow={1} />
+                        <Tooltip title="Экспорт в CSV">
+              <span>
+                <IconButton onClick={handleExport} disabled={!rows.length}>
+                  <DownloadIcon />
+                </IconButton>
+              </span>
+                        </Tooltip>
+                    </Stack>
+                </Paper>
 
-                <Collapse in={openFilters} timeout="auto" unmountOnExit>
-                    <Grid container spacing={2}>
-                        {/* № замечания */}
-                        <Grid item xs={12} sm={6} lg={4}>
-                            <TextField
-                                label="№ замечания"
-                                type="number"
-                                fullWidth
-                                value={localFlt.id}
-                                onChange={(e) =>
-                                    setLocalF({ ...localFlt, id: e.target.value })
-                                }
-                            />
-                        </Grid>
-
-                        {/* Объект */}
-                        <Grid item xs={12} sm={6} lg={4}>
-                            <FormControl fullWidth>
-                                <InputLabel>Объект</InputLabel>
-                                <Select
-                                    label="Объект"
-                                    value={localFlt.unitId ?? ''}
-                                    onChange={(e) =>
-                                        setLocalF({
-                                            ...localFlt,
-                                            unitId:
-                                                e.target.value === ''
-                                                    ? undefined
-                                                    : e.target.value
-                                        })
-                                    }
-                                >
-                                    <MenuItem value="">Все объекты</MenuItem>
-                                    {units.map((u) => (
-                                        <MenuItem key={u.id} value={u.id}>
-                                            {u.name}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-                        </Grid>
-
-                        {/* Статус */}
-                        <Grid item xs={12} sm={6} lg={4}>
-                            <FormControl fullWidth>
-                                <InputLabel>Статус</InputLabel>
-                                <Select
-                                    label="Статус"
-                                    value={localFlt.statusId}
-                                    onChange={(e) =>
-                                        setLocalF({
-                                            ...localFlt,
-                                            statusId: e.target.value
-                                        })
-                                    }
-                                >
-                                    <MenuItem value="">Все</MenuItem>
-                                    <MenuItem value={1}>Открыт</MenuItem>
-                                    <MenuItem value={2}>В работе</MenuItem>
-                                    <MenuItem value={3}>Закрыт</MenuItem>
-                                </Select>
-                            </FormControl>
-                        </Grid>
-
-                        {/* Кем добавлено */}
-                        <Grid item xs={12} sm={6} lg={4}>
-                            <FormControl fullWidth>
-                                <InputLabel>Кем добавлено</InputLabel>
-                                <Select
-                                    label="Кем добавлено"
-                                    value={localFlt.responsibleId}
-                                    onChange={(e) =>
-                                        setLocalF({
-                                            ...localFlt,
-                                            responsibleId: e.target.value
-                                        })
-                                    }
-                                >
-                                    <MenuItem value="">Все</MenuItem>
-                                    <MenuItem value="uuid-1">Иван И.</MenuItem>
-                                    <MenuItem value="uuid-2">Пётр С.</MenuItem>
-                                </Select>
-                            </FormControl>
-                        </Grid>
-
-                        {/* Гарантия */}
-                        <Grid item xs={12} sm={6} lg={4}>
-                            <FormControl fullWidth>
-                                <InputLabel>Гарантия</InputLabel>
-                                <Select
-                                    label="Гарантия"
-                                    value={
-                                        localFlt.isWarranty === undefined
-                                            ? ''
-                                            : localFlt.isWarranty
-                                                ? 'yes'
-                                                : 'no'
-                                    }
-                                    onChange={(e) => {
-                                        const v = e.target.value;
-                                        setLocalF({
-                                            ...localFlt,
-                                            isWarranty:
-                                                v === ''
-                                                    ? undefined
-                                                    : v === 'yes'
-                                        });
-                                    }}
-                                >
-                                    <MenuItem value="">Все</MenuItem>
-                                    <MenuItem value="yes">Гарантийные</MenuItem>
-                                    <MenuItem value="no">Негарантийные</MenuItem>
-                                </Select>
-                            </FormControl>
-                        </Grid>
-
-                        {/* Apply / Reset */}
-                        <Grid
-                            item
-                            xs={12}
-                            lg={4}
-                            sx={{ display: 'flex', alignItems: 'flex-end', gap: 1 }}
+                {/* ---------------- таблица ---------------- */}
+                <Paper sx={{ position: 'relative', maxHeight: 560 }}>
+                    {isLoading ? (
+                        <Stack
+                            justifyContent="center"
+                            alignItems="center"
+                            sx={{ height: 560 }}
                         >
-                            <Button
-                                variant="contained"
-                                fullWidth
-                                onClick={applyFilters}
-                            >
-                                Применить
-                            </Button>
-                            <Button
-                                variant="outlined"
-                                fullWidth
-                                onClick={resetFilters}
-                            >
-                                Сбросить
-                            </Button>
-                        </Grid>
-                    </Grid>
-                </Collapse>
-            </Paper>
+                            <CircularProgress />
+                        </Stack>
+                    ) : (
+                        <TableContainer sx={{ maxHeight: 560 }}>
+                            <Table stickyHeader size="small">
+                                <TableHead>
+                                    <TableRow>
+                                        {/* ====== заголовки с сортировкой ====== */}
+                                        {[
+                                            { id: 'created',  label: 'Дата создания', align: 'left', min: 160 },
+                                            { id: 'project',  label: 'Проект',         align: 'left', min: 180 },
+                                            { id: 'unit',     label: 'Объект',         align: 'left', min: 160 },
+                                            { id: 'id',       label: '№ замечания',    align: 'left', min: 130 },
+                                            { id: 'type',     label: 'Тип',            align: 'left', min: 160 },
+                                            { id: 'status',   label: 'Статус',         align: 'left', min: 140 },
+                                            { id: 'warranty', label: 'Гарантия',       align: 'center', min: 110 },
+                                        ].map((col) => (
+                                            <TableCell
+                                                key={col.id}
+                                                sortDirection={orderBy === col.id ? order : false}
+                                                sx={{ minWidth: col.min }}
+                                                align={col.align}
+                                            >
+                                                <TableSortLabel
+                                                    active={orderBy === col.id}
+                                                    direction={orderBy === col.id ? order : 'asc'}
+                                                    onClick={createSortHandler(col.id)}
+                                                >
+                                                    {col.label}
+                                                </TableSortLabel>
+                                            </TableCell>
+                                        ))}
+                                    </TableRow>
+                                </TableHead>
 
-            {/* Actions toolbar */}
-            <Box sx={{ mb: 2, display: 'flex', gap: 2 }}>
-                <Button
-                    variant="contained"
-                    startIcon={<RefreshIcon />}
-                    onClick={() =>
-                        queryClient.invalidateQueries({ queryKey: ['tickets'] })
-                    }
-                >
-                    Обновить
-                </Button>
-                <Button
-                    variant="outlined"
-                    startIcon={<FileDownloadIcon />}
-                    onClick={exportCsv}
-                    disabled={!ticketsCount}
-                >
-                    Экспорт CSV
-                </Button>
-            </Box>
-
-            {/* Table */}
-            <Box className="tickets-table-wrapper">
-                <Table className="tickets-table" size="small">
-                    <TableHead sx={{ bgcolor: 'grey.100' }}>
-                        <TableRow>
-                            {[
-                                ['created_at', 'Дата создания'],
-                                ['unit_id', 'Объект'],
-                                ['id', '№'],
-                                ['status_id', 'Статус'],
-                                ['responsible_user_id', 'Кем добавлено'],
-                                ['received_at', 'Дата получения'],
-                                ['is_warranty', 'Гарантия']
-                            ].map(([field, label]) => (
-                                <TableCell key={field} sx={{ whiteSpace: 'nowrap' }}>
-                                    <TableSortLabel
-                                        active={sort.field === field}
-                                        direction={sortDir(field) || 'asc'}
-                                        onClick={() => toggleSort(field)}
-                                    >
-                                        {label}
-                                    </TableSortLabel>
-                                </TableCell>
-                            ))}
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {isLoading ? (
-                            [...Array(10)].map((_, i) => (
-                                <TableRow key={i}>
-                                    {Array.from({ length: 7 }).map((__, j) => (
-                                        <TableCell key={j}>
-                                            <Skeleton variant="text" width="100%" />
-                                        </TableCell>
+                                <TableBody>
+                                    {rows.map((r, idx) => (
+                                        <TableRow
+                                            key={r.id}
+                                            hover
+                                            sx={{
+                                                backgroundColor:
+                                                    idx % 2 ? 'rgba(0,0,0,.02)' : 'inherit',
+                                            }}
+                                        >
+                                            <TableCell>
+                                                {r.created
+                                                    ? dayjs(r.created).format('DD.MM.YYYY HH:mm')
+                                                    : ''}
+                                            </TableCell>
+                                            <TableCell>{r.project}</TableCell>
+                                            <TableCell>{r.unit}</TableCell>
+                                            <TableCell>{r.id}</TableCell>
+                                            <TableCell>{r.type}</TableCell>
+                                            <TableCell>{r.status}</TableCell>
+                                            <TableCell align="center">
+                                                {r.warranty ? '✓' : '✕'}
+                                            </TableCell>
+                                        </TableRow>
                                     ))}
-                                </TableRow>
-                            ))
-                        ) : tickets.length ? (
-                            tickets.map((t) => (
-                                <TableRow key={t.id} hover>
-                                    <TableCell>
-                                        {new Date(t.created_at).toLocaleString()}
-                                    </TableCell>
-                                    <TableCell>{t.unit_name}</TableCell>
-                                    <TableCell>{t.id}</TableCell>
-                                    <TableCell>{t.status_name}</TableCell>
-                                    <TableCell>{t.responsible_name}</TableCell>
-                                    <TableCell>
-                                        {t.received_at
-                                            ? new Date(
-                                                t.received_at
-                                            ).toLocaleDateString()
-                                            : '—'}
-                                    </TableCell>
-                                    <TableCell>
-                                        {t.is_warranty ? 'Да' : 'Нет'}
-                                    </TableCell>
-                                </TableRow>
-                            ))
-                        ) : (
-                            <TableRow>
-                                <TableCell colSpan={7} align="center">
-                                    Нет данных по выбранным условиям
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </Box>
-
-            {/* Snackbar ошибок */}
-            <Snackbar
-                open={sb.open}
-                autoHideDuration={6000}
-                onClose={() => setSb({ ...sb, open: false })}
-            >
-                <Alert
-                    severity="error"
-                    onClose={() => setSb({ ...sb, open: false })}
-                    sx={{ width: '100%' }}
-                >
-                    {sb.msg}
-                </Alert>
-            </Snackbar>
-        </Box>
+                                    {!rows.length && (
+                                        <TableRow>
+                                            <TableCell colSpan={7} align="center">
+                                                Нет данных
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    )}
+                </Paper>
+            </Stack>
+        </LocalizationProvider>
     );
 }
