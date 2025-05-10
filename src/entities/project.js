@@ -4,7 +4,7 @@ import {
     useMutation,
     useQueryClient,
 } from '@tanstack/react-query';
-import { supabase } from '@shared/api/supabaseClient';
+import { supabase } from '@/shared/api/supabaseClient';
 
 /* ───────── helpers ───────── */
 const normalize = (s) => s.trim();                 // CHANGE: единая нормализация

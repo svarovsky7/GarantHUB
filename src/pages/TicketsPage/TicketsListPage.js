@@ -1,23 +1,25 @@
-// src/pages/TicketsListPage/TicketsListPage.js
-//------------------------------------------------
-import React from 'react';
+// src/pages/TicketsPage/TicketsListPage.js
+// -------------------------------------------------------------
+// Перечень замечаний: выровненные фильтры, таблица без горизонт. скролла,
+// экспорт в Excel с поддержкой кириллицы (xlsx)
+// -------------------------------------------------------------
+import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
-    Box,
+    Grid,
     Stack,
     Paper,
     TextField,
-    Tooltip,
     Typography,
-    IconButton,
-    CircularProgress,
-    Autocomplete,
-    TableContainer,
+    Button,
     Table,
     TableHead,
     TableRow,
     TableCell,
     TableBody,
-    TableSortLabel,        // ⬅️ добавили
+    TablePagination,
+    Chip,
+    Container,
 } from '@mui/material';
 import {
     LocalizationProvider,
@@ -27,307 +29,311 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ru';
 
-import DownloadIcon from '@mui/icons-material/Download';
+import AddIcon        from '@mui/icons-material/Add';
+import DownloadIcon   from '@mui/icons-material/Download';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import FilterAltIcon  from '@mui/icons-material/FilterAlt';
 
-import { useTickets } from '@/entities/ticket';
-import { useProjects } from '@/entities/project';
-import { useTicketTypes } from '@/entities/ticketType';
-import { useNotify } from '@/shared/hooks/useNotify';
+import * as XLSX from 'xlsx';                       // NEW
+
+import { useProjects }       from '@/entities/project';
+import { useTicketTypes }    from '@/entities/ticketType';
+import { useTicketStatuses } from '@/entities/ticketStatus';
+import { useTickets }        from '@/entities/ticket';
+import { useNotify }         from '@/shared/hooks/useNotify';
 
 dayjs.locale('ru');
 
-/* ---------- литералы ---------- */
+/* ---------- константы ---------- */
 const warrantyOptions = [
-    { id: 'all',   label: 'Все' },
-    { id: 'true',  label: 'Да'  },
-    { id: 'false', label: 'Нет' },
+    { id: 'all',  label: 'Все' },
+    { id: true,   label: 'Да' },
+    { id: false,  label: 'Нет' },
 ];
 
-/* ---------- утилиты для сортировки ---------- */
-function descendingComparator(a, b, orderBy) {
-    if (b[orderBy] < a[orderBy]) return -1;
-    if (b[orderBy] > a[orderBy]) return 1;
-    return 0;
-}
-function getComparator(order, orderBy) {
-    return order === 'desc'
-        ? (a, b) => descendingComparator(a, b, orderBy)
-        : (a, b) => -descendingComparator(a, b, orderBy);
-}
-function stableSort(array, comparator) {
-    return array
-        .map((el, idx) => [el, idx])
-        .sort((a, b) => {
-            const cmp = comparator(a[0], b[0]);
-            if (cmp !== 0) return cmp;
-            return a[1] - b[1];
-        })
-        .map((el) => el[0]);
-}
+const headCells = [
+    { id: 'received', label: 'Дата получения' },
+    { id: 'fixed',    label: 'Дата устранения' },
+    { id: 'project',  label: 'Проект' },
+    { id: 'unit',     label: 'Объект' },
+    { id: 'id',       label: '№' },
+    { id: 'status',   label: 'Статус' },
+    { id: 'warr',     label: 'Гарантия' },
+    { id: 'author',   label: 'Кем добавлено' },
+    { id: 'type',     label: 'Тип' },
+];
 
-/* ==================================================================== */
+/* ===================================================================== */
 
 export default function TicketsListPage() {
-    const notify = useNotify();
+    const nav   = useNavigate();
+    const toast = useNotify();
 
-    /* -------- загрузка данных -------- */
-    const {
-        data: tickets = [],
-        isLoading,
-        isError,
-        error,
-    } = useTickets();
-    const { data: projects = [] } = useProjects();
-    const { data: types    = [] } = useTicketTypes();
+    /* ---------- данные ---------- */
+    const { data: tickets = [] }    = useTickets();
+    const { data: projects = [] }   = useProjects();
+    const { data: types = [] }      = useTicketTypes();
+    const { data: statuses = [] }   = useTicketStatuses();
 
-    /* -------- фильтры -------- */
-    const [dateFrom, setDateFrom] = React.useState(null);
-    const [dateTo,   setDateTo]   = React.useState(null);
-    const [project,  setProject]  = React.useState(null);
-    const [type,     setType]     = React.useState(null);
-    const [warranty, setWarranty] = React.useState('all');
+    /* ---------- фильтры ---------- */
+    const [flt, setFlt] = useState({
+        from: null, to: null, proj: '', unitQ: '',
+        warr: 'all', stat: '', type: '', num: '',
+    });
 
-    /* -------- сортировка -------- */
-    const [orderBy, setOrderBy]   = React.useState('created');
-    const [order,   setOrder]     = React.useState('desc');
+    const update = (k, v) =>
+        setFlt((p) => ({ ...p, [k]: v?.target ? v.target.value : v }));
 
-    /* -------- snackbar при ошибке -------- */
-    React.useEffect(() => {
-        if (isError) notify.error(error.message);
-    }, [isError, error, notify]);
+    const reset = () => setFlt({
+        from: null, to: null, proj: '', unitQ: '',
+        warr: 'all', stat: '', type: '', num: '',
+    });
 
-    /* ------------------------------------------------------------------ */
-    /*                        подготовка строк                            */
-    /* ------------------------------------------------------------------ */
-    const filteredTickets = React.useMemo(
-        () =>
-            tickets.filter((t) => {
-                if (dateFrom && dayjs(t.created_at).isBefore(dateFrom, 'day')) return false;
-                if (dateTo   && dayjs(t.created_at).isAfter (dateTo,   'day')) return false;
-                if (project  && t.unit?.project?.id !== project.id)            return false;
-                if (type     && t.type?.id          !== type.id)               return false;
-                if (warranty !== 'all' && t.is_warranty !== (warranty === 'true')) return false;
-                return true;
-            }),
-        [tickets, dateFrom, dateTo, project, type, warranty]
-    );
+    /* ---------- подготовка строк ---------- */
+    const rows = useMemo(() => tickets.map((t) => ({
+        id      : t.id,
+        received: t.received_at,
+        fixed   : t.fixed_at ?? '—',
+        project : t.unit?.project?.name ?? '—',
+        unit    : t.unit?.name ?? '—',
+        status  : t.status?.name ?? '—',
+        warr    : t.is_warranty ? 'Да' : 'Нет',
+        author  : t.profile?.name ?? '—',
+        type    : t.type?.name ?? '—',
+    })), [tickets]);
 
-    /** плоские строки для таблицы */
-    const rawRows = React.useMemo(
-        () =>
-            filteredTickets.map((t) => ({
-                id:       t.id,
-                created:  t.created_at ?? t.created ?? null,
-                project:  t.unit?.project?.name ?? '',
-                unit:     t.unit?.name ?? '',
-                type:     t.type?.name ?? '',
-                status:   t.status?.name ?? t.status_id ?? '',
-                warranty: t.is_warranty,
-            })),
-        [filteredTickets]
-    );
+    const filtered = useMemo(() => rows.filter((r) => {
+        if (flt.from && dayjs(r.received).isBefore(flt.from, 'day')) return false;
+        if (flt.to   && dayjs(r.received).isAfter (flt.to,   'day')) return false;
+        if (flt.proj && r.project !== flt.proj)             return false;
+        if (flt.unitQ && !r.unit.toLowerCase().includes(flt.unitQ.toLowerCase())) return false;
+        if (flt.warr !== 'all' && (flt.warr === 'true' ? 'Да' : 'Нет') !== r.warr) return false;
+        if (flt.stat && r.status !== flt.stat)             return false;
+        if (flt.type && r.type  !== flt.type)              return false;
+        if (flt.num  && !r.id.toString().includes(flt.num))return false;
+        return true;
+    }), [rows, flt]);
 
-    /* — отсортированные строки — */
-    const rows = React.useMemo(
-        () => stableSort(rawRows, getComparator(order, orderBy)),
-        [rawRows, order, orderBy]
-    );
+    /* ---------- экспорт в Excel ---------- */
+    const exportXlsx = () => {
+        const wsData = [
+            headCells.map((h) => h.label),
+            ...filtered.map((r) => headCells.map((h) => r[h.id])),
+        ];
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Tickets');
 
-    /* ------------------------------------------------------------------ */
-    /*                            экспорт CSV                             */
-    /* ------------------------------------------------------------------ */
-    const handleExport = () => {
-        const csv = [
-            'Дата;Проект;Объект;ID;Тип;Статус;Гарантия',
-            ...rows.map((r) =>
-                [
-                    r.created ? dayjs(r.created).format('DD.MM.YYYY HH:mm') : '',
-                    r.project,
-                    r.unit,
-                    r.id,
-                    r.type,
-                    r.status,
-                    r.warranty ? 'Да' : 'Нет',
-                ].join(';')
-            ),
-        ].join('\n');
+        /* автоширина столбцов */
+        const colWidths = wsData[0].map((_, c) => ({
+            wch: Math.max(...wsData.map((row) => (row[c]?.toString().length ?? 0))) + 2,
+        }));
+        ws['!cols'] = colWidths;
 
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const url  = URL.createObjectURL(blob);
-        const a    = document.createElement('a');
-        a.href = url;
-        a.download = `tickets_${dayjs().format('YYYYMMDD_HHmm')}.csv`;
-        a.click();
-        URL.revokeObjectURL(url);
-        notify.success('Экспорт завершён');
+        const fileName = `tickets_${dayjs().format('YYYYMMDD_HHmm')}.xlsx`;
+        XLSX.writeFile(wb, fileName, { bookType: 'xlsx', type: 'binary' });
+        toast.success('Excel выгружен');
     };
 
-    /* ------------------- обработчик заголовков ------------------- */
-    const createSortHandler = (property) => () => {
-        if (orderBy === property) {
-            setOrder(order === 'asc' ? 'desc' : 'asc');
-        } else {
-            setOrderBy(property);
-            setOrder('asc');
-        }
-    };
-
-    /* ------------------------------------------------------------------ */
-    /*                               UI                                   */
-    /* ------------------------------------------------------------------ */
+    /* ============================= UI ============================= */
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ru">
-            <Stack spacing={3}>
-                <Typography variant="h4" fontWeight={700}>
+            <Container maxWidth={false} sx={{ py: 3 }}>
+                <Typography variant="h4" sx={{ mb: 3, fontWeight: 700 }}>
                     Перечень замечаний
                 </Typography>
 
-                {/* ---------------- панель фильтров ---------------- */}
-                <Paper sx={{ p: 2 }}>
-                    <Stack
-                        direction={{ xs: 'column', md: 'row' }}
-                        spacing={2}
-                        useFlexGap
-                        flexWrap="wrap"
-                    >
-                        {/* ...фильтры без изменений... */}
-                        <DatePicker
-                            label="Создано с"
-                            value={dateFrom}
-                            onChange={setDateFrom}
-                            slotProps={{ textField: { size: 'small' } }}
-                        />
-                        <DatePicker
-                            label="Создано по"
-                            value={dateTo}
-                            onChange={setDateTo}
-                            slotProps={{ textField: { size: 'small' } }}
-                        />
-                        <Autocomplete
-                            options={projects}
-                            getOptionLabel={(o) => o.name}
-                            isOptionEqualToValue={(o, v) => o.id === v.id}
-                            value={project}
-                            onChange={(_, v) => setProject(v)}
-                            renderInput={(p) => (
-                                <TextField {...p} label="Проект" size="small" />
-                            )}
-                            sx={{ minWidth: 200 }}
-                        />
-                        <Autocomplete
-                            options={types}
-                            getOptionLabel={(o) => o.name}
-                            isOptionEqualToValue={(o, v) => o.id === v.id}
-                            value={type}
-                            onChange={(_, v) => setType(v)}
-                            renderInput={(p) => (
-                                <TextField {...p} label="Тип" size="small" />
-                            )}
-                            sx={{ minWidth: 200 }}
-                        />
-                        <Autocomplete
-                            options={warrantyOptions}
-                            getOptionLabel={(o) => o.label}
-                            isOptionEqualToValue={(o, v) => o.id === v.id}
-                            value={warrantyOptions.find((o) => o.id === warranty)}
-                            onChange={(_, v) => setWarranty(v?.id ?? 'all')}
-                            renderInput={(p) => (
-                                <TextField {...p} label="Гарантия" size="small" />
-                            )}
-                            sx={{ minWidth: 160 }}
-                        />
-                        <Box flexGrow={1} />
-                        <Tooltip title="Экспорт в CSV">
-              <span>
-                <IconButton onClick={handleExport} disabled={!rows.length}>
-                  <DownloadIcon />
-                </IconButton>
-              </span>
-                        </Tooltip>
+                {/* ------------------ Фильтры ------------------ */}
+                <Paper sx={{ p: 3, mb: 4, borderRadius: 2 }}>
+                    <Grid container spacing={2}>
+                        <Grid item xs={12} md={2}>
+                            <DatePicker
+                                label="Дата от"
+                                value={flt.from}
+                                onChange={(v) => update('from', v)}
+                                slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                            />
+                        </Grid>
+                        <Grid item xs={12} md={2}>
+                            <DatePicker
+                                label="Дата до"
+                                value={flt.to}
+                                onChange={(v) => update('to', v)}
+                                slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                            />
+                        </Grid>
+                        <Grid item xs={12} md={2}>
+                            <TextField
+                                label="Проект"
+                                size="small"
+                                fullWidth
+                                select
+                                SelectProps={{ native: true }}
+                                value={flt.proj}
+                                onChange={(e) => update('proj', e.target.value)}
+                            >
+                                <option value="" />
+                                {projects.map((p) => (
+                                    <option key={p.id} value={p.name}>{p.name}</option>
+                                ))}
+                            </TextField>
+                        </Grid>
+                        <Grid item xs={12} md={2}>
+                            <TextField
+                                label="Объект (поиск)"
+                                size="small"
+                                fullWidth
+                                value={flt.unitQ}
+                                onChange={(e) => update('unitQ', e.target.value)}
+                            />
+                        </Grid>
+                        <Grid item xs={12} md={2}>
+                            <TextField
+                                label="Гарантия"
+                                size="small"
+                                fullWidth
+                                select
+                                SelectProps={{ native: true }}
+                                value={flt.warr}
+                                onChange={(e) => update('warr', e.target.value)}
+                            >
+                                {warrantyOptions.map((o) => (
+                                    <option key={o.id} value={o.id}>{o.label}</option>
+                                ))}
+                            </TextField>
+                        </Grid>
+                        <Grid item xs={12} md={2}>
+                            <TextField
+                                label="Номер"
+                                size="small"
+                                fullWidth
+                                value={flt.num}
+                                onChange={(e) => update('num', e.target.value)}
+                            />
+                        </Grid>
+
+                        {/* ----- Вторая строка ----- */}
+                        <Grid item xs={12} md={2}>
+                            <TextField
+                                label="Статус"
+                                size="small"
+                                fullWidth
+                                select
+                                SelectProps={{ native: true }}
+                                value={flt.stat}
+                                onChange={(e) => update('stat', e.target.value)}
+                            >
+                                <option value="" />
+                                {statuses.map((s) => (
+                                    <option key={s.id} value={s.name}>{s.name}</option>
+                                ))}
+                            </TextField>
+                        </Grid>
+                        <Grid item xs={12} md={2}>
+                            <TextField
+                                label="Тип"
+                                size="small"
+                                fullWidth
+                                select
+                                SelectProps={{ native: true }}
+                                value={flt.type}
+                                onChange={(e) => update('type', e.target.value)}
+                            >
+                                <option value="" />
+                                {types.map((t) => (
+                                    <option key={t.id} value={t.name}>{t.name}</option>
+                                ))}
+                            </TextField>
+                        </Grid>
+                    </Grid>
+
+                    <Stack direction="row" spacing={2} sx={{ mt: 3 }} justifyContent="space-between">
+                        <Stack direction="row" spacing={1}>
+                            <Button variant="contained" startIcon={<FilterAltIcon />}>
+                                Применить
+                            </Button>
+                            <Button variant="outlined" startIcon={<RestartAltIcon />} onClick={reset}>
+                                Сбросить
+                            </Button>
+                        </Stack>
+                        <Button
+                            variant="contained"
+                            color="success"
+                            startIcon={<DownloadIcon />}
+                            onClick={exportXlsx}              /* <-- NEW */
+                            disabled={!filtered.length}
+                        >
+                            Excel
+                        </Button>
                     </Stack>
                 </Paper>
 
-                {/* ---------------- таблица ---------------- */}
-                <Paper sx={{ position: 'relative', maxHeight: 560 }}>
-                    {isLoading ? (
-                        <Stack
-                            justifyContent="center"
-                            alignItems="center"
-                            sx={{ height: 560 }}
-                        >
-                            <CircularProgress />
-                        </Stack>
-                    ) : (
-                        <TableContainer sx={{ maxHeight: 560 }}>
-                            <Table stickyHeader size="small">
-                                <TableHead>
-                                    <TableRow>
-                                        {/* ====== заголовки с сортировкой ====== */}
-                                        {[
-                                            { id: 'created',  label: 'Дата создания', align: 'left', min: 160 },
-                                            { id: 'project',  label: 'Проект',         align: 'left', min: 180 },
-                                            { id: 'unit',     label: 'Объект',         align: 'left', min: 160 },
-                                            { id: 'id',       label: '№ замечания',    align: 'left', min: 130 },
-                                            { id: 'type',     label: 'Тип',            align: 'left', min: 160 },
-                                            { id: 'status',   label: 'Статус',         align: 'left', min: 140 },
-                                            { id: 'warranty', label: 'Гарантия',       align: 'center', min: 110 },
-                                        ].map((col) => (
-                                            <TableCell
-                                                key={col.id}
-                                                sortDirection={orderBy === col.id ? order : false}
-                                                sx={{ minWidth: col.min }}
-                                                align={col.align}
-                                            >
-                                                <TableSortLabel
-                                                    active={orderBy === col.id}
-                                                    direction={orderBy === col.id ? order : 'asc'}
-                                                    onClick={createSortHandler(col.id)}
-                                                >
-                                                    {col.label}
-                                                </TableSortLabel>
-                                            </TableCell>
-                                        ))}
-                                    </TableRow>
-                                </TableHead>
+                {/* ------------------ Таблица ------------------ */}
+                <Paper sx={{ p: 2, borderRadius: 2 }}>
+                    <Stack direction="row" justifyContent="space-between" sx={{ mb: 2 }}>
+                        <Typography variant="h6">
+                            Список&nbsp;
+                            <Typography component="span" variant="subtitle2" color="text.secondary">
+                                {filtered.length}
+                            </Typography>
+                        </Typography>
+                        <Button variant="contained" startIcon={<AddIcon />} onClick={() => nav('/tickets/new')}>
+                            Новое замечание
+                        </Button>
+                    </Stack>
 
-                                <TableBody>
-                                    {rows.map((r, idx) => (
-                                        <TableRow
-                                            key={r.id}
-                                            hover
-                                            sx={{
-                                                backgroundColor:
-                                                    idx % 2 ? 'rgba(0,0,0,.02)' : 'inherit',
-                                            }}
-                                        >
-                                            <TableCell>
-                                                {r.created
-                                                    ? dayjs(r.created).format('DD.MM.YYYY HH:mm')
-                                                    : ''}
-                                            </TableCell>
-                                            <TableCell>{r.project}</TableCell>
-                                            <TableCell>{r.unit}</TableCell>
-                                            <TableCell>{r.id}</TableCell>
-                                            <TableCell>{r.type}</TableCell>
-                                            <TableCell>{r.status}</TableCell>
-                                            <TableCell align="center">
-                                                {r.warranty ? '✓' : '✕'}
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                    {!rows.length && (
-                                        <TableRow>
-                                            <TableCell colSpan={7} align="center">
-                                                Нет данных
-                                            </TableCell>
-                                        </TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                    )}
+                    <Table size="small" sx={{ width: '100%', tableLayout: 'fixed' }}>
+                        <TableHead>
+                            <TableRow>
+                                {headCells.map((h) => (
+                                    <TableCell key={h.id} sx={{ fontWeight: 600 }}>
+                                        {h.label}
+                                    </TableCell>
+                                ))}
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {filtered.map((r) => (
+                                <TableRow key={r.id} hover>
+                                    <TableCell>{r.received}</TableCell>
+                                    <TableCell>{r.fixed}</TableCell>
+                                    <TableCell sx={{ whiteSpace: 'nowrap' }}>{r.project}</TableCell>
+                                    <TableCell sx={{ whiteSpace: 'nowrap' }}>{r.unit}</TableCell>
+                                    <TableCell>{r.id}</TableCell>
+                                    <TableCell>{r.status}</TableCell>
+                                    <TableCell align="center">
+                                        <Chip
+                                            label={r.warr}
+                                            size="small"
+                                            color={r.warr === 'Да' ? 'info' : 'default'}
+                                        />
+                                    </TableCell>
+                                    <TableCell>{r.author}</TableCell>
+                                    <TableCell>{r.type}</TableCell>
+                                </TableRow>
+                            ))}
+                            {!filtered.length && (
+                                <TableRow>
+                                    <TableCell colSpan={headCells.length} align="center" sx={{ py: 4 }}>
+                                        Нет данных
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+
+                    <TablePagination
+                        rowsPerPageOptions={[10, 25, 50]}
+                        component="div"
+                        count={filtered.length}
+                        rowsPerPage={10}
+                        page={0}
+                        onPageChange={() => {}}
+                        onRowsPerPageChange={() => {}}
+                        labelRowsPerPage="Строк на странице:"
+                    />
                 </Paper>
-            </Stack>
+            </Container>
         </LocalizationProvider>
     );
 }

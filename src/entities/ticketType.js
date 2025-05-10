@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@shared/api/supabaseClient';
+import { supabase } from '@/shared/api/supabaseClient';
 
 /* SELECT */
 export const useTicketTypes = () =>

@@ -1,11 +1,15 @@
-import { supabase } from '@shared/api/supabaseClient';
+// src/entities/unit.js
+// -----------------------------------------------------------------------------
+// CRUD для объектов (квартир/помещений) + связи с жильцами
+// -----------------------------------------------------------------------------
+import { supabase } from '@/shared/api/supabaseClient';
 import {
     useQuery,
     useMutation,
     useQueryClient,
 } from '@tanstack/react-query';
 
-/* ───────── SELECT с вложенными связями ───────── */
+/* ---------- базовый SELECT ---------- */
 const SELECT = `
   id, name, building, section, floor,
   project_id,
@@ -15,7 +19,7 @@ const SELECT = `
   )
 `;
 
-/* ───────── helper ───────── */
+/* ---------- helper: отфильтровываем разрешённые поля ---------- */
 const sanitize = (obj) => {
     const allowed = ['name', 'building', 'section', 'floor', 'project_id'];
     return Object.fromEntries(
@@ -25,15 +29,16 @@ const sanitize = (obj) => {
     );
 };
 
-/* ───────────────────── READ ───────────────────── */
+/* ====================== READ ====================== */
 export const useUnits = () =>
     useQuery({
         queryKey: ['units'],
-        queryFn : async () => {
+        queryFn: async () => {
             const { data, error } = await supabase
                 .from('units')
                 .select(SELECT)
                 .order('id');
+
             if (error) throw error;
 
             return (data ?? []).map((u) => ({
@@ -46,13 +51,14 @@ export const useUnits = () =>
 export const useUnitsByProject = (projectId) =>
     useQuery({
         queryKey: ['units', projectId ?? 'all'],
-        enabled : !!projectId,
-        queryFn : async () => {
+        enabled: !!projectId,
+        queryFn: async () => {
             const { data, error } = await supabase
                 .from('units')
                 .select(SELECT)
                 .eq('project_id', projectId)
                 .order('id');
+
             if (error) throw error;
 
             return (data ?? []).map((u) => ({
@@ -65,13 +71,14 @@ export const useUnitsByProject = (projectId) =>
 export const useUnit = (unitId) =>
     useQuery({
         queryKey: ['unit', unitId],
-        enabled : !!unitId,
-        queryFn : async () => {
+        enabled: !!unitId,
+        queryFn: async () => {
             const { data, error } = await supabase
                 .from('units')
                 .select(SELECT)
                 .eq('id', unitId)
                 .single();
+
             if (error) throw error;
 
             return {
@@ -81,8 +88,9 @@ export const useUnit = (unitId) =>
         },
     });
 
-/* ───────────────────── CREATE ───────────────────── */
+/* ====================== CREATE ====================== */
 const createUnit = async (payload) => {
+    // защита от дублей (квартира + проект уникальны)
     const { data: dup } = await supabase
         .from('units')
         .select('id')
@@ -90,13 +98,16 @@ const createUnit = async (payload) => {
         .eq('name', payload.name)
         .limit(1)
         .maybeSingle();
-    if (dup) throw new Error('Объект с такой квартирой в выбранном проекте уже существует');
+
+    if (dup)
+        throw new Error('Объект с такой квартирой в выбранном проекте уже существует');
 
     const { data, error } = await supabase
         .from('units')
         .insert(sanitize(payload))
         .select(SELECT)
         .single();
+
     if (error) throw error;
 
     return { ...data, persons: [] };
@@ -110,8 +121,9 @@ export const useAddUnit = () => {
     });
 };
 
-/* ───────────────────── UPDATE ───────────────────── */
+/* ====================== UPDATE ====================== */
 const updateUnit = async ({ id, updates }) => {
+    // проверка дубликата при смене номера или проекта
     if (updates.project_id && updates.name) {
         const { data: dup } = await supabase
             .from('units')
@@ -121,6 +133,7 @@ const updateUnit = async ({ id, updates }) => {
             .neq('id', id)
             .limit(1)
             .maybeSingle();
+
         if (dup) throw new Error('Другой объект с такой квартирой уже есть');
     }
 
@@ -130,9 +143,13 @@ const updateUnit = async ({ id, updates }) => {
         .eq('id', id)
         .select(SELECT)
         .single();
+
     if (error) throw error;
 
-    return { ...data, persons: data.unit_persons?.map((l) => l.person) ?? [] };
+    return {
+        ...data,
+        persons: data.unit_persons?.map((l) => l.person) ?? [],
+    };
 };
 
 export const useUpdateUnit = () => {
@@ -143,7 +160,7 @@ export const useUpdateUnit = () => {
     });
 };
 
-/* ───────────────────── DELETE ───────────────────── */
+/* ====================== DELETE ====================== */
 export const useDeleteUnit = () => {
     const qc = useQueryClient();
     return useMutation({
