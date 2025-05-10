@@ -1,6 +1,6 @@
 // src/entities/ticket.js
 // -------------------------------------------------------------
-// CRUD тикетов + загрузка вложений в Supabase Storage
+// CRUD тикетов + загрузка вложений Supabase
 // -------------------------------------------------------------
 import { supabase } from '@/shared/api/supabaseClient';
 import {
@@ -9,22 +9,18 @@ import {
     useQueryClient,
 } from '@tanstack/react-query';
 import dayjs from 'dayjs';
-import slug from 'slugify'; // библиотека для ASCII-slug
+import slug from 'slugify';
 
-/* ---------- helper: ASCII-slug без % и юникода ---------- */
+/* ---------- util ---------- */
 const toSlug = (str) =>
-    slug(str, {
-        lower: true,  // «Ситибей 1» → «sitibey-1»
-        strict: true, // удаляет всё, что не [a-z0-9_-]
-        locale: 'ru', // корректная транслитерация кириллицы
-    });
+    slug(str, { lower: true, strict: true, locale: 'ru' });
 
-/* ======================= SELECT-строка ====================== */
-
+/* ---------- SELECT ---------- */
 export const TICKET_SELECT = `
   id,
   created_at,
   received_at,
+  fixed_at,
   title,
   description,
   is_warranty,
@@ -32,17 +28,26 @@ export const TICKET_SELECT = `
   type_id,
   project_id,
   unit_id,
+  created_by,
   unit:units (
     id, name, floor, section, building,
     project:projects ( id, name )
   ),
-  type:ticket_types ( id, name ),
-  attachments:attachments (
-    id, file_url, file_type, storage_path
-  )
+  type:ticket_types   ( id, name ),
+  status:ticket_statuses ( id, name ),
+  attachments:attachments ( id, file_url, file_type, storage_path )
 `;
 
-/* ====================== helpers ====================== */
+/* ---------- helpers ---------- */
+const getStatusIdByName = async (name) => {
+    const { data, error } = await supabase
+        .from('ticket_statuses')
+        .select('id')
+        .ilike('name', name)
+        .maybeSingle();
+    if (error) throw error;
+    return data?.id ?? null;
+};
 
 const getDefaultStatusId = async () => {
     const { data, error } = await supabase
@@ -70,13 +75,6 @@ const sanitize = (raw) => {
     );
 };
 
-/**
- * Загружает файлы в bucket `attachments`
- * @param {File[]}  files
- * @param {string}  projectName
- * @param {number}  ticketId
- * @returns {Promise<Array<{path:string, publicUrl:string, mimeType:string}>>}
- */
 const uploadAttachments = async (files, projectName, ticketId) => {
     if (!files?.length) return [];
 
@@ -90,23 +88,22 @@ const uploadAttachments = async (files, projectName, ticketId) => {
                 name,
             )}${ext}`;
 
-            const { error: uploadErr } = await bucket.upload(
-                filePath,
-                file,
-                { contentType: file.type, upsert: false },
-            );
+            const { error: uploadErr } = await bucket.upload(filePath, file, {
+                contentType: file.type,
+                upsert: false,
+            });
             if (uploadErr) throw uploadErr;
 
             const {
                 data: { publicUrl },
-            } = bucket.getPublicUrl(filePath); // ← приватный bucket → createSignedUrl
+            } = bucket.getPublicUrl(filePath);
+
             return { path: filePath, publicUrl, mimeType: file.type };
         }),
     );
 };
 
-/* ============================ CRUD =========================== */
-
+/* ---------- create ---------- */
 export const createTicket = async (payload) => {
     const { attachments = [], ...raw } = payload;
     const fields = sanitize(raw);
@@ -116,9 +113,26 @@ export const createTicket = async (payload) => {
     if (fields.is_warranty === undefined) fields.is_warranty = false;
     if (!fields.received_at)
         fields.received_at = dayjs().format('YYYY-MM-DD');
-    if (!fields.status_id) fields.status_id = await getDefaultStatusId();
 
-    /* 1. создаём запись тикета */
+    if (!fields.status_id) {
+        fields.status_id = await getStatusIdByName('новое');
+        if (!fields.status_id) {
+            console.warn('Статус «новое» не найден, беру первый');
+            fields.status_id = await getDefaultStatusId();
+            if (!fields.status_id)
+                throw new Error('Нет записей в ticket_statuses');
+        }
+    }
+
+    if (!fields.created_by) {
+        const {
+            data: { user },
+            error: uErr,
+        } = await supabase.auth.getUser();
+        if (uErr) throw uErr;
+        fields.created_by = user?.id ?? null;
+    }
+
     const { data: ticket, error } = await supabase
         .from('tickets')
         .insert(fields)
@@ -126,7 +140,6 @@ export const createTicket = async (payload) => {
         .single();
     if (error) throw error;
 
-    /* 2. загружаем вложения (если есть) */
     if (attachments.length) {
         const { data: project, error: projErr } = await supabase
             .from('projects')
@@ -141,7 +154,6 @@ export const createTicket = async (payload) => {
             ticket.id,
         );
 
-        /* 3. сохраняем метаданные */
         const rows = stored.map((f) => ({
             ticket_id   : ticket.id,
             file_url    : f.publicUrl,
@@ -157,7 +169,14 @@ export const createTicket = async (payload) => {
     return ticket;
 };
 
-/* ===================== React-Query hooks ===================== */
+/* ---------- hooks ---------- */
+export const useAddTicket = () => {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn : createTicket,
+        onSuccess  : () => qc.invalidateQueries({ queryKey: ['tickets'] }),
+    });
+};
 
 export const useTickets = (enabled = true) =>
     useQuery({
@@ -204,12 +223,3 @@ export const useTicketsByProject = (projectId, isWarranty) =>
             return data;
         },
     });
-
-export const useAddTicket = () => {
-    const qc = useQueryClient();
-    return useMutation({
-        mutationFn : createTicket,
-        onSuccess  : () =>
-            qc.invalidateQueries({ queryKey: ['tickets', 'all'], exact: true }),
-    });
-};

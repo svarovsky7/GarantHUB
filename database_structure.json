@@ -406,6 +406,13 @@
     "column_default": "CURRENT_DATE"
   },
   {
+    "table_name": "tickets",
+    "column_name": "created_by",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
     "table_name": "unit_persons",
     "column_name": "unit_id",
     "data_type": "integer",
