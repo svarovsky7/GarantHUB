@@ -1,405 +1,385 @@
-// src/features/ticket/TicketForm.js
-// -------------------------------------------------------------
-// Форма создания / регистрации замечания
-// -------------------------------------------------------------
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+// -----------------------------------------------------------------------------
+// Форма создания / редактирования замечания
+// Проект подставляется автоматически из useProjectId и не редактируется
+// -----------------------------------------------------------------------------
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { useForm, FormProvider, Controller } from 'react-hook-form';
+import {
+    Stack, TextField, Switch, Button, Divider, Autocomplete,
+    Typography, CircularProgress, Box,
+} from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ru';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
+import { useNavigate, useParams } from 'react-router-dom';
 
-import {
-    Stack,
-    TextField,
-    Button,
-    CircularProgress,
-    Autocomplete,
-    Switch,
-    FormControlLabel,
-    Skeleton,
-    LinearProgress,
-    Typography,
-    Box,
-} from '@mui/material';
-import {
-    LocalizationProvider,
-    DatePicker,
-} from '@mui/x-date-pickers';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import CloudUploadIcon   from '@mui/icons-material/CloudUpload';
-import ErrorOutlineIcon  from '@mui/icons-material/ErrorOutline';
+import { useUnitsByProject }   from '@/entities/unit';
+import { useTicketTypes }      from '@/entities/ticketType';
+import { useTicketStatuses }   from '@/entities/ticketStatus';
+import { useCreateTicket, useTicket } from '@/entities/ticket';
 
-import { useProjects }       from '@/entities/project';
-import { useUnitsByProject } from '@/entities/unit';
-import { useTicketTypes }    from '@/entities/ticketType';
-import { useTicketStatuses } from '@/entities/ticketStatus';
-import { useAddTicket }      from '@/entities/ticket';
+import { useProjectId }        from '@/shared/hooks/useProjectId';   // CHANGE: текущий проект
+import FileDropZone            from '@/shared/ui/FileDropZone';
+import AttachmentPreviewList   from '@/shared/ui/AttachmentPreviewList';
 
-import { useNotify }         from '@/shared/hooks/useNotify';
-import AttachmentPreviewList from './AttachmentPreviewList';
+/* ---------- validation ---------- */
+const schema = yup.object({
+    project_id  : yup.number().required(),
+    unit_id     : yup.number().nullable(),
+    type_id     : yup.number().required('Тип обязателен'),
+    status_id   : yup.number().required('Статус обязателен'),
+    title       : yup.string().trim().required('Заголовок обязателен').min(3),
+    description : yup.string().trim().nullable(),
+    is_warranty : yup.boolean().defined(),
+    received_at : yup.mixed()
+        .required('Дата получения обязательна')
+        .test('is-dayjs', 'Некорректная дата', v => dayjs.isDayjs(v) && v.isValid()),
+    fixed_at    : yup.mixed()
+        .nullable()
+        .test('is-dayjs-or-null', 'Некорректная дата', v => v === null || (dayjs.isDayjs(v) && v.isValid())),
+}).required();
 
-dayjs.locale('ru');
-
-/* ---------- initial form state ---------- */
-const defaultValues = {
-    project_id : '',
-    unit_id    : null,
-    type_id    : '',
-    status_id  : '',
-    title      : '',
-    description: '',
-    is_warranty: false,
-    received_at: dayjs(),
-    fixed_at   : null,
-};
-
+/* ---------- компонент ---------- */
 export default function TicketForm() {
-    const notify        = useNotify();
-    const fileInputRef  = useRef(null);          // для очистки value
+    const navigate   = useNavigate();
+    const { ticketId } = useParams();
+    const isEditMode = Boolean(ticketId);
 
-    /* ---------------- form ---------------- */
-    const {
-        control,
-        handleSubmit,
-        watch,
-        setValue,
-        reset,
-        formState: { errors, touchedFields, dirtyFields },
-    } = useForm({ defaultValues, mode: 'onTouched' });
+    const projectId = useProjectId();                         // CHANGE: выбранный в шапке проект
 
-    /* ---------------- directories ---------------- */
-    const { data: projects  = [], isLoading: projLoad, error: projErr } = useProjects();
-    const { data: types     = [], isLoading: typeLoad, error: typeErr } = useTicketTypes();
-    const { data: statuses  = [], isLoading: statLoad, error: statErr } = useTicketStatuses();
+    /* ---------- запросы ---------- */
+    const { data: ticket,   isLoading: isLoadingTicket,
+        updateAsync: updateTicket, updating: isUpdatingTicket } = useTicket(ticketId);
 
-    const projectId = watch('project_id');
-    const { data: units = [], isLoading: unitLoad, error: unitErr } =
-        useUnitsByProject(projectId);
+    const { data: types    = [], isLoading: isLoadingTypes    } = useTicketTypes();
+    const { data: statuses = [], isLoading: isLoadingStatuses } = useTicketStatuses();
+    const { data: units    = [], isLoading: isLoadingUnits    } = useUnitsByProject(projectId, !!projectId);
 
+    /* ---------- RHF ---------- */
+    const methods = useForm({
+        resolver      : yupResolver(schema),
+        defaultValues : {
+            project_id  : projectId,                          // CHANGE: сразу записываем projectId
+            unit_id     : null,
+            type_id     : null,
+            status_id   : null,
+            title       : '',
+            description : '',
+            is_warranty : false,
+            received_at : dayjs(),
+            fixed_at    : null,
+        },
+    });
+    const { control, reset, setValue, handleSubmit,
+        formState: { errors, isSubmitting } } = methods;
+
+    /* --- подгружаем данные билета в режимe редактирования ----------------- */
     useEffect(() => {
-        projErr && notify.error(`Ошибка проектов: ${projErr.message}`);
-        typeErr && notify.error(`Ошибка типов: ${typeErr.message}`);
-        statErr && notify.error(`Ошибка статусов: ${statErr.message}`);
-        unitErr && projectId && notify.error(`Ошибка объектов: ${unitErr.message}`);
-    }, [projErr, typeErr, statErr, unitErr, projectId, notify]);
+        if (isEditMode && ticket) {
+            reset({
+                project_id  : ticket.projectId,               // read-only, но нужен для валидации
+                unit_id     : ticket.unitId ?? null,
+                type_id     : ticket.typeId,
+                status_id   : ticket.statusId,
+                title       : ticket.title,
+                description : ticket.description ?? '',
+                is_warranty : ticket.isWarranty,
+                received_at : ticket.receivedAt,
+                fixed_at    : ticket.fixedAt,
+            });
+            setRemoteFiles(ticket.attachments ?? []);
+        }
+    }, [isEditMode, ticket, reset]);
 
-    /* ---------------- attachments ---------------- */
-    const [files, setFiles] = useState([]);
+    /* --- при переключении проекта в шапке обновляем скрытое поле ---------- */
+    useEffect(() => {
+        setValue('project_id', projectId);
+    }, [projectId, setValue]);
 
-    const appendFiles = useCallback((fileList) => {
-        if (!fileList?.length) return;
-        setFiles((prev) => {
-            const map = new Map(prev.map((f) => [`${f.name}-${f.size}`, f]));
-            Array.from(fileList).forEach((f) => map.set(`${f.name}-${f.size}`, f));
-            return Array.from(map.values());
-        });
-        // разрешить повторно выбрать этот же файл
-        if (fileInputRef.current) fileInputRef.current.value = '';
+    /* ---------- вложения ---------- */
+    const [remoteFiles, setRemoteFiles] = useState([]);       // файлы уже на сервере
+    const [newFiles,    setNewFiles]    = useState([]);       // новые файлы
+
+    const handleDropFiles = useCallback((files) => {
+        setNewFiles(prev => [...prev, ...files]);
     }, []);
 
-    const removeFile = useCallback(
-        (idx) => setFiles((prev) => prev.filter((_, i) => i !== idx)),
-        [],
-    );
+    const handleRemoveNewFile    = (idx)   => setNewFiles(prev => prev.filter((_, i) => i !== idx));
+    const handleRemoveRemoteFile = (id)    => setRemoteFiles(prev => prev.filter(f => f.id !== id));
 
-    /* ---------- default status («новое» или первый) ---------- */
-    useEffect(() => {
-        if (statuses.length && !watch('status_id') && !touchedFields.status_id) {
-            const def = statuses.find((s) => s.name?.toLowerCase() === 'новое') ?? statuses[0];
-            def && setValue('status_id', def.id, { shouldValidate: true });
-        }
-    }, [statuses, watch, touchedFields.status_id, setValue]);
+    /* ---------- submit ---------- */
+    const { mutateAsync: createTicket, isPending: isCreatingTicket } = useCreateTicket();
 
-    /* ---------------- mutation ---------------- */
-    const { mutateAsync: addTicket, isPending: isAdding } = useAddTicket();
+    const serialize = (data) => ({
+        project_id  : data.project_id,
+        unit_id     : data.unit_id ?? null,
+        type_id     : data.type_id,
+        status_id   : data.status_id,
+        title       : data.title.trim(),
+        description : data.description?.trim() || null,
+        is_warranty : data.is_warranty,
+        received_at : dayjs(data.received_at).format('YYYY-MM-DD'),
+        fixed_at    : data.fixed_at ? dayjs(data.fixed_at).format('YYYY-MM-DD') : null,
+    });
 
     const onSubmit = async (data) => {
-        if (!data.project_id) { notify.error('Выберите проект'); return; }
-        if (!data.unit_id)    { notify.error('Выберите объект'); return; }
+        const dto = serialize(data);
 
-        try {
-            await addTicket({
-                ...data,
-                project_id : Number(data.project_id),
-                unit_id    : Number(data.unit_id),
-                type_id    : Number(data.type_id),
-                status_id  : Number(data.status_id),
-                is_warranty: !!data.is_warranty,
-                received_at: dayjs(data.received_at).format('YYYY-MM-DD'),
-                fixed_at   : data.fixed_at ? dayjs(data.fixed_at).format('YYYY-MM-DD') : null,
-                attachments: files,
+        if (isEditMode) {
+            const removedIds = ticket.attachments
+                .filter(f => !remoteFiles.some(r => r.id === f.id))
+                .map(f => f.id);
+
+            await updateTicket({
+                id: Number(ticketId),
+                ...dto,
+                newAttachments      : newFiles,
+                removedAttachmentIds: removedIds,
             });
-            notify.success('Замечание сохранено');
-            reset({ ...defaultValues, project_id: data.project_id });
-            setFiles([]);
-        } catch (e) {
-            console.error(e);
-            notify.error(`Ошибка: ${e.message}`);
+        } else {
+            await createTicket({ ...dto, attachments: newFiles });
         }
+        navigate('/tickets');
     };
 
-    /* ---------- clear unit when project changes ---------- */
-    useEffect(() => {
-        if (dirtyFields.project_id) setValue('unit_id', null, { shouldValidate: true });
-    }, [projectId, dirtyFields.project_id, setValue]);
+    /* ---------- loaders ---------- */
+    const isLoading = (isEditMode && isLoadingTicket) ||
+        isLoadingTypes || isLoadingStatuses ||
+        (!isEditMode && !projectId) ||
+        (projectId && isLoadingUnits);
 
-    /* ====================== UI ====================== */
+    if (isLoading) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 240 }}>
+                <CircularProgress />
+            </Box>
+        );
+    }
+
+    /* ---------- UI ---------- */
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ru">
-            <form onSubmit={handleSubmit(onSubmit)} noValidate>
-                {isAdding && (
-                    <LinearProgress
-                        sx={{ mb: 2, position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1201 }}
-                    />
-                )}
+            <FormProvider {...methods}>
+                <form onSubmit={handleSubmit(onSubmit)} noValidate>
+                    <Stack spacing={3}>
 
-                <Stack spacing={3} sx={{ maxWidth: 720, mx: 'auto', p: { xs: 2, md: 3 } }}>
-                    {/* -------- Проект -------- */}
-                    {projLoad ? (
-                        <Skeleton variant="rectangular" height={56} />
-                    ) : (
-                        <Controller
-                            name="project_id"
-                            control={control}
-                            rules={{ required: 'Проект обязателен' }}
-                            render={({ field }) => (
-                                <Autocomplete
-                                    {...field}
-                                    options={projects}
-                                    getOptionLabel={(p) => p?.name || ''}
-                                    isOptionEqualToValue={(o, v) => o.id === v.id}
-                                    value={projects.find((p) => p.id === field.value) || null}
-                                    onChange={(_, v) => field.onChange(v?.id ?? '')}
-                                    disabled={isAdding}
-                                    renderInput={(params) => (
-                                        <TextField
-                                            {...params}
-                                            label="Проект"
-                                            required
-                                            error={!!errors.project_id}
-                                            helperText={errors.project_id?.message}
-                                        />
-                                    )}
-                                />
-                            )}
-                        />
-                    )}
-
-                    {/* -------- Объект -------- */}
-                    {unitLoad && projectId ? (
-                        <Skeleton variant="rectangular" height={56} />
-                    ) : (
+                        {/* Unit ----------------------------------------------------------- */}
                         <Controller
                             name="unit_id"
                             control={control}
-                            rules={{ required: 'Объект обязателен' }}
-                            render={({ field }) => (
+                            render={({ field, fieldState: { error } }) => (
                                 <Autocomplete
                                     {...field}
                                     options={units}
-                                    getOptionLabel={(u) => u?.name || ''}
-                                    isOptionEqualToValue={(o, v) => o.id === v.id}
-                                    value={units.find((u) => u.id === field.value) || null}
-                                    onChange={(_, v) => field.onChange(v?.id ?? null)}
-                                    disabled={isAdding}
+                                    loading={isLoadingUnits}
+                                    getOptionLabel={(o) => o?.name ?? ''}
+                                    isOptionEqualToValue={(o, v) => o?.id === v?.id}
+                                    onChange={(_, v) => field.onChange(v ? v.id : null)}
+                                    value={units.find(u => u.id === field.value) || null}
                                     renderInput={(params) => (
                                         <TextField
                                             {...params}
                                             label="Объект"
-                                            required
-                                            error={!!errors.unit_id}
-                                            helperText={errors.unit_id?.message}
+                                            error={!!error}
+                                            helperText={error?.message}
+                                            InputProps={{
+                                                ...params.InputProps,
+                                                endAdornment: (
+                                                    <>
+                                                        {isLoadingUnits && <CircularProgress size={20} />}
+                                                        {params.InputProps.endAdornment}
+                                                    </>
+                                                ),
+                                            }}
                                         />
                                     )}
                                 />
                             )}
                         />
-                    )}
 
-                    {/* -------- Дата получения -------- */}
-                    <Controller
-                        name="received_at"
-                        control={control}
-                        rules={{ required: true }}
-                        render={({ field }) => (
-                            <DatePicker
-                                {...field}
-                                label="Дата получения"
-                                format="DD.MM.YYYY"
-                                disabled={isAdding}
-                                slotProps={{ textField: { required: true, fullWidth: true } }}
-                            />
-                        )}
-                    />
-
-                    {/* -------- Дата устранения -------- */}
-                    <Controller
-                        name="fixed_at"
-                        control={control}
-                        render={({ field }) => (
-                            <DatePicker
-                                {...field}
-                                label="Дата устранения (план/факт)"
-                                format="DD.MM.YYYY"
-                                disabled={isAdding}
-                                slotProps={{ textField: { fullWidth: true } }}
-                            />
-                        )}
-                    />
-
-                    {/* -------- Тип -------- */}
-                    {typeLoad ? (
-                        <Skeleton variant="rectangular" height={56} />
-                    ) : (
+                        {/* Type ----------------------------------------------------------- */}
                         <Controller
                             name="type_id"
                             control={control}
-                            rules={{ required: 'Тип обязателен' }}
-                            render={({ field }) => (
+                            render={({ field, fieldState: { error } }) => (
                                 <Autocomplete
                                     {...field}
                                     options={types}
-                                    getOptionLabel={(t) => t?.name || ''}
-                                    isOptionEqualToValue={(o, v) => o.id === v.id}
-                                    value={types.find((t) => t.id === field.value) || null}
-                                    onChange={(_, v) => field.onChange(v?.id ?? '')}
-                                    disabled={isAdding}
+                                    loading={isLoadingTypes}
+                                    getOptionLabel={(o) => o?.name ?? ''}
+                                    isOptionEqualToValue={(o, v) => o?.id === v?.id}
+                                    onChange={(_, v) => field.onChange(v ? v.id : null)}
+                                    value={types.find(t => t.id === field.value) || null}
                                     renderInput={(params) => (
                                         <TextField
                                             {...params}
                                             label="Тип замечания"
                                             required
-                                            error={!!errors.type_id}
-                                            helperText={errors.type_id?.message}
+                                            error={!!error}
+                                            helperText={error?.message}
+                                            InputProps={{
+                                                ...params.InputProps,
+                                                endAdornment: (
+                                                    <>
+                                                        {isLoadingTypes && <CircularProgress size={20} />}
+                                                        {params.InputProps.endAdornment}
+                                                    </>
+                                                ),
+                                            }}
                                         />
                                     )}
                                 />
                             )}
                         />
-                    )}
 
-                    {/* -------- Статус -------- */}
-                    {statLoad ? (
-                        <Skeleton variant="rectangular" height={56} />
-                    ) : (
+                        {/* Status --------------------------------------------------------- */}
                         <Controller
                             name="status_id"
                             control={control}
-                            rules={{ required: 'Статус обязателен' }}
-                            render={({ field }) => (
+                            render={({ field, fieldState: { error } }) => (
                                 <Autocomplete
                                     {...field}
                                     options={statuses}
-                                    getOptionLabel={(s) => s?.name || ''}
-                                    isOptionEqualToValue={(o, v) => o.id === v.id}
-                                    value={statuses.find((s) => s.id === field.value) || null}
-                                    onChange={(_, v) => field.onChange(v?.id ?? '')}
-                                    disabled={isAdding}
+                                    loading={isLoadingStatuses}
+                                    getOptionLabel={(o) => o?.name ?? ''}
+                                    isOptionEqualToValue={(o, v) => o?.id === v?.id}
+                                    onChange={(_, v) => field.onChange(v ? v.id : null)}
+                                    value={statuses.find(s => s.id === field.value) || null}
                                     renderInput={(params) => (
                                         <TextField
                                             {...params}
                                             label="Статус"
                                             required
-                                            error={!!errors.status_id}
-                                            helperText={errors.status_id?.message}
+                                            error={!!error}
+                                            helperText={error?.message}
+                                            InputProps={{
+                                                ...params.InputProps,
+                                                endAdornment: (
+                                                    <>
+                                                        {isLoadingStatuses && <CircularProgress size={20} />}
+                                                        {params.InputProps.endAdornment}
+                                                    </>
+                                                ),
+                                            }}
                                         />
                                     )}
                                 />
                             )}
                         />
-                    )}
 
-                    {/* -------- Гарантия -------- */}
-                    <Controller
-                        name="is_warranty"
-                        control={control}
-                        render={({ field }) => (
-                            <FormControlLabel
-                                control={<Switch {...field} checked={field.value} disabled={isAdding} />}
-                                label="Гарантийный случай"
-                            />
-                        )}
-                    />
+                        {/* Dates ---------------------------------------------------------- */}
+                        <Controller
+                            name="received_at"
+                            control={control}
+                            render={({ field, fieldState: { error } }) => (
+                                <DatePicker
+                                    label="Дата получения *"
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    slotProps={{
+                                        textField: { fullWidth: true, required: true, error: !!error, helperText: error?.message },
+                                    }}
+                                />
+                            )}
+                        />
+                        <Controller
+                            name="fixed_at"
+                            control={control}
+                            render={({ field, fieldState: { error } }) => (
+                                <DatePicker
+                                    label="Дата устранения"
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    slotProps={{
+                                        textField: { fullWidth: true, error: !!error, helperText: error?.message },
+                                    }}
+                                />
+                            )}
+                        />
 
-                    {/* -------- Заголовок -------- */}
-                    <Controller
-                        name="title"
-                        control={control}
-                        render={({ field }) => (
-                            <TextField {...field} label="Краткий текст" fullWidth disabled={isAdding} />
-                        )}
-                    />
+                        {/* Warranty flag -------------------------------------------------- */}
+                        <Controller
+                            name="is_warranty"
+                            control={control}
+                            render={({ field }) => (
+                                <Stack direction="row" alignItems="center" spacing={1}>
+                                    <Switch {...field} checked={field.value} />
+                                    <Typography onClick={() => field.onChange(!field.value)} sx={{ cursor: 'pointer' }}>
+                                        Гарантийный случай
+                                    </Typography>
+                                </Stack>
+                            )}
+                        />
 
-                    {/* -------- Описание -------- */}
-                    <Controller
-                        name="description"
-                        control={control}
-                        render={({ field }) => (
-                            <TextField
-                                {...field}
-                                label="Подробное описание"
-                                multiline
-                                rows={4}
-                                fullWidth
-                                disabled={isAdding}
-                            />
-                        )}
-                    />
+                        {/* Title / Description ------------------------------------------- */}
+                        <Controller
+                            name="title"
+                            control={control}
+                            render={({ field, fieldState: { error } }) => (
+                                <TextField
+                                    {...field}
+                                    label="Краткое описание"
+                                    required
+                                    fullWidth
+                                    error={!!error}
+                                    helperText={error?.message}
+                                />
+                            )}
+                        />
+                        <Controller
+                            name="description"
+                            control={control}
+                            render={({ field, fieldState: { error } }) => (
+                                <TextField
+                                    {...field}
+                                    label="Подробное описание"
+                                    multiline
+                                    minRows={4}
+                                    fullWidth
+                                    error={!!error}
+                                    helperText={error?.message}
+                                />
+                            )}
+                        />
 
-                    {/* -------- Files -------- */}
-                    <Box sx={{ border: '1px dashed grey', p: 2, borderRadius: 1, textAlign: 'center' }}>
-                        <Button
-                            variant="outlined"
-                            component="label"
-                            startIcon={<CloudUploadIcon />}
-                            disabled={isAdding}
-                            fullWidth
-                        >
-                            Прикрепить файлы
-                            <input
-                                ref={fileInputRef}
-                                hidden
-                                multiple
-                                type="file"
-                                onChange={(e) => appendFiles(e.target.files)}
-                            />
-                        </Button>
-                    </Box>
+                        {/* Attachments ---------------------------------------------------- */}
+                        <Divider />
+                        <Typography variant="h6">Вложения</Typography>
+                        <FileDropZone onFiles={handleDropFiles} />
+                        <AttachmentPreviewList
+                            remoteFiles={remoteFiles}
+                            newFiles={newFiles}
+                            onRemoveRemote={handleRemoveRemoteFile}
+                            onRemoveNew={handleRemoveNewFile}
+                        />
 
-                    <AttachmentPreviewList files={files} onRemove={removeFile} />
-
-                    {/* -------- Actions -------- */}
-                    <Stack direction="row" justifyContent="flex-end" spacing={2}>
-                        <Button
-                            variant="outlined"
-                            onClick={() => {
-                                reset(defaultValues);
-                                setFiles([]);
-                            }}
-                            disabled={isAdding}
-                        >
-                            Очистить
-                        </Button>
-                        <Button
-                            type="submit"
-                            variant="contained"
-                            disabled={isAdding}
-                            startIcon={isAdding && <CircularProgress size={18} color="inherit" />}
-                        >
-                            {isAdding ? 'Сохранение…' : 'Сохранить'}
-                        </Button>
+                        {/* Buttons -------------------------------------------------------- */}
+                        <Stack direction="row" spacing={2} justifyContent="flex-end">
+                            <Button
+                                type="submit"
+                                variant="contained"
+                                disabled={isSubmitting || isCreatingTicket || isUpdatingTicket}
+                            >
+                                {(isSubmitting || isCreatingTicket || isUpdatingTicket)
+                                    ? <CircularProgress size={24} sx={{ color: 'white' }} />
+                                    : isEditMode ? 'Сохранить' : 'Создать'}
+                            </Button>
+                            <Button
+                                variant="outlined"
+                                color="inherit"
+                                onClick={() => navigate('/tickets')}
+                                disabled={isSubmitting || isCreatingTicket || isUpdatingTicket}
+                            >
+                                Отмена
+                            </Button>
+                        </Stack>
                     </Stack>
-
-                    {/* -------- summary error -------- */}
-                    {Object.keys(errors).length > 0 && !isAdding && (
-                        <Typography
-                            color="error"
-                            sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
-                        >
-                            <ErrorOutlineIcon fontSize="small" /> Пожалуйста, исправьте ошибки формы
-                        </Typography>
-                    )}
-                </Stack>
-            </form>
+                </form>
+            </FormProvider>
         </LocalizationProvider>
     );
 }

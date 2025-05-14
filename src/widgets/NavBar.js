@@ -1,16 +1,24 @@
-// src/widgets/NavBar.js
-import React from 'react';
-import { Link as RouterLink } from 'react-router-dom';
-import { AppBar, Toolbar, Typography, Button } from '@mui/material';
-import LogoutIcon from '@mui/icons-material/Logout';
+// -----------------------------------------------------------------------------
+// Навигационная панель – добавлено выпадающее меню проектов
+// -----------------------------------------------------------------------------
+import React                     from 'react';
+import { Link as RouterLink }    from 'react-router-dom';
+import {
+    AppBar, Toolbar, Typography, Button,
+    Box, FormControl, Select, MenuItem, CircularProgress,
+} from '@mui/material';
+import LogoutIcon  from '@mui/icons-material/Logout';
 
-import { supabase }     from '@shared/api/supabaseClient';
-import { useAuthStore } from '@shared/store/authStore';
+import { supabase }      from '@/shared/api/supabaseClient';
+import { useAuthStore }  from '@/shared/store/authStore';
+import { useProjects }   from '@/entities/project';
 
 const NavBar = () => {
-    const profile    = useAuthStore((s) => s.profile);
-    const setProfile = useAuthStore((s) => s.setProfile);
-    const isAdmin    = profile?.role === 'ADMIN';
+    const profile      = useAuthStore((s) => s.profile);
+    const setProfile   = useAuthStore((s) => s.setProfile);
+    const setProjectId = useAuthStore((s) => s.setProjectId);
+
+    const { data: projects = [], isPending } = useProjects();
 
     const logout = async () => {
         await supabase.auth.signOut();
@@ -20,7 +28,7 @@ const NavBar = () => {
     return (
         <AppBar position="static">
             <Toolbar sx={{ gap: 2 }}>
-                {/* Логотип / переход на главную */}
+                {/* --- логотип --- */}
                 <Typography
                     variant="h6"
                     component={RouterLink}
@@ -31,58 +39,74 @@ const NavBar = () => {
                     Garantie&nbsp;Hub
                 </Typography>
 
-                {/* Основная навигация */}
-                <Button color="inherit" component={RouterLink} to="/units">
-                    Объекты
+                {/* --- навигация --- */}
+                <Button color="inherit" component={RouterLink} to="/stats-go">
+                    Статистика
                 </Button>
-
+                <Button color="inherit" component={RouterLink} to="/tickets/new">
+                    Добавить&nbsp;замечание
+                </Button>
                 <Button color="inherit" component={RouterLink} to="/tickets">
-                    Замечания
+                    Таблица&nbsp;замечаний
                 </Button>
-
-                {/* CHANGE: прямая ссылка на новую страницу перечня */}
-                <Button
-                    color="inherit"
-                    component={RouterLink}
-                    to="/tickets/list"
-                >
-                    Перечень&nbsp;замечаний
+                <Button color="inherit" component={RouterLink} to="/litigations">
+                    Судебные&nbsp;дела
                 </Button>
-
-                <Button
-                    color="inherit"
-                    component={RouterLink}
-                    to="/tickets/new"
-                >
-                    Новое&nbsp;замечание
-                </Button>
-
-                {isAdmin && (
-                    <Button
-                        color="inherit"
-                        component={RouterLink}
-                        to="/admin"
-                    >
+                {profile?.role === 'ADMIN' && (
+                    <Button color="inherit" component={RouterLink} to="/admin">
                         Администрирование
                     </Button>
                 )}
 
-                {/* гибкий отступ, чтобы кнопки справа «прилипли» к краю */}
+                {/* гибкий отступ – прижимаем профиль к правому краю */}
                 <span style={{ flexGrow: 1 }} />
 
+                {/* --- профиль + выбор проекта + выход --- */}
                 {profile && (
-                    <>
-                        <Typography variant="body2" sx={{ mr: 2 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', mr: 2 }}>
+                        <Typography variant="body2">
                             {profile.name ?? profile.email}
                         </Typography>
-                        <Button
-                            color="inherit"
-                            startIcon={<LogoutIcon />}
-                            onClick={logout}
-                        >
-                            Выйти
-                        </Button>
-                    </>
+
+                        {/* ------------------------------------------------------------------
+                           CHANGE: выпадающий список проектов.
+                           • Skeleton-индикатор при первой загрузке
+                           • onChange → useAuthStore.setProjectId → триггерит глобальный ре-рендер
+                           ------------------------------------------------------------------ */}
+                        {isPending ? (
+                            <CircularProgress size={14} sx={{ mt: .5 }} />
+                        ) : (
+                            <FormControl variant="standard" size="small">
+                                <Select
+                                    value={profile.project_id ?? ''}
+                                    onChange={(e) => setProjectId(e.target.value)}
+                                    displayEmpty
+                                    sx={{
+                                        color: 'inherit',
+                                        fontSize: 12,
+                                        '& .MuiSelect-icon': { color: 'inherit' },
+                                        '&:before, &:after': { borderBottomColor: 'rgba(255,255,255,0.5)' },
+                                    }}
+                                >
+                                    {projects.map((p) => (
+                                        <MenuItem key={p.id} value={p.id}>
+                                            {p.name}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        )}
+                    </Box>
+                )}
+
+                {profile && (
+                    <Button
+                        color="inherit"
+                        startIcon={<LogoutIcon />}
+                        onClick={logout}
+                    >
+                        Выйти
+                    </Button>
                 )}
             </Toolbar>
         </AppBar>

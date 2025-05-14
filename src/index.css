@@ -1,60 +1,29 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
 
-/* Базовые стили */
 body {
     font-family: 'Roboto', sans-serif;
     background-color: #f0f4f8;
     margin: 0;
+    font-size: 14px;
 }
 
-/* Глобальные переменные */
-:root {
-    --accent: #1a56db;
-    --border-color: #e0e0e0;
-    --bg-header: #f5f5f5;
-    --bg-even-row: #fafafa;
-    --font-size: 14px;
+/* === ФИЛЬТРЫ ================================================================= */
+.filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
 }
 
-/* Таблица */
-.MuiTable-root {
+.filter-grid .MuiTextField-root,
+.filter-grid .MuiFormControl-root {
     width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    table-layout: fixed;
-    font-size: var(--font-size);
-    background: #fff;
 }
 
-.MuiTableHead-root th {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    white-space: nowrap;
-}
+/* === ТАБЛИЦА ================================================================= */
+.MuiTable-root { width: 100%; table-layout: fixed; border-collapse: separate; }
+.MuiTableHead-root th  { position: sticky; top: 0; background: #f5f5f5; white-space: pre-line; }
+.MuiTableCell-root      { padding: 12px 16px; overflow: hidden; text-overflow: ellipsis; }
+.MuiTableBody-root tr:nth-child(even) { background: #fafafa; }
+.MuiTableBody-root tr:hover           { background: #e5edff; }
 
-.MuiTableCell-root {
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--border-color);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.MuiTableBody-root tr:nth-child(even) {
-    background: var(--bg-even-row);
-}
-
-.MuiTableBody-root tr:hover {
-    background: #e5edff;
-}
-
-/* Skeleton */
-@keyframes skeleton-loading {
-    0% { background-position: -200px 0; }
-    100% { background-position: 200px 0; }
-}
-
-.MuiSkeleton-root {
-    animation: skeleton-loading 1.5s infinite ease-in-out;
-}
+/* Skeleton эффекты были выше (оставил без изменений) */

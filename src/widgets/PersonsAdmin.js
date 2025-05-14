@@ -1,17 +1,14 @@
 // src/widgets/PersonsAdmin.js
-// -------------------------------------------------------------
-// CRUD-таблица физлиц
-// -------------------------------------------------------------
+// -----------------------------------------------------------------------------
+// CRUD-таблица физлиц + встроенная форма добавления/редактирования
+// -----------------------------------------------------------------------------
 import React, { useState } from 'react';
 import { GridActionsCellItem } from '@mui/x-data-grid';
 import EditIcon   from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 
-import {
-    usePersons,
-    useDeletePerson,
-} from '@/entities/person';
-import { useProjects } from '@/entities/project';
+import { usePersons, useDeletePerson } from '@/entities/person';
+import { useProjects }                from '@/entities/project';
 
 import PersonForm    from '@/features/person/PersonForm';
 import AdminDataGrid from '@/shared/ui/AdminDataGrid';
@@ -21,47 +18,48 @@ export default function PersonsAdmin() {
     const notify = useNotify();
 
     /* --- данные --- */
-    const { data: persons  = [], isPending } = usePersons();
-    const { data: projects = [] }            = useProjects();
+    const { data: persons = [], isPending } = usePersons();
+    const { data: projects = [] }           = useProjects();
 
     const remove = useDeletePerson();
 
-    const [modal, setModal] = useState(null); // { mode:'add'|'edit', data }
+    /* --- state inline-формы --- */
+    // {} → add, { initialData:row } → edit
+    const [form, setForm] = useState(null);
 
     /* быстрый поиск имени проекта */
-    const nameById = (id) =>
-        projects.find((p) => p.id === id)?.name ?? '—';
+    const nameById = (id) => projects.find((p) => p.id === id)?.name ?? '—';
 
     /* ---- колонки ---- */
     const columns = [
         { field: 'id', headerName: 'ID', width: 80 },
         {
-            field     : 'project_name',
+            field: 'project_name',
             headerName: 'Проект',
-            flex      : 1,
+            flex: 1,
             renderCell: ({ row }) =>
                 row?.project?.name
                 ?? (Array.isArray(row.project) ? row.project[0]?.name : null)
                 ?? nameById(row.project_id),
-            sortable  : false,
+            sortable: false,
             filterable: false,
         },
         { field: 'full_name', headerName: 'ФИО', flex: 1 },
         { field: 'phone',     headerName: 'Телефон', width: 160 },
         { field: 'email',     headerName: 'E-mail',  flex: 1 },
         {
-            field : 'actions',
-            type  : 'actions',
-            width : 110,
+            field: 'actions',
+            type: 'actions',
+            width: 110,
             getActions: ({ row }) => [
                 <GridActionsCellItem
                     key="edit"
                     icon={<EditIcon />}
                     label="Редактировать"
-                    onClick={() => setModal({ mode: 'edit', data: row })}
+                    onClick={() => setForm({ initialData: row })}
                 />,
                 <GridActionsCellItem
-                    key="del"
+                    key="delete"
                     icon={<DeleteIcon color="error" />}
                     label="Удалить"
                     onClick={() => {
@@ -77,21 +75,19 @@ export default function PersonsAdmin() {
     ];
 
     /* ---- helpers ---- */
-    const close = () => setModal(null);
-    const ok    = (msg) => { close(); notify.success(msg); };
+    const closeForm = () => setForm(null);
+    const ok        = (msg) => { closeForm(); notify.success(msg); };
 
     /* ---- UI ---- */
     return (
         <>
-            {modal?.mode === 'add' && (
-                <PersonForm onSuccess={() => ok('Запись создана')} onCancel={close} />
-            )}
-
-            {modal?.mode === 'edit' && (
+            {form && (
                 <PersonForm
-                    initialData={modal.data}
-                    onSuccess={() => ok('Запись обновлена')}
-                    onCancel={close}
+                    initialData={form.initialData}
+                    onSuccess={() =>
+                        ok(form.initialData ? 'Запись обновлена' : 'Запись создана')
+                    }
+                    onCancel={closeForm}
                 />
             )}
 
@@ -100,7 +96,7 @@ export default function PersonsAdmin() {
                 rows={persons}
                 columns={columns}
                 loading={isPending}
-                onAdd={() => setModal({ mode: 'add' })}
+                onAdd={() => setForm({})}
             />
         </>
     );

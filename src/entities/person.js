@@ -1,87 +1,118 @@
-/* entities/person.js
- * CRUD-хуки для таблицы persons.
- */
-import { supabase } from '@shared/api/supabaseClient';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+// src/entities/person.js
+// -----------------------------------------------------------------------------
+// CRUD-API для persons с автоматической фильтрацией по текущему project_id
+// -----------------------------------------------------------------------------
+/* eslint-disable import/prefer-default-export */
 
-/* поля, которые всегда выбираем */
-const FIELDS =
-    'id, project_id, full_name, phone, email, project:projects ( id, name )';
+import { supabase } from '@/shared/api/supabaseClient';
+import { useProjectId } from '@/shared/hooks/useProjectId';
+import {
+    useQuery,
+    useMutation,
+    useQueryClient,
+} from '@tanstack/react-query';
 
-/* '' → null, trim full_name */
-const sanitize = (o) =>
+/** Поля, которые всегда запрашиваем */
+const FIELDS = `
+  id, project_id, full_name, phone, email,
+  project:projects ( id, name )
+`;
+
+/* -------------------------------------------------------------------------- */
+/*                                 helpers                                    */
+/* -------------------------------------------------------------------------- */
+
+/** trim + ''→null */
+const sanitize = (obj) =>
     Object.fromEntries(
-        Object.entries(o)
-            .filter(([k]) =>
-                ['project_id', 'full_name', 'phone', 'email'].includes(k),
-            )
-            .map(([k, v]) => [
-                k,
-                k === 'full_name' ? v.trim() : v === '' ? null : v,
-            ]),
+        Object.entries(obj).map(([k, v]) => [
+            k,
+            typeof v === 'string' ? v.trim() || null : v,
+        ]),
     );
 
-/* ───────────────────── duplicate helper ───────────────────── */
+/** Проверка дубликатов ФИО внутри проекта */
 const isDuplicate = async ({ project_id, full_name }, excludeId = null) => {
-    const { data } = await supabase
-        .from('persons')
-        .select('id', { head: true })                     // быстрый EXISTS
-        .eq('project_id', project_id)
-        .filter('lower(full_name)', 'eq', full_name.trim().toLowerCase())
-        .neq('id', excludeId);
+    const fio = (full_name ?? '').trim();
 
-    return !!data;                                     // true ⇢ дубль есть
+    let q = supabase
+        .from('persons')
+        .select('id', { head: true })
+        .eq('project_id', project_id)
+        .eq('full_name', fio);
+
+    if (excludeId != null) q = q.neq('id', excludeId);
+
+    const { data, error } = await q;
+    if (error && error.code !== '406') throw error; // 406: rows not found
+
+    return !!data;
 };
 
-/* ───────────────────────── READ ───────────────────────── */
-export const usePersons = () =>
-    useQuery({
-        queryKey: ['persons'],
-        queryFn: async () => {
+/* -------------------------------------------------------------------------- */
+/*                                   READ                                     */
+/* -------------------------------------------------------------------------- */
+
+/** Список людей текущего проекта */
+export const usePersons = () => {
+    const projectId = useProjectId();
+    return useQuery({
+        queryKey: ['persons', projectId],
+        enabled : !!projectId,
+        queryFn : async () => {
             const { data, error } = await supabase
                 .from('persons')
                 .select(FIELDS)
+                .eq('project_id', projectId)
                 .order('id');
             if (error) throw error;
             return data ?? [];
         },
     });
+};
 
-/* ──────────────────────── CREATE ──────────────────────── */
-const insert = async (payload) => {
-    if (await isDuplicate(payload))
-        throw new Error('Такое ФИО уже существует в выбранном проекте');
+/** 🔄 Совместимый алиас для старого кода (LitigationForm и др.) */
+export const usePersonsByProject = usePersons;
+
+/* -------------------------------------------------------------------------- */
+/*                                  CREATE                                    */
+/* -------------------------------------------------------------------------- */
+
+const insert = async (payload, project_id) => {
+    const row = { ...sanitize(payload), project_id };
+
+    if (await isDuplicate(row))
+        throw new Error('Такое ФИО уже существует в проекте');
 
     const { data, error } = await supabase
         .from('persons')
-        .insert(sanitize(payload))
+        .insert(row)
         .select(FIELDS)
         .single();
 
-    if (error) {
-        if (error.message.includes('duplicate key'))
-            throw new Error('Такое ФИО уже существует в выбранном проекте');
-        throw error;
-    }
+    if (error) throw error;
     return data;
 };
 
-/* ──────────────────────── UPDATE ──────────────────────── */
+/* -------------------------------------------------------------------------- */
+/*                                  UPDATE                                    */
+/* -------------------------------------------------------------------------- */
+
 const updateRow = async ({ id, updates }) => {
-    /* берём актуальные значения для проверки */
-    const { data: current } = await supabase
+    const { data: current, error: err } = await supabase
         .from('persons')
         .select('project_id, full_name')
         .eq('id', id)
         .single();
+    if (err) throw err;
 
-    const pair = {
-        project_id: updates.project_id ?? current.project_id,
-        full_name : (updates.full_name ?? current.full_name).trim(),
+    const dupCheck = {
+        project_id: current.project_id,
+        full_name : updates.full_name ?? current.full_name,
     };
 
-    if (await isDuplicate(pair, id))
-        throw new Error('Такое ФИО уже существует в выбранном проекте');
+    if (await isDuplicate(dupCheck, id))
+        throw new Error('Такое ФИО уже существует в проекте');
 
     const { data, error } = await supabase
         .from('persons')
@@ -90,37 +121,53 @@ const updateRow = async ({ id, updates }) => {
         .select(FIELDS)
         .single();
 
-    if (error) {
-        if (error.message.includes('duplicate key'))
-            throw new Error('Такое ФИО уже существует в выбранном проекте');
-        throw error;
-    }
+    if (error) throw error;
     return data;
 };
 
-/* ──────────────────────── DELETE ──────────────────────── */
+/* -------------------------------------------------------------------------- */
+/*                                  DELETE                                    */
+/* -------------------------------------------------------------------------- */
+
 const remove = async (id) => {
     const { error } = await supabase.from('persons').delete().eq('id', id);
     if (error) throw error;
 };
 
-/* ─────────────────── React-Query хуки ─────────────────── */
-const withInvalidate =
-    (fn) =>
-        () => {
-            const qc = useQueryClient();
-            return useMutation({
-                mutationFn: fn,
-                onSuccess: () => qc.invalidateQueries(['persons']),
-            });
-        };
+/* -------------------------------------------------------------------------- */
+/*                       React-Query wrappers (DRY)                           */
+/* -------------------------------------------------------------------------- */
 
-export const useAddPerson    = withInvalidate(insert);
-export const useUpdatePerson = withInvalidate(updateRow);
-export const useDeletePerson = withInvalidate(remove);
+const useInvalidatePersons = () => {
+    const projectId = useProjectId();
+    const qc        = useQueryClient();
+    return () => qc.invalidateQueries({ queryKey: ['persons', projectId] });
+};
 
-/* ──────────────── (один раз в БД) ────────────────
-CREATE UNIQUE INDEX IF NOT EXISTS
-  persons_project_fullname_uidx
-ON persons (project_id, lower(full_name));
---------------------------------------------------- */
+/** Добавить человека */
+export const useAddPerson = () => {
+    const projectId         = useProjectId();
+    const invalidatePersons = useInvalidatePersons();
+    return useMutation({
+        mutationFn : (values) => insert(values, projectId),
+        onSuccess  : invalidatePersons,
+    });
+};
+
+/** Обновить человека */
+export const useUpdatePerson = () => {
+    const invalidatePersons = useInvalidatePersons();
+    return useMutation({
+        mutationFn : updateRow,
+        onSuccess  : invalidatePersons,
+    });
+};
+
+/** Удалить человека */
+export const useDeletePerson = () => {
+    const invalidatePersons = useInvalidatePersons();
+    return useMutation({
+        mutationFn : remove,
+        onSuccess  : invalidatePersons,
+    });
+};

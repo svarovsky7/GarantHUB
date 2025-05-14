@@ -112,6 +112,230 @@
     "column_default": "false"
   },
   {
+    "table_name": "litigation_stages",
+    "column_name": "id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": "nextval('litigation_stages_id_seq'::regclass)"
+  },
+  {
+    "table_name": "litigation_stages",
+    "column_name": "name",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "litigations",
+    "column_name": "id",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": "nextval('litigations_id_seq'::regclass)"
+  },
+  {
+    "table_name": "litigations",
+    "column_name": "court_number",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "litigations",
+    "column_name": "court_name",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "litigations",
+    "column_name": "stage_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "litigations",
+    "column_name": "claimant_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "litigations",
+    "column_name": "defendant_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "litigations",
+    "column_name": "project_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "litigations",
+    "column_name": "unit_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "litigations",
+    "column_name": "ddu_number",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "litigations",
+    "column_name": "ddu_date",
+    "data_type": "date",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "litigations",
+    "column_name": "defects",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "litigations",
+    "column_name": "repair_estimate",
+    "data_type": "numeric",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "litigations",
+    "column_name": "claim_number",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "litigations",
+    "column_name": "claim_date",
+    "data_type": "date",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "litigations",
+    "column_name": "lawsuit_date",
+    "data_type": "date",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "litigations",
+    "column_name": "main_amount",
+    "data_type": "numeric",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "litigations",
+    "column_name": "penalty",
+    "data_type": "numeric",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "litigations",
+    "column_name": "fine",
+    "data_type": "numeric",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "litigations",
+    "column_name": "moral_damage",
+    "data_type": "numeric",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "litigations",
+    "column_name": "state_fee",
+    "data_type": "numeric",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "litigations",
+    "column_name": "decision_date",
+    "data_type": "date",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "litigations",
+    "column_name": "decision_text",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "litigations",
+    "column_name": "amount_awarded",
+    "data_type": "numeric",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "litigations",
+    "column_name": "amount_paid",
+    "data_type": "numeric",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "litigations",
+    "column_name": "payment_date",
+    "data_type": "date",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "litigations",
+    "column_name": "documents",
+    "data_type": "jsonb",
+    "is_nullable": "YES",
+    "column_default": "'[]'::jsonb"
+  },
+  {
+    "table_name": "litigations",
+    "column_name": "lawyer",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "litigations",
+    "column_name": "comments",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "litigations",
+    "column_name": "is_active",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": "true"
+  },
+  {
+    "table_name": "litigations",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
     "table_name": "persons",
     "column_name": "id",
     "data_type": "bigint",
@@ -178,6 +402,13 @@
     "table_name": "profiles",
     "column_name": "email",
     "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "project_id",
+    "data_type": "integer",
     "is_nullable": "NO",
     "column_default": null
   },
@@ -372,27 +603,6 @@
   },
   {
     "table_name": "tickets",
-    "column_name": "responsible_user_id",
-    "data_type": "uuid",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
-    "table_name": "tickets",
-    "column_name": "created_at",
-    "data_type": "timestamp with time zone",
-    "is_nullable": "YES",
-    "column_default": "now()"
-  },
-  {
-    "table_name": "tickets",
-    "column_name": "updated_at",
-    "data_type": "timestamp with time zone",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
-    "table_name": "tickets",
     "column_name": "is_warranty",
     "data_type": "boolean",
     "is_nullable": "NO",
@@ -400,17 +610,31 @@
   },
   {
     "table_name": "tickets",
-    "column_name": "received_at",
-    "data_type": "date",
-    "is_nullable": "NO",
-    "column_default": "CURRENT_DATE"
-  },
-  {
-    "table_name": "tickets",
     "column_name": "created_by",
     "data_type": "uuid",
     "is_nullable": "YES",
     "column_default": null
+  },
+  {
+    "table_name": "tickets",
+    "column_name": "fixed_at",
+    "data_type": "date",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "tickets",
+    "column_name": "received_at",
+    "data_type": "date",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "tickets",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
   },
   {
     "table_name": "unit_persons",

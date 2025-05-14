@@ -1,145 +1,202 @@
-/* features/person/PersonForm.js */
-import React from 'react';
+// src/features/person/PersonForm.js
+// -----------------------------------------------------------------------------
+// Inline-форма добавления / редактирования физического лица
+// -----------------------------------------------------------------------------
+import React, { useMemo } from 'react';
 import {
-    Stack,
-    TextField,
-    MenuItem,
-    Button,
-    CircularProgress,
+    Paper, Stack, Typography, TextField, MenuItem,
+    Button, IconButton, CircularProgress, Skeleton,
 } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import { useForm, Controller } from 'react-hook-form';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 
-import { useProjects } from '@entities/project';
-import { useAddPerson, useUpdatePerson } from '@entities/person';
-import { useNotify } from '@shared/hooks/useNotify';
+import { useProjects }        from '@/entities/project';
+import { useAddPerson, useUpdatePerson } from '@/entities/person';
+import { useNotify }          from '@/shared/hooks/useNotify';
 
-/* схема валидации */
+/* ------------------------------ validation ------------------------------ */
+
 const schema = z.object({
-    project_id: z.preprocess((v) => Number(v), z.number().int().positive('Выберите проект')),
-    full_name : z.string().min(1, 'Обязательно'),
-    phone     : z.union([z.literal(''), z.string().min(5)]).default(''),
-    email     : z.union([z.literal(''), z.string().email('Неверный e-mail')]).default(''),
+    project_id: z.number({ invalid_type_error: 'Проект обязателен' }),
+    full_name : z.string().min(3, 'Укажите ФИО'),
+    phone     : z.string().optional(),
+    email     : z
+        .string()
+        .email('Некорректный e-mail')
+        .or(z.literal('').transform(() => undefined))
+        .optional(),
 });
 
+/**
+ * @param {{
+ *   initialData?: {
+ *     id:number,
+ *     project_id:number,
+ *     full_name:string,
+ *     phone?:string|null,
+ *     email?:string|null
+ *   },
+ *   onSuccess: () => void,
+ *   onCancel: () => void
+ * }} props
+ */
 export default function PersonForm({ initialData, onSuccess, onCancel }) {
+    const isEdit = !!initialData;
     const notify = useNotify();
-    const isEdit = Boolean(initialData?.id);
 
-    const add    = useAddPerson();
-    const update = useUpdatePerson();
+    const addMut = useAddPerson();
+    const updMut = useUpdatePerson();
 
-    const { data: projects = [] } = useProjects();
+    const {
+        data: projects = [],
+        isPending: projLoading,
+    } = useProjects();
+
+    const defaults = useMemo(
+        () =>
+            initialData
+                ? {
+                    project_id: initialData.project_id,
+                    full_name : initialData.full_name,
+                    phone     : initialData.phone ?? '',
+                    email     : initialData.email ?? '',
+                }
+                : {},
+        [initialData],
+    );
 
     const {
         control,
         handleSubmit,
-        setError,
-        reset,
         formState: { errors, isSubmitting },
     } = useForm({
+        defaultValues: defaults,
         resolver: zodResolver(schema),
-        defaultValues: {
-            project_id: initialData?.project_id ?? '',
-            full_name : initialData?.full_name  ?? '',
-            phone     : initialData?.phone      ?? '',
-            email     : initialData?.email      ?? '',
-        },
         mode: 'onTouched',
     });
 
-    const submit = async (raw) => {
-        const data = { ...raw, project_id: Number(raw.project_id) };
+    /* ------------------------------- submit ------------------------------- */
+    const submit = async (values) => {
+        const payload = {
+            project_id: values.project_id,
+            full_name : values.full_name.trim(),
+            phone     : values.phone || null,
+            email     : values.email || null,
+        };
 
         try {
             if (isEdit) {
-                await update.mutateAsync({ id: initialData.id, updates: data });
+                await updMut.mutateAsync({ id: initialData.id, updates: payload });
                 notify.success('Запись обновлена');
             } else {
-                await add.mutateAsync(data);
-                notify.success('Запись создана');
-                reset({ ...data, full_name: '', phone: '', email: '' });
+                await addMut.mutateAsync(payload);
+                notify.success('Физлицо добавлено');
             }
             onSuccess?.();
-        } catch (err) {
-            if (/ФИО уже существует/i.test(err.message)) {    // CHANGE
-                setError('full_name', {
-                    type        : 'duplicate',
-                    message     : 'Такое ФИО уже есть в этом проекте',
-                    shouldFocus : true,
-                });
-            }
-            notify.error(err.message);
+        } catch (e) {
+            notify.error(e.message);
         }
     };
 
+    /* --------------------------------  UI  -------------------------------- */
     return (
-        <form onSubmit={handleSubmit(submit)} noValidate>
-            <Stack spacing={2} sx={{ maxWidth: 440 }}>
-                {/* проект */}
-                <Controller
-                    name="project_id"
-                    control={control}
-                    render={({ field }) => (
-                        <TextField
-                            {...field}
-                            select
-                            label="Проект"
-                            required
-                            fullWidth
-                            autoComplete="off"
-                            error={!!errors.project_id}
-                            helperText={errors.project_id?.message}
-                        >
-                            {projects.map((p) => (
-                                <MenuItem key={p.id} value={p.id}>
-                                    {p.name}
-                                </MenuItem>
-                            ))}
-                        </TextField>
-                    )}
-                />
+        <Paper elevation={3} sx={{ p: 3, mb: 4 }}>
+            <Stack direction="row" justifyContent="space-between" mb={2}>
+                <Typography variant="h6">
+                    {isEdit ? 'Редактировать физлицо' : 'Добавить физлицо'}
+                </Typography>
+                <IconButton onClick={onCancel} size="small">
+                    <CloseIcon fontSize="small" />
+                </IconButton>
+            </Stack>
 
-                {/* ФИО, телефон, email */}
-                {['full_name', 'phone', 'email'].map((f) => (
+            <form onSubmit={handleSubmit(submit)} noValidate>
+                <Stack spacing={2}>
+                    {/* project_id ---------------------------------------------------- */}
+                    {projLoading ? (
+                        <Skeleton variant="rectangular" height={56} />
+                    ) : (
+                        <Controller
+                            control={control}
+                            name="project_id"
+                            render={({ field }) => (
+                                <TextField
+                                    {...field}
+                                    select
+                                    label="Проект *"
+                                    error={!!errors.project_id}
+                                    helperText={errors.project_id?.message}
+                                    fullWidth
+                                >
+                                    {projects.map((p) => (
+                                        <MenuItem key={p.id} value={p.id}>
+                                            {p.name}
+                                        </MenuItem>
+                                    ))}
+                                </TextField>
+                            )}
+                        />
+                    )}
+
+                    {/* full_name ----------------------------------------------------- */}
                     <Controller
-                        key={f}
-                        name={f}
                         control={control}
+                        name="full_name"
                         render={({ field }) => (
                             <TextField
                                 {...field}
-                                id={`person-${f}`}
-                                label={{
-                                    full_name: 'ФИО',
-                                    phone    : 'Телефон',
-                                    email    : 'E-mail',
-                                }[f]}
-                                required={f === 'full_name'}
+                                label="ФИО *"
+                                error={!!errors.full_name}
+                                helperText={errors.full_name?.message}
                                 fullWidth
-                                autoComplete="off"
-                                error={!!errors[f]}
-                                helperText={errors[f]?.message}
                             />
                         )}
                     />
-                ))}
 
-                <Stack direction="row" spacing={2} justifyContent="flex-end">
-                    <Button
-                        type="submit"
-                        variant="contained"
-                        disabled={isSubmitting}
-                        startIcon={isSubmitting && <CircularProgress size={18} />}
-                    >
-                        Сохранить
-                    </Button>
-                    <Button variant="text" onClick={onCancel} disabled={isSubmitting}>
-                        Отмена
-                    </Button>
+                    {/* phone --------------------------------------------------------- */}
+                    <Controller
+                        control={control}
+                        name="phone"
+                        render={({ field }) => (
+                            <TextField {...field} label="Телефон" fullWidth />
+                        )}
+                    />
+
+                    {/* email --------------------------------------------------------- */}
+                    <Controller
+                        control={control}
+                        name="email"
+                        render={({ field }) => (
+                            <TextField
+                                {...field}
+                                label="E-mail"
+                                error={!!errors.email}
+                                helperText={errors.email?.message}
+                                fullWidth
+                            />
+                        )}
+                    />
+
+                    {/* actions ------------------------------------------------------- */}
+                    <Stack direction="row" spacing={2} justifyContent="flex-end">
+                        <Button onClick={onCancel}>Отмена</Button>
+                        <Button
+                            type="submit"
+                            variant="contained"
+                            disabled={isSubmitting}
+                            startIcon={
+                                isSubmitting && (
+                                    <CircularProgress size={18} color="inherit" />
+                                )
+                            }
+                        >
+                            Сохранить
+                        </Button>
+                    </Stack>
                 </Stack>
-            </Stack>
-        </form>
+            </form>
+        </Paper>
     );
 }
