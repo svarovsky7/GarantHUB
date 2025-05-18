@@ -7,7 +7,7 @@ import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import UnitForm            from '@/features/unit/UnitForm';
 import { useUnits, useDeleteUnit } from '@/entities/unit';
 import { useProjects } from '@/entities/project';
-import { usePersons  } from '@/entities/person';            // для фильтрации по проекту
+import { usePersons  } from '@/entities/person';
 
 import {
     useUnitPersons,
@@ -124,7 +124,7 @@ export default function UnitsTable() {
 /* ------------------------------------------------------------------ */
 function UnitPersonsDialog({ unit, onClose }) {
     const notify                             = useNotify();
-    const { data: personsAll = [] }          = usePersons();          // все ФЛ
+    const { data: personsAll = [] }          = usePersons();
     const { data: links = [] }               = useUnitPersons(unit.id);
     const addLink                            = useAddUnitPerson();
     const removeLink                         = useDeleteUnitPerson();
@@ -133,7 +133,7 @@ function UnitPersonsDialog({ unit, onClose }) {
 
     /* --------- Фильтр ФЛ по проекту объекта --------- */
     const personsForProject = personsAll
-        .filter((p) => p.project_id === unit.project_id);              // CHANGE
+        .filter((p) => p.project_id === unit.project_id);
 
     const [inputValue, setInputValue] = useState('');
     const [selected,    setSelected]  = useState(null);
@@ -167,13 +167,18 @@ function UnitPersonsDialog({ unit, onClose }) {
             <DialogContent dividers>
                 <Stack spacing={2}>
                     <Autocomplete
-                        options={personsForProject.filter((p) => !assignedIds.includes(p.id))} // CHANGE
+                        options={personsForProject.filter((p) => !assignedIds.includes(p.id))}
                         getOptionLabel={(o) => o.full_name}
                         value={selected}
                         onChange={handleAdd}
                         inputValue={inputValue}
                         onInputChange={(_e, v) => setInputValue(v)}
                         size="small"
+                        renderOption={(props, option) => (
+                            <li {...props} key={option.id}>
+                                {option.full_name}
+                            </li>
+                        )}
                         renderInput={(params) => (
                             <TextField
                                 {...params}
@@ -188,6 +193,7 @@ function UnitPersonsDialog({ unit, onClose }) {
                         )}
                     />
 
+                    {/* Исправленный ключ: обязательно l.person.id! */}
                     {links.map((l) => (
                         <Stack key={l.person.id} direction="row" spacing={1} alignItems="center">
                             <span>{l.person.full_name}</span>

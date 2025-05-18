@@ -19,7 +19,7 @@ import { useNotify }          from '@/shared/hooks/useNotify';
 /* ------------------------------ validation ------------------------------ */
 
 const schema = z.object({
-    project_id: z.number({ invalid_type_error: 'Проект обязателен' }),
+    project_id: z.union([z.number(), z.string()]).refine((v) => v !== '', 'Проект обязателен'),
     full_name : z.string().min(3, 'Укажите ФИО'),
     phone     : z.string().optional(),
     email     : z
@@ -54,16 +54,17 @@ export default function PersonForm({ initialData, onSuccess, onCancel }) {
         isPending: projLoading,
     } = useProjects();
 
+    // --- корректное значение project_id для new/edit ---
     const defaults = useMemo(
         () =>
             initialData
                 ? {
-                    project_id: initialData.project_id,
+                    project_id: initialData.project_id ?? '',
                     full_name : initialData.full_name,
                     phone     : initialData.phone ?? '',
                     email     : initialData.email ?? '',
                 }
-                : {},
+                : { project_id: '', full_name: '', phone: '', email: '' },
         [initialData],
     );
 
@@ -80,7 +81,7 @@ export default function PersonForm({ initialData, onSuccess, onCancel }) {
     /* ------------------------------- submit ------------------------------- */
     const submit = async (values) => {
         const payload = {
-            project_id: values.project_id,
+            project_id: Number(values.project_id),
             full_name : values.full_name.trim(),
             phone     : values.phone || null,
             email     : values.email || null,
@@ -129,7 +130,15 @@ export default function PersonForm({ initialData, onSuccess, onCancel }) {
                                     error={!!errors.project_id}
                                     helperText={errors.project_id?.message}
                                     fullWidth
+                                    // Критически важно: если value невалиден — ставим ''
+                                    value={
+                                        field.value !== undefined &&
+                                        projects.some((p) => String(p.id) === String(field.value))
+                                            ? field.value
+                                            : ''
+                                    }
                                 >
+                                    <MenuItem value="">—</MenuItem>
                                     {projects.map((p) => (
                                         <MenuItem key={p.id} value={p.id}>
                                             {p.name}

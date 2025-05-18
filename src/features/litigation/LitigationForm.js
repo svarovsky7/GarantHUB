@@ -11,7 +11,8 @@ import {
     Divider,
 } from '@mui/material';
 import { Controller, useFormContext } from 'react-hook-form';
-import dayjs from 'dayjs';
+// CHANGE: удалён неиспользуемый импорт dayjs
+// import dayjs from 'dayjs';
 import {
     LocalizationProvider,
     DatePicker,

@@ -10,7 +10,6 @@ import { useProjects }   from '@/entities/project';
 import { useAddUnit, useUpdateUnit } from '@/entities/unit';
 import { useNotify } from '@/shared/hooks/useNotify';
 
-/* ───── схема ───── */
 const schema = z.object({
     project_id: z.coerce.number().min(1, 'Обязательно'),
     name      : z.string().min(1, 'Обязательно'),
@@ -53,7 +52,7 @@ export default function UnitForm({ initialData, onSuccess, onCancel }) {
             } else {
                 const newUnit = await add.mutateAsync(payload);
                 notify.success('Объект создан');
-                onSuccess?.(newUnit);         // передаём наверх
+                onSuccess?.(newUnit);
             }
         } catch (err) {
             if (/уже существует/i.test(err.message)) {
@@ -66,10 +65,8 @@ export default function UnitForm({ initialData, onSuccess, onCancel }) {
     };
 
     return (
-        /* CHANGE: выключаем автозаполнение всей формы */
         <form onSubmit={handleSubmit(submit)} noValidate autoComplete="off">
             <Stack spacing={2} sx={{ maxWidth: 420 }}>
-
                 {/* ----- Проект ----- */}
                 <Controller
                     name="project_id" control={control}
@@ -81,8 +78,9 @@ export default function UnitForm({ initialData, onSuccess, onCancel }) {
                             label="Проект"
                             error={!!errors.project_id}
                             helperText={errors.project_id?.message}
-                            autoComplete="off"                                  /* CHANGE */
-                            inputProps={{ autoCorrect:'off', spellCheck:'false' }} /* CHANGE */
+                            autoComplete="off"
+                            inputProps={{ autoCorrect:'off', spellCheck:'false' }}
+                            value={field.value === undefined ? '' : field.value}
                         >
                             <MenuItem value="">—</MenuItem>
                             {projects.map((p) => (
@@ -101,7 +99,7 @@ export default function UnitForm({ initialData, onSuccess, onCancel }) {
                             label="Квартира / Лот"
                             required fullWidth id="unit-name"
                             error={!!errors.name} helperText={errors.name?.message}
-                            autoComplete="off" inputProps={{ autoCorrect:'off', spellCheck:'false' }} /* CHANGE */
+                            autoComplete="off" inputProps={{ autoCorrect:'off', spellCheck:'false' }}
                         />
                     )}
                 />
@@ -115,8 +113,8 @@ export default function UnitForm({ initialData, onSuccess, onCancel }) {
                                 {...f}
                                 label={{ building:'Корпус', section:'Секция', floor:'Этаж' }[field]}
                                 fullWidth
-                                autoComplete="off"                                /* CHANGE */
-                                inputProps={{ autoCorrect:'off', spellCheck:'false' }} /* CHANGE */
+                                autoComplete="off"
+                                inputProps={{ autoCorrect:'off', spellCheck:'false' }}
                             />
                         )}
                     />

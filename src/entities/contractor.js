@@ -1,9 +1,7 @@
-// src/entities/contractor.js
 // --------------------------------------------------------
-// Контрагенты, изолированные по project_id
+// Контрагенты — ГЛОБАЛЬНЫЕ (без project_id)
 // --------------------------------------------------------
 import { supabase } from '@/shared/api/supabaseClient';
-import { useProjectId } from '@/shared/hooks/useProjectId';
 import {
     useQuery,
     useMutation,
@@ -12,8 +10,7 @@ import {
 
 const TABLE  = 'contractors';
 const FIELDS = `
-  id, project_id, name, inn, phone, email,
-  comment:description, created_at
+  id, name, inn, phone, email, comment:description, created_at
 `;
 
 /** trim + ''→null; comment→description */
@@ -21,7 +18,7 @@ const sanitize = (o) =>
     Object.fromEntries(
         Object.entries(o)
             .filter(([k]) =>
-                ['project_id', 'name', 'inn', 'phone', 'email', 'comment'].includes(k),
+                ['name', 'inn', 'phone', 'email', 'comment'].includes(k),
             )
             .map(([k, v]) => [
                 k === 'comment' ? 'description' : k,
@@ -29,24 +26,25 @@ const sanitize = (o) =>
             ]),
     );
 
-/** Проверяем дубль внутри проекта (inn+name) */
-const isDuplicate = async ({ project_id, inn, name }, excludeId = null) => {
-    const { data, error } = await supabase
+/** Проверяем дубль по inn+name (ГЛОБАЛЬНО, не по проекту) */
+const isDuplicate = async ({ inn, name }, excludeId = null) => {
+    let query = supabase
         .from(TABLE)
-        .select('id', { head: true })
-        .eq('project_id', project_id)
+        .select('id')
         .eq('inn', inn)
-        .ilike('name', name.trim())
-        .neq('id', excludeId);
-
+        .ilike('name', name.trim());
+    if (excludeId) {
+        query = query.neq('id', excludeId);
+    }
+    const { data, error } = await query;
     if (error && error.code !== '406') throw error;
-    return !!data;
+    return (data && data.length > 0);
 };
 
 /* ---------------- CRUD ---------------- */
 const insert = async (payload) => {
     if (await isDuplicate(payload)) {
-        throw new Error('Компания с таким названием и ИНН уже существует в проекте');
+        throw new Error('Компания с таким названием и ИНН уже существует');
     }
     const { data, error } = await supabase
         .from(TABLE)
@@ -60,21 +58,20 @@ const insert = async (payload) => {
 const patch = async ({ id, updates }) => {
     const { data: current } = await supabase
         .from(TABLE)
-        .select('project_id, inn, name')
+        .select('inn, name')
         .eq('id', id)
         .single();
 
     if (
         await isDuplicate(
             {
-                project_id: updates.project_id ?? current.project_id,
-                inn:        updates.inn        ?? current.inn,
-                name:       updates.name       ?? current.name,
+                inn : updates.inn  ?? current.inn,
+                name: updates.name ?? current.name,
             },
             id,
         )
     ) {
-        throw new Error('Компания с таким названием и ИНН уже существует в проекте');
+        throw new Error('Компания с таким названием и ИНН уже существует');
     }
 
     const { data, error } = await supabase
@@ -94,15 +91,12 @@ const remove = async (id) => {
 
 /* ---------------- hooks ---------------- */
 export const useContractors = () => {
-    const projectId = useProjectId();
     return useQuery({
-        queryKey: [TABLE, projectId],
-        enabled : !!projectId,
+        queryKey: [TABLE],
         queryFn : async () => {
             const { data, error } = await supabase
                 .from(TABLE)
                 .select(FIELDS)
-                .eq('project_id', projectId)
                 .order('name');
             if (error) throw error;
             return data ?? [];
@@ -111,11 +105,10 @@ export const useContractors = () => {
 };
 
 const mutation = (fn) => () => {
-    const qc        = useQueryClient();
-    const projectId = useProjectId();
+    const qc = useQueryClient();
     return useMutation({
         mutationFn : fn,
-        onSuccess  : () => qc.invalidateQueries({ queryKey: [TABLE, projectId] }),
+        onSuccess  : () => qc.invalidateQueries({ queryKey: [TABLE] }),
     });
 };
 

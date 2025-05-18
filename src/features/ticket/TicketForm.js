@@ -2,11 +2,11 @@
 // Форма создания / редактирования замечания
 // Проект подставляется автоматически из useProjectId и не редактируется
 // -----------------------------------------------------------------------------
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useForm, FormProvider, Controller } from 'react-hook-form';
 import {
     Stack, TextField, Switch, Button, Divider, Autocomplete,
-    Typography, CircularProgress, Box,
+    Typography, CircularProgress, Box, Alert,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -22,7 +22,7 @@ import { useTicketTypes }      from '@/entities/ticketType';
 import { useTicketStatuses }   from '@/entities/ticketStatus';
 import { useCreateTicket, useTicket } from '@/entities/ticket';
 
-import { useProjectId }        from '@/shared/hooks/useProjectId';   // CHANGE: текущий проект
+import { useProjectId }        from '@/shared/hooks/useProjectId';
 import FileDropZone            from '@/shared/ui/FileDropZone';
 import AttachmentPreviewList   from '@/shared/ui/AttachmentPreviewList';
 
@@ -43,27 +43,25 @@ const schema = yup.object({
         .test('is-dayjs-or-null', 'Некорректная дата', v => v === null || (dayjs.isDayjs(v) && v.isValid())),
 }).required();
 
-/* ---------- компонент ---------- */
 export default function TicketForm() {
     const navigate   = useNavigate();
     const { ticketId } = useParams();
     const isEditMode = Boolean(ticketId);
 
-    const projectId = useProjectId();                         // CHANGE: выбранный в шапке проект
+    const projectId = useProjectId();
 
-    /* ---------- запросы ---------- */
-    const { data: ticket,   isLoading: isLoadingTicket,
+    // --- Все хуки только здесь, без условий! ---
+    const { data: ticket, isLoading: isLoadingTicket,
         updateAsync: updateTicket, updating: isUpdatingTicket } = useTicket(ticketId);
 
     const { data: types    = [], isLoading: isLoadingTypes    } = useTicketTypes();
     const { data: statuses = [], isLoading: isLoadingStatuses } = useTicketStatuses();
     const { data: units    = [], isLoading: isLoadingUnits    } = useUnitsByProject(projectId, !!projectId);
 
-    /* ---------- RHF ---------- */
     const methods = useForm({
         resolver      : yupResolver(schema),
         defaultValues : {
-            project_id  : projectId,                          // CHANGE: сразу записываем projectId
+            project_id  : projectId,
             unit_id     : null,
             type_id     : null,
             status_id   : null,
@@ -74,14 +72,25 @@ export default function TicketForm() {
             fixed_at    : null,
         },
     });
-    const { control, reset, setValue, handleSubmit,
-        formState: { errors, isSubmitting } } = methods;
+    const { control, reset, setValue, handleSubmit, formState: { isSubmitting } } = methods;
 
-    /* --- подгружаем данные билета в режимe редактирования ----------------- */
+    // --- state всегда на верхнем уровне ---
+    const [remoteFiles, setRemoteFiles] = useState([]);
+    const [newFiles,    setNewFiles]    = useState([]);
+
+    const handleDropFiles = useCallback((files) => {
+        setNewFiles(prev => [...prev, ...files]);
+    }, []);
+    const handleRemoveNewFile    = (idx) => setNewFiles(prev => prev.filter((_, i) => i !== idx));
+    const handleRemoveRemoteFile = (id)  => setRemoteFiles(prev => prev.filter(f => f.id !== id));
+
+    const { mutateAsync: createTicket, isPending: isCreatingTicket } = useCreateTicket();
+
+    // --- Эффекты ---
     useEffect(() => {
         if (isEditMode && ticket) {
             reset({
-                project_id  : ticket.projectId,               // read-only, но нужен для валидации
+                project_id  : ticket.projectId,
                 unit_id     : ticket.unitId ?? null,
                 type_id     : ticket.typeId,
                 status_id   : ticket.statusId,
@@ -95,24 +104,9 @@ export default function TicketForm() {
         }
     }, [isEditMode, ticket, reset]);
 
-    /* --- при переключении проекта в шапке обновляем скрытое поле ---------- */
     useEffect(() => {
         setValue('project_id', projectId);
     }, [projectId, setValue]);
-
-    /* ---------- вложения ---------- */
-    const [remoteFiles, setRemoteFiles] = useState([]);       // файлы уже на сервере
-    const [newFiles,    setNewFiles]    = useState([]);       // новые файлы
-
-    const handleDropFiles = useCallback((files) => {
-        setNewFiles(prev => [...prev, ...files]);
-    }, []);
-
-    const handleRemoveNewFile    = (idx)   => setNewFiles(prev => prev.filter((_, i) => i !== idx));
-    const handleRemoveRemoteFile = (id)    => setRemoteFiles(prev => prev.filter(f => f.id !== id));
-
-    /* ---------- submit ---------- */
-    const { mutateAsync: createTicket, isPending: isCreatingTicket } = useCreateTicket();
 
     const serialize = (data) => ({
         project_id  : data.project_id,
@@ -146,7 +140,17 @@ export default function TicketForm() {
         navigate('/tickets');
     };
 
-    /* ---------- loaders ---------- */
+    // --- Loader и Alert после хуков ---
+    if (!projectId) {
+        return (
+            <Box sx={{ minHeight: 240, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Alert severity="warning">
+                    Не выбран проект. Выберите проект в верхней панели.
+                </Alert>
+            </Box>
+        );
+    }
+
     const isLoading = (isEditMode && isLoadingTicket) ||
         isLoadingTypes || isLoadingStatuses ||
         (!isEditMode && !projectId) ||
@@ -160,7 +164,7 @@ export default function TicketForm() {
         );
     }
 
-    /* ---------- UI ---------- */
+    // --- UI ---
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ru">
             <FormProvider {...methods}>

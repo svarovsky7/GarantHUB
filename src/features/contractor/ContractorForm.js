@@ -67,7 +67,7 @@ export default function ContractorForm({
             }
             onSuccess?.();
         } catch (err) {
-            if (/Компания с таким/i.test(err.message)) {      // CHANGE
+            if (/Компания с таким/i.test(err.message)) {
                 ['name', 'inn'].forEach((f) =>
                     setError(f, { type: 'duplicate', message: 'Пара уже занята' }),
                 );

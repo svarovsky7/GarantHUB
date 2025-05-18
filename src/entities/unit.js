@@ -1,16 +1,11 @@
 // src/entities/unit.js
-// -----------------------------------------------------------------------------
-// CRUD для объектов (квартир/помещений) + связи с жильцами
-// ВСЕ запросы фильтруются по project_id текущего пользователя
-// -----------------------------------------------------------------------------
-// базовый файл: :contentReference[oaicite:0]{index=0}:contentReference[oaicite:1]{index=1}
 import { supabase } from '@/shared/api/supabaseClient';
-import { useProjectId } from '@/shared/hooks/useProjectId';
 import {
     useQuery,
     useMutation,
     useQueryClient,
 } from '@tanstack/react-query';
+import { useProjectId } from '@/shared/hooks/useProjectId';
 
 /* ---------- базовый SELECT ---------- */
 const SELECT = `
@@ -22,9 +17,8 @@ const SELECT = `
   )
 `;
 
-/* ---------- helper: отфильтровываем разрешённые поля ---------- */
 const sanitize = (obj) => {
-    const allowed = ['name', 'building', 'section', 'floor'];
+    const allowed = ['name', 'building', 'section', 'floor', 'project_id'];
     return Object.fromEntries(
         Object.entries(obj)
             .filter(([k]) => allowed.includes(k))
@@ -49,7 +43,7 @@ export const useUnits = () => {
 
             return (data ?? []).map((u) => ({
                 ...u,
-                persons: u.unit_persons?.map((l) => l.person) ?? [],
+                persons: (u.unit_persons?.map((l) => l.person).filter(Boolean)) ?? [],
             }));
         },
     });
@@ -70,7 +64,7 @@ export const useUnitsByProject = (projectId) =>
 
             return (data ?? []).map((u) => ({
                 ...u,
-                persons: u.unit_persons?.map((l) => l.person) ?? [],
+                persons: (u.unit_persons?.map((l) => l.person).filter(Boolean)) ?? [],
             }));
         },
     });
@@ -92,19 +86,19 @@ export const useUnit = (unitId) => {
 
             return {
                 ...data,
-                persons: data.unit_persons?.map((l) => l.person) ?? [],
+                persons: (data.unit_persons?.map((l) => l.person).filter(Boolean)) ?? [],
             };
         },
     });
 };
 
 /* ====================== CREATE ====================== */
-const createUnit = async (payload, project_id) => {
+const createUnit = async (payload) => {
     // защита от дублей (квартира + проект уникальны)
     const { data: dup } = await supabase
         .from('units')
         .select('id')
-        .eq('project_id', project_id)
+        .eq('project_id', payload.project_id)
         .eq('name', payload.name)
         .limit(1)
         .maybeSingle();
@@ -114,7 +108,7 @@ const createUnit = async (payload, project_id) => {
 
     const { data, error } = await supabase
         .from('units')
-        .insert({ ...sanitize(payload), project_id })
+        .insert(sanitize(payload))
         .select(SELECT)
         .single();
 
@@ -124,22 +118,21 @@ const createUnit = async (payload, project_id) => {
 };
 
 export const useAddUnit = () => {
-    const projectId = useProjectId();
-    const qc        = useQueryClient();
+    const qc = useQueryClient();
     return useMutation({
-        mutationFn: (payload) => createUnit(payload, projectId),
-        onSuccess : () => qc.invalidateQueries({ queryKey: ['units', projectId] }),
+        mutationFn: (payload) => createUnit(payload), // Теперь корректно из формы
+        onSuccess : () => qc.invalidateQueries({ queryKey: ['units'] }),
     });
 };
 
 /* ====================== UPDATE ====================== */
-const updateUnit = async ({ id, updates }, project_id) => {
-    // проверка дубликата при смене номера
-    if (updates.name) {
+const updateUnit = async ({ id, updates }) => {
+    // Проверка дубликата при смене номера
+    if (updates.name && updates.project_id) {
         const { data: dup } = await supabase
             .from('units')
             .select('id')
-            .eq('project_id', project_id)
+            .eq('project_id', updates.project_id)
             .eq('name', updates.name)
             .neq('id', id)
             .limit(1)
@@ -152,7 +145,7 @@ const updateUnit = async ({ id, updates }, project_id) => {
         .from('units')
         .update(sanitize(updates))
         .eq('id', id)
-        .eq('project_id', project_id)
+        .eq('project_id', updates.project_id)
         .select(SELECT)
         .single();
 
@@ -160,32 +153,29 @@ const updateUnit = async ({ id, updates }, project_id) => {
 
     return {
         ...data,
-        persons: data.unit_persons?.map((l) => l.person) ?? [],
+        persons: (data.unit_persons?.map((l) => l.person).filter(Boolean)) ?? [],
     };
 };
 
 export const useUpdateUnit = () => {
-    const projectId = useProjectId();
-    const qc        = useQueryClient();
+    const qc = useQueryClient();
     return useMutation({
-        mutationFn: (args) => updateUnit(args, projectId),
-        onSuccess : () => qc.invalidateQueries({ queryKey: ['units', projectId] }),
+        mutationFn: (args) => updateUnit(args),
+        onSuccess : () => qc.invalidateQueries({ queryKey: ['units'] }),
     });
 };
 
 /* ====================== DELETE ====================== */
 export const useDeleteUnit = () => {
-    const projectId = useProjectId();
-    const qc        = useQueryClient();
+    const qc = useQueryClient();
     return useMutation({
         mutationFn: async (id) => {
             const { error } = await supabase
                 .from('units')
                 .delete()
-                .eq('id', id)
-                .eq('project_id', projectId);
+                .eq('id', id);
             if (error) throw error;
         },
-        onSuccess: () => qc.invalidateQueries({ queryKey: ['units', projectId] }),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ['units'] }),
     });
 };

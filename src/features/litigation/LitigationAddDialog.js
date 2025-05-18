@@ -26,7 +26,8 @@ export default function LitigationAddDialog({ open, onClose }) {
     const form = useForm({
         defaultValues: { litigation: {} },
     });
-    const { handleSubmit, watch, reset } = form;
+    // CHANGE: удалён неиспользуемый watch
+    const { handleSubmit, reset } = form;
 
     /* -------- files state -------- */
     const [files, setFiles] = useState([]);

@@ -1,11 +1,9 @@
 // src/entities/unitPerson.js
 // -----------------------------------------------------------------------------
 // Many-to-many: единица (unit) ↔ физлицо (person)
-// Все операции фильтруются по project_id текущего пользователя
+// Все операции БЕЗ project_id (unit_persons связывает только unit и person)
 // -----------------------------------------------------------------------------
-// Основано на исходной версии  :contentReference[oaicite:4]{index=4}
 import { supabase } from '@/shared/api/supabaseClient';
-import { useProjectId } from '@/shared/hooks/useProjectId';
 import {
     useQuery,
     useMutation,
@@ -22,16 +20,14 @@ const FIELDS =
  * @param {number} unitId
  */
 export const useUnitPersons = (unitId) => {
-    const projectId = useProjectId();
     return useQuery({
-        queryKey: ['unit_persons', unitId, projectId],
-        enabled : !!unitId && !!projectId,
+        queryKey: ['unit_persons', unitId],
+        enabled : !!unitId,
         queryFn : async () => {
             const { data, error } = await supabase
                 .from('unit_persons')
                 .select(FIELDS)
                 .eq('unit_id', unitId)
-                .eq('project_id', projectId)
                 .order('person_id');
             if (error) throw error;
             return data ?? [];
@@ -40,11 +36,11 @@ export const useUnitPersons = (unitId) => {
 };
 
 /* ─────────────────── CREATE ─────────────────── */
-const insertLink = async ({ unit_id, person_id, project_id }) => {
+const insertLink = async ({ unit_id, person_id }) => {
     const { error } = await supabase
         .from('unit_persons')
         .upsert(
-            { unit_id, person_id, project_id },
+            { unit_id, person_id },
             { ignoreDuplicates: true },
         );
     if (error) throw error;
@@ -52,39 +48,36 @@ const insertLink = async ({ unit_id, person_id, project_id }) => {
 
 /** Добавить физлицо к объекту */
 export const useAddUnitPerson = () => {
-    const projectId = useProjectId();
-    const qc        = useQueryClient();
+    const qc = useQueryClient();
     return useMutation({
         mutationFn: ({ unit_id, person_id }) =>
-            insertLink({ unit_id, person_id, project_id: projectId }),
+            insertLink({ unit_id, person_id }),
         onSuccess: (_, vars) => {
-            qc.invalidateQueries({ queryKey: ['unit_persons', vars.unit_id, projectId] });
-            qc.invalidateQueries({ queryKey: ['units', projectId] });
+            qc.invalidateQueries({ queryKey: ['unit_persons', vars.unit_id] });
+            qc.invalidateQueries({ queryKey: ['units'] });
         },
     });
 };
 
 /* ─────────────────── DELETE ─────────────────── */
-const deleteLink = async ({ unit_id, person_id, project_id }) => {
+const deleteLink = async ({ unit_id, person_id }) => {
     const { error } = await supabase
         .from('unit_persons')
         .delete()
         .eq('unit_id', unit_id)
-        .eq('person_id', person_id)
-        .eq('project_id', project_id);
+        .eq('person_id', person_id);
     if (error) throw error;
 };
 
 /** Удалить физлицо из объекта */
 export const useDeleteUnitPerson = () => {
-    const projectId = useProjectId();
-    const qc        = useQueryClient();
+    const qc = useQueryClient();
     return useMutation({
         mutationFn: ({ unit_id, person_id }) =>
-            deleteLink({ unit_id, person_id, project_id: projectId }),
+            deleteLink({ unit_id, person_id }),
         onSuccess: (_, vars) => {
-            qc.invalidateQueries({ queryKey: ['unit_persons', vars.unit_id, projectId] });
-            qc.invalidateQueries({ queryKey: ['units', projectId] });
+            qc.invalidateQueries({ queryKey: ['unit_persons', vars.unit_id] });
+            qc.invalidateQueries({ queryKey: ['units'] }); // <- критично для моментального обновления таблицы объектов!
         },
     });
 };

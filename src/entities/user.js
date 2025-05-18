@@ -1,28 +1,22 @@
 // src/entities/user.js
 // -----------------------------------------------------------------------------
-// Управление пользователями (profiles) — фильтрация по project_id текущего пользователя
+// Управление пользователями (profiles) — теперь без фильтрации по project_id
 // -----------------------------------------------------------------------------
-// базовый файл: :contentReference[oaicite:2]{index=2}:contentReference[oaicite:3]{index=3}
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/shared/api/supabaseClient';
-import { useProjectId } from '@/shared/hooks/useProjectId';
 
-/* поля, которые всегда выбираем */
 const FIELDS = 'id, name, email, role, project_id';
 
 /* ─────────── SELECT ─────────── */
+/** Получить всех пользователей БД без фильтрации */
 export const useUsers = () => {
-    const projectId = useProjectId();
     return useQuery({
-        queryKey: ['users', projectId],
-        enabled : !!projectId,
+        queryKey: ['users', 'all'],
         queryFn : async () => {
             const { data, error } = await supabase
                 .from('profiles')
                 .select(FIELDS)
-                .eq('project_id', projectId)
                 .order('id');
-
             if (error) throw error;
             return data ?? [];
         },
@@ -31,37 +25,33 @@ export const useUsers = () => {
 
 /* ─────────── UPDATE (role) ─────────── */
 export const useUpdateUserRole = () => {
-    const projectId = useProjectId();
-    const qc        = useQueryClient();
+    const qc = useQueryClient();
     return useMutation({
-        mutationFn: async ({ id, role }) => {
+        mutationFn: async ({ id, newRole }) => {
             const { data, error } = await supabase
                 .from('profiles')
-                .update({ role })
+                .update({ role: newRole })
                 .eq('id', id)
-                .eq('project_id', projectId)
                 .select(FIELDS)
                 .single();
             if (error) throw error;
             return data;
         },
-        onSuccess: () => qc.invalidateQueries(['users', projectId]),
+        onSuccess: () => qc.invalidateQueries(['users', 'all']),
     });
 };
 
 /* ─────────── DELETE ─────────── */
 export const useDeleteUser = () => {
-    const projectId = useProjectId();
-    const qc        = useQueryClient();
+    const qc = useQueryClient();
     return useMutation({
         mutationFn: async (id) => {
             const { error } = await supabase
                 .from('profiles')
                 .delete()
-                .eq('id', id)
-                .eq('project_id', projectId);
+                .eq('id', id);
             if (error) throw error;
         },
-        onSuccess: () => qc.invalidateQueries(['users', projectId]),
+        onSuccess: () => qc.invalidateQueries(['users', 'all']),
     });
 };

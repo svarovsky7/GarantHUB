@@ -3,8 +3,9 @@
 // -----------------------------------------------------------------------------
 import React, { useMemo } from 'react';
 import dayjs from 'dayjs';
+// CHANGE: единый импорт из antd
 import {
-    Table, Tooltip, Space, Button, Popconfirm, Tag, Skeleton,
+    Table, Tooltip, Space, Button, Popconfirm, Tag, Skeleton, message
 } from 'antd';
 import {
     EditOutlined,
@@ -13,7 +14,6 @@ import {
     CloseCircleTwoTone,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { message } from 'antd';
 
 import { useDeleteTicket } from '@/entities/ticket';
 

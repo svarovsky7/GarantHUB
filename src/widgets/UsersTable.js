@@ -2,20 +2,19 @@ import React from 'react';
 import { GridActionsCellItem } from '@mui/x-data-grid';
 import DeleteIcon from '@mui/icons-material/Delete';
 
-import { useUsers, useDeleteUser } from '@/entities/user';      // FIX-path
-import { useRoles } from '@/entities/role';                     // FIX-path
+import { useUsers, useDeleteUser } from '@/entities/user';
+import { useRoles } from '@/entities/role';
 
-import RoleSelect    from '@/features/user/RoleSelect';         // FIX-path
-import AdminDataGrid from '@/shared/ui/AdminDataGrid';          // FIX-path
-import { useNotify } from '@/shared/hooks/useNotify';           // FIX-path
+import RoleSelect    from '@/features/user/RoleSelect';
+import AdminDataGrid from '@/shared/ui/AdminDataGrid';
+import { useNotify } from '@/shared/hooks/useNotify';
 
 export default function UsersTable() {
     const notify                                    = useNotify();
-    const { data: users = [],  isPending: uLoad }   = useUsers();
+    const { data: users = [],  isPending: uLoad }   = useUsers();      // ← теперь все пользователи без фильтра
     const { data: roles = [],  isPending: rLoad }   = useRoles();
     const delUser                                   = useDeleteUser();
 
-    /* порядок колонок: ID → Имя пользователя → E-mail → Роль */
     const columns = [
         { field: 'id',   headerName: 'ID',               width: 70 },
         { field: 'name', headerName: 'Имя пользователя', flex:  1 },

@@ -1,7 +1,3 @@
-// src/widgets/PersonsAdmin.js
-// -----------------------------------------------------------------------------
-// CRUD-таблица физлиц + встроенная форма добавления/редактирования
-// -----------------------------------------------------------------------------
 import React, { useState } from 'react';
 import { GridActionsCellItem } from '@mui/x-data-grid';
 import EditIcon   from '@mui/icons-material/Edit';
@@ -18,19 +14,14 @@ export default function PersonsAdmin() {
     const notify = useNotify();
 
     /* --- данные --- */
-    const { data: persons = [], isPending } = usePersons();
+    const { data: persons = [], isPending } = usePersons(); // ← фильтрация по проекту
     const { data: projects = [] }           = useProjects();
 
     const remove = useDeletePerson();
 
-    /* --- state inline-формы --- */
-    // {} → add, { initialData:row } → edit
     const [form, setForm] = useState(null);
-
-    /* быстрый поиск имени проекта */
     const nameById = (id) => projects.find((p) => p.id === id)?.name ?? '—';
 
-    /* ---- колонки ---- */
     const columns = [
         { field: 'id', headerName: 'ID', width: 80 },
         {
@@ -74,11 +65,9 @@ export default function PersonsAdmin() {
         },
     ];
 
-    /* ---- helpers ---- */
     const closeForm = () => setForm(null);
     const ok        = (msg) => { closeForm(); notify.success(msg); };
 
-    /* ---- UI ---- */
     return (
         <>
             {form && (

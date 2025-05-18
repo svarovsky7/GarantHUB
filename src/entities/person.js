@@ -1,9 +1,3 @@
-// src/entities/person.js
-// -----------------------------------------------------------------------------
-// CRUD-API для persons с автоматической фильтрацией по текущему project_id
-// -----------------------------------------------------------------------------
-/* eslint-disable import/prefer-default-export */
-
 import { supabase } from '@/shared/api/supabaseClient';
 import { useProjectId } from '@/shared/hooks/useProjectId';
 import {
@@ -12,17 +6,11 @@ import {
     useQueryClient,
 } from '@tanstack/react-query';
 
-/** Поля, которые всегда запрашиваем */
 const FIELDS = `
   id, project_id, full_name, phone, email,
   project:projects ( id, name )
 `;
 
-/* -------------------------------------------------------------------------- */
-/*                                 helpers                                    */
-/* -------------------------------------------------------------------------- */
-
-/** trim + ''→null */
 const sanitize = (obj) =>
     Object.fromEntries(
         Object.entries(obj).map(([k, v]) => [
@@ -31,29 +19,21 @@ const sanitize = (obj) =>
         ]),
     );
 
-/** Проверка дубликатов ФИО внутри проекта */
+// Проверка дубля в рамках проекта — для создания/редактирования оставляем
 const isDuplicate = async ({ project_id, full_name }, excludeId = null) => {
     const fio = (full_name ?? '').trim();
-
     let q = supabase
         .from('persons')
         .select('id', { head: true })
         .eq('project_id', project_id)
         .eq('full_name', fio);
-
     if (excludeId != null) q = q.neq('id', excludeId);
-
     const { data, error } = await q;
-    if (error && error.code !== '406') throw error; // 406: rows not found
-
+    if (error && error.code !== '406') throw error;
     return !!data;
 };
 
-/* -------------------------------------------------------------------------- */
-/*                                   READ                                     */
-/* -------------------------------------------------------------------------- */
-
-/** Список людей текущего проекта */
+/** Список людей текущего проекта — ФИЛЬТРАЦИЯ ПО PROJECT_ID */
 export const usePersons = () => {
     const projectId = useProjectId();
     return useQuery({
@@ -71,32 +51,21 @@ export const usePersons = () => {
     });
 };
 
-/** 🔄 Совместимый алиас для старого кода (LitigationForm и др.) */
 export const usePersonsByProject = usePersons;
 
-/* -------------------------------------------------------------------------- */
-/*                                  CREATE                                    */
-/* -------------------------------------------------------------------------- */
-
+// --- CRUD не меняется ---
 const insert = async (payload, project_id) => {
     const row = { ...sanitize(payload), project_id };
-
     if (await isDuplicate(row))
         throw new Error('Такое ФИО уже существует в проекте');
-
     const { data, error } = await supabase
         .from('persons')
         .insert(row)
         .select(FIELDS)
         .single();
-
     if (error) throw error;
     return data;
 };
-
-/* -------------------------------------------------------------------------- */
-/*                                  UPDATE                                    */
-/* -------------------------------------------------------------------------- */
 
 const updateRow = async ({ id, updates }) => {
     const { data: current, error: err } = await supabase
@@ -125,18 +94,10 @@ const updateRow = async ({ id, updates }) => {
     return data;
 };
 
-/* -------------------------------------------------------------------------- */
-/*                                  DELETE                                    */
-/* -------------------------------------------------------------------------- */
-
 const remove = async (id) => {
     const { error } = await supabase.from('persons').delete().eq('id', id);
     if (error) throw error;
 };
-
-/* -------------------------------------------------------------------------- */
-/*                       React-Query wrappers (DRY)                           */
-/* -------------------------------------------------------------------------- */
 
 const useInvalidatePersons = () => {
     const projectId = useProjectId();
@@ -144,7 +105,6 @@ const useInvalidatePersons = () => {
     return () => qc.invalidateQueries({ queryKey: ['persons', projectId] });
 };
 
-/** Добавить человека */
 export const useAddPerson = () => {
     const projectId         = useProjectId();
     const invalidatePersons = useInvalidatePersons();
@@ -153,8 +113,6 @@ export const useAddPerson = () => {
         onSuccess  : invalidatePersons,
     });
 };
-
-/** Обновить человека */
 export const useUpdatePerson = () => {
     const invalidatePersons = useInvalidatePersons();
     return useMutation({
@@ -162,8 +120,6 @@ export const useUpdatePerson = () => {
         onSuccess  : invalidatePersons,
     });
 };
-
-/** Удалить человека */
 export const useDeletePerson = () => {
     const invalidatePersons = useInvalidatePersons();
     return useMutation({

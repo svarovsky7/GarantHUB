@@ -389,7 +389,7 @@
     "column_name": "role",
     "data_type": "text",
     "is_nullable": "NO",
-    "column_default": "'user'::text"
+    "column_default": "'USER'::text"
   },
   {
     "table_name": "profiles",

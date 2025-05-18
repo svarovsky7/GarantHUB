@@ -1,20 +1,34 @@
-// -----------------------------------------------------------------------------
-// Обёртка страницы создания / редактирования замечания с фиолетовым header
-// ВАЖНО: форма полностью перемонтируется при смене projectId –
-// благодаря этому пользователь никогда не увидит «чужие» проекты/объекты.
-// -----------------------------------------------------------------------------
+// src/pages/TicketsPage/TicketFormPage.js
 import React from 'react';
-import { Box, Paper, Typography } from '@mui/material';
+import { Box, Paper, Typography, Alert } from '@mui/material';
 import { useParams } from 'react-router-dom';
 
 import TicketForm          from '@/features/ticket/TicketForm';
-import { useProjectId }    from '@/shared/hooks/useProjectId';      // CHANGE: текущий проект
+import { useProjectId }    from '@/shared/hooks/useProjectId';
 
 export default function TicketFormPage() {
     const { ticketId } = useParams();
     const title       = ticketId ? 'Редактирование замечания' : 'Добавление замечания';
 
-    const projectId = useProjectId();                               // CHANGE
+    const projectId = useProjectId();
+
+    // --- Если проект не выбран ---
+    if (!projectId) {
+        return (
+            <Box sx={{ p: { xs: 2, md: 4 } }}>
+                <Paper elevation={3} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+                    <Box sx={{ bgcolor: 'primary.main', color: '#fff', py: 2, px: 3 }}>
+                        <Typography variant="h6" fontWeight={600}>{title}</Typography>
+                    </Box>
+                    <Box sx={{ p: { xs: 3, md: 5 } }}>
+                        <Alert severity="warning">
+                            Не выбран проект. Пожалуйста, выберите проект в верхней панели для создания замечания.
+                        </Alert>
+                    </Box>
+                </Paper>
+            </Box>
+        );
+    }
 
     return (
         <Box sx={{ p: { xs: 2, md: 4 } }}>
@@ -23,17 +37,8 @@ export default function TicketFormPage() {
                 <Box sx={{ bgcolor: 'primary.main', color: '#fff', py: 2, px: 3 }}>
                     <Typography variant="h6" fontWeight={600}>{title}</Typography>
                 </Box>
-
                 {/* --- форма --- */}
                 <Box sx={{ p: { xs: 3, md: 5 } }}>
-                    {/* -----------------------------------------------------------------
-                       CHANGE: key заставляет React размонтировать TicketForm
-                       при изменении projectId или ticketId.  Благодаря этому:
-                       • при создании нового замечания в поле «Проект» остаётся
-                         только один (разрешённый) пункт;
-                       • смена проекта в NavBar мгновенно отражается на форме,
-                         сбрасывает стейт и подгружает новые справочники.
-                       ----------------------------------------------------------------- */}
                     <TicketForm key={`${projectId ?? 'none'}-${ticketId ?? 'new'}`} />
                 </Box>
             </Paper>

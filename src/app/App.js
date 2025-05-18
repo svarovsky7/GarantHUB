@@ -1,6 +1,7 @@
 // src/app/App.js
 import React, { useEffect, useCallback } from 'react';
 import { Container, Box } from '@mui/material';
+import { useLocation } from 'react-router-dom';
 
 import { supabase }     from '@shared/api/supabaseClient';
 import { useAuthStore } from '@shared/store/authStore';
@@ -12,6 +13,7 @@ const log = (...a) => console.log('%c[App]', 'color:teal', ...a);
 
 export default function App() {
     const setProfile = useAuthStore((s) => s.setProfile);
+    const location = useLocation();
 
     const loadProfile = useCallback(
         async (user, tag = '') => {
@@ -53,9 +55,12 @@ export default function App() {
         return () => subscription?.unsubscribe?.();
     }, [loadProfile, setProfile]);
 
+    // Не показываем NavBar на страницах login/register
+    const hideNavBar = ['/login', '/register'].includes(location.pathname);
+
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-            <NavBar />
+            {!hideNavBar && <NavBar />}
             <Container maxWidth="lg" sx={{ flexGrow: 1, py: 3 }}>
                 <AppRouter />
             </Container>
