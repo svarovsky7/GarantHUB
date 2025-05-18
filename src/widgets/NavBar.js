@@ -1,17 +1,17 @@
 // -----------------------------------------------------------------------------
-// Навигационная панель – добавлено выпадающее меню проектов
+// Навигационная панель – добавлено выпадающее меню проектов + раздел "Структура проекта"
 // -----------------------------------------------------------------------------
-import React                     from 'react';
-import { Link as RouterLink }    from 'react-router-dom';
+import React from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 import {
     AppBar, Toolbar, Typography, Button,
     Box, FormControl, Select, MenuItem, CircularProgress,
 } from '@mui/material';
-import LogoutIcon  from '@mui/icons-material/Logout';
+import LogoutIcon from '@mui/icons-material/Logout';
 
-import { supabase }      from '@/shared/api/supabaseClient';
-import { useAuthStore }  from '@/shared/store/authStore';
-import { useProjects }   from '@/entities/project';
+import { supabase } from '@/shared/api/supabaseClient';
+import { useAuthStore } from '@/shared/store/authStore';
+import { useProjects } from '@/entities/project';
 
 const NavBar = () => {
     const profile      = useAuthStore((s) => s.profile);
@@ -40,6 +40,9 @@ const NavBar = () => {
                 </Typography>
 
                 {/* --- навигация --- */}
+                <Button color="inherit" component={RouterLink} to="/structure">
+                    Структура&nbsp;проекта
+                </Button>
                 <Button color="inherit" component={RouterLink} to="/stats-go">
                     Статистика
                 </Button>

@@ -15,6 +15,7 @@ import LitigationsPage from '@/pages/LitigationsPage/LitigationsPage';
 import LoginPage    from '@/pages/UnitsPage/LoginPage';     // ← CHANGE
 import RegisterPage from '@/pages/UnitsPage/RegisterPage';  // ← CHANGE
 import AdminPage    from '@/pages/UnitsPage/AdminPage';
+import ProjectStructurePage from '@/pages/ProjectStructurePage/ProjectStructurePage';
 
 /** --------------------------------------------------------------------------
  *  Компонент-сторож
@@ -61,6 +62,14 @@ export default function AppRouter() {
                 element={(
                     <RequireAuth>
                         <TicketsPage />
+                    </RequireAuth>
+                )}
+            />
+            <Route
+                path="/structure"
+                element={(
+                    <RequireAuth>
+                        <ProjectStructurePage />
                     </RequireAuth>
                 )}
             />
