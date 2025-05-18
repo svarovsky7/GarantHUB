@@ -532,6 +532,13 @@
     "column_default": null
   },
   {
+    "table_name": "ticket_statuses",
+    "column_name": "color",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
     "table_name": "ticket_types",
     "column_name": "id",
     "data_type": "integer",

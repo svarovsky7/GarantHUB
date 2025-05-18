@@ -1,6 +1,6 @@
 // src/app/App.js
 import React, { useEffect, useCallback } from 'react';
-import { Container, Box } from '@mui/material';
+import { Container, Box, Toolbar } from '@mui/material';
 import { useLocation } from 'react-router-dom';
 
 import { supabase }     from '@shared/api/supabaseClient';
@@ -39,28 +39,34 @@ export default function App() {
     );
 
     useEffect(() => {
-        setProfile(null);
-
+        let unsub = null;
         (async () => {
             const { data } = await supabase.auth.getSession();
-            if (data.session?.user) loadProfile(data.session.user, 'init');
+            if (data.session?.user) {
+                loadProfile(data.session.user, 'init');
+            } else {
+                setProfile(null);
+            }
+            const { data: { subscription } = {} } =
+                supabase.auth.onAuthStateChange((evt, sess) => {
+                    if (!sess?.user) {
+                        setProfile(null);
+                    } else {
+                        loadProfile(sess.user, `evt:${evt}`);
+                    }
+                });
+            unsub = subscription;
         })();
 
-        const { data: { subscription } = {} } =
-            supabase.auth.onAuthStateChange((evt, sess) => {
-                if (!sess?.user) return setProfile(null);
-                loadProfile(sess.user, `evt:${evt}`);
-            });
-
-        return () => subscription?.unsubscribe?.();
+        return () => unsub?.unsubscribe?.();
     }, [loadProfile, setProfile]);
 
-    // Не показываем NavBar на страницах login/register
     const hideNavBar = ['/login', '/register'].includes(location.pathname);
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
             {!hideNavBar && <NavBar />}
+            {!hideNavBar && <Toolbar />} {/* Компенсация высоты фиксированной шапки */}
             <Container maxWidth="lg" sx={{ flexGrow: 1, py: 3 }}>
                 <AppRouter />
             </Container>

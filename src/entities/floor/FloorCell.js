@@ -11,12 +11,13 @@ const FLOOR_COLOR = "#1976d2";
 export default function FloorCell({
                                       floor,
                                       units,
+                                      ticketsByUnit, // Новый проп!
                                       onAddUnit,
                                       onEditFloor,
                                       onDeleteFloor,
                                       onEditUnit,
                                       onDeleteUnit,
-                                      onUnitClick, // <--- НОВЫЙ пропс!
+                                      onUnitClick,
                                   }) {
     return (
         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mb: 1 }}>
@@ -67,9 +68,10 @@ export default function FloorCell({
                 <UnitCell
                     key={unit.id}
                     unit={unit}
+                    tickets={ticketsByUnit ? ticketsByUnit[unit.id] : []} // <-- Вот тут!
                     onEditUnit={() => onEditUnit?.(unit)}
                     onDeleteUnit={() => onDeleteUnit?.(unit)}
-                    onAction={() => onUnitClick?.(unit)} // ВАЖНО: передаем onUnitClick!
+                    onAction={() => onUnitClick?.(unit)}
                 />
             ))}
             <Box

@@ -6,29 +6,56 @@ export default function useUnitsMatrix(projectId, building, section) {
     const [units, setUnits] = useState([]);
     const [floors, setFloors] = useState([]);
     const [unitsByFloor, setUnitsByFloor] = useState({});
+    const [ticketsByUnit, setTicketsByUnit] = useState({});
 
-    // Вынос fetchUnits наружу для возможности вызова из родителя после удаления
     const fetchUnits = useCallback(async () => {
         if (!projectId || !building) {
             setUnits([]);
             setFloors([]);
             setUnitsByFloor({});
+            setTicketsByUnit({});
             return;
         }
+        // Грузим units
         let query = supabase
             .from('units')
             .select('*')
             .eq('project_id', projectId)
             .eq('building', building);
         if (section) query = query.eq('section', section);
-        const { data } = await query;
-        setUnits(data || []);
+        const { data: unitsData } = await query;
+        setUnits(unitsData || []);
+
+        // Грузим замечания с цветом статуса
+        if (unitsData && unitsData.length > 0) {
+            const unitIds = unitsData.map(u => u.id);
+            const { data: ticketsData } = await supabase
+                .from('tickets')
+                .select(`
+                    id,
+                    unit_id,
+                    status_id,
+                    ticket_statuses(color)
+                `)
+                .in('unit_id', unitIds);
+            const byUnit = {};
+            (ticketsData || []).forEach(t => {
+                if (!byUnit[t.unit_id]) byUnit[t.unit_id] = [];
+                byUnit[t.unit_id].push({
+                    id: t.id,
+                    status_id: t.status_id,
+                    color: t.ticket_statuses?.color || null,
+                });
+            });
+            setTicketsByUnit(byUnit);
+        } else {
+            setTicketsByUnit({});
+        }
     }, [projectId, building, section]);
 
     useEffect(() => { fetchUnits(); }, [fetchUnits]);
 
     useEffect(() => {
-        // floors (без 0)
         const unique = Array.from(
             new Map(
                 units
@@ -44,7 +71,6 @@ export default function useUnitsMatrix(projectId, building, section) {
         });
         setFloors(unique);
 
-        // unitsByFloor
         const map = {};
         units.forEach(u => {
             if (!map[u.floor]) map[u.floor] = [];
@@ -53,17 +79,14 @@ export default function useUnitsMatrix(projectId, building, section) {
         setUnitsByFloor(map);
     }, [units]);
 
-    // --- добавление этажа и квартиры ---
     const handleAddUnit = async (floor) => {
         let maxNum = 0;
         if (unitsByFloor[floor] && unitsByFloor[floor].length > 0) {
-            // На этаже уже есть квартиры — берём максимальный номер на этом этаже
             const nums = unitsByFloor[floor]
                 .map(u => Number(u.name))
                 .filter(v => !isNaN(v));
             if (nums.length > 0) maxNum = Math.max(...nums);
         } else {
-            // На этаже нет квартир — ищем этаж ниже
             const idx = floors.indexOf(floor);
             let belowFloor = idx < floors.length - 1 ? floors[idx + 1] : null;
             if (belowFloor && unitsByFloor[belowFloor] && unitsByFloor[belowFloor].length > 0) {
@@ -85,7 +108,6 @@ export default function useUnitsMatrix(projectId, building, section) {
         if (!error) setUnits((prev) => [...prev, data[0]]);
     };
 
-    // Теперь новый этаж = максимальный этаж + 1 (вверх)
     const handleAddFloor = async () => {
         let candidate = null;
         const numericFloors = floors.filter(f => !isNaN(f));
@@ -103,8 +125,9 @@ export default function useUnitsMatrix(projectId, building, section) {
         unitsByFloor,
         handleAddUnit,
         handleAddFloor,
-        units, // для кастомных компонент-гридов
+        units,
         setUnits,
         fetchUnits,
+        ticketsByUnit, // Новый ключ
     };
 }

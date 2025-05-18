@@ -1,6 +1,4 @@
-// -----------------------------------------------------------------------------
-// Навигационная панель – добавлено выпадающее меню проектов + раздел "Структура проекта"
-// -----------------------------------------------------------------------------
+// src/widgets/NavBar.js
 import React from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import {
@@ -26,7 +24,7 @@ const NavBar = () => {
     };
 
     return (
-        <AppBar position="static">
+        <AppBar position="fixed"> {/* Исправлено: fixed вместо static */}
             <Toolbar sx={{ gap: 2 }}>
                 {/* --- логотип --- */}
                 <Typography
@@ -71,11 +69,7 @@ const NavBar = () => {
                             {profile.name ?? profile.email}
                         </Typography>
 
-                        {/* ------------------------------------------------------------------
-                           CHANGE: выпадающий список проектов.
-                           • Skeleton-индикатор при первой загрузке
-                           • onChange → useAuthStore.setProjectId → триггерит глобальный ре-рендер
-                           ------------------------------------------------------------------ */}
+                        {/* выпадающий список проектов */}
                         {isPending ? (
                             <CircularProgress size={14} sx={{ mt: .5 }} />
                         ) : (

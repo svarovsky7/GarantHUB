@@ -5,12 +5,29 @@ import DeleteOutline from '@mui/icons-material/DeleteOutline';
 
 const CELL_SIZE = 54;
 
+// Функция для hex → rgba
+function getSemiTransparent(color, alpha = 0.30) {
+    if (!color) return undefined;
+    if (color.startsWith('#') && color.length === 7) {
+        const r = parseInt(color.slice(1, 3), 16);
+        const g = parseInt(color.slice(3, 5), 16);
+        const b = parseInt(color.slice(5, 7), 16);
+        return `rgba(${r},${g},${b},${alpha})`;
+    }
+    return color;
+}
+
 export default function UnitCell({
                                      unit,
+                                     tickets = [],
                                      onEditUnit,
                                      onDeleteUnit,
-                                     onAction, // callback: (unit) => void
+                                     onAction,
                                  }) {
+    // Берём первый тикет для окраски (или нужную бизнес-логику)
+    const ticket = Array.isArray(tickets) && tickets.length > 0 ? tickets[0] : null;
+    const bgColor = ticket && ticket.color ? getSemiTransparent(ticket.color) : '#fff';
+
     return (
         <Paper
             sx={{
@@ -22,7 +39,7 @@ export default function UnitCell({
                 alignItems: 'stretch',
                 justifyContent: 'flex-start',
                 border: '1.5px solid #dde2ee',
-                background: '#fff',
+                background: bgColor,
                 borderRadius: '12px',
                 boxShadow: '0 1px 6px 0 #E3ECFB',
                 px: 0,
@@ -33,13 +50,12 @@ export default function UnitCell({
                 '&:hover': {
                     boxShadow: '0 4px 16px 0 #b5d2fa',
                     borderColor: '#1976d2',
-                    background: '#f6faff',
+                    background: ticket && ticket.color ? getSemiTransparent(ticket.color, 0.55) : '#f6faff',
                 },
                 position: 'relative',
             }}
             elevation={0}
             onClick={(e) => {
-                // Игнорируем клик по иконкам
                 if (
                     e.target.closest('.unit-action-icon') ||
                     e.target.closest('.MuiTooltip-popper')

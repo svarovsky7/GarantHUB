@@ -8,7 +8,7 @@ import TicketForm from '@/features/ticket/TicketForm'; // путь может о
 
 export default function UnitsMatrix({ projectId, building, section }) {
     const {
-        floors, unitsByFloor, handleAddUnit, handleAddFloor, setUnits,
+        floors, unitsByFloor, handleAddUnit, handleAddFloor, setUnits, ticketsByUnit, fetchUnits,
     } = useUnitsMatrix(projectId, building, section);
 
     // Диалоги редактирования/удаления
@@ -26,16 +26,31 @@ export default function UnitsMatrix({ projectId, building, section }) {
     const handleDeleteUnit = (unit) => setConfirmDialog({ open: true, type: 'unit', target: unit });
     const handleUnitAction = (unit) => setActionDialog({ open: true, unit, action: '' });
 
-    // Сохранить
-    const handleSaveEdit = () => {
+    // Сохранить (исправлено: обновление в базе и fetchUnits)
+    const handleSaveEdit = async () => {
         if (editDialog.type === 'floor') {
             const newFloor = isNaN(editDialog.value) ? editDialog.value : Number(editDialog.value);
-            setUnits(units => units.map(u => u.floor === editDialog.target ? { ...u, floor: newFloor } : u));
+            // Получаем все квартиры на выбранном этаже
+            const floorUnits = [];
+            for (const u of Object.values(unitsByFloor).flat()) {
+                if (u.floor === editDialog.target) floorUnits.push(u);
+            }
+            if (floorUnits.length) {
+                const ids = floorUnits.map(u => u.id);
+                await supabase
+                    .from('units')
+                    .update({ floor: newFloor })
+                    .in('id', ids);
+            }
         }
         if (editDialog.type === 'unit') {
-            setUnits(units => units.map(u => u.id === editDialog.target.id ? { ...u, name: editDialog.value } : u));
+            await supabase
+                .from('units')
+                .update({ name: editDialog.value })
+                .eq('id', editDialog.target.id);
         }
         setEditDialog({ open: false, type: '', target: null, value: '' });
+        fetchUnits(); // Перезагружаем данные!
     };
 
     // Удалить — теперь с реальным удалением из БД
@@ -104,12 +119,13 @@ export default function UnitsMatrix({ projectId, building, section }) {
                         key={floor}
                         floor={floor}
                         units={unitsByFloor[floor] || []}
+                        ticketsByUnit={ticketsByUnit}
                         onAddUnit={() => handleAddUnit(floor)}
                         onEditFloor={handleEditFloor}
                         onDeleteFloor={handleDeleteFloor}
                         onEditUnit={handleEditUnit}
                         onDeleteUnit={handleDeleteUnit}
-                        onUnitClick={handleUnitAction} // ВАЖНО: теперь работает!
+                        onUnitClick={handleUnitAction}
                     />
                 ))}
                 {/* Кнопка добавления нового этажа */}
@@ -177,8 +193,11 @@ export default function UnitsMatrix({ projectId, building, section }) {
             <Dialog
                 open={actionDialog.open}
                 onClose={() => setActionDialog({ open: false, unit: null, action: '' })}
-                maxWidth="xs"
+                maxWidth="md"
                 fullWidth
+                PaperProps={{
+                    sx: { minWidth: 540, maxWidth: 900 }
+                }}
             >
                 <DialogTitle sx={{ fontWeight: 600, textAlign: 'center' }}>
                     Квартира {actionDialog.unit?.name}
@@ -220,7 +239,10 @@ export default function UnitsMatrix({ projectId, building, section }) {
                             <TicketForm
                                 embedded
                                 initialUnitId={actionDialog.unit?.id}
-                                onCreated={() => setActionDialog({ open: false, unit: null, action: '' })}
+                                onCreated={() => {
+                                    setActionDialog({ open: false, unit: null, action: '' });
+                                    fetchUnits(); // Теперь цвета и тикеты обновятся сразу!
+                                }}
                                 onCancel={() => setActionDialog({ open: false, unit: null, action: '' })}
                             />
                         </Box>
