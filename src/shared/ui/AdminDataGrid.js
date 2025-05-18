@@ -1,15 +1,3 @@
-/**
- * Универсальный блок: Заголовок + кнопка «Добавить» + DataGrid
- * ------------------------------------------------------------------
- * Использовать так:
- * <AdminDataGrid
- *    title="Проекты"
- *    rows={rows}
- *    columns={columns}
- *    loading={isLoading}
- *    onAdd={() => setModal({mode:'add'})}
- * />
- */
 import React from 'react';
 import {
     Paper, Box, Typography, Button,
@@ -22,10 +10,14 @@ export default function AdminDataGrid({
                                           rows,
                                           columns,
                                           loading = false,
-                                          onAdd   = null,
-                                          pageSize = 100,
+                                          onAdd = null,
+                                          pageSize = 25,
+                                          rowsPerPageOptions = [10, 25, 50, 100],
                                           ...rest
                                       }) {
+    // Управляемые параметры для DataGrid (controlled pagination)
+    const [pageSizeState, setPageSizeState] = React.useState(pageSize);
+
     return (
         <Paper elevation={1} sx={{ p: 1.5, mb: 3 }}>
             {/* ───── Заголовок + кнопка ─────────────────────────────── */}
@@ -33,7 +25,6 @@ export default function AdminDataGrid({
                 <Typography variant="h6" sx={{ flexGrow: 1 }}>
                     {title}
                 </Typography>
-
                 {onAdd && (
                     <Button
                         variant="contained"
@@ -56,10 +47,10 @@ export default function AdminDataGrid({
                 disableRowSelectionOnClick
                 loading={loading}
                 hideFooterSelectedRowCount
-                pageSizeOptions={[pageSize]}
-                initialState={{
-                    pagination: { paginationModel: { pageSize } },
-                }}
+                pageSize={pageSizeState}
+                onPageSizeChange={(newSize) => setPageSizeState(newSize)}
+                rowsPerPageOptions={rowsPerPageOptions}
+                pagination
                 {...rest}
             />
         </Paper>

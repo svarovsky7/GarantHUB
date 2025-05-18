@@ -1,7 +1,4 @@
 // src/features/ticketStatus/TicketStatusForm.js
-// -------------------------------------------------------------
-// Форма добавления/редактирования статуса замечания
-// -------------------------------------------------------------
 import React from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import {
@@ -30,6 +27,7 @@ export default function TicketStatusForm({
         defaultValues: {
             name       : initialData?.name        ?? '',
             description: initialData?.description ?? '',
+            color      : initialData?.color       ?? '#1976d2', // CHANGE
         },
     });
 
@@ -67,6 +65,21 @@ export default function TicketStatusForm({
                                 multiline
                                 rows={3}
                                 fullWidth
+                            />
+                        )}
+                    />
+
+                    <Controller
+                        name="color"
+                        control={control}
+                        rules={{ required: 'Цвет обязателен' }}
+                        render={({ field }) => (
+                            <TextField
+                                {...field}
+                                label="Цвет статуса"
+                                type="color"
+                                fullWidth
+                                inputProps={{ style: { height: 48, padding: 0 } }}
                             />
                         )}
                     />

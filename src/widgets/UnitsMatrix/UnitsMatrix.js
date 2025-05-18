@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Box, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from '@mui/material';
+import { Box, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import FloorCell from '@/entities/floor/FloorCell';
 import useUnitsMatrix from '@/shared/hooks/useUnitsMatrix';
 import { supabase } from '@/shared/api/supabaseClient';
+import TicketForm from '@/features/ticket/TicketForm'; // путь может отличаться!
 
 export default function UnitsMatrix({ projectId, building, section }) {
     const {
@@ -14,12 +15,16 @@ export default function UnitsMatrix({ projectId, building, section }) {
     const [editDialog, setEditDialog] = useState({ open: false, type: '', target: null, value: '' });
     const [confirmDialog, setConfirmDialog] = useState({ open: false, type: '', target: null });
 
+    // Диалог действий по квартире
+    const [actionDialog, setActionDialog] = useState({ open: false, unit: null, action: '' });
+
     // Этаж
     const handleEditFloor = (floor) => setEditDialog({ open: true, type: 'floor', target: floor, value: String(floor) });
     const handleDeleteFloor = (floor) => setConfirmDialog({ open: true, type: 'floor', target: floor });
     // Квартира
     const handleEditUnit = (unit) => setEditDialog({ open: true, type: 'unit', target: unit, value: unit.name });
     const handleDeleteUnit = (unit) => setConfirmDialog({ open: true, type: 'unit', target: unit });
+    const handleUnitAction = (unit) => setActionDialog({ open: true, unit, action: '' });
 
     // Сохранить
     const handleSaveEdit = () => {
@@ -85,85 +90,143 @@ export default function UnitsMatrix({ projectId, building, section }) {
 
     // Если этажи есть — обычный вывод шахматки
     return (
-        <Box sx={{
-            display: 'inline-flex',
-            flexDirection: 'column',
-            alignItems: 'flex-start',
-            pl: 0,
-            mt: 2,
-            gap: 1
-        }}>
-            {floors.map(floor => (
-                <FloorCell
-                    key={floor}
-                    floor={floor}
-                    units={unitsByFloor[floor] || []}
-                    onAddUnit={() => handleAddUnit(floor)}
-                    onEditFloor={handleEditFloor}
-                    onDeleteFloor={handleDeleteFloor}
-                    onEditUnit={handleEditUnit}
-                    onDeleteUnit={handleDeleteUnit}
-                />
-            ))}
-            {/* Кнопка добавления нового этажа */}
-            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mt: 1 }}>
-                <Box
-                    sx={{
-                        width: 80, minWidth: 80, height: 54,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        borderRight: '2.5px solid #1976d2', borderRadius: '12px 0 0 12px', background: '#fff'
-                    }}
-                >
-                    <IconButton
-                        onClick={handleAddFloor}
+        <>
+            <Box sx={{
+                display: 'inline-flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                pl: 0,
+                mt: 2,
+                gap: 1
+            }}>
+                {floors.map(floor => (
+                    <FloorCell
+                        key={floor}
+                        floor={floor}
+                        units={unitsByFloor[floor] || []}
+                        onAddUnit={() => handleAddUnit(floor)}
+                        onEditFloor={handleEditFloor}
+                        onDeleteFloor={handleDeleteFloor}
+                        onEditUnit={handleEditUnit}
+                        onDeleteUnit={handleDeleteUnit}
+                        onUnitClick={handleUnitAction} // ВАЖНО: теперь работает!
+                    />
+                ))}
+                {/* Кнопка добавления нового этажа */}
+                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mt: 1 }}>
+                    <Box
                         sx={{
-                            border: '2px dashed #1976d2',
-                            width: 44, height: 44,
-                            background: '#F3F7FF',
-                            color: '#1976d2',
-                            '&:hover': { background: '#e3ecfb' }
+                            width: 80, minWidth: 80, height: 54,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            borderRight: '2.5px solid #1976d2', borderRadius: '12px 0 0 12px', background: '#fff'
                         }}
                     >
-                        <AddIcon fontSize="large" />
-                    </IconButton>
+                        <IconButton
+                            onClick={handleAddFloor}
+                            sx={{
+                                border: '2px dashed #1976d2',
+                                width: 44, height: 44,
+                                background: '#F3F7FF',
+                                color: '#1976d2',
+                                '&:hover': { background: '#e3ecfb' }
+                            }}
+                        >
+                            <AddIcon fontSize="large" />
+                        </IconButton>
+                    </Box>
                 </Box>
+
+                {/* Диалоги */}
+                <Dialog open={editDialog.open} onClose={() => setEditDialog({ open: false, type: '', target: null, value: '' })}>
+                    <DialogTitle>
+                        {editDialog.type === 'floor' ? 'Переименовать этаж' : 'Переименовать квартиру'}
+                    </DialogTitle>
+                    <DialogContent>
+                        <TextField
+                            fullWidth
+                            autoFocus
+                            value={editDialog.value}
+                            onChange={e => setEditDialog({ ...editDialog, value: e.target.value })}
+                            sx={{ mt: 2 }}
+                        />
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setEditDialog({ open: false, type: '', target: null, value: '' })}>Отмена</Button>
+                        <Button variant="contained" onClick={handleSaveEdit}>Сохранить</Button>
+                    </DialogActions>
+                </Dialog>
+                <Dialog open={confirmDialog.open} onClose={() => setConfirmDialog({ open: false, type: '', target: null })}>
+                    <DialogTitle>
+                        {confirmDialog.type === 'floor'
+                            ? `Удалить этаж "${confirmDialog.target}" со всеми квартирами?`
+                            : `Удалить квартиру "${confirmDialog.target?.name}"?`}
+                    </DialogTitle>
+                    <DialogContent>
+                        {confirmDialog.type === 'floor'
+                            ? 'Все квартиры на этом этаже будут удалены безвозвратно.'
+                            : 'Квартира будет удалена безвозвратно.'}
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setConfirmDialog({ open: false, type: '', target: null })}>Отмена</Button>
+                        <Button color="error" variant="contained" onClick={handleConfirmDelete}>Удалить</Button>
+                    </DialogActions>
+                </Dialog>
             </Box>
 
-            {/* Диалоги */}
-            <Dialog open={editDialog.open} onClose={() => setEditDialog({ open: false, type: '', target: null, value: '' })}>
-                <DialogTitle>
-                    {editDialog.type === 'floor' ? 'Переименовать этаж' : 'Переименовать квартиру'}
+            {/* Модальное меню по ячейке квартиры */}
+            <Dialog
+                open={actionDialog.open}
+                onClose={() => setActionDialog({ open: false, unit: null, action: '' })}
+                maxWidth="xs"
+                fullWidth
+            >
+                <DialogTitle sx={{ fontWeight: 600, textAlign: 'center' }}>
+                    Квартира {actionDialog.unit?.name}
                 </DialogTitle>
-                <DialogContent>
-                    <TextField
-                        fullWidth
-                        autoFocus
-                        value={editDialog.value}
-                        onChange={e => setEditDialog({ ...editDialog, value: e.target.value })}
-                        sx={{ mt: 2 }}
-                    />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setEditDialog({ open: false, type: '', target: null, value: '' })}>Отмена</Button>
-                    <Button variant="contained" onClick={handleSaveEdit}>Сохранить</Button>
-                </DialogActions>
+                {!actionDialog.action && (
+                    <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            fullWidth
+                            onClick={() => setActionDialog(ad => ({ ...ad, action: 'ticket' }))}
+                        >
+                            Добавить замечание
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            color="secondary"
+                            fullWidth
+                            disabled
+                        >
+                            Добавить судебное дело
+                        </Button>
+                        <Button
+                            variant="text"
+                            color="info"
+                            fullWidth
+                            disabled
+                        >
+                            Показать историю
+                        </Button>
+                    </DialogContent>
+                )}
+                {actionDialog.action === 'ticket' && (
+                    <DialogContent sx={{ p: 0, pt: 2 }}>
+                        <Typography sx={{ fontWeight: 500, textAlign: 'center', mb: 2 }}>
+                            Добавление замечания для квартиры {actionDialog.unit?.name}
+                        </Typography>
+                        <Box sx={{ px: 2, pb: 2 }}>
+                            <TicketForm
+                                embedded
+                                initialUnitId={actionDialog.unit?.id}
+                                onCreated={() => setActionDialog({ open: false, unit: null, action: '' })}
+                                onCancel={() => setActionDialog({ open: false, unit: null, action: '' })}
+                            />
+                        </Box>
+                    </DialogContent>
+                )}
             </Dialog>
-            <Dialog open={confirmDialog.open} onClose={() => setConfirmDialog({ open: false, type: '', target: null })}>
-                <DialogTitle>
-                    {confirmDialog.type === 'floor'
-                        ? `Удалить этаж "${confirmDialog.target}" со всеми квартирами?`
-                        : `Удалить квартиру "${confirmDialog.target?.name}"?`}
-                </DialogTitle>
-                <DialogContent>
-                    {confirmDialog.type === 'floor'
-                        ? 'Все квартиры на этом этаже будут удалены безвозвратно.'
-                        : 'Квартира будет удалена безвозвратно.'}
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setConfirmDialog({ open: false, type: '', target: null })}>Отмена</Button>
-                    <Button color="error" variant="contained" onClick={handleConfirmDelete}>Удалить</Button>
-                </DialogActions>
-            </Dialog>
-        </Box>
+        </>
     );
 }

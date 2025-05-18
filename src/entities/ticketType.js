@@ -1,6 +1,4 @@
-// -----------------------------------------------------------------------------
-// CRUD-hooks для ticket_types (ГЛОБАЛЬНО — без фильтрации по project_id)
-// -----------------------------------------------------------------------------
+// src/entities/ticketType.js
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/shared/api/supabaseClient';
 

@@ -16,6 +16,7 @@ export default function FloorCell({
                                       onDeleteFloor,
                                       onEditUnit,
                                       onDeleteUnit,
+                                      onUnitClick, // <--- НОВЫЙ пропс!
                                   }) {
     return (
         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mb: 1 }}>
@@ -68,6 +69,7 @@ export default function FloorCell({
                     unit={unit}
                     onEditUnit={() => onEditUnit?.(unit)}
                     onDeleteUnit={() => onDeleteUnit?.(unit)}
+                    onAction={() => onUnitClick?.(unit)} // ВАЖНО: передаем onUnitClick!
                 />
             ))}
             <Box

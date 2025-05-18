@@ -1,7 +1,3 @@
-// -----------------------------------------------------------------------------
-// Форма создания / редактирования замечания
-// Проект подставляется автоматически из useProjectId и не редактируется
-// -----------------------------------------------------------------------------
 import React, { useEffect, useState, useCallback } from 'react';
 import { useForm, FormProvider, Controller } from 'react-hook-form';
 import {
@@ -43,7 +39,12 @@ const schema = yup.object({
         .test('is-dayjs-or-null', 'Некорректная дата', v => v === null || (dayjs.isDayjs(v) && v.isValid())),
 }).required();
 
-export default function TicketForm() {
+export default function TicketForm({
+                                       embedded = false,
+                                       initialUnitId = null,
+                                       onCreated,
+                                       onCancel,
+                                   }) {
     const navigate   = useNavigate();
     const { ticketId } = useParams();
     const isEditMode = Boolean(ticketId);
@@ -62,7 +63,7 @@ export default function TicketForm() {
         resolver      : yupResolver(schema),
         defaultValues : {
             project_id  : projectId,
-            unit_id     : null,
+            unit_id     : initialUnitId ?? null,
             type_id     : null,
             status_id   : null,
             title       : '',
@@ -108,6 +109,13 @@ export default function TicketForm() {
         setValue('project_id', projectId);
     }, [projectId, setValue]);
 
+    // Автоматически подставлять initialUnitId, если форма открывается в embed-режиме
+    useEffect(() => {
+        if (embedded && initialUnitId) {
+            setValue('unit_id', initialUnitId);
+        }
+    }, [embedded, initialUnitId, setValue]);
+
     const serialize = (data) => ({
         project_id  : data.project_id,
         unit_id     : data.unit_id ?? null,
@@ -137,7 +145,11 @@ export default function TicketForm() {
         } else {
             await createTicket({ ...dto, attachments: newFiles });
         }
-        navigate('/tickets');
+        if (onCreated) {
+            onCreated();
+        } else {
+            navigate('/tickets');
+        }
     };
 
     // --- Loader и Alert после хуков ---
@@ -201,11 +213,12 @@ export default function TicketForm() {
                                             }}
                                         />
                                     )}
+                                    disabled={Boolean(embedded && initialUnitId)}
                                 />
                             )}
                         />
 
-                        {/* Type ----------------------------------------------------------- */}
+                        {/* Тип ----------------------------------------------------------- */}
                         <Controller
                             name="type_id"
                             control={control}
@@ -240,7 +253,7 @@ export default function TicketForm() {
                             )}
                         />
 
-                        {/* Status --------------------------------------------------------- */}
+                        {/* Статус --------------------------------------------------------- */}
                         <Controller
                             name="status_id"
                             control={control}
@@ -372,14 +385,25 @@ export default function TicketForm() {
                                     ? <CircularProgress size={24} sx={{ color: 'white' }} />
                                     : isEditMode ? 'Сохранить' : 'Создать'}
                             </Button>
-                            <Button
-                                variant="outlined"
-                                color="inherit"
-                                onClick={() => navigate('/tickets')}
-                                disabled={isSubmitting || isCreatingTicket || isUpdatingTicket}
-                            >
-                                Отмена
-                            </Button>
+                            {embedded ? (
+                                <Button
+                                    variant="outlined"
+                                    color="inherit"
+                                    onClick={onCancel}
+                                    disabled={isSubmitting || isCreatingTicket || isUpdatingTicket}
+                                >
+                                    Отмена
+                                </Button>
+                            ) : (
+                                <Button
+                                    variant="outlined"
+                                    color="inherit"
+                                    onClick={() => navigate('/tickets')}
+                                    disabled={isSubmitting || isCreatingTicket || isUpdatingTicket}
+                                >
+                                    Отмена
+                                </Button>
+                            )}
                         </Stack>
                     </Stack>
                 </form>

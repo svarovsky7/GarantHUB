@@ -1,6 +1,4 @@
-// -----------------------------------------------------------------------------
-// CRUD-hooks для ticket_statuses (ГЛОБАЛЬНО — без фильтрации по project_id)
-// -----------------------------------------------------------------------------
+// src/entities/ticketStatus.js
 import { supabase } from '@/shared/api/supabaseClient';
 import {
     useQuery,
@@ -30,7 +28,7 @@ export const useAddTicketStatus = () => {
     const qc = useQueryClient();
     return useMutation({
         mutationFn: async (values) => {
-            const payload = { ...values };
+            const payload = { ...values }; // color присутствует!
             const { data, error } = await supabase
                 .from(TABLE)
                 .insert(payload)
@@ -50,7 +48,7 @@ export const useUpdateTicketStatus = () => {
         mutationFn: async ({ id, updates }) => {
             const { data, error } = await supabase
                 .from(TABLE)
-                .update(updates)
+                .update(updates) // color будет в updates
                 .eq('id', id)
                 .select('*')
                 .single();

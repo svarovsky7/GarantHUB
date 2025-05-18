@@ -10,7 +10,10 @@ import UnitsMatrix from '@/widgets/UnitsMatrix/UnitsMatrix';
 import useProjectStructure from '@/shared/hooks/useProjectStructure';
 import { supabase } from '@/shared/api/supabaseClient';
 
+// Ваша функция получения профиля пользователя
+// Замените на актуальную для вашего проекта!
 function getCurrentProfile() {
+    // например, profile хранится в localStorage после логина, либо используйте глобальный store
     try {
         return JSON.parse(localStorage.getItem('profile')) || {};
     } catch {
@@ -28,14 +31,15 @@ export default function ProjectStructurePage() {
         refreshAll,
     } = useProjectStructure();
 
+    // Для добавления корпуса и секции
     const [addDialog, setAddDialog] = useState({ open: false, type: '', value: '' });
     const [confirmDialog, setConfirmDialog] = useState({ open: false, type: '', value: '' });
 
-    // --- Восстановление выбора из localStorage и профиля ---
+    // --- Автоматический выбор проекта из профиля, если ни один не выбран
     useEffect(() => {
+        // Берём project_id из профиля или из localStorage
         const profile = getCurrentProfile();
         const saved = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
-        // PROJECT
         if (!projectId) {
             if (saved.projectId && projects.find(p => String(p.id) === String(saved.projectId))) {
                 setProjectId(saved.projectId);
@@ -47,25 +51,28 @@ export default function ProjectStructurePage() {
         }
     }, [projectId, projects, setProjectId]);
 
+    // --- При появлении корпусов или секций — восстанавливаем выбор из localStorage
     useEffect(() => {
         const saved = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
-        // BUILDING
-        if (saved.building && buildings.includes(saved.building)) {
-            if (building !== saved.building) setBuilding(saved.building);
-        } else if (!building && buildings.length > 0) {
-            setBuilding(buildings[0]);
+        if (!building && buildings.length > 0) {
+            if (saved.building && buildings.includes(saved.building)) {
+                setBuilding(saved.building);
+            } else {
+                setBuilding(buildings[0]);
+            }
         }
     }, [buildings, building, setBuilding]);
 
     useEffect(() => {
         const saved = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
-        // SECTION
-        if (saved.section && sections.includes(saved.section)) {
-            if (section !== saved.section) setSection(saved.section);
+        if (!section && sections.length > 0) {
+            if (saved.section && sections.includes(saved.section)) {
+                setSection(saved.section);
+            }
         }
     }, [sections, section, setSection]);
 
-    // --- Сохраняем выбранные значения при каждом изменении ---
+    // --- Сохраняем выбранные значения при каждом изменении
     useEffect(() => {
         localStorage.setItem(
             LS_KEY,

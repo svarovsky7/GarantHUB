@@ -5,17 +5,12 @@ import DeleteOutline from '@mui/icons-material/DeleteOutline';
 
 const CELL_SIZE = 54;
 
-function getFontSize(text) {
-    const len = String(text).length;
-    if (len <= 3) return 21;
-    if (len === 4) return 17;
-    if (len === 5) return 15;
-    if (len === 6) return 13;
-    return 12;
-}
-
-export default function UnitCell({ unit, onEditUnit, onDeleteUnit }) {
-    const fontSize = getFontSize(unit.name);
+export default function UnitCell({
+                                     unit,
+                                     onEditUnit,
+                                     onDeleteUnit,
+                                     onAction, // callback: (unit) => void
+                                 }) {
     return (
         <Paper
             sx={{
@@ -28,16 +23,30 @@ export default function UnitCell({ unit, onEditUnit, onDeleteUnit }) {
                 justifyContent: 'flex-start',
                 border: '1.5px solid #dde2ee',
                 background: '#fff',
-                position: 'relative',
                 borderRadius: '12px',
                 boxShadow: '0 1px 6px 0 #E3ECFB',
                 px: 0,
                 py: 0,
-                overflow: 'hidden'
+                overflow: 'hidden',
+                cursor: 'pointer',
+                transition: 'box-shadow .15s, border-color .15s, background .15s',
+                '&:hover': {
+                    boxShadow: '0 4px 16px 0 #b5d2fa',
+                    borderColor: '#1976d2',
+                    background: '#f6faff',
+                },
+                position: 'relative',
             }}
             elevation={0}
+            onClick={(e) => {
+                // Игнорируем клик по иконкам
+                if (
+                    e.target.closest('.unit-action-icon') ||
+                    e.target.closest('.MuiTooltip-popper')
+                ) return;
+                onAction?.(unit);
+            }}
         >
-            {/* Номер квартиры по центру, занимает всю ширину и высоту кроме футера */}
             <Box
                 sx={{
                     flexGrow: 1,
@@ -50,21 +59,19 @@ export default function UnitCell({ unit, onEditUnit, onDeleteUnit }) {
                 <Typography
                     sx={{
                         fontWeight: 700,
-                        fontSize: fontSize,
+                        fontSize: 18,
                         color: '#202746',
-                        letterSpacing: 0.5,
                         textAlign: 'center',
                         width: '100%',
                         wordBreak: 'break-all',
-                        lineHeight: 1,
-                        userSelect: 'none'
+                        lineHeight: 1.05,
+                        userSelect: 'none',
                     }}
                     title={unit.name}
                 >
                     {unit.name}
                 </Typography>
             </Box>
-            {/* Нижняя панель с иконками */}
             <Box
                 sx={{
                     display: 'flex',
@@ -80,12 +87,13 @@ export default function UnitCell({ unit, onEditUnit, onDeleteUnit }) {
                 <Tooltip title="Переименовать">
                     <IconButton
                         size="small"
+                        className="unit-action-icon"
                         sx={{
                             color: '#b0b6be',
                             p: '2px',
                             '&:hover': { color: '#1976d2', background: 'transparent' },
                         }}
-                        onClick={onEditUnit}
+                        onClick={e => { e.stopPropagation(); onEditUnit?.(unit); }}
                     >
                         <EditOutlined fontSize="small" />
                     </IconButton>
@@ -93,12 +101,13 @@ export default function UnitCell({ unit, onEditUnit, onDeleteUnit }) {
                 <Tooltip title="Удалить">
                     <IconButton
                         size="small"
+                        className="unit-action-icon"
                         sx={{
                             color: '#b0b6be',
                             p: '2px',
                             '&:hover': { color: '#e53935', background: 'transparent' },
                         }}
-                        onClick={onDeleteUnit}
+                        onClick={e => { e.stopPropagation(); onDeleteUnit?.(unit); }}
                     >
                         <DeleteOutline fontSize="small" />
                     </IconButton>
