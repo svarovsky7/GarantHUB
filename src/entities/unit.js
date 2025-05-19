@@ -1,4 +1,5 @@
 // src/entities/unit.js
+
 import { supabase } from '@/shared/api/supabaseClient';
 import {
     useQuery,
@@ -6,6 +7,7 @@ import {
     useQueryClient,
 } from '@tanstack/react-query';
 import { useProjectId } from '@/shared/hooks/useProjectId';
+import { useAuthStore } from '@/shared/store/authStore'; // Добавлено!
 
 /* ---------- базовый SELECT ---------- */
 const SELECT = `
@@ -14,11 +16,13 @@ const SELECT = `
   project:projects ( id, name ),
   unit_persons (
     person:persons ( id, full_name, phone, email )
-  )
+  ),
+  person_id
 `;
 
+// sanitize теперь включает person_id!
 const sanitize = (obj) => {
-    const allowed = ['name', 'building', 'section', 'floor', 'project_id'];
+    const allowed = ['name', 'building', 'section', 'floor', 'project_id', 'person_id'];
     return Object.fromEntries(
         Object.entries(obj)
             .filter(([k]) => allowed.includes(k))
@@ -94,7 +98,7 @@ export const useUnit = (unitId) => {
 
 /* ====================== CREATE ====================== */
 const createUnit = async (payload) => {
-    // защита от дублей (квартира + проект уникальны)
+    // Защита от дублей (квартира + проект уникальны)
     const { data: dup } = await supabase
         .from('units')
         .select('id')
@@ -119,8 +123,13 @@ const createUnit = async (payload) => {
 
 export const useAddUnit = () => {
     const qc = useQueryClient();
+    const userId = useAuthStore((s) => s.profile?.id ?? null);
     return useMutation({
-        mutationFn: (payload) => createUnit(payload), // Теперь корректно из формы
+        mutationFn: (payload) => {
+            if (!userId) throw new Error('Профиль пользователя не загружен');
+            // person_id обязательно подставляется сюда:
+            return createUnit({ ...payload, person_id: userId });
+        },
         onSuccess : () => qc.invalidateQueries({ queryKey: ['units'] }),
     });
 };

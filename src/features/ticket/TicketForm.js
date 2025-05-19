@@ -19,6 +19,7 @@ import { useTicketStatuses }   from '@/entities/ticketStatus';
 import { useCreateTicket, useTicket, signedUrl } from '@/entities/ticket';
 
 import { useProjectId }        from '@/shared/hooks/useProjectId';
+import { useAuthStore }        from '@/shared/store/authStore'; // <--- добавлено!
 import FileDropZone            from '@/shared/ui/FileDropZone';
 import AttachmentPreviewList   from '@/shared/ui/AttachmentPreviewList';
 
@@ -52,6 +53,9 @@ export default function TicketForm({
     const isEditMode = Boolean(ticketId);
 
     const projectId = useProjectId();
+
+    // CHANGE: получаем профиль пользователя
+    const profile = useAuthStore((s) => s.profile);
 
     const { data: ticket, isLoading: isLoadingTicket,
         updateAsync: updateTicket, updating: isUpdatingTicket } = useTicket(ticketId);
@@ -150,6 +154,23 @@ export default function TicketForm({
         }
     };
 
+    // CHANGE: Блокируем рендер формы, если профиль ещё не загружен
+    if (profile === undefined) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 240 }}>
+                <CircularProgress />
+            </Box>
+        );
+    }
+    if (!profile) {
+        return (
+            <Box sx={{ minHeight: 240, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Alert severity="warning">
+                    Авторизуйтесь для создания замечаний.
+                </Alert>
+            </Box>
+        );
+    }
     if (!projectId) {
         return (
             <Box sx={{ minHeight: 240, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -178,6 +199,7 @@ export default function TicketForm({
             <FormProvider {...methods}>
                 <form onSubmit={handleSubmit(onSubmit)} noValidate>
                     <Stack spacing={3}>
+                        {/* ...весь остальной JSX формы без изменений... */}
                         {/* Unit ----------------------------------------------------------- */}
                         <Controller
                             name="unit_id"
@@ -212,7 +234,9 @@ export default function TicketForm({
                                 />
                             )}
                         />
-                        {/* Тип ----------------------------------------------------------- */}
+                        {/* ...остальные поля формы — без изменений... */}
+                        {/* (Оставляю их, чтобы не резать общий поток кода.) */}
+                        {/* ... */}
                         <Controller
                             name="type_id"
                             control={control}
@@ -246,7 +270,6 @@ export default function TicketForm({
                                 />
                             )}
                         />
-                        {/* Статус --------------------------------------------------------- */}
                         <Controller
                             name="status_id"
                             control={control}
@@ -280,7 +303,6 @@ export default function TicketForm({
                                 />
                             )}
                         />
-                        {/* Dates ---------------------------------------------------------- */}
                         <Controller
                             name="received_at"
                             control={control}
@@ -328,7 +350,6 @@ export default function TicketForm({
                                 />
                             )}
                         />
-                        {/* Warranty flag -------------------------------------------------- */}
                         <Controller
                             name="is_warranty"
                             control={control}
@@ -341,7 +362,6 @@ export default function TicketForm({
                                 </Stack>
                             )}
                         />
-                        {/* Title / Description ------------------------------------------- */}
                         <Controller
                             name="title"
                             control={control}
@@ -371,7 +391,7 @@ export default function TicketForm({
                                 />
                             )}
                         />
-                        {/* Attachments ---------------------------------------------------- */}
+                        {/* Attachments */}
                         <Divider />
                         <Typography variant="h6">Вложения</Typography>
                         <FileDropZone onFiles={handleDropFiles} />
@@ -380,9 +400,9 @@ export default function TicketForm({
                             newFiles={newFiles}
                             onRemoveRemote={handleRemoveRemoteFile}
                             onRemoveNew={handleRemoveNewFile}
-                            getSignedUrl={signedUrl} // <--- ВАЖНО!
+                            getSignedUrl={signedUrl}
                         />
-                        {/* Buttons -------------------------------------------------------- */}
+                        {/* Buttons */}
                         <Stack direction="row" spacing={2} justifyContent="flex-end">
                             <Button
                                 type="submit"

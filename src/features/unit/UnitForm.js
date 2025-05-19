@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-    Stack, TextField, MenuItem, Button, CircularProgress,
+    Stack, TextField, MenuItem, Button, CircularProgress, Alert,
 } from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
@@ -9,6 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useProjects }   from '@/entities/project';
 import { useAddUnit, useUpdateUnit } from '@/entities/unit';
 import { useNotify } from '@/shared/hooks/useNotify';
+import { useAuthStore } from '@/shared/store/authStore'; // Добавлено!
 
 const schema = z.object({
     project_id: z.coerce.number().min(1, 'Обязательно'),
@@ -20,6 +21,7 @@ const schema = z.object({
 
 export default function UnitForm({ initialData, onSuccess, onCancel }) {
     const notify  = useNotify();
+    const profile = useAuthStore((s) => s.profile); // ← добавлено для UX-защиты
     const isEdit  = Boolean(initialData?.id);
     const { data: projects = [] } = useProjects();
 
@@ -41,16 +43,23 @@ export default function UnitForm({ initialData, onSuccess, onCancel }) {
         mode: 'onTouched',
     });
 
+    // UX-защита: пока профиль не загружен — skeleton, если не авторизован — предупреждение
+    if (profile === undefined) {
+        return <CircularProgress sx={{ display: 'block', mx: 'auto', my: 4 }} />;
+    }
+    if (!profile) {
+        return <Alert severity="warning" sx={{ my: 4 }}>Авторизуйтесь для создания объектов.</Alert>;
+    }
+
     const submit = async (data) => {
         const payload = { ...data, project_id: Number(data.project_id) };
-
         try {
             if (isEdit) {
                 await update.mutateAsync({ id: initialData.id, updates: payload });
                 notify.success('Объект обновлён');
                 onSuccess?.(initialData);
             } else {
-                const newUnit = await add.mutateAsync(payload);
+                const newUnit = await add.mutateAsync(payload); // person_id подставится автоматически!
                 notify.success('Объект создан');
                 onSuccess?.(newUnit);
             }

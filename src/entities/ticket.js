@@ -2,7 +2,6 @@
 // -----------------------------------------------------------------------------
 // CRUD-hooks для «Замечаний» + работа с вложениями Supabase Storage
 // -----------------------------------------------------------------------------
-// Фильтрация КАЖДОГО запроса по project_id текущего пользователя
 /* eslint-disable import/prefer-default-export */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -143,11 +142,17 @@ export function useTickets() {
 export function useCreateTicket() {
     const projectId = useProjectId();
     const userId   = useAuthStore((s) => s.profile?.id ?? null);
+    const profile  = useAuthStore((s) => s.profile); // ← получаем весь профиль
     const qc       = useQueryClient();
     const notify   = useNotify();
 
     return useMutation({
         mutationFn: async ({ attachments = [], ...dto }) => {
+            // CHANGE: Проверка на наличие userId/profie
+            if (!profile || !userId) {
+                throw new Error('Профиль пользователя не загружен. Попробуйте обновить страницу или повторно войти.');
+            }
+
             const { data: newTicket, error } = await supabase
                 .from('tickets')
                 .insert({
