@@ -1,34 +1,40 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/shared/api/supabaseClient';
 
-// универсальный хук для матрицы квартир
+// Универсальный хук для матрицы квартир
 export default function useUnitsMatrix(projectId, building, section) {
-    const [units, setUnits] = useState([]);
+    const [units, setUnits] = useState([]); // <-- ВСЕ объекты проекта
     const [floors, setFloors] = useState([]);
     const [unitsByFloor, setUnitsByFloor] = useState({});
     const [ticketsByUnit, setTicketsByUnit] = useState({});
+    const [filteredUnits, setFilteredUnits] = useState([]);
 
     const fetchUnits = useCallback(async () => {
-        if (!projectId || !building) {
+        if (!projectId) {
             setUnits([]);
             setFloors([]);
             setUnitsByFloor({});
             setTicketsByUnit({});
+            setFilteredUnits([]);
             return;
         }
-        // Грузим units
+        // Грузим ВСЕ units по проекту
         let query = supabase
             .from('units')
             .select('*')
-            .eq('project_id', projectId)
-            .eq('building', building);
-        if (section) query = query.eq('section', section);
+            .eq('project_id', projectId);
         const { data: unitsData } = await query;
         setUnits(unitsData || []);
 
-        // Грузим замечания с цветом статуса
-        if (unitsData && unitsData.length > 0) {
-            const unitIds = unitsData.map(u => u.id);
+        // Сначала фильтруем по building/section для визуализации шахматки
+        let filtered = unitsData || [];
+        if (building) filtered = filtered.filter(u => String(u.building) === String(building));
+        if (section) filtered = filtered.filter(u => String(u.section) === String(section));
+        setFilteredUnits(filtered);
+
+        // Грузим замечания с цветом статуса только для отображаемых юнитов
+        if (filtered.length > 0) {
+            const unitIds = filtered.map(u => u.id);
             const { data: ticketsData } = await supabase
                 .from('tickets')
                 .select(`
@@ -55,10 +61,12 @@ export default function useUnitsMatrix(projectId, building, section) {
 
     useEffect(() => { fetchUnits(); }, [fetchUnits]);
 
+    // В floors и unitsByFloor отправляем только по текущему building/section
     useEffect(() => {
+        const currentUnits = filteredUnits;
         const unique = Array.from(
             new Map(
-                units
+                currentUnits
                     .filter(u => u.floor !== null && u.floor !== undefined && u.floor !== 0)
                     .map(u => [String(u.floor), u.floor])
             ).values()
@@ -72,13 +80,14 @@ export default function useUnitsMatrix(projectId, building, section) {
         setFloors(unique);
 
         const map = {};
-        units.forEach(u => {
+        currentUnits.forEach(u => {
             if (!map[u.floor]) map[u.floor] = [];
             map[u.floor].push(u);
         });
         setUnitsByFloor(map);
-    }, [units]);
+    }, [filteredUnits]);
 
+    // Добавить квартиру (только в выбранный корпус/секцию)
     const handleAddUnit = async (floor) => {
         let maxNum = 0;
         if (unitsByFloor[floor] && unitsByFloor[floor].length > 0) {
@@ -99,13 +108,15 @@ export default function useUnitsMatrix(projectId, building, section) {
         const newName = String(maxNum + 1);
         const payload = {
             project_id: projectId,
-            building,
+            building: building || null,
             section: section || null,
             floor,
             name: newName,
         };
-        const { data, error } = await supabase.from('units').insert([payload]).select('*');
-        if (!error) setUnits((prev) => [...prev, data[0]]);
+        const { error } = await supabase.from('units').insert([payload]);
+        if (!error) {
+            await fetchUnits(); // <-- только fetchUnits!
+        }
     };
 
     const handleAddFloor = async () => {
@@ -121,13 +132,15 @@ export default function useUnitsMatrix(projectId, building, section) {
     };
 
     return {
+        // Для шахматки (только по выбранному building/section)
         floors,
         unitsByFloor,
         handleAddUnit,
         handleAddFloor,
+        // Для счетчиков — ВСЕ объекты проекта
         units,
         setUnits,
         fetchUnits,
-        ticketsByUnit, // Новый ключ
+        ticketsByUnit,
     };
 }

@@ -13,7 +13,7 @@ export default function TicketTypeForm({ initialData, onSubmit, onCancel }) {
     const {
         control,
         handleSubmit,
-        formState: { isSubmitting, errors },
+        formState: { isSubmitting }
     } = useForm({
         defaultValues: {
             name: initialData?.name ?? '',

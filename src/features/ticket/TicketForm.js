@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useForm, FormProvider, Controller } from 'react-hook-form';
 import {
     Stack, TextField, Switch, Button, Divider, Autocomplete,
-    Typography, CircularProgress, Box, Alert,
+    Typography, CircularProgress, Box, Alert, Chip
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -16,7 +16,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useUnitsByProject }   from '@/entities/unit';
 import { useTicketTypes }      from '@/entities/ticketType';
 import { useTicketStatuses }   from '@/entities/ticketStatus';
-import { useCreateTicket, useTicket } from '@/entities/ticket';
+import { useCreateTicket, useTicket, signedUrl } from '@/entities/ticket';
 
 import { useProjectId }        from '@/shared/hooks/useProjectId';
 import FileDropZone            from '@/shared/ui/FileDropZone';
@@ -44,14 +44,15 @@ export default function TicketForm({
                                        initialUnitId = null,
                                        onCreated,
                                        onCancel,
+                                       ticketId: propTicketId,
                                    }) {
     const navigate   = useNavigate();
-    const { ticketId } = useParams();
+    const params = useParams();
+    const ticketId = propTicketId ?? params.ticketId;
     const isEditMode = Boolean(ticketId);
 
     const projectId = useProjectId();
 
-    // --- Все хуки только здесь, без условий! ---
     const { data: ticket, isLoading: isLoadingTicket,
         updateAsync: updateTicket, updating: isUpdatingTicket } = useTicket(ticketId);
 
@@ -75,7 +76,6 @@ export default function TicketForm({
     });
     const { control, reset, setValue, handleSubmit, formState: { isSubmitting } } = methods;
 
-    // --- state всегда на верхнем уровне ---
     const [remoteFiles, setRemoteFiles] = useState([]);
     const [newFiles,    setNewFiles]    = useState([]);
 
@@ -87,7 +87,6 @@ export default function TicketForm({
 
     const { mutateAsync: createTicket, isPending: isCreatingTicket } = useCreateTicket();
 
-    // --- Эффекты ---
     useEffect(() => {
         if (isEditMode && ticket) {
             reset({
@@ -109,7 +108,6 @@ export default function TicketForm({
         setValue('project_id', projectId);
     }, [projectId, setValue]);
 
-    // Автоматически подставлять initialUnitId, если форма открывается в embed-режиме
     useEffect(() => {
         if (embedded && initialUnitId) {
             setValue('unit_id', initialUnitId);
@@ -152,7 +150,6 @@ export default function TicketForm({
         }
     };
 
-    // --- Loader и Alert после хуков ---
     if (!projectId) {
         return (
             <Box sx={{ minHeight: 240, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -176,13 +173,11 @@ export default function TicketForm({
         );
     }
 
-    // --- UI ---
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ru">
             <FormProvider {...methods}>
                 <form onSubmit={handleSubmit(onSubmit)} noValidate>
                     <Stack spacing={3}>
-
                         {/* Unit ----------------------------------------------------------- */}
                         <Controller
                             name="unit_id"
@@ -217,7 +212,6 @@ export default function TicketForm({
                                 />
                             )}
                         />
-
                         {/* Тип ----------------------------------------------------------- */}
                         <Controller
                             name="type_id"
@@ -252,7 +246,6 @@ export default function TicketForm({
                                 />
                             )}
                         />
-
                         {/* Статус --------------------------------------------------------- */}
                         <Controller
                             name="status_id"
@@ -287,7 +280,6 @@ export default function TicketForm({
                                 />
                             )}
                         />
-
                         {/* Dates ---------------------------------------------------------- */}
                         <Controller
                             name="received_at"
@@ -303,6 +295,25 @@ export default function TicketForm({
                                 />
                             )}
                         />
+                        {/* Быстрые чипы прибавления дней */}
+                        <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
+                            {[10, 30, 45].map(days => (
+                                <Chip
+                                    key={days}
+                                    label={`+${days} дней`}
+                                    clickable
+                                    color="primary"
+                                    variant="outlined"
+                                    onClick={() => {
+                                        const rec = methods.getValues('received_at');
+                                        if (dayjs(rec).isValid()) {
+                                            setValue('fixed_at', dayjs(rec).add(days, 'day'));
+                                        }
+                                    }}
+                                    sx={{ fontWeight: 500 }}
+                                />
+                            ))}
+                        </Box>
                         <Controller
                             name="fixed_at"
                             control={control}
@@ -317,7 +328,6 @@ export default function TicketForm({
                                 />
                             )}
                         />
-
                         {/* Warranty flag -------------------------------------------------- */}
                         <Controller
                             name="is_warranty"
@@ -331,7 +341,6 @@ export default function TicketForm({
                                 </Stack>
                             )}
                         />
-
                         {/* Title / Description ------------------------------------------- */}
                         <Controller
                             name="title"
@@ -362,7 +371,6 @@ export default function TicketForm({
                                 />
                             )}
                         />
-
                         {/* Attachments ---------------------------------------------------- */}
                         <Divider />
                         <Typography variant="h6">Вложения</Typography>
@@ -372,8 +380,8 @@ export default function TicketForm({
                             newFiles={newFiles}
                             onRemoveRemote={handleRemoveRemoteFile}
                             onRemoveNew={handleRemoveNewFile}
+                            getSignedUrl={signedUrl} // <--- ВАЖНО!
                         />
-
                         {/* Buttons -------------------------------------------------------- */}
                         <Stack direction="row" spacing={2} justifyContent="flex-end">
                             <Button

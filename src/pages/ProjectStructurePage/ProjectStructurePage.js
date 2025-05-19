@@ -8,12 +8,9 @@ import DeleteOutline from '@mui/icons-material/DeleteOutline';
 import AddBuildingOrSectionDialog from '@/features/addBuildingOrSection/AddBuildingOrSectionDialog';
 import UnitsMatrix from '@/widgets/UnitsMatrix/UnitsMatrix';
 import useProjectStructure from '@/shared/hooks/useProjectStructure';
-import { supabase } from '@/shared/api/supabaseClient';
 
-// Ваша функция получения профиля пользователя
-// Замените на актуальную для вашего проекта!
+// Функция получения профиля пользователя
 function getCurrentProfile() {
-    // например, profile хранится в localStorage после логина, либо используйте глобальный store
     try {
         return JSON.parse(localStorage.getItem('profile')) || {};
     } catch {
@@ -22,6 +19,14 @@ function getCurrentProfile() {
 }
 
 const LS_KEY = 'structurePageSelection';
+
+// Функция склонения слова "объект"
+function pluralObj(n) {
+    n = Number(n);
+    if (n % 10 === 1 && n % 100 !== 11) return 'объект';
+    if ([2,3,4].includes(n % 10) && ![12,13,14].includes(n % 100)) return 'объекта';
+    return 'объектов';
+}
 
 export default function ProjectStructurePage() {
     const {
@@ -35,9 +40,11 @@ export default function ProjectStructurePage() {
     const [addDialog, setAddDialog] = useState({ open: false, type: '', value: '' });
     const [confirmDialog, setConfirmDialog] = useState({ open: false, type: '', value: '' });
 
+    // Массив всех объектов (units) в проекте — всегда актуальный
+    const [units, setUnits] = useState([]);
+
     // --- Автоматический выбор проекта из профиля, если ни один не выбран
     useEffect(() => {
-        // Берём project_id из профиля или из localStorage
         const profile = getCurrentProfile();
         const saved = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
         if (!projectId) {
@@ -51,7 +58,6 @@ export default function ProjectStructurePage() {
         }
     }, [projectId, projects, setProjectId]);
 
-    // --- При появлении корпусов или секций — восстанавливаем выбор из localStorage
     useEffect(() => {
         const saved = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
         if (!building && buildings.length > 0) {
@@ -72,7 +78,6 @@ export default function ProjectStructurePage() {
         }
     }, [sections, section, setSection]);
 
-    // --- Сохраняем выбранные значения при каждом изменении
     useEffect(() => {
         localStorage.setItem(
             LS_KEY,
@@ -80,7 +85,7 @@ export default function ProjectStructurePage() {
         );
     }, [projectId, building, section]);
 
-    // --- Стандартные функции диалогов ---
+    // --- Диалоги ---
     const handleOpenAddDialog = (type) => setAddDialog({ open: true, type, value: '' });
     const handleCloseAddDialog = () => setAddDialog({ open: false, type: '', value: '' });
 
@@ -93,28 +98,17 @@ export default function ProjectStructurePage() {
         setConfirmDialog({ open: true, type: 'section', value: section });
     };
     const handleConfirmDelete = async () => {
-        if (confirmDialog.type === 'building' && projectId && confirmDialog.value) {
-            await supabase
-                .from('units')
-                .delete()
-                .eq('project_id', projectId)
-                .eq('building', confirmDialog.value);
-            setBuilding('');
-            setSection('');
-        }
-        if (confirmDialog.type === 'section' && projectId && building && confirmDialog.value) {
-            await supabase
-                .from('units')
-                .delete()
-                .eq('project_id', projectId)
-                .eq('building', building)
-                .eq('section', confirmDialog.value);
-            setSection('');
-        }
         setConfirmDialog({ open: false, type: '', value: '' });
         refreshAll();
     };
     const handleCancelDelete = () => setConfirmDialog({ open: false, type: '', value: '' });
+
+    // Счетчики — фильтруем по units
+    const countProject = units.length;
+    const countBuilding = units.filter(u => String(u.building) === String(building)).length;
+    const countSection = units.filter(
+        u => String(u.building) === String(building) && String(u.section) === String(section)
+    ).length;
 
     return (
         <Stack spacing={4} alignItems="flex-start">
@@ -171,6 +165,14 @@ export default function ProjectStructurePage() {
                                 ))}
                             </Select>
                         </FormControl>
+                        {projectId && (
+                            <Box sx={{
+                                ml: 1, px: 1.5, py: '2px', bgcolor: 'rgba(255,255,255,0.20)',
+                                borderRadius: '16px', fontWeight: 600, fontSize: 15, color: '#fff', minWidth: 32, textAlign: 'center'
+                            }}>
+                                ({countProject} {pluralObj(countProject)})
+                            </Box>
+                        )}
                     </Box>
                     {/* Корпус */}
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -197,6 +199,14 @@ export default function ProjectStructurePage() {
                                 ))}
                             </Select>
                         </FormControl>
+                        {building && (
+                            <Box sx={{
+                                ml: 1, px: 1.5, py: '2px', bgcolor: 'rgba(255,255,255,0.20)',
+                                borderRadius: '16px', fontWeight: 600, fontSize: 15, color: '#fff', minWidth: 32, textAlign: 'center'
+                            }}>
+                                ({countBuilding} {pluralObj(countBuilding)})
+                            </Box>
+                        )}
                         <IconButton size="small" onClick={() => handleOpenAddDialog('building')} sx={{
                             color: "#fff", opacity: .94, ml: .5, p: '6px'
                         }}>
@@ -237,6 +247,14 @@ export default function ProjectStructurePage() {
                             ))}
                         </Select>
                     </FormControl>
+                    {section && (
+                        <Box sx={{
+                            ml: 1, px: 1.5, py: '2px', bgcolor: 'rgba(255,255,255,0.20)',
+                            borderRadius: '16px', fontWeight: 600, fontSize: 15, color: '#fff', minWidth: 32, textAlign: 'center'
+                        }}>
+                            ({countSection} {pluralObj(countSection)})
+                        </Box>
+                    )}
                     <IconButton size="small" onClick={() => handleOpenAddDialog('section')} sx={{
                         color: "#fff", opacity: .94, ml: .5, p: '6px'
                     }}>
@@ -283,19 +301,18 @@ export default function ProjectStructurePage() {
                 </DialogActions>
             </Dialog>
 
-            {/* Если нет корпусов, рендерим подсказку, а не шахматку */}
             {!buildings.length && (
                 <Box sx={{ color: '#1976d2', mt: 4, mb: 3, fontSize: 17, fontWeight: 600 }}>
                     Сначала создайте корпус
                 </Box>
             )}
 
-            {/* Основная шахматка */}
             {projectId && building && buildings.length > 0 && (
                 <UnitsMatrix
                     projectId={projectId}
                     building={building}
                     section={section}
+                    onUnitsChanged={setUnits}
                 />
             )}
         </Stack>

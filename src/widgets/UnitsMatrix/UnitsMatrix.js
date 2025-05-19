@@ -1,14 +1,17 @@
-import React, { useState } from 'react';
-import { Box, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Typography } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import {
+    Box, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Typography
+} from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import FloorCell from '@/entities/floor/FloorCell';
 import useUnitsMatrix from '@/shared/hooks/useUnitsMatrix';
 import { supabase } from '@/shared/api/supabaseClient';
-import TicketForm from '@/features/ticket/TicketForm'; // путь может отличаться!
+import TicketForm from '@/features/ticket/TicketForm';
+import TicketListDialog from '@/features/ticket/TicketListDialog';
 
-export default function UnitsMatrix({ projectId, building, section }) {
+export default function UnitsMatrix({ projectId, building, section, onUnitsChanged }) {
     const {
-        floors, unitsByFloor, handleAddUnit, handleAddFloor, setUnits, ticketsByUnit, fetchUnits,
+        floors, unitsByFloor, handleAddUnit, handleAddFloor, fetchUnits, ticketsByUnit, units
     } = useUnitsMatrix(projectId, building, section);
 
     // Диалоги редактирования/удаления
@@ -18,6 +21,13 @@ export default function UnitsMatrix({ projectId, building, section }) {
     // Диалог действий по квартире
     const [actionDialog, setActionDialog] = useState({ open: false, unit: null, action: '' });
 
+    // Прокидываем units (все объекты проекта) наверх для счетчиков
+    useEffect(() => {
+        if (typeof onUnitsChanged === 'function') {
+            onUnitsChanged(units);
+        }
+    }, [units, onUnitsChanged]);
+
     // Этаж
     const handleEditFloor = (floor) => setEditDialog({ open: true, type: 'floor', target: floor, value: String(floor) });
     const handleDeleteFloor = (floor) => setConfirmDialog({ open: true, type: 'floor', target: floor });
@@ -26,7 +36,7 @@ export default function UnitsMatrix({ projectId, building, section }) {
     const handleDeleteUnit = (unit) => setConfirmDialog({ open: true, type: 'unit', target: unit });
     const handleUnitAction = (unit) => setActionDialog({ open: true, unit, action: '' });
 
-    // Сохранить (исправлено: обновление в базе и fetchUnits)
+    // Сохранить (обновление в базе и fetchUnits)
     const handleSaveEdit = async () => {
         if (editDialog.type === 'floor') {
             const newFloor = isNaN(editDialog.value) ? editDialog.value : Number(editDialog.value);
@@ -50,10 +60,10 @@ export default function UnitsMatrix({ projectId, building, section }) {
                 .eq('id', editDialog.target.id);
         }
         setEditDialog({ open: false, type: '', target: null, value: '' });
-        fetchUnits(); // Перезагружаем данные!
+        await fetchUnits();
     };
 
-    // Удалить — теперь с реальным удалением из БД
+    // Удалить (с реальным удалением из БД)
     const handleConfirmDelete = async () => {
         if (confirmDialog.type === 'floor') {
             await supabase.from('units')
@@ -61,16 +71,15 @@ export default function UnitsMatrix({ projectId, building, section }) {
                 .eq('project_id', projectId)
                 .eq('building', building)
                 .eq('floor', confirmDialog.target);
-            setUnits(units => units.filter(u => u.floor !== confirmDialog.target));
+            await fetchUnits(); // Только fetchUnits, не setUnits!
         }
         if (confirmDialog.type === 'unit') {
             await supabase.from('units').delete().eq('id', confirmDialog.target.id);
-            setUnits(units => units.filter(u => u.id !== confirmDialog.target.id));
+            await fetchUnits(); // Только fetchUnits, не setUnits!
         }
         setConfirmDialog({ open: false, type: '', target: null });
     };
 
-    // --- Главное изменение: если этажей нет, показать крупный плюс для добавления первого этажа
     if (!floors.length) {
         return (
             <Box sx={{
@@ -224,6 +233,14 @@ export default function UnitsMatrix({ projectId, building, section }) {
                             variant="text"
                             color="info"
                             fullWidth
+                            onClick={() => setActionDialog(ad => ({ ...ad, action: 'tickets' }))}
+                        >
+                            Посмотреть все замечания
+                        </Button>
+                        <Button
+                            variant="text"
+                            color="info"
+                            fullWidth
                             disabled
                         >
                             Показать историю
@@ -241,7 +258,7 @@ export default function UnitsMatrix({ projectId, building, section }) {
                                 initialUnitId={actionDialog.unit?.id}
                                 onCreated={() => {
                                     setActionDialog({ open: false, unit: null, action: '' });
-                                    fetchUnits(); // Теперь цвета и тикеты обновятся сразу!
+                                    fetchUnits();
                                 }}
                                 onCancel={() => setActionDialog({ open: false, unit: null, action: '' })}
                             />
@@ -249,6 +266,13 @@ export default function UnitsMatrix({ projectId, building, section }) {
                     </DialogContent>
                 )}
             </Dialog>
+            {/* Диалог со всеми замечаниями */}
+            <TicketListDialog
+                open={actionDialog.action === 'tickets'}
+                unit={actionDialog.unit}
+                onClose={() => setActionDialog({ open: false, unit: null, action: '' })}
+                onTicketsChanged={fetchUnits}
+            />
         </>
     );
 }
