@@ -49,6 +49,13 @@
     "column_default": null
   },
   {
+    "table_name": "attachments",
+    "column_name": "is_fix_act",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": "false"
+  },
+  {
     "table_name": "contractors",
     "column_name": "id",
     "data_type": "integer",
@@ -709,7 +716,7 @@
   {
     "table_name": "units",
     "column_name": "person_id",
-    "data_type": "bigint",
+    "data_type": "uuid",
     "is_nullable": "YES",
     "column_default": null
   }
