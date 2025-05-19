@@ -11,6 +11,7 @@ import DashboardPage   from '@/pages/DashboardPage/DashboardPage';
 import TicketsPage     from '@/pages/TicketsPage/TicketsPage';
 import TicketFormPage  from '@/pages/TicketsPage/TicketFormPage';
 import LitigationsPage from '@/pages/LitigationsPage/LitigationsPage';
+import StatsPage       from '@/pages/StatsPage/StatsPage';
 
 import LoginPage    from '@/pages/UnitsPage/LoginPage';     // ← CHANGE
 import RegisterPage from '@/pages/UnitsPage/RegisterPage';  // ← CHANGE
@@ -94,6 +95,14 @@ export default function AppRouter() {
                 element={(
                     <RequireAuth>
                         <LitigationsPage />
+                    </RequireAuth>
+                )}
+            />
+            <Route
+                path="/stats"
+                element={(
+                    <RequireAuth>
+                        <StatsPage />
                     </RequireAuth>
                 )}
             />

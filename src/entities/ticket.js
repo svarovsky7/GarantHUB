@@ -321,3 +321,20 @@ export function useDeleteTicket() {
         onError: (e) => notify.error(`Ошибка удаления замечания: ${e.message}`),
     });
 }
+
+// -----------------------------------------------------------------------------
+// Получить все замечания без фильтрации по проекту (для статистики)
+// -----------------------------------------------------------------------------
+export function useAllTicketsSimple() {
+    return useQuery({
+        queryKey: ['tickets-all'],
+        queryFn : async () => {
+            const { data, error } = await supabase
+                .from('tickets')
+                .select('id, status_id');
+            if (error) throw error;
+            return data ?? [];
+        },
+        staleTime: 5 * 60_000,
+    });
+}
