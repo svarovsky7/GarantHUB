@@ -12,6 +12,7 @@ import 'dayjs/locale/ru';
 import { supabase } from '@/shared/api/supabaseClient';
 import { useNotify } from '@/shared/hooks/useNotify';
 import { useProjectId } from '@/shared/hooks/useProjectId';
+import { useAuthStore } from '@/shared/store/authStore';
 
 // ──────────────────────────── constants ────────────────────────────
 const ATTACH_BUCKET =
@@ -141,14 +142,19 @@ export function useTickets() {
 // ──────────────────────────── create ──────────────────────────────
 export function useCreateTicket() {
     const projectId = useProjectId();
-    const qc     = useQueryClient();
-    const notify = useNotify();
+    const userId   = useAuthStore((s) => s.profile?.id ?? null);
+    const qc       = useQueryClient();
+    const notify   = useNotify();
 
     return useMutation({
         mutationFn: async ({ attachments = [], ...dto }) => {
             const { data: newTicket, error } = await supabase
                 .from('tickets')
-                .insert({ ...dto, project_id: projectId })
+                .insert({
+                    ...dto,
+                    project_id: projectId,
+                    created_by: userId,
+                })
                 .select('id, project_id')
                 .single();
 
