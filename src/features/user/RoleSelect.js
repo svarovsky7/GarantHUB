@@ -8,7 +8,7 @@ const RoleSelect = ({ user, roles }) => {
     const updateRole = useUpdateUserRole();
 
     const handleChange = (e) =>
-        updateRole.mutate({ userId: user.id, newRole: e.target.value });
+        updateRole.mutate({ id: user.id, newRole: e.target.value });
 
     return (
         <FormControl size="small" sx={{ minWidth: 140 }}>
