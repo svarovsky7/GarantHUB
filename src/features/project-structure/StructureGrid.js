@@ -4,6 +4,7 @@ import FloorCell from '@/entities/floor/FloorCell';
 import UnitCell from '@/entities/unit/UnitCell';
 import AddIcon from '@mui/icons-material/Add';
 import { supabase } from '@/shared/api/supabaseClient';
+import { useAuthStore } from '@/shared/store/authStore';
 
 const CELL_SIZE = 56;
 
@@ -15,6 +16,7 @@ export default function StructureGrid({
 
     // --- Добавить квартиру по правилам ниже лежащего этажа
     const handleAddUnit = async (floor) => {
+        const userId = useAuthStore.getState().profile?.id ?? null;
         let idx = floors.indexOf(floor);
         let belowFloor = idx < floors.length - 1 ? floors[idx + 1] : null;
         let maxName = 0;
@@ -24,7 +26,12 @@ export default function StructureGrid({
         }
         const newName = String(maxName + 1);
         const payload = {
-            project_id: projectId, building, section: section || null, floor, name: newName
+            project_id: projectId,
+            building,
+            section: section || null,
+            floor,
+            name: newName,
+            person_id: userId,
         };
         const { data, error } = await supabase.from('units').insert([payload]).select('*');
         if (!error) setUnits((prev) => [...prev, data[0]]);

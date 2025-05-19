@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/shared/api/supabaseClient';
+import { useAuthStore } from '@/shared/store/authStore';
 
 // Универсальный хук для матрицы квартир
 export default function useUnitsMatrix(projectId, building, section) {
@@ -89,6 +90,7 @@ export default function useUnitsMatrix(projectId, building, section) {
 
     // Добавить квартиру (только в выбранный корпус/секцию)
     const handleAddUnit = async (floor) => {
+        const userId = useAuthStore.getState().profile?.id ?? null;
         let maxNum = 0;
         if (unitsByFloor[floor] && unitsByFloor[floor].length > 0) {
             const nums = unitsByFloor[floor]
@@ -112,6 +114,7 @@ export default function useUnitsMatrix(projectId, building, section) {
             section: section || null,
             floor,
             name: newName,
+            person_id: userId,
         };
         const { error } = await supabase.from('units').insert([payload]);
         if (!error) {
