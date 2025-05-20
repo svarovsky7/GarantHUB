@@ -651,6 +651,27 @@
     "column_default": "now()"
   },
   {
+    "table_name": "tickets",
+    "column_name": "customer_request_no",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "tickets",
+    "column_name": "customer_request_date",
+    "data_type": "date",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "tickets",
+    "column_name": "responsible_engineer_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
     "table_name": "unit_persons",
     "column_name": "unit_id",
     "data_type": "integer",
