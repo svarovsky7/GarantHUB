@@ -17,6 +17,7 @@ import { useUnitsByProject }   from '@/entities/unit';
 import { useTicketTypes }      from '@/entities/ticketType';
 import { useTicketStatuses }   from '@/entities/ticketStatus';
 import { useCreateTicket, useTicket, signedUrl } from '@/entities/ticket';
+import { useUsers }            from '@/entities/user';
 
 import { useProjectId }        from '@/shared/hooks/useProjectId';
 import { useAuthStore }        from '@/shared/store/authStore'; // <--- добавлено!
@@ -31,6 +32,11 @@ const schema = yup.object({
     status_id   : yup.number().required('Статус обязателен'),
     title       : yup.string().trim().required('Заголовок обязателен').min(3),
     description : yup.string().trim().nullable(),
+    customer_request_no   : yup.string().trim().nullable(),
+    customer_request_date : yup.mixed()
+        .nullable()
+        .test('is-dayjs-or-null', 'Некорректная дата', v => v === null || (dayjs.isDayjs(v) && v.isValid())),
+    responsible_engineer_id: yup.string().nullable(),
     is_warranty : yup.boolean().defined(),
     received_at : yup.mixed()
         .required('Дата получения обязательна')
@@ -63,6 +69,7 @@ export default function TicketForm({
     const { data: types    = [], isLoading: isLoadingTypes    } = useTicketTypes();
     const { data: statuses = [], isLoading: isLoadingStatuses } = useTicketStatuses();
     const { data: units    = [], isLoading: isLoadingUnits    } = useUnitsByProject(projectId, !!projectId);
+    const { data: users    = [], isLoading: isLoadingUsers    } = useUsers();
 
     const methods = useForm({
         resolver      : yupResolver(schema),
@@ -73,6 +80,9 @@ export default function TicketForm({
             status_id   : null,
             title       : '',
             description : '',
+            customer_request_no   : '',
+            customer_request_date : null,
+            responsible_engineer_id: null,
             is_warranty : false,
             received_at : dayjs(),
             fixed_at    : null,
@@ -100,6 +110,9 @@ export default function TicketForm({
                 status_id   : ticket.statusId,
                 title       : ticket.title,
                 description : ticket.description ?? '',
+                customer_request_no   : ticket.customerRequestNo ?? '',
+                customer_request_date : ticket.customerRequestDate,
+                responsible_engineer_id: ticket.responsibleEngineerId ?? null,
                 is_warranty : ticket.isWarranty,
                 received_at : ticket.receivedAt,
                 fixed_at    : ticket.fixedAt,
@@ -125,6 +138,11 @@ export default function TicketForm({
         status_id   : data.status_id,
         title       : data.title.trim(),
         description : data.description?.trim() || null,
+        customer_request_no   : data.customer_request_no?.trim() || null,
+        customer_request_date : data.customer_request_date
+            ? dayjs(data.customer_request_date).format('YYYY-MM-DD')
+            : null,
+        responsible_engineer_id: data.responsible_engineer_id ?? null,
         is_warranty : data.is_warranty,
         received_at : dayjs(data.received_at).format('YYYY-MM-DD'),
         fixed_at    : data.fixed_at ? dayjs(data.fixed_at).format('YYYY-MM-DD') : null,
@@ -182,7 +200,7 @@ export default function TicketForm({
     }
 
     const isLoading = (isEditMode && isLoadingTicket) ||
-        isLoadingTypes || isLoadingStatuses ||
+        isLoadingTypes || isLoadingStatuses || isLoadingUsers ||
         (!isEditMode && !projectId) ||
         (projectId && isLoadingUnits);
 
@@ -199,7 +217,6 @@ export default function TicketForm({
             <FormProvider {...methods}>
                 <form onSubmit={handleSubmit(onSubmit)} noValidate>
                     <Stack spacing={3}>
-                        {/* ...весь остальной JSX формы без изменений... */}
                         {/* Unit ----------------------------------------------------------- */}
                         <Controller
                             name="unit_id"
@@ -234,72 +251,30 @@ export default function TicketForm({
                                 />
                             )}
                         />
-                        {/* ...остальные поля формы — без изменений... */}
-                        {/* (Оставляю их, чтобы не резать общий поток кода.) */}
-                        {/* ... */}
                         <Controller
-                            name="type_id"
+                            name="customer_request_no"
                             control={control}
                             render={({ field, fieldState: { error } }) => (
-                                <Autocomplete
+                                <TextField
                                     {...field}
-                                    options={types}
-                                    loading={isLoadingTypes}
-                                    getOptionLabel={(o) => o?.name ?? ''}
-                                    isOptionEqualToValue={(o, v) => o?.id === v?.id}
-                                    onChange={(_, v) => field.onChange(v ? v.id : null)}
-                                    value={types.find(t => t.id === field.value) || null}
-                                    renderInput={(params) => (
-                                        <TextField
-                                            {...params}
-                                            label="Тип замечания"
-                                            required
-                                            error={!!error}
-                                            helperText={error?.message}
-                                            InputProps={{
-                                                ...params.InputProps,
-                                                endAdornment: (
-                                                    <>
-                                                        {isLoadingTypes && <CircularProgress size={20} />}
-                                                        {params.InputProps.endAdornment}
-                                                    </>
-                                                ),
-                                            }}
-                                        />
-                                    )}
+                                    label="№ заявки от Заказчика"
+                                    fullWidth
+                                    error={!!error}
+                                    helperText={error?.message}
                                 />
                             )}
                         />
                         <Controller
-                            name="status_id"
+                            name="customer_request_date"
                             control={control}
                             render={({ field, fieldState: { error } }) => (
-                                <Autocomplete
-                                    {...field}
-                                    options={statuses}
-                                    loading={isLoadingStatuses}
-                                    getOptionLabel={(o) => o?.name ?? ''}
-                                    isOptionEqualToValue={(o, v) => o?.id === v?.id}
-                                    onChange={(_, v) => field.onChange(v ? v.id : null)}
-                                    value={statuses.find(s => s.id === field.value) || null}
-                                    renderInput={(params) => (
-                                        <TextField
-                                            {...params}
-                                            label="Статус"
-                                            required
-                                            error={!!error}
-                                            helperText={error?.message}
-                                            InputProps={{
-                                                ...params.InputProps,
-                                                endAdornment: (
-                                                    <>
-                                                        {isLoadingStatuses && <CircularProgress size={20} />}
-                                                        {params.InputProps.endAdornment}
-                                                    </>
-                                                ),
-                                            }}
-                                        />
-                                    )}
+                                <DatePicker
+                                    label="Дата регистрации заявки"
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    slotProps={{
+                                        textField: { fullWidth: true, error: !!error, helperText: error?.message },
+                                    }}
                                 />
                             )}
                         />
@@ -351,6 +326,72 @@ export default function TicketForm({
                             )}
                         />
                         <Controller
+                            name="status_id"
+                            control={control}
+                            render={({ field, fieldState: { error } }) => (
+                                <Autocomplete
+                                    {...field}
+                                    options={statuses}
+                                    loading={isLoadingStatuses}
+                                    getOptionLabel={(o) => o?.name ?? ''}
+                                    isOptionEqualToValue={(o, v) => o?.id === v?.id}
+                                    onChange={(_, v) => field.onChange(v ? v.id : null)}
+                                    value={statuses.find(s => s.id === field.value) || null}
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            label="Статус"
+                                            required
+                                            error={!!error}
+                                            helperText={error?.message}
+                                            InputProps={{
+                                                ...params.InputProps,
+                                                endAdornment: (
+                                                    <>
+                                                        {isLoadingStatuses && <CircularProgress size={20} />}
+                                                        {params.InputProps.endAdornment}
+                                                    </>
+                                                ),
+                                            }}
+                                        />
+                                    )}
+                                />
+                            )}
+                        />
+                        <Controller
+                            name="type_id"
+                            control={control}
+                            render={({ field, fieldState: { error } }) => (
+                                <Autocomplete
+                                    {...field}
+                                    options={types}
+                                    loading={isLoadingTypes}
+                                    getOptionLabel={(o) => o?.name ?? ''}
+                                    isOptionEqualToValue={(o, v) => o?.id === v?.id}
+                                    onChange={(_, v) => field.onChange(v ? v.id : null)}
+                                    value={types.find(t => t.id === field.value) || null}
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            label="Тип замечания"
+                                            required
+                                            error={!!error}
+                                            helperText={error?.message}
+                                            InputProps={{
+                                                ...params.InputProps,
+                                                endAdornment: (
+                                                    <>
+                                                        {isLoadingTypes && <CircularProgress size={20} />}
+                                                        {params.InputProps.endAdornment}
+                                                    </>
+                                                ),
+                                            }}
+                                        />
+                                    )}
+                                />
+                            )}
+                        />
+                        <Controller
                             name="is_warranty"
                             control={control}
                             render={({ field }) => (
@@ -388,6 +429,38 @@ export default function TicketForm({
                                     fullWidth
                                     error={!!error}
                                     helperText={error?.message}
+                                />
+                            )}
+                        />
+                        <Controller
+                            name="responsible_engineer_id"
+                            control={control}
+                            render={({ field, fieldState: { error } }) => (
+                                <Autocomplete
+                                    {...field}
+                                    options={users}
+                                    loading={isLoadingUsers}
+                                    getOptionLabel={(o) => o?.name ?? ''}
+                                    isOptionEqualToValue={(o, v) => o?.id === v?.id}
+                                    onChange={(_, v) => field.onChange(v ? v.id : null)}
+                                    value={users.find(u => u.id === field.value) || null}
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            label="Ответственный инженер"
+                                            error={!!error}
+                                            helperText={error?.message}
+                                            InputProps={{
+                                                ...params.InputProps,
+                                                endAdornment: (
+                                                    <>
+                                                        {isLoadingUsers && <CircularProgress size={20} />}
+                                                        {params.InputProps.endAdornment}
+                                                    </>
+                                                ),
+                                            }}
+                                        />
+                                    )}
                                 />
                             )}
                         />

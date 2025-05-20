@@ -102,6 +102,9 @@ function mapTicket(r) {
         statusName: r.ticket_statuses?.name ?? '—',
         title: r.title,
         description: r.description,
+        customerRequestNo: r.customer_request_no,
+        customerRequestDate: toDayjs(r.customer_request_date),
+        responsibleEngineerId: r.responsible_engineer_id,
         isWarranty: r.is_warranty,
         hasAttachments: attachments.length > 0,
         attachments,
@@ -122,6 +125,7 @@ export function useTickets() {
                 .from('tickets')
                 .select(`
           id, project_id, unit_id, type_id, status_id, title, description,
+          customer_request_no, customer_request_date, responsible_engineer_id,
           is_warranty, created_at, received_at, fixed_at,
           projects (id, name), units (id, name),
           ticket_types (id, name), ticket_statuses (id, name),
@@ -211,6 +215,7 @@ export function useTicket(ticketId) {
                 .from('tickets')
                 .select(`
           id, project_id, unit_id, type_id, status_id, title, description,
+          customer_request_no, customer_request_date, responsible_engineer_id,
           is_warranty, created_at, received_at, fixed_at,
           projects (id, name), units (id, name),
           ticket_types (id, name), ticket_statuses (id, name),
