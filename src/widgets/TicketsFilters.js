@@ -93,6 +93,32 @@ export default function TicketsFilters({ options, onChange }) {
                     </Button>
                 </Col>
             </Row>
+
+            <Row gutter={16}>
+                <Col xs={24} md={3}>
+                    <Form.Item name="requestNo" label="№ заявки от Заказчика">
+                        <Input />
+                    </Form.Item>
+                </Col>
+
+                <Col xs={24} md={4}>
+                    <Form.Item name="requestPeriod" label="Дата регистрации заявки">
+                        <RangePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
+                    </Form.Item>
+                </Col>
+
+                <Col xs={24} md={3}>
+                    <Form.Item name="days" label="Прошло дней с Даты получения">
+                        <Input />
+                    </Form.Item>
+                </Col>
+
+                <Col xs={24} md={4}>
+                    <Form.Item name="responsible" label="Ответственный инженер">
+                        <Select allowClear options={options.responsibleEngineers} />
+                    </Form.Item>
+                </Col>
+            </Row>
         </Form>
     );
 }
