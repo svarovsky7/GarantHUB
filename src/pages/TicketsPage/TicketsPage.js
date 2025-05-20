@@ -10,18 +10,34 @@ import AddIcon from '@mui/icons-material/Add';
 import { useSnackbar } from 'notistack';
 
 import { useTickets } from '@/entities/ticket';
+import { useUsers }   from '@/entities/user';
 import TicketsTable   from '@/widgets/TicketsTable';
 import TicketsFilters from '@/widgets/TicketsFilters';
 
 export default function TicketsPage() {
     const { enqueueSnackbar }                = useSnackbar();
     const { data: tickets = [], isLoading, error } = useTickets();
+    const { data: users = [] }                = useUsers();
     const [filters, setFilters]              = useState({});
 
     /* toast api-ошибки */
     React.useEffect(() => {
         if (error) enqueueSnackbar(error.message, { variant: 'error' });
     }, [error, enqueueSnackbar]);
+
+    const userMap = useMemo(() => {
+        const map = {};
+        users.forEach((u) => { map[u.id] = u.name; });
+        return map;
+    }, [users]);
+
+    const ticketsWithEngineers = useMemo(
+        () => tickets.map((t) => ({
+            ...t,
+            responsibleEngineerName: userMap[t.responsibleEngineerId] ?? null,
+        })),
+        [tickets, userMap],
+    );
 
     /* списки для <Select> (уникальные значения) */
     const options = useMemo(() => {
@@ -30,13 +46,14 @@ export default function TicketsPage() {
                 label: v, value: v,
             }));
         return {
-            projects : uniq(tickets, 'projectName'),
-            units    : uniq(tickets, 'unitName'),
-            statuses : uniq(tickets, 'statusName'),
-            types    : uniq(tickets, 'typeName'),
-            authors  : uniq(tickets, 'createdByName'), // предполагаем поле createdByName
+            projects             : uniq(ticketsWithEngineers, 'projectName'),
+            units                : uniq(ticketsWithEngineers, 'unitName'),
+            statuses             : uniq(ticketsWithEngineers, 'statusName'),
+            types                : uniq(ticketsWithEngineers, 'typeName'),
+            authors              : uniq(ticketsWithEngineers, 'createdByName'), // предполагаем поле createdByName
+            responsibleEngineers : uniq(ticketsWithEngineers, 'responsibleEngineerName'),
         };
-    }, [tickets]);
+    }, [ticketsWithEngineers]);
 
     return (
         <Box sx={{ width: '100%', px: 0, py: 3 }}>
@@ -74,7 +91,7 @@ export default function TicketsPage() {
                     <Alert severity="error" sx={{ mt: 2 }}>{error.message}</Alert>
                 ) : (
                     <TicketsTable
-                        tickets={tickets}
+                        tickets={ticketsWithEngineers}
                         filters={filters}
                         loading={isLoading}
                     />
