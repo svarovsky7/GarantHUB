@@ -31,6 +31,7 @@ const daysPassed = (receivedAt) =>
 /* ---------- фильтрация ---------- */
 const applyFilters = (rows, f) =>
     rows.filter((r) => {
+        const days = daysPassed(r.receivedAt);
         if (f.ticketId && String(r.id) !== String(f.ticketId)) return false;
 
         if (f.period && f.period.length === 2) {
@@ -39,6 +40,14 @@ const applyFilters = (rows, f) =>
             if (r.receivedAt.isBefore(from, 'day') || r.receivedAt.isAfter(to, 'day'))
                 return false;
         }
+        if (f.requestPeriod && f.requestPeriod.length === 2) {
+            const [from, to] = f.requestPeriod;
+            if (!r.customerRequestDate) return false;
+            if (r.customerRequestDate.isBefore(from, 'day') || r.customerRequestDate.isAfter(to, 'day'))
+                return false;
+        }
+        if (f.requestNo && r.customerRequestNo !== f.requestNo) return false;
+        if (f.days && days !== Number(f.days)) return false;
         if (f.project && r.projectName !== f.project) return false;
         if (f.unit && r.unitName !== f.unit) return false;
         if (f.warranty) {
@@ -48,6 +57,7 @@ const applyFilters = (rows, f) =>
         if (f.status && r.statusName !== f.status) return false;
         if (f.type && r.typeName !== f.type) return false;
         if (f.author && r.createdByName !== f.author) return false;
+        if (f.responsible && r.responsibleEngineerName !== f.responsible) return false;
         return true;
     });
 
@@ -64,6 +74,21 @@ export default function TicketsTable({ tickets, filters, loading }) {
             sorter: (a, b) => a.id - b.id,
         },
         {
+            title    : '№ заявки от Заказчика',
+            dataIndex: 'customerRequestNo',
+            width    : 160,
+            sorter   : (a, b) => (a.customerRequestNo || '').localeCompare(b.customerRequestNo || ''),
+        },
+        {
+            title    : 'Дата регистрации заявки',
+            dataIndex: 'customerRequestDate',
+            width    : 160,
+            sorter   : (a, b) =>
+                (a.customerRequestDate ? a.customerRequestDate.valueOf() : 0) -
+                (b.customerRequestDate ? b.customerRequestDate.valueOf() : 0),
+            render   : (v) => fmt(v),
+        },
+        {
             title : 'Дата получения',
             dataIndex: 'receivedAt',
             width : 140,
@@ -74,7 +99,7 @@ export default function TicketsTable({ tickets, filters, loading }) {
             render: (v) => fmt(v),
         },
         {
-            title : 'Прошло дней',
+            title : 'Прошло дней с Даты получения',
             dataIndex: 'days',
             width : 120,
             sorter: (a, b) => (a.days ?? -1) - (b.days ?? -1),
@@ -105,6 +130,9 @@ export default function TicketsTable({ tickets, filters, loading }) {
             dataIndex: 'statusName',
             width : 140,
             sorter: (a, b) => a.statusName.localeCompare(b.statusName),
+            render: (_, row) => (
+                <Tag color={row.statusColor || 'default'}>{row.statusName}</Tag>
+            ),
         },
         {
             title : 'Гарантия',
@@ -121,6 +149,12 @@ export default function TicketsTable({ tickets, filters, loading }) {
                         Нет
                     </Tag>
                 ),
+        },
+        {
+            title    : 'Ответственный инженер',
+            dataIndex: 'responsibleEngineerName',
+            width    : 180,
+            sorter   : (a, b) => (a.responsibleEngineerName || '').localeCompare(b.responsibleEngineerName || ''),
         },
         {
             title : 'Тип замечания',
@@ -171,9 +205,12 @@ export default function TicketsTable({ tickets, filters, loading }) {
         () =>
             applyFilters(tickets, filters).map((t) => ({
                 ...t,
-                receivedAt: t.receivedAt,
-                fixedAt   : t.fixedAt,
-                days      : daysPassed(t.receivedAt),
+                receivedAt         : t.receivedAt,
+                fixedAt            : t.fixedAt,
+                customerRequestDate: t.customerRequestDate,
+                customerRequestNo  : t.customerRequestNo,
+                responsibleEngineerName: t.responsibleEngineerName,
+                days               : daysPassed(t.receivedAt),
             })),
         [tickets, filters],
     );

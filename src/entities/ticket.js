@@ -99,7 +99,8 @@ function mapTicket(r) {
         projectName: r.projects?.name ?? '—',
         unitName: r.units?.name ?? '—',
         typeName: r.ticket_types?.name ?? '—',
-        statusName: r.ticket_statuses?.name ?? '—',
+        statusName : r.ticket_statuses?.name ?? '—',
+        statusColor: r.ticket_statuses?.color ?? null,
         title: r.title,
         description: r.description,
         customerRequestNo: r.customer_request_no,
@@ -128,7 +129,7 @@ export function useTickets() {
           customer_request_no, customer_request_date, responsible_engineer_id,
           is_warranty, created_at, received_at, fixed_at,
           projects (id, name), units (id, name),
-          ticket_types (id, name), ticket_statuses (id, name),
+          ticket_types (id, name), ticket_statuses (id, name, color),
           attachments (id, file_type, storage_path, file_url)
         `)
                 .eq('project_id', projectId)
@@ -218,7 +219,7 @@ export function useTicket(ticketId) {
           customer_request_no, customer_request_date, responsible_engineer_id,
           is_warranty, created_at, received_at, fixed_at,
           projects (id, name), units (id, name),
-          ticket_types (id, name), ticket_statuses (id, name),
+          ticket_types (id, name), ticket_statuses (id, name, color),
           attachments (id, file_type, storage_path, file_url)
         `)
                 .eq('id', id)
