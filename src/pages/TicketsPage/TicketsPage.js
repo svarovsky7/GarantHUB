@@ -31,10 +31,11 @@ export default function TicketsPage() {
         return map;
     }, [users]);
 
-    const ticketsWithEngineers = useMemo(
+    const ticketsWithNames = useMemo(
         () => tickets.map((t) => ({
             ...t,
             responsibleEngineerName: userMap[t.responsibleEngineerId] ?? null,
+            createdByName          : userMap[t.createdBy] ?? null,
         })),
         [tickets, userMap],
     );
@@ -46,52 +47,55 @@ export default function TicketsPage() {
                 label: v, value: v,
             }));
         return {
-            projects             : uniq(ticketsWithEngineers, 'projectName'),
-            units                : uniq(ticketsWithEngineers, 'unitName'),
-            statuses             : uniq(ticketsWithEngineers, 'statusName'),
-            types                : uniq(ticketsWithEngineers, 'typeName'),
-            authors              : uniq(ticketsWithEngineers, 'createdByName'), // предполагаем поле createdByName
-            responsibleEngineers : uniq(ticketsWithEngineers, 'responsibleEngineerName'),
+            projects             : uniq(ticketsWithNames, 'projectName'),
+            units                : uniq(ticketsWithNames, 'unitName'),
+            statuses             : uniq(ticketsWithNames, 'statusName'),
+            types                : uniq(ticketsWithNames, 'typeName'),
+            authors              : uniq(ticketsWithNames, 'createdByName'),
+            responsibleEngineers : uniq(ticketsWithNames, 'responsibleEngineerName'),
         };
-    }, [ticketsWithEngineers]);
+    }, [ticketsWithNames]);
 
     return (
         <Box sx={{ width: '100%', px: 0, py: 3 }}>
+            <Stack
+                direction={{ xs: 'column', md: 'row' }}
+                justifyContent="space-between"
+                alignItems={{ xs: 'flex-start', md: 'center' }}
+                spacing={2}
+                sx={{ mb: 3 }}
+            >
+                <Typography variant="h4">Список замечаний</Typography>
+
+                <Button
+                    component={RouterLink}
+                    to="/tickets/new"
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                >
+                    Новое замечание
+                </Button>
+            </Stack>
+
             <Paper
                 elevation={3}
-                sx={{ p: { xs: 2, sm: 3, md: 4 }, borderRadius: 2, overflow: 'visible' }}
+                sx={{ p: { xs: 2, sm: 3, md: 4 }, mb: 3, borderRadius: 2 }}
             >
-                <Stack
-                    direction={{ xs: 'column', md: 'row' }}
-                    justifyContent="space-between"
-                    alignItems={{ xs: 'flex-start', md: 'center' }}
-                    spacing={2}
-                    sx={{ mb: 3 }}
-                >
-                    <Typography variant="h4">Список замечаний</Typography>
-
-                    <Button
-                        component={RouterLink}
-                        to="/tickets/new"
-                        variant="contained"
-                        startIcon={<AddIcon />}
-                    >
-                        Новое замечание
-                    </Button>
-                </Stack>
-
-                {/* ---- Блок фильтров ---- */}
                 <TicketsFilters
                     options={options}
                     onChange={setFilters}
                 />
+            </Paper>
 
-                {/* ---- Таблица ---- */}
+            <Paper
+                elevation={3}
+                sx={{ p: { xs: 2, sm: 3, md: 4 }, borderRadius: 2, overflow: 'visible' }}
+            >
                 {error ? (
                     <Alert severity="error" sx={{ mt: 2 }}>{error.message}</Alert>
                 ) : (
                     <TicketsTable
-                        tickets={ticketsWithEngineers}
+                        tickets={ticketsWithNames}
                         filters={filters}
                         loading={isLoading}
                     />
