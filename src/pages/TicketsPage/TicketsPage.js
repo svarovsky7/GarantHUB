@@ -1,6 +1,5 @@
-// -----------------------------------------------------------------------------
-// Страница «/tickets» – фильтры + таблица
-// -----------------------------------------------------------------------------
+// src/pages/TicketsPage/TicketsPage.js
+
 import React, { useState, useMemo } from 'react';
 import {
     Box, Paper, Stack, Typography, Button, Alert,
@@ -15,12 +14,11 @@ import TicketsTable   from '@/widgets/TicketsTable';
 import TicketsFilters from '@/widgets/TicketsFilters';
 
 export default function TicketsPage() {
-    const { enqueueSnackbar }                = useSnackbar();
+    const { enqueueSnackbar } = useSnackbar();
     const { data: tickets = [], isLoading, error } = useTickets();
-    const { data: users = [] }                = useUsers();
-    const [filters, setFilters]              = useState({});
+    const { data: users = [] } = useUsers();
+    const [filters, setFilters] = useState({});
 
-    /* toast api-ошибки */
     React.useEffect(() => {
         if (error) enqueueSnackbar(error.message, { variant: 'error' });
     }, [error, enqueueSnackbar]);
@@ -39,19 +37,18 @@ export default function TicketsPage() {
         [tickets, userMap],
     );
 
-    /* списки для <Select> (уникальные значения) */
     const options = useMemo(() => {
         const uniq = (arr, key) =>
             Array.from(new Set(arr.map((i) => i[key]).filter(Boolean))).map((v) => ({
                 label: v, value: v,
             }));
         return {
-            projects             : uniq(ticketsWithEngineers, 'projectName'),
-            units                : uniq(ticketsWithEngineers, 'unitName'),
-            statuses             : uniq(ticketsWithEngineers, 'statusName'),
-            types                : uniq(ticketsWithEngineers, 'typeName'),
-            authors              : uniq(ticketsWithEngineers, 'createdByName'), // предполагаем поле createdByName
-            responsibleEngineers : uniq(ticketsWithEngineers, 'responsibleEngineerName'),
+            projects: uniq(ticketsWithEngineers, 'projectName'),
+            units: uniq(ticketsWithEngineers, 'unitName'),
+            statuses: uniq(ticketsWithEngineers, 'statusName'),
+            types: uniq(ticketsWithEngineers, 'typeName'),
+            authors: uniq(ticketsWithEngineers, 'createdByName'),
+            responsibleEngineers: uniq(ticketsWithEngineers, 'responsibleEngineerName'),
         };
     }, [ticketsWithEngineers]);
 
@@ -59,7 +56,11 @@ export default function TicketsPage() {
         <Box sx={{ width: '100%', px: 0, py: 3 }}>
             <Paper
                 elevation={3}
-                sx={{ p: { xs: 2, sm: 3, md: 4 }, borderRadius: 2, overflow: 'visible' }}
+                sx={{
+                    p: { xs: 2, sm: 3, md: 4 },
+                    borderRadius: 2,
+                    overflow: 'visible',
+                }}
             >
                 <Stack
                     direction={{ xs: 'column', md: 'row' }}
@@ -69,7 +70,6 @@ export default function TicketsPage() {
                     sx={{ mb: 3 }}
                 >
                     <Typography variant="h4">Список замечаний</Typography>
-
                     <Button
                         component={RouterLink}
                         to="/tickets/new"
@@ -79,23 +79,21 @@ export default function TicketsPage() {
                         Новое замечание
                     </Button>
                 </Stack>
-
-                {/* ---- Блок фильтров ---- */}
                 <TicketsFilters
                     options={options}
                     onChange={setFilters}
                 />
-
-                {/* ---- Таблица ---- */}
-                {error ? (
-                    <Alert severity="error" sx={{ mt: 2 }}>{error.message}</Alert>
-                ) : (
-                    <TicketsTable
-                        tickets={ticketsWithEngineers}
-                        filters={filters}
-                        loading={isLoading}
-                    />
-                )}
+                <Box sx={{ width: '100%' }}>
+                    {error ? (
+                        <Alert severity="error" sx={{ mt: 2 }}>{error.message}</Alert>
+                    ) : (
+                        <TicketsTable
+                            tickets={ticketsWithEngineers}
+                            filters={filters}
+                            loading={isLoading}
+                        />
+                    )}
+                </Box>
             </Paper>
         </Box>
     );
