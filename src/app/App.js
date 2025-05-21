@@ -67,7 +67,7 @@ export default function App() {
         <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
             {!hideNavBar && <NavBar />}
             {!hideNavBar && <Toolbar />} {/* Компенсация высоты фиксированной шапки */}
-            <Container maxWidth="lg" sx={{ flexGrow: 1, py: 3 }}>
+            <Container maxWidth={false} sx={{ flexGrow: 1, py: 3 }}>
                 <AppRouter />
             </Container>
         </Box>
