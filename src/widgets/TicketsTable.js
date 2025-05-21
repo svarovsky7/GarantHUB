@@ -120,6 +120,12 @@ export default function TicketsTable({ tickets, filters, loading }) {
             sorter: (a, b) => a.projectName.localeCompare(b.projectName),
         },
         {
+            title    : 'Кем добавлено',
+            dataIndex: 'createdByName',
+            width    : 160,
+            sorter   : (a, b) => (a.createdByName || '').localeCompare(b.createdByName || ''),
+        },
+        {
             title : 'Объект',
             dataIndex: 'unitName',
             width : 160,
@@ -209,6 +215,7 @@ export default function TicketsTable({ tickets, filters, loading }) {
                 fixedAt            : t.fixedAt,
                 customerRequestDate: t.customerRequestDate,
                 customerRequestNo  : t.customerRequestNo,
+                createdByName      : t.createdByName,
                 responsibleEngineerName: t.responsibleEngineerName,
                 days               : daysPassed(t.receivedAt),
             })),
