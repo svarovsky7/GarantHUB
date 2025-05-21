@@ -1,9 +1,7 @@
-// -----------------------------------------------------------------------------
-// Ant Design Table – добавлена колонка «Прошло дней»
-// -----------------------------------------------------------------------------
+// src/widgets/TicketsTable.js
+
 import React, { useMemo } from 'react';
 import dayjs from 'dayjs';
-// CHANGE: единый импорт из antd
 import {
     Table, Tooltip, Space, Button, Popconfirm, Tag, Skeleton, message
 } from 'antd';
@@ -17,7 +15,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { useDeleteTicket } from '@/entities/ticket';
 
-/* ---------- helpers ---------- */
+/** Форматирование даты */
 const fmt = (d, withTime = false) =>
     d && dayjs.isDayjs(d) && d.isValid()
         ? d.format(withTime ? 'DD.MM.YYYY HH:mm' : 'DD.MM.YYYY')
@@ -28,12 +26,11 @@ const daysPassed = (receivedAt) =>
         ? dayjs().diff(receivedAt, 'day') + 1 // +1, т.к. «включительно»
         : null;
 
-/* ---------- фильтрация ---------- */
+/** Фильтрация по фильтрам */
 const applyFilters = (rows, f) =>
     rows.filter((r) => {
         const days = daysPassed(r.receivedAt);
         if (f.ticketId && String(r.id) !== String(f.ticketId)) return false;
-
         if (f.period && f.period.length === 2) {
             const [from, to] = f.period;
             if (!r.receivedAt) return false;
@@ -61,37 +58,42 @@ const applyFilters = (rows, f) =>
         return true;
     });
 
+/**
+ * Таблица замечаний
+ * @param {Array} tickets - массив замечаний
+ * @param {Object} filters - активные фильтры
+ * @param {boolean} loading - индикатор загрузки
+ */
 export default function TicketsTable({ tickets, filters, loading }) {
-    const navigate                           = useNavigate();
+    const navigate = useNavigate();
     const { mutateAsync: remove, isPending } = useDeleteTicket();
 
-    /* ---------- колонки ---------- */
     const columns = useMemo(() => [
         {
-            title : 'Номер замечания',
+            title: 'Номер замечания',
             dataIndex: 'id',
-            width : 100,
+            width: 100,
             sorter: (a, b) => a.id - b.id,
         },
         {
-            title    : '№ заявки от Заказчика',
+            title: '№ заявки от Заказчика',
             dataIndex: 'customerRequestNo',
-            width    : 160,
-            sorter   : (a, b) => (a.customerRequestNo || '').localeCompare(b.customerRequestNo || ''),
+            width: 160,
+            sorter: (a, b) => (a.customerRequestNo || '').localeCompare(b.customerRequestNo || ''),
         },
         {
-            title    : 'Дата регистрации заявки',
+            title: 'Дата регистрации заявки',
             dataIndex: 'customerRequestDate',
-            width    : 160,
-            sorter   : (a, b) =>
+            width: 160,
+            sorter: (a, b) =>
                 (a.customerRequestDate ? a.customerRequestDate.valueOf() : 0) -
                 (b.customerRequestDate ? b.customerRequestDate.valueOf() : 0),
-            render   : (v) => fmt(v),
+            render: (v) => fmt(v),
         },
         {
-            title : 'Дата получения',
+            title: 'Дата получения',
             dataIndex: 'receivedAt',
-            width : 140,
+            width: 140,
             defaultSortOrder: 'descend',
             sorter: (a, b) =>
                 (a.receivedAt ? a.receivedAt.valueOf() : 0) -
@@ -99,51 +101,51 @@ export default function TicketsTable({ tickets, filters, loading }) {
             render: (v) => fmt(v),
         },
         {
-            title : 'Прошло дней с Даты получения',
+            title: 'Прошло дней с Даты получения',
             dataIndex: 'days',
-            width : 120,
+            width: 120,
             sorter: (a, b) => (a.days ?? -1) - (b.days ?? -1),
         },
         {
-            title : 'Дата устранения',
+            title: 'Дата устранения',
             dataIndex: 'fixedAt',
-            width : 140,
+            width: 140,
             sorter: (a, b) =>
                 (a.fixedAt ? a.fixedAt.valueOf() : 0) -
                 (b.fixedAt ? b.fixedAt.valueOf() : 0),
             render: (v) => fmt(v),
         },
         {
-            title : 'Проект',
+            title: 'Проект',
             dataIndex: 'projectName',
-            width : 180,
+            width: 180,
             sorter: (a, b) => a.projectName.localeCompare(b.projectName),
         },
         {
-            title    : 'Кем добавлено',
+            title: 'Кем добавлено',
             dataIndex: 'createdByName',
-            width    : 160,
-            sorter   : (a, b) => (a.createdByName || '').localeCompare(b.createdByName || ''),
+            width: 160,
+            sorter: (a, b) => (a.createdByName || '').localeCompare(b.createdByName || ''),
         },
         {
-            title : 'Объект',
+            title: 'Объект',
             dataIndex: 'unitName',
-            width : 160,
+            width: 160,
             sorter: (a, b) => a.unitName.localeCompare(b.unitName),
         },
         {
-            title : 'Статус',
+            title: 'Статус',
             dataIndex: 'statusName',
-            width : 140,
+            width: 140,
             sorter: (a, b) => a.statusName.localeCompare(b.statusName),
             render: (_, row) => (
                 <Tag color={row.statusColor || 'default'}>{row.statusName}</Tag>
             ),
         },
         {
-            title : 'Гарантия',
+            title: 'Гарантия',
             dataIndex: 'isWarranty',
-            width : 110,
+            width: 110,
             sorter: (a, b) => Number(a.isWarranty) - Number(b.isWarranty),
             render: (v) =>
                 v ? (
@@ -157,21 +159,21 @@ export default function TicketsTable({ tickets, filters, loading }) {
                 ),
         },
         {
-            title    : 'Ответственный инженер',
+            title: 'Ответственный инженер',
             dataIndex: 'responsibleEngineerName',
-            width    : 180,
-            sorter   : (a, b) => (a.responsibleEngineerName || '').localeCompare(b.responsibleEngineerName || ''),
+            width: 180,
+            sorter: (a, b) => (a.responsibleEngineerName || '').localeCompare(b.responsibleEngineerName || ''),
         },
         {
-            title : 'Тип замечания',
+            title: 'Тип замечания',
             dataIndex: 'typeName',
-            width : 160,
+            width: 160,
             sorter: (a, b) => a.typeName.localeCompare(b.typeName),
         },
         {
-            title : 'Действия',
-            key   : 'actions',
-            width : 100,
+            title: 'Действия',
+            key: 'actions',
+            width: 100,
             render: (_, record) => (
                 <Space size="middle">
                     <Tooltip title="Редактировать">
@@ -182,7 +184,6 @@ export default function TicketsTable({ tickets, filters, loading }) {
                             onClick={() => navigate(`/tickets/${record.id}/edit`)}
                         />
                     </Tooltip>
-
                     <Popconfirm
                         title="Удалить замечание?"
                         okText="Да"
@@ -206,18 +207,17 @@ export default function TicketsTable({ tickets, filters, loading }) {
         },
     ], [navigate, remove, isPending]);
 
-    /* ---------- datasource с фильтрами и расчётом days ---------- */
     const dataSource = useMemo(
         () =>
             applyFilters(tickets, filters).map((t) => ({
                 ...t,
-                receivedAt         : t.receivedAt,
-                fixedAt            : t.fixedAt,
+                receivedAt: t.receivedAt,
+                fixedAt: t.fixedAt,
                 customerRequestDate: t.customerRequestDate,
-                customerRequestNo  : t.customerRequestNo,
-                createdByName      : t.createdByName,
+                customerRequestNo: t.customerRequestNo,
+                createdByName: t.createdByName,
                 responsibleEngineerName: t.responsibleEngineerName,
-                days               : daysPassed(t.receivedAt),
+                days: daysPassed(t.receivedAt),
             })),
         [tickets, filters],
     );
