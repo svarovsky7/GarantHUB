@@ -16,13 +16,14 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 
-import { useLitigations }      from '@/entities/litigation';
+import { useLitigations, useLitigationLiveUpdates } from '@/entities/litigation';
 import { useLitigationStages } from '@/entities/litigationStage';
 import LitigationsTable        from '@/widgets/LitigationsTable';
 import LitigationAddDialog     from '@/features/litigation/LitigationAddDialog';
 import { useNotify }           from '@/shared/hooks/useNotify';
 
 export default function LitigationsPage() {
+    useLitigationLiveUpdates();
     const notify                = useNotify();
     const [search,   setSearch] = useState('');
     const [stageId,  setStageId] = useState('');

@@ -3,13 +3,13 @@
 // Судебные дела, изолированные по project_id
 // --------------------------------------------------------
 import { supabase } from '@/shared/api/supabaseClient';
-import { queryClient } from '@/shared/config/queryClient';
 import { useProjectId } from '@/shared/hooks/useProjectId';
 import {
     useQuery,
     useMutation,
     useQueryClient,
 } from '@tanstack/react-query';
+import { useEffect } from 'react';
 
 const TABLE = 'litigations';
 
@@ -30,6 +30,7 @@ export const useLitigationByUnit = (unitId) => {
             if (error && error.code !== 'PGRST116') throw error;
             return data ?? null;
         },
+        staleTime: 60_000,
     });
 };
 
@@ -119,9 +120,23 @@ export const useLitigations = ({ search = '', stageId = null } = {}) => {
 };
 
 /* ---------- live-updates ---------- */
-supabase
-    .channel(`public:${TABLE}`)
-    .on('postgres_changes', { event: '*', schema: 'public', table: TABLE }, () => {
-        queryClient.invalidateQueries({ queryKey: [TABLE] });
-    })
-    .subscribe();
+export const useLitigationLiveUpdates = () => {
+    const qc = useQueryClient();
+
+    useEffect(() => {
+        const channel = supabase
+            .channel(`public:${TABLE}`)
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: TABLE },
+                () => {
+                    qc.invalidateQueries({ queryKey: [TABLE] });
+                },
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [qc]);
+};
