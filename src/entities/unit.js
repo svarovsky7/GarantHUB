@@ -50,6 +50,7 @@ export const useUnits = () => {
                 persons: (u.unit_persons?.map((l) => l.person).filter(Boolean)) ?? [],
             }));
         },
+        staleTime: 5 * 60_000,
     });
 };
 
@@ -71,6 +72,7 @@ export const useUnitsByProject = (projectId) =>
                 persons: (u.unit_persons?.map((l) => l.person).filter(Boolean)) ?? [],
             }));
         },
+        staleTime: 5 * 60_000,
     });
 
 export const useUnit = (unitId) => {
@@ -93,6 +95,7 @@ export const useUnit = (unitId) => {
                 persons: (data.unit_persons?.map((l) => l.person).filter(Boolean)) ?? [],
             };
         },
+        staleTime: 5 * 60_000,
     });
 };
 
