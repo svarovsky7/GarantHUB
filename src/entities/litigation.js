@@ -30,6 +30,7 @@ export const useLitigationByUnit = (unitId) => {
             if (error && error.code !== 'PGRST116') throw error;
             return data ?? null;
         },
+        staleTime: 60_000,
     });
 };
 

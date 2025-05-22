@@ -101,6 +101,7 @@ export const useContractors = () => {
             if (error) throw error;
             return data ?? [];
         },
+        staleTime: 10 * 60_000,
     });
 };
 
