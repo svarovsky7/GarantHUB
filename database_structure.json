@@ -455,6 +455,20 @@
     "column_default": null
   },
   {
+    "table_name": "party_types",
+    "column_name": "id",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": "nextval('party_types_id_seq'::regclass)"
+  },
+  {
+    "table_name": "party_types",
+    "column_name": "name",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
     "table_name": "litigation_stages",
     "column_name": "id",
     "data_type": "integer",
