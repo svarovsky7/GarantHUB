@@ -10,7 +10,6 @@ import { useAuthStore } from '@/shared/store/authStore';
 import DashboardPage   from '@/pages/DashboardPage/DashboardPage';
 import TicketsPage     from '@/pages/TicketsPage/TicketsPage';
 import TicketFormPage  from '@/pages/TicketsPage/TicketFormPage';
-import LitigationsPage from '@/pages/LitigationsPage/LitigationsPage';
 import StatsPage       from '@/pages/StatsPage/StatsPage';
 
 import LoginPage    from '@/pages/UnitsPage/LoginPage';     // ← CHANGE
@@ -87,14 +86,6 @@ export default function AppRouter() {
                 element={(
                     <RequireAuth>
                         <TicketFormPage />
-                    </RequireAuth>
-                )}
-            />
-            <Route
-                path="/litigations"
-                element={(
-                    <RequireAuth>
-                        <LitigationsPage />
                     </RequireAuth>
                 )}
             />
