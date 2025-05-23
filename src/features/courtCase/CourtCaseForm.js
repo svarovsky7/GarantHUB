@@ -91,9 +91,9 @@ export default function CourtCaseForm({ initialData, onSubmit, onCancel }) {
                             control={control}
                             render={({ field }) => (
                                 <Autocomplete
-                                    {...field}
-                                    onChange={(_, v) => field.onChange(v?.id ?? null)}
                                     options={units}
+                                    value={units.find((u) => u.id === field.value) || null}
+                                    onChange={(_, v) => field.onChange(v?.id ?? null)}
                                     getOptionLabel={(o) => o.name || ''}
                                     isOptionEqualToValue={(o, v) => o.id === v.id}
                                     renderInput={(params) => <TextField {...params} label="Объект" />}
@@ -105,9 +105,9 @@ export default function CourtCaseForm({ initialData, onSubmit, onCancel }) {
                             control={control}
                             render={({ field }) => (
                                 <Autocomplete
-                                    {...field}
-                                    onChange={(_, v) => field.onChange(v?.id ?? null)}
                                     options={stages}
+                                    value={stages.find((s) => s.id === field.value) || null}
+                                    onChange={(_, v) => field.onChange(v?.id ?? null)}
                                     getOptionLabel={(o) => o.name || ''}
                                     isOptionEqualToValue={(o, v) => o.id === v.id}
                                     renderInput={(params) => <TextField {...params} label="Стадия" />}
@@ -119,9 +119,9 @@ export default function CourtCaseForm({ initialData, onSubmit, onCancel }) {
                             control={control}
                             render={({ field }) => (
                                 <Autocomplete
-                                    {...field}
-                                    onChange={(_, v) => field.onChange(v?.name ?? '')}
                                     options={statuses}
+                                    value={statuses.find((s) => s.name === field.value) || null}
+                                    onChange={(_, v) => field.onChange(v?.name ?? '')}
                                     getOptionLabel={(o) => o.name || ''}
                                     isOptionEqualToValue={(o, v) => o.name === v.name}
                                     renderInput={(params) => <TextField {...params} label="Статус" />}
@@ -133,9 +133,9 @@ export default function CourtCaseForm({ initialData, onSubmit, onCancel }) {
                             control={control}
                             render={({ field }) => (
                                 <Autocomplete
-                                    {...field}
-                                    onChange={(_, v) => field.onChange(v?.id ?? null)}
                                     options={users}
+                                    value={users.find((u) => u.id === field.value) || null}
+                                    onChange={(_, v) => field.onChange(v?.id ?? null)}
                                     getOptionLabel={(o) => o.name || o.email || ''}
                                     isOptionEqualToValue={(o, v) => o.id === v.id}
                                     renderInput={(params) => <TextField {...params} label="Ответственный юрист" />}
