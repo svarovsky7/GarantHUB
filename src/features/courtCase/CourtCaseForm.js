@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { Stack, TextField, Button, Dialog, DialogTitle, DialogContent, DialogActions, Autocomplete } from '@mui/material';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
@@ -8,17 +8,31 @@ import { useUnitsByProject } from '@/entities/unit';
 import { useLitigationStages } from '@/entities/litigationStage';
 import { useCourtCaseStatuses } from '@/entities/courtCaseStatus';
 import { useUsers } from '@/entities/user';
+import { useProjectId } from '@/shared/hooks/useProjectId';
+import {
+    useCaseLetters,
+    useAddLetter,
+    useUpdateLetter,
+} from '@/entities/letter';
+import LetterForm from '@/features/letter/LetterForm';
+import LettersTable from '@/widgets/LettersTable';
 
 export default function CourtCaseForm({ initialData, onSubmit, onCancel }) {
+    const projectId = useProjectId();
     const { data: stages = [] } = useLitigationStages();
     const { data: statuses = [] } = useCourtCaseStatuses();
     const { data: users = [] } = useUsers();
-    const { data: units = [] } = useUnitsByProject(initialData?.project_id, true);
+    const { data: units = [] } = useUnitsByProject(projectId);
 
-    const { control, handleSubmit, reset } = useForm({
+    const { data: letters = [] } = useCaseLetters(initialData?.id);
+    const addLetter = useAddLetter();
+    const updateLetter = useUpdateLetter();
+    const [letterModal, setLetterModal] = useState(null); // {mode, data}
+
+    const { control, handleSubmit, reset, setValue } = useForm({
         defaultValues: {
             internal_no: '',
-            project_id: initialData?.project_id ?? null,
+            project_id: projectId,
             unit_id: null,
             stage_id: null,
             status: 'NEW',
@@ -42,8 +56,14 @@ export default function CourtCaseForm({ initialData, onSubmit, onCancel }) {
                 fix_end_date: initialData.fix_end_date ? dayjs(initialData.fix_end_date) : null,
                 comments: initialData.comments ?? '',
             });
+        } else {
+            setValue('internal_no', `CC-${Date.now()}`);
         }
-    }, [initialData, reset]);
+    }, [initialData, reset, setValue]);
+
+    useEffect(() => {
+        setValue('project_id', projectId);
+    }, [projectId, setValue]);
 
     return (
         <Dialog open onClose={onCancel} fullWidth maxWidth="sm">
@@ -155,11 +175,37 @@ export default function CourtCaseForm({ initialData, onSubmit, onCancel }) {
                         />
                     </Stack>
                 </LocalizationProvider>
+                {initialData && (
+                    <Stack spacing={2} sx={{ mt: 3 }}>
+                        <Button variant="outlined" onClick={() => setLetterModal({ mode: 'add', data: null })}>
+                            Добавить письмо
+                        </Button>
+                        <LettersTable
+                            rows={letters}
+                            onEdit={(row) => setLetterModal({ mode: 'edit', data: row })}
+                        />
+                    </Stack>
+                )}
             </DialogContent>
             <DialogActions>
                 <Button onClick={onCancel}>Отмена</Button>
                 <Button variant="contained" onClick={handleSubmit(onSubmit)}>Сохранить</Button>
             </DialogActions>
+            {letterModal && initialData && (
+                <LetterForm
+                    open
+                    initialData={letterModal.data}
+                    onCancel={() => setLetterModal(null)}
+                    onSubmit={async (vals) => {
+                        if (letterModal.mode === 'add') {
+                            await addLetter.mutateAsync({ ...vals, case_id: initialData.id });
+                        } else if (letterModal.mode === 'edit' && letterModal.data) {
+                            await updateLetter.mutateAsync({ id: letterModal.data.id, case_id: initialData.id, updates: vals });
+                        }
+                        setLetterModal(null);
+                    }}
+                />
+            )}
         </Dialog>
     );
 }

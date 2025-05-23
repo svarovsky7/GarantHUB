@@ -50,7 +50,7 @@ const NavBar = () => {
                 <Button color="inherit" component={RouterLink} to="/tickets">
                     Таблица&nbsp;замечаний
                 </Button>
-                <Button color="inherit" component={RouterLink} to="/litigations">
+                <Button color="inherit" component={RouterLink} to="/court-cases">
                     Судебные&nbsp;дела
                 </Button>
                 {profile?.role === 'ADMIN' && (

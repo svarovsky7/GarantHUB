@@ -11,11 +11,9 @@ export default function CourtCasesPage() {
     const [modal, setModal] = useState(null); // {mode:'add'|'edit', data?}
 
     const rows = cases.map((c) => ({
-        id: c.id,
-        internal_no: c.internal_no,
+        ...c,
         unit_name: c.units?.name ?? '',
         stage_name: c.litigation_stages?.name ?? '',
-        status: c.status,
     }));
 
     const handleCreate = async (values) => {
