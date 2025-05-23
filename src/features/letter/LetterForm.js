@@ -68,9 +68,9 @@ export default function LetterForm({ open, initialData, onSubmit, onCancel }) {
                                 control={control}
                                 render={({ field }) => (
                                     <Autocomplete
-                                        {...field}
-                                        onChange={(_, v) => field.onChange(v?.name ?? '')}
                                         options={types}
+                                        value={types.find((t) => t.name === field.value) || null}
+                                        onChange={(_, v) => field.onChange(v?.name ?? '')}
                                         getOptionLabel={(o) => o.name || ''}
                                         isOptionEqualToValue={(o, v) => o.name === v.name}
                                         renderInput={(params) => <TextField {...params} label="Тип" />}
