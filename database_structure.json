@@ -401,7 +401,7 @@
   {
     "table_name": "letters",
     "column_name": "letter_type",
-    "data_type": "USER-DEFINED",
+    "data_type": "text",
     "is_nullable": "NO",
     "column_default": null
   },
@@ -439,6 +439,20 @@
     "data_type": "timestamp with time zone",
     "is_nullable": "NO",
     "column_default": "now()"
+  },
+  {
+    "table_name": "letter_types",
+    "column_name": "id",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": "nextval('letter_types_id_seq'::regclass)"
+  },
+  {
+    "table_name": "letter_types",
+    "column_name": "name",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
   },
   {
     "table_name": "litigation_stages",
