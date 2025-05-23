@@ -8,7 +8,6 @@ import TicketStatusesAdmin   from '../../widgets/TicketStatusesAdmin';
 import TicketTypesAdmin      from '../../widgets/TicketTypesAdmin';
 import UsersTable            from '../../widgets/UsersTable';
 import LitigationStagesAdmin from '../../widgets/LitigationStagesAdmin';
-import CourtCaseStatusesAdmin from '../../widgets/CourtCaseStatusesAdmin';
 import PartyTypesAdmin from '../../widgets/PartyTypesAdmin';
 import LetterTypesAdmin from '../../widgets/LetterTypesAdmin';
 
@@ -21,7 +20,6 @@ export default function AdminPage() {
                 <TicketStatusesAdmin pageSize={25} rowsPerPageOptions={[10, 25, 50, 100]} />
                 <TicketTypesAdmin pageSize={25} rowsPerPageOptions={[10, 25, 50, 100]} />
                 <LitigationStagesAdmin pageSize={25} rowsPerPageOptions={[10, 25, 50, 100]} />
-                <CourtCaseStatusesAdmin pageSize={25} rowsPerPageOptions={[10, 25, 50, 100]} />
                 <PartyTypesAdmin pageSize={25} rowsPerPageOptions={[10, 25, 50, 100]} />
                 <LetterTypesAdmin pageSize={25} rowsPerPageOptions={[10, 25, 50, 100]} />
                 <UsersTable pageSize={25} rowsPerPageOptions={[10, 25, 50, 100]} />
