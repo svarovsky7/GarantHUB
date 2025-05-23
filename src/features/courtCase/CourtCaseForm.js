@@ -14,7 +14,13 @@ import {
     useAddLetter,
     useUpdateLetter,
 } from '@/entities/letter';
+import {
+    useCaseDefects,
+    useAddCaseDefect,
+} from '@/entities/caseDefect';
 import LetterForm from '@/features/letter/LetterForm';
+import CaseDefectForm from '@/features/caseDefect/CaseDefectForm';
+import CaseDefectsTable from '@/widgets/CaseDefectsTable';
 import LettersTable from '@/widgets/LettersTable';
 
 export default function CourtCaseForm({ initialData, onSubmit, onCancel }) {
@@ -28,6 +34,10 @@ export default function CourtCaseForm({ initialData, onSubmit, onCancel }) {
     const addLetter = useAddLetter();
     const updateLetter = useUpdateLetter();
     const [letterModal, setLetterModal] = useState(null); // {mode, data}
+
+    const { data: caseDefects = [] } = useCaseDefects(initialData?.id);
+    const addCaseDefect = useAddCaseDefect();
+    const [defectModal, setDefectModal] = useState(false);
 
     const { control, handleSubmit, reset, setValue } = useForm({
         defaultValues: {
@@ -177,6 +187,14 @@ export default function CourtCaseForm({ initialData, onSubmit, onCancel }) {
                 </LocalizationProvider>
                 {initialData && (
                     <Stack spacing={2} sx={{ mt: 3 }}>
+                        <Button variant="outlined" onClick={() => setDefectModal(true)}>
+                            Добавить недостаток
+                        </Button>
+                        <CaseDefectsTable rows={caseDefects} />
+                    </Stack>
+                )}
+                {initialData && (
+                    <Stack spacing={2} sx={{ mt: 3 }}>
                         <Button variant="outlined" onClick={() => setLetterModal({ mode: 'add', data: null })}>
                             Добавить письмо
                         </Button>
@@ -203,6 +221,20 @@ export default function CourtCaseForm({ initialData, onSubmit, onCancel }) {
                             await updateLetter.mutateAsync({ id: letterModal.data.id, case_id: initialData.id, updates: vals });
                         }
                         setLetterModal(null);
+                    }}
+                />
+            )}
+            {defectModal && initialData && (
+                <CaseDefectForm
+                    open
+                    initialData={null}
+                    onCancel={() => setDefectModal(false)}
+                    onSubmit={async (defect_id) => {
+                        await addCaseDefect.mutateAsync({
+                            case_id: initialData.id,
+                            defect_id,
+                        });
+                        setDefectModal(false);
                     }}
                 />
             )}
