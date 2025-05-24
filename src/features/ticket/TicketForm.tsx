@@ -20,11 +20,11 @@ import { useCreateTicket, useTicket, signedUrl } from '@/entities/ticket';
 import { useUsers }            from '@/entities/user';
 
 import { useProjectId }        from '@/shared/hooks/useProjectId';
-import { useAuthStore }        from '@/shared/store/authStore'; // <--- добавлено!
+import { useAuthStore }        from '@/shared/store/authStore';
 import FileDropZone            from '@/shared/ui/FileDropZone';
 import AttachmentPreviewList   from '@/shared/ui/AttachmentPreviewList';
 
-/* ---------- validation ---------- */
+// ---------- validation ----------
 const schema = yup.object({
     project_id  : yup.number().required(),
     unit_id     : yup.number().nullable(),
@@ -33,15 +33,15 @@ const schema = yup.object({
     title       : yup.string().trim().required('Заголовок обязателен').min(3),
     description : yup.string().trim().nullable(),
     customer_request_no   : yup.string().trim().nullable(),
-    customer_request_date : yup.mixed()
+    customer_request_date : yup.mixed<Dayjs>()
         .nullable()
         .test('is-dayjs-or-null', 'Некорректная дата', v => v === null || (dayjs.isDayjs(v) && v.isValid())),
     responsible_engineer_id: yup.string().nullable(),
     is_warranty : yup.boolean().defined(),
-    received_at : yup.mixed()
+    received_at : yup.mixed<Dayjs>()
         .required('Дата получения обязательна')
         .test('is-dayjs', 'Некорректная дата', v => dayjs.isDayjs(v) && v.isValid()),
-    fixed_at    : yup.mixed()
+    fixed_at    : yup.mixed<Dayjs>()
         .nullable()
         .test('is-dayjs-or-null', 'Некорректная дата', v => v === null || (dayjs.isDayjs(v) && v.isValid())),
 }).required();
@@ -74,8 +74,6 @@ export default function TicketForm({
     const isEditMode = Boolean(ticketId);
 
     const projectId = useProjectId();
-
-    // CHANGE: получаем профиль пользователя
     const profile = useAuthStore((s) => s.profile);
 
     const { data: ticket, isLoading: isLoadingTicket,
@@ -87,22 +85,22 @@ export default function TicketForm({
     const { data: users    = [], isLoading: isLoadingUsers    } = useUsers();
 
     const methods = useForm<TicketFormValues>({
-        resolver      : yupResolver<TicketFormValues, any, TicketFormValues>(schema),
-
-        defaultValues : {
-            project_id  : projectId,
-            unit_id     : initialUnitId ?? null,
-            type_id     : null,
-            status_id   : null,
-            title       : '',
-            description : '',
-            customer_request_no   : '',
-            customer_request_date : null,
+        shouldUnregister: false,
+        resolver: yupResolver(schema),
+        defaultValues: {
+            project_id: projectId,
+            unit_id: initialUnitId ?? null,
+            type_id: null,
+            status_id: null,
+            title: '',
+            description: '',
+            customer_request_no: '',
+            customer_request_date: null,
             responsible_engineer_id: null,
-            is_warranty : false,
-            received_at : dayjs(),
-            fixed_at    : null,
-        },
+            is_warranty: false,
+            received_at: dayjs(),
+            fixed_at: null,
+        }
     });
     const { control, reset, setValue, handleSubmit, formState: { isSubmitting } } = methods;
 
@@ -112,8 +110,8 @@ export default function TicketForm({
     const handleDropFiles = useCallback((files) => {
         setNewFiles(prev => [...prev, ...files]);
     }, []);
-    const handleRemoveNewFile    = (idx) => setNewFiles(prev => prev.filter((_, i) => i !== idx));
-    const handleRemoveRemoteFile = (id)  => setRemoteFiles(prev => prev.filter(f => f.id !== id));
+    const handleRemoveNewFile    = (idx: number) => setNewFiles(prev => prev.filter((_, i) => i !== idx));
+    const handleRemoveRemoteFile = (id: number)  => setRemoteFiles(prev => prev.filter(f => f.id !== id));
 
     const { mutateAsync: createTicket, isPending: isCreatingTicket } = useCreateTicket();
 
@@ -147,7 +145,7 @@ export default function TicketForm({
         }
     }, [embedded, initialUnitId, setValue]);
 
-    const serialize = (data) => ({
+    const serialize = (data: TicketFormValues) => ({
         project_id  : data.project_id,
         unit_id     : data.unit_id ?? null,
         type_id     : data.type_id,
@@ -164,7 +162,7 @@ export default function TicketForm({
         fixed_at    : data.fixed_at ? dayjs(data.fixed_at).format('YYYY-MM-DD') : null,
     });
 
-    const onSubmit = async (data) => {
+    const onSubmit = async (data: TicketFormValues) => {
         const dto = serialize(data);
 
         if (isEditMode) {
@@ -188,7 +186,6 @@ export default function TicketForm({
         }
     };
 
-    // CHANGE: Блокируем рендер формы, если профиль ещё не загружен
     if (profile === undefined) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 240 }}>
@@ -233,7 +230,7 @@ export default function TicketForm({
             <FormProvider {...methods}>
                 <form onSubmit={handleSubmit(onSubmit)} noValidate>
                     <Stack spacing={3}>
-                        {/* Unit ----------------------------------------------------------- */}
+                        {/* Unit */}
                         <Controller
                             name="unit_id"
                             control={control}
