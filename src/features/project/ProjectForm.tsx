@@ -11,6 +11,8 @@ const makeSchema = (min = 2, max = 120) =>
         name: z.string().trim().min(min, `Минимум ${min} символа(ов)`).max(max, `Максимум ${max} символов`),
     });
 
+const schema = makeSchema();
+
 /**
  * Форма создания/редактирования проекта.
  */
@@ -25,8 +27,8 @@ const ProjectForm = ({ initialData, onSubmit, onCancel }: ProjectFormProps) => {
         handleSubmit,
         control,
         formState: { errors, isSubmitting },
-    } = useForm<{ name: string }>({
-        resolver: zodResolver(makeSchema()),
+    } = useForm<z.infer<typeof schema>>({
+        resolver: zodResolver(schema),
         defaultValues: { name: initialData?.name ?? '' },
         mode: 'onTouched',
     });

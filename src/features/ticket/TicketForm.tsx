@@ -87,7 +87,7 @@ export default function TicketForm({
     const { data: users    = [], isLoading: isLoadingUsers    } = useUsers();
 
     const methods = useForm<TicketFormValues>({
-        resolver      : yupResolver(schema),
+        resolver      : yupResolver<TicketFormValues>(schema),
         defaultValues : {
             project_id  : projectId,
             unit_id     : initialUnitId ?? null,
@@ -283,7 +283,7 @@ export default function TicketForm({
                             name="customer_request_date"
                             control={control}
                             render={({ field, fieldState: { error } }) => (
-                                <DatePicker<Dayjs>
+                                <DatePicker
                                     label="Дата регистрации заявки"
                                     value={field.value}
                                     onChange={field.onChange}
@@ -297,7 +297,7 @@ export default function TicketForm({
                             name="received_at"
                             control={control}
                             render={({ field, fieldState: { error } }) => (
-                                <DatePicker<Dayjs>
+                                <DatePicker
                                     label="Дата получения *"
                                     value={field.value}
                                     onChange={field.onChange}
@@ -330,7 +330,7 @@ export default function TicketForm({
                             name="fixed_at"
                             control={control}
                             render={({ field, fieldState: { error } }) => (
-                                <DatePicker<Dayjs>
+                                <DatePicker
                                     label="Дата устранения"
                                     value={field.value}
                                     onChange={field.onChange}
