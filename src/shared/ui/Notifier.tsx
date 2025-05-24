@@ -2,7 +2,7 @@ import React from 'react';
 import { SnackbarProvider } from 'notistack';
 
 /* ---------- кастомный “зелёный” снек ---------- */
-const GreenSnack = React.forwardRef(function GreenSnack(
+const GreenSnack = React.forwardRef<HTMLDivElement, { message: string; onClose: () => void }>(function GreenSnack(
     { message, onClose },   // забираем только то, что используем
     ref,
 ) {

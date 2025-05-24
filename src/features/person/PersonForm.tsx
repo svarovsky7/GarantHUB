@@ -72,9 +72,9 @@ export default function PersonForm({ initialData, onSuccess, onCancel }) {
         control,
         handleSubmit,
         formState: { errors, isSubmitting },
-    } = useForm({
+    } = useForm<any>({
         defaultValues: defaults,
-        resolver: zodResolver(schema),
+        resolver: zodResolver(schema) as any,
         mode: 'onTouched',
     });
 
@@ -128,7 +128,7 @@ export default function PersonForm({ initialData, onSuccess, onCancel }) {
                                     select
                                     label="Проект *"
                                     error={!!errors.project_id}
-                                    helperText={errors.project_id?.message}
+                                    helperText={errors.project_id?.message as string}
                                     fullWidth
                                     // Критически важно: если value невалиден — ставим ''
                                     value={
@@ -158,7 +158,7 @@ export default function PersonForm({ initialData, onSuccess, onCancel }) {
                                 {...field}
                                 label="ФИО *"
                                 error={!!errors.full_name}
-                                helperText={errors.full_name?.message}
+                                helperText={errors.full_name?.message as string}
                                 fullWidth
                             />
                         )}
@@ -182,7 +182,7 @@ export default function PersonForm({ initialData, onSuccess, onCancel }) {
                                 {...field}
                                 label="E-mail"
                                 error={!!errors.email}
-                                helperText={errors.email?.message}
+                                helperText={errors.email?.message as string}
                                 fullWidth
                             />
                         )}
