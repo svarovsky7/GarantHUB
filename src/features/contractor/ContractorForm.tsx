@@ -68,7 +68,7 @@ export default function ContractorForm({
             onSuccess?.();
         } catch (err) {
             if (/Компания с таким/i.test(err.message)) {
-                ['name', 'inn'].forEach((f) =>
+                (['name', 'inn'] as const).forEach((f) =>
                     setError(f, { type: 'duplicate', message: 'Пара уже занята' }),
                 );
             }
@@ -76,10 +76,12 @@ export default function ContractorForm({
         }
     };
 
+    const fields = ['name', 'inn', 'phone', 'email', 'comment'] as const;
+
     return (
         <form onSubmit={handleSubmit(submit)} noValidate>
             <Stack spacing={2} sx={{ maxWidth: 480 }}>
-                {['name', 'inn', 'phone', 'email', 'comment'].map((f) => (
+                {fields.map((f) => (
                     <Controller
                         key={f}
                         name={f}

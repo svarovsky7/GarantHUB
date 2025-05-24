@@ -56,9 +56,10 @@ export default function UnitCell({
             }}
             elevation={0}
             onClick={(e) => {
+                const target = e.target as HTMLElement;
                 if (
-                    e.target.closest('.unit-action-icon') ||
-                    e.target.closest('.MuiTooltip-popper')
+                    target.closest('.unit-action-icon') ||
+                    target.closest('.MuiTooltip-popper')
                 ) return;
                 onAction?.(unit);
             }}
