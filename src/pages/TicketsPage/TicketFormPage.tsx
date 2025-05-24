@@ -39,7 +39,12 @@ export default function TicketFormPage() {
                 </Box>
                 {/* --- форма --- */}
                 <Box sx={{ p: { xs: 3, md: 5 } }}>
-                    <TicketForm key={`${projectId ?? 'none'}-${ticketId ?? 'new'}`} />
+                    <TicketForm
+                        key={`${projectId ?? 'none'}-${ticketId ?? 'new'}`}
+                        ticketId={ticketId}
+                        onCreated={() => {}}
+                        onCancel={() => {}}
+                    />
                 </Box>
             </Paper>
         </Box>

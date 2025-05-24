@@ -11,7 +11,7 @@ import {
 } from '@/entities/partyType';
 import PartyTypeForm from '@/features/partyType/PartyTypeForm';
 
-export default function PartyTypesAdmin({ pageSize = 25, rowsPerPageOptions = [10, 25, 50, 100] }) {
+export default function PartyTypesAdmin() {
     const { data = [], isLoading } = usePartyTypes();
     const add = useAddPartyType();
     const update = useUpdatePartyType();
@@ -60,8 +60,6 @@ export default function PartyTypesAdmin({ pageSize = 25, rowsPerPageOptions = [1
                             ),
                         },
                     ]}
-                    pageSize={pageSize}
-                    rowsPerPageOptions={rowsPerPageOptions}
                     autoHeight
                     loading={isLoading}
                     disableSelectionOnClick

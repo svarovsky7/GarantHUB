@@ -3,21 +3,19 @@
 // Модальная форма добавления / редактирования стадии судебного дела
 // -----------------------------------------------------------------------------
 
-import React, { useState }    from 'react';
+import React, { useState } from 'react';
 import {
     Dialog, DialogTitle, DialogContent, DialogActions,
     TextField, Button, Stack,
 } from '@mui/material';
 
-/**
- * @typedef {Object} LitigationStageFormProps
- * @property {Object}  [initialData]
- * @property {function(Object):void} onSubmit
- * @property {function():void} onCancel
- */
+interface LitigationStageFormProps {
+    initialData?: { id?: number; name?: string };
+    onSubmit: (values: { name: string }) => void;
+    onCancel: () => void;
+}
 
-/** @param {LitigationStageFormProps} props */
-export default function LitigationStageForm({ initialData = {}, onSubmit, onCancel }) {
+export default function LitigationStageForm({ initialData = {}, onSubmit, onCancel }: LitigationStageFormProps) {
     const [name, setName] = useState(initialData.name ?? '');
 
     const handleSave = (e) => {

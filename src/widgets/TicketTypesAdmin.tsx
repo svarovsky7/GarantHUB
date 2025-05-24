@@ -12,7 +12,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import TicketTypeForm from '@/features/ticketType/TicketTypeForm'; // без ProjectForm!
 
-export default function TicketTypesAdmin({ pageSize = 25, rowsPerPageOptions = [10, 25, 50, 100] }) {
+export default function TicketTypesAdmin() {
     const { data = [], isLoading } = useTicketTypes();
     const addMutation = useAddTicketType();
     const updateMutation = useUpdateTicketType();
@@ -83,8 +83,6 @@ export default function TicketTypesAdmin({ pageSize = 25, rowsPerPageOptions = [
                             ),
                         },
                     ]}
-                    pageSize={pageSize}
-                    rowsPerPageOptions={rowsPerPageOptions}
                     autoHeight
                     loading={isLoading}
                     disableSelectionOnClick

@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-    Grid,
     TextField,
     MenuItem,
     FormControl,
@@ -8,6 +7,7 @@ import {
     Select,
     Button,
 } from '@mui/material';
+import Grid from '@mui/material/Unstable_Grid2';
 
 const statusesRu = [
     { value: '', label: 'Все статусы' },

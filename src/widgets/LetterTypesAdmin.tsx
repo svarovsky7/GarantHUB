@@ -11,7 +11,7 @@ import {
 } from '@/entities/letterType';
 import LetterTypeForm from '@/features/letterType/LetterTypeForm';
 
-export default function LetterTypesAdmin({ pageSize = 25, rowsPerPageOptions = [10, 25, 50, 100] }) {
+export default function LetterTypesAdmin() {
     const { data = [], isLoading } = useLetterTypes();
     const add = useAddLetterType();
     const update = useUpdateLetterType();
@@ -60,8 +60,6 @@ export default function LetterTypesAdmin({ pageSize = 25, rowsPerPageOptions = [
                             ),
                         },
                     ]}
-                    pageSize={pageSize}
-                    rowsPerPageOptions={rowsPerPageOptions}
                     autoHeight
                     loading={isLoading}
                     disableSelectionOnClick

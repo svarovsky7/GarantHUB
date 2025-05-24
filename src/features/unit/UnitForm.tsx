@@ -65,8 +65,8 @@ export default function UnitForm({ initialData, onSuccess, onCancel }) {
             }
         } catch (err) {
             if (/уже существует/i.test(err.message)) {
-                ['project_id', 'name'].forEach((f) =>
-                    setError(f, { type: 'duplicate', message: 'Дубликат', shouldFocus: true }),
+                (['project_id', 'name'] as const).forEach((f) =>
+                    setError(f as any, { type: 'duplicate', message: 'Дубликат', shouldFocus: true }),
                 );
             }
             notify.error(err.message);
@@ -114,7 +114,7 @@ export default function UnitForm({ initialData, onSuccess, onCancel }) {
                 />
 
                 {/* Корпус / Секция / Этаж */}
-                {['building', 'section', 'floor'].map((field) => (
+                {(['building', 'section', 'floor'] as const).map((field) => (
                     <Controller
                         key={field} name={field} control={control}
                         render={({ field: f }) => (
