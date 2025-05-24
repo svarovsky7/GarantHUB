@@ -3,10 +3,12 @@ import {
     Grid,
     TextField,
     Button,
+    Paper,
     MenuItem,
     InputLabel,
     FormControl,
     Select,
+    Typography,
     Box,
 } from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
@@ -42,9 +44,13 @@ export default function CourtCaseCreateForm({ onSubmit }) {
     };
 
     return (
-        <form onSubmit={handleSubmit(handleFormSubmit)} autoComplete="off">
-                <Grid container spacing={2}>
-                    <Grid item xs={12} md={6}>
+        <Paper elevation={3} sx={{ p: 4, borderRadius: 3, mb: 6 }}>
+            <Typography variant="h6" fontWeight={600} sx={{ mb: 3 }}>
+                Добавить новое судебное дело
+            </Typography>
+            <form onSubmit={handleSubmit(handleFormSubmit)} autoComplete="off">
+                <Grid container spacing={3}>
+                    <Grid item xs={12} md={4}>
                         <Controller
                             name="number"
                             control={control}
@@ -54,7 +60,7 @@ export default function CourtCaseCreateForm({ onSubmit }) {
                             )}
                         />
                     </Grid>
-                    <Grid item xs={12} md={6}>
+                    <Grid item xs={12} md={4}>
                         <Controller
                             name="date"
                             control={control}
@@ -64,7 +70,7 @@ export default function CourtCaseCreateForm({ onSubmit }) {
                             )}
                         />
                     </Grid>
-                    <Grid item xs={12} md={6}>
+                    <Grid item xs={12} md={4}>
                         <Controller
                             name="projectObject"
                             control={control}
@@ -74,7 +80,7 @@ export default function CourtCaseCreateForm({ onSubmit }) {
                             )}
                         />
                     </Grid>
-                    <Grid item xs={12} md={6}>
+                    <Grid item xs={12} md={4}>
                         <Controller
                             name="plaintiff"
                             control={control}
@@ -84,7 +90,7 @@ export default function CourtCaseCreateForm({ onSubmit }) {
                             )}
                         />
                     </Grid>
-                    <Grid item xs={12} md={6}>
+                    <Grid item xs={12} md={4}>
                         <Controller
                             name="defendant"
                             control={control}
@@ -94,7 +100,7 @@ export default function CourtCaseCreateForm({ onSubmit }) {
                             )}
                         />
                     </Grid>
-                    <Grid item xs={12} md={6}>
+                    <Grid item xs={12} md={4}>
                         <Controller
                             name="responsibleLawyer"
                             control={control}
@@ -104,7 +110,7 @@ export default function CourtCaseCreateForm({ onSubmit }) {
                             )}
                         />
                     </Grid>
-                    <Grid item xs={12} md={6}>
+                    <Grid item xs={12} md={4}>
                         <Controller
                             name="court"
                             control={control}
@@ -114,7 +120,7 @@ export default function CourtCaseCreateForm({ onSubmit }) {
                             )}
                         />
                     </Grid>
-                    <Grid item xs={12} md={6}>
+                    <Grid item xs={12} md={4}>
                         <Controller
                             name="status"
                             control={control}
@@ -130,7 +136,7 @@ export default function CourtCaseCreateForm({ onSubmit }) {
                             )}
                         />
                     </Grid>
-                    <Grid item xs={12} md={6}>
+                    <Grid item xs={12} md={4}>
                         <Controller
                             name="claimAmount"
                             control={control}
@@ -139,7 +145,7 @@ export default function CourtCaseCreateForm({ onSubmit }) {
                             )}
                         />
                     </Grid>
-                    <Grid item xs={12} md={6}>
+                    <Grid item xs={12} md={4}>
                         <Controller
                             name="remediationStartDate"
                             control={control}
@@ -148,7 +154,7 @@ export default function CourtCaseCreateForm({ onSubmit }) {
                             )}
                         />
                     </Grid>
-                    <Grid item xs={12} md={6}>
+                    <Grid item xs={12} md={4}>
                         <Controller
                             name="remediationEndDate"
                             control={control}
@@ -172,11 +178,12 @@ export default function CourtCaseCreateForm({ onSubmit }) {
                         type="submit"
                         variant="contained"
                         color="primary"
-                        sx={{ px: 6, py: 2, fontWeight: 600, borderRadius: 6, fontSize: 16 }}
+                        sx={{ px: 6, py: 2, fontWeight: 600, borderRadius: 2, fontSize: 16 }}
                     >
-                        Добавить дело
+                        ДОБАВИТЬ ДЕЛО
                     </Button>
                 </Box>
             </form>
+        </Paper>
     );
 }

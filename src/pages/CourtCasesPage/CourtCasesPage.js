@@ -1,5 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { Box, Paper, Typography } from '@mui/material';
+import {
+    Box,
+    Paper,
+    Stack,
+    Typography,
+} from '@mui/material';
 import CourtCaseCreateForm from '@/features/courtCase/CourtCaseCreateForm';
 import CourtCasesFilters from '@/widgets/CourtCasesFilters';
 import CourtCasesTable from '@/widgets/CourtCasesTable';
@@ -20,8 +25,7 @@ export default function CourtCasesPage() {
 
     const [viewCase, setViewCase] = useState(null);
 
-
-    // Фильтрация (можно вынести в функцию-утилиту)
+    // Фильтрация данных по фильтрам
     const filteredRows = useMemo(
         () =>
             cases
@@ -57,8 +61,12 @@ export default function CourtCasesPage() {
         }
     };
 
+    // Сброс фильтров
+    const handleReset = () => setFilters({ status: '', unit: '', lawyer: '', search: '' });
+
     return (
-        <Box sx={{ width: '100%', px: 0 }}>
+        <Box sx={{ width: '100%', px: 0, py: 3 }}>
+            {/* Header */}
             <Box
                 sx={{
                     height: 60,
@@ -78,21 +86,25 @@ export default function CourtCasesPage() {
                 <Typography variant="caption">Генподрядчик</Typography>
             </Box>
 
-            <Box sx={{ maxWidth: 1000, mx: 'auto' }}>
-                <Paper elevation={1} sx={{ p: 4, mb: 4, borderRadius: 2 }}>
-                    <Typography variant="h6" sx={{ mb: 2 }}>
+            {/* Основная сетка */}
+            <Box sx={{ maxWidth: 1100, mx: 'auto' }}>
+                {/* Форма создания дела */}
+                <Paper elevation={3} sx={{ p: 4, mb: 4, borderRadius: 3 }}>
+                    <Typography variant="h6" fontWeight={600} sx={{ mb: 3 }}>
                         Добавить новое судебное дело
                     </Typography>
                     <CourtCaseCreateForm onSubmit={handleCreate} />
                 </Paper>
 
-                <Paper elevation={1} sx={{ p: 4, mb: 4, borderRadius: 2 }}>
-                    <Typography variant="h6" sx={{ mb: 2 }}>
+                {/* Фильтры + таблица */}
+                <Paper elevation={3} sx={{ p: 4, mb: 4, borderRadius: 3 }}>
+                    <Typography variant="h6" fontWeight={600} sx={{ mb: 3 }}>
                         Таблица судебных дел
                     </Typography>
                     <CourtCasesFilters
                         filters={filters}
                         setFilters={setFilters}
+                        onReset={handleReset}
                     />
                     <CourtCasesTable
                         rows={filteredRows}
@@ -103,6 +115,7 @@ export default function CourtCasesPage() {
                 </Paper>
             </Box>
 
+            {/* Модалка деталей дела */}
             {viewCase && (
                 <CourtCaseDetailsDialog
                     open
