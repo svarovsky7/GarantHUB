@@ -3,7 +3,7 @@ import { GridActionsCellItem } from '@mui/x-data-grid';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { MenuItem, Select, CircularProgress } from '@mui/material';
 
-import { useUsers, useDeleteUser } from '@/entities/user'; // <-- исправлено
+import { useUsers, useDeleteUser } from '@/entities/user';
 import { useRoles } from '@/entities/role';
 import { useProjects } from '@/entities/project';
 import AdminDataGrid from '@/shared/ui/AdminDataGrid';
@@ -12,13 +12,21 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/shared/api/supabaseClient';
 import RoleSelect from '@/features/user/RoleSelect';
 
-export default function UsersTable() {
+// Интерфейс для пропсов с пагинацией
+interface UsersTableProps {
+    pageSize?: number;
+    rowsPerPageOptions?: number[];
+}
+
+export default function UsersTable({
+                                       pageSize = 25,
+                                       rowsPerPageOptions = [10, 25, 50, 100],
+                                   }: UsersTableProps) {
     const notify = useNotify();
     const { data: users = [], isPending: uLoad } = useUsers();
     const { data: roles = [], isPending: rLoad } = useRoles();
     const { data: projects = [], isPending: pLoad } = useProjects();
     const delUser = useDeleteUser();
-    // const updateRole = useUpdateUserRole(); // удалено — не используется
 
     const qc = useQueryClient();
 
@@ -106,6 +114,8 @@ export default function UsersTable() {
             rows={users}
             columns={columns}
             loading={uLoad || rLoad || pLoad}
+            pageSize={pageSize}
+            rowsPerPageOptions={rowsPerPageOptions}
         />
     );
 }

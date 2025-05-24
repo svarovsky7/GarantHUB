@@ -8,13 +8,22 @@ import AdminDataGrid from '@/shared/ui/AdminDataGrid';
 import { useNotify } from '@/shared/hooks/useNotify';
 import { Skeleton } from '@mui/material';
 
-export default function ProjectsTable() {
+// Описываем типы пропсов для поддержки pageSize и rowsPerPageOptions
+interface ProjectsTableProps {
+    pageSize?: number;
+    rowsPerPageOptions?: number[];
+}
+
+export default function ProjectsTable({
+                                          pageSize = 25,
+                                          rowsPerPageOptions = [10, 25, 50, 100],
+                                      }: ProjectsTableProps) {
     const notify = useNotify();
     const { data: projects = [], isPending } = useProjects();
     const add = useAddProject();
     const update = useUpdateProject();
     const remove = useDeleteProject();
-    const [modal, setModal] = useState(null); // {mode:'add'|'edit', data?}
+    const [modal, setModal] = useState<null | { mode: 'add' | 'edit'; data?: any }>(null);
 
     const columns = [
         { field: 'id', headerName: 'ID', width: 80 },
@@ -29,7 +38,7 @@ export default function ProjectsTable() {
                     icon={<EditIcon />}
                     label="Редактировать"
                     onClick={() => setModal({ mode: 'edit', data: row })}
-                    showInMenu={false} // Enables tooltip
+                    showInMenu={false}
                 />,
                 <GridActionsCellItem
                     key="del"
@@ -42,14 +51,14 @@ export default function ProjectsTable() {
                             onError: (e) => notify.error(e.message),
                         });
                     }}
-                    showInMenu={false} // Enables tooltip
+                    showInMenu={false}
                 />,
             ],
         },
     ];
 
     const close = () => setModal(null);
-    const ok = (msg) => { close(); notify.success(msg); };
+    const ok = (msg: string) => { close(); notify.success(msg); };
 
     if (isPending) {
         return <Skeleton variant="rectangular" width="100%" height={400} />;
@@ -87,6 +96,8 @@ export default function ProjectsTable() {
                 columns={columns}
                 loading={isPending}
                 onAdd={() => setModal({ mode: 'add' })}
+                pageSize={pageSize}
+                rowsPerPageOptions={rowsPerPageOptions}
             />
         </>
     );

@@ -1,7 +1,4 @@
-// src/widgets/ContractorAdmin.js
-// -------------------------------------------------------------
-// CRUD-таблица контрагентов
-// -------------------------------------------------------------
+// src/widgets/ContractorAdmin.tsx
 import React, { useState, useEffect } from 'react';
 import { GridActionsCellItem } from '@mui/x-data-grid';
 import EditIcon   from '@mui/icons-material/Edit';
@@ -9,17 +6,25 @@ import DeleteIcon from '@mui/icons-material/Delete';
 
 import {
     useContractors,
-    useDeleteContractor, // ← используем только remove
+    useDeleteContractor,
 } from '@/entities/contractor';
 
 import ContractorForm from '@/features/contractor/ContractorForm';
 import AdminDataGrid  from '@/shared/ui/AdminDataGrid';
 import { useNotify }  from '@/shared/hooks/useNotify';
 
-export default function ContractorAdmin() {
+// Интерфейс для пропсов (поддержка пагинации)
+interface ContractorAdminProps {
+    pageSize?: number;
+    rowsPerPageOptions?: number[];
+}
+
+export default function ContractorAdmin({
+                                            pageSize = 25,
+                                            rowsPerPageOptions = [10, 25, 50, 100],
+                                        }: ContractorAdminProps) {
     const notify = useNotify();
 
-    /* -------- данные -------- */
     const {
         data: contractors = [],
         isPending,
@@ -28,9 +33,8 @@ export default function ContractorAdmin() {
 
     const remove = useDeleteContractor();
 
-    const [modal, setModal] = useState(null); // { mode:'add'|'edit', data? }
+    const [modal, setModal] = useState<null | { mode: 'add' | 'edit'; data?: any }>(null);
 
-    /* -------- обработка ошибок / пустоты -------- */
     useEffect(() => {
         if (error) {
             // eslint-disable-next-line no-console
@@ -41,7 +45,6 @@ export default function ContractorAdmin() {
         }
     }, [error, isPending, contractors, notify]);
 
-    /* -------- колонки -------- */
     const columns = [
         { field: 'id',   headerName: 'ID',       width: 80 },
         { field: 'name', headerName: 'Название', flex : 1 },
@@ -85,11 +88,9 @@ export default function ContractorAdmin() {
         },
     ];
 
-    /* -------- helpers -------- */
     const close = () => setModal(null);
-    const ok    = (msg) => { close(); notify.success(msg); };
+    const ok    = (msg: string) => { close(); notify.success(msg); };
 
-    /* -------- UI -------- */
     return (
         <>
             {modal?.mode === 'add' && (
@@ -110,6 +111,8 @@ export default function ContractorAdmin() {
                 columns={columns}
                 loading={isPending}
                 onAdd={() => setModal({ mode: 'add' })}
+                pageSize={pageSize}
+                rowsPerPageOptions={rowsPerPageOptions}
             />
         </>
     );

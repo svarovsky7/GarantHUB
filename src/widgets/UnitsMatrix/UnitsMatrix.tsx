@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import {
-    Box, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Typography
+    Box,
+    IconButton,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Button,
+    TextField,
+    Typography
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import FloorCell from '@/entities/floor/FloorCell';
@@ -9,6 +17,9 @@ import { supabase } from '@/shared/api/supabaseClient';
 import TicketForm from '@/features/ticket/TicketForm';
 import TicketListDialog from '@/features/ticket/TicketListDialog';
 
+/**
+ * Шахматка квартир/этажей для заданного проекта/корпуса/секции.
+ */
 export default function UnitsMatrix({ projectId, building, section, onUnitsChanged }) {
     const {
         floors, unitsByFloor, handleAddUnit, handleAddFloor, fetchUnits, ticketsByUnit, units
@@ -257,11 +268,11 @@ export default function UnitsMatrix({ projectId, building, section, onUnitsChang
                                 embedded
                                 initialUnitId={actionDialog.unit?.id}
                                 onCreated={() => {
-                                    setActionDialog({ open: false, unit: null, action: '' });
+                                    setActionDialog({open: false, unit: null, action: ''});
                                     fetchUnits();
                                 }}
-                                onCancel={() => setActionDialog({ open: false, unit: null, action: '' })}
-                            />
+                                onCancel={() => setActionDialog({open: false, unit: null, action: ''})}
+                                ticketId={undefined}                            />
                         </Box>
                     </DialogContent>
                 )}

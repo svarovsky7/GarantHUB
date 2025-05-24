@@ -1,12 +1,11 @@
-// src/pages/UnitsPage/AdminPage.js
 import React from 'react';
 import { Container, Stack } from '@mui/material';
 
-import ProjectsTable         from '../../widgets/ProjectsTable';
-import ContractorAdmin       from '../../widgets/ContractorAdmin';
-import TicketStatusesAdmin   from '../../widgets/TicketStatusesAdmin';
-import TicketTypesAdmin      from '../../widgets/TicketTypesAdmin';
-import UsersTable            from '../../widgets/UsersTable';
+import ProjectsTable from '../../widgets/ProjectsTable';
+import ContractorAdmin from '../../widgets/ContractorAdmin';
+import TicketStatusesAdmin from '../../widgets/TicketStatusesAdmin';
+import TicketTypesAdmin from '../../widgets/TicketTypesAdmin';
+import UsersTable from '../../widgets/UsersTable';
 import LitigationStagesAdmin from '../../widgets/LitigationStagesAdmin';
 import PartyTypesAdmin from '../../widgets/PartyTypesAdmin';
 import LetterTypesAdmin from '../../widgets/LetterTypesAdmin';

@@ -3,7 +3,7 @@ import {
     Paper, Box, Typography, Button,
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
-import AddIcon      from '@mui/icons-material/Add';
+import AddIcon from '@mui/icons-material/Add';
 
 export default function AdminDataGrid({
                                           title,
@@ -15,8 +15,11 @@ export default function AdminDataGrid({
                                           rowsPerPageOptions = [10, 25, 50, 100],
                                           ...rest
                                       }) {
-    // Управляемые параметры для DataGrid (controlled pagination)
-    const [pageSizeState, setPageSizeState] = React.useState(pageSize);
+    // Управление пагинацией через paginationModel (v6+)
+    const [paginationModel, setPaginationModel] = React.useState({
+        pageSize,
+        page: 0,
+    });
 
     return (
         <Paper elevation={1} sx={{ p: 1.5, mb: 3 }}>
@@ -36,7 +39,6 @@ export default function AdminDataGrid({
                     </Button>
                 )}
             </Box>
-
             {/* ───── Таблица ───────────────────────────────────────── */}
             <DataGrid
                 autoHeight
@@ -47,10 +49,10 @@ export default function AdminDataGrid({
                 disableRowSelectionOnClick
                 loading={loading}
                 hideFooterSelectedRowCount
-                pageSize={pageSizeState}
-                onPageSizeChange={(newSize) => setPageSizeState(newSize)}
-                rowsPerPageOptions={rowsPerPageOptions}
                 pagination
+                paginationModel={paginationModel}
+                onPaginationModelChange={setPaginationModel}
+                pageSizeOptions={rowsPerPageOptions}
                 {...rest}
             />
         </Paper>
