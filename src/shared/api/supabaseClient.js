@@ -2,14 +2,20 @@
 import { createClient } from '@supabase/supabase-js';
 import { useAuthStore } from '@shared/store/authStore';
 
-const {
-    REACT_APP_SUPABASE_URL:      SUPABASE_URL,
-    REACT_APP_SUPABASE_ANON_KEY: SUPABASE_ANON_KEY,
-} = process.env;
+// Vite использует переменные с префиксом `VITE_`, в то время как в
+// приложениях CRA применялся префикс `REACT_APP_`.  Для совместимости
+// проверяем оба варианта из `import.meta.env` и `process.env`.
+const SUPABASE_URL =
+    (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_URL) ||
+    process.env.REACT_APP_SUPABASE_URL;
+const SUPABASE_ANON_KEY =
+    (typeof import.meta !== 'undefined' &&
+        import.meta.env?.VITE_SUPABASE_ANON_KEY) ||
+    process.env.REACT_APP_SUPABASE_ANON_KEY;
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     throw new Error(
-        '[supabaseClient] Задайте REACT_APP_SUPABASE_URL и REACT_APP_SUPABASE_ANON_KEY в .env',
+        '[supabaseClient] Задайте VITE_SUPABASE_URL и VITE_SUPABASE_ANON_KEY (или их REACT_APP_ аналоги) в .env',
     );
 }
 
