@@ -3,12 +3,10 @@ import {
     Grid,
     TextField,
     Button,
-    Paper,
     MenuItem,
     InputLabel,
     FormControl,
     Select,
-    Typography,
     Box,
 } from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
@@ -44,12 +42,8 @@ export default function CourtCaseCreateForm({ onSubmit }) {
     };
 
     return (
-        <Paper elevation={3} sx={{ p: 4, borderRadius: 3, mb: 6 }}>
-            <Typography variant="h6" fontWeight={600} sx={{ mb: 3 }}>
-                Добавить новое судебное дело
-            </Typography>
-            <form onSubmit={handleSubmit(handleFormSubmit)} autoComplete="off">
-                <Grid container spacing={3}>
+        <form onSubmit={handleSubmit(handleFormSubmit)} autoComplete="off">
+            <Grid container spacing={3}>
                     <Grid item xs={12} md={4}>
                         <Controller
                             name="number"
@@ -184,6 +178,5 @@ export default function CourtCaseCreateForm({ onSubmit }) {
                     </Button>
                 </Box>
             </form>
-        </Paper>
     );
 }
