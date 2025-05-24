@@ -1,17 +1,15 @@
 import React, { useState, useMemo } from 'react';
-import { Container, Paper } from '@mui/material';
+import { Box, Paper, Typography } from '@mui/material';
 import CourtCaseCreateForm from '@/features/courtCase/CourtCaseCreateForm';
 import CourtCasesFilters from '@/widgets/CourtCasesFilters';
 import CourtCasesTable from '@/widgets/CourtCasesTable';
 import CourtCaseDetailsDialog from '@/widgets/CourtCaseDetailsDialog';
 import { useCourtCases, useAddCourtCase, useDeleteCourtCase } from '@/entities/courtCase';
-import { useCourtCaseStatuses } from '@/entities/courtCaseStatus';
 
 export default function CourtCasesPage() {
     const { data: cases = [], isLoading } = useCourtCases();
     const add = useAddCourtCase();
     const remove = useDeleteCourtCase();
-    const { data: statuses = [] } = useCourtCaseStatuses();
 
     const [filters, setFilters] = useState({
         status: '',
@@ -22,8 +20,6 @@ export default function CourtCasesPage() {
 
     const [viewCase, setViewCase] = useState(null);
 
-    // Сброс фильтров
-    const handleReset = () => setFilters({ status: '', unit: '', lawyer: '', search: '' });
 
     // Фильтрация (можно вынести в функцию-утилиту)
     const filteredRows = useMemo(
@@ -62,18 +58,42 @@ export default function CourtCasesPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-            <header className="bg-blue-800 text-white shadow-lg">
-                <div className="container mx-auto px-4 py-6">
-                    <h1 className="text-3xl font-bold">Система учета судебных дел</h1>
-                    <p className="text-blue-200">Генподрядчик</p>
-                </div>
-            </header>
-            <Container maxWidth="lg" sx={{ py: 6 }}>
-                <CourtCaseCreateForm onSubmit={handleCreate} statuses={statuses} />
-                <Paper elevation={3} sx={{ p: 4, borderRadius: 3, mb: 6 }}>
-                    <h2 className="text-xl font-bold mb-6 text-gray-800">Таблица судебных дел</h2>
-                    <CourtCasesFilters filters={filters} setFilters={setFilters} onReset={handleReset} />
+        <Box sx={{ width: '100%', px: 0 }}>
+            <Box
+                sx={{
+                    height: 60,
+                    bgcolor: '#0d47a1',
+                    color: '#fff',
+                    px: 2,
+                    mb: 3,
+                    borderRadius: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                }}
+            >
+                <Typography variant="h6" lineHeight={1.2}>
+                    Система учёта судебных дел
+                </Typography>
+                <Typography variant="caption">Генподрядчик</Typography>
+            </Box>
+
+            <Box sx={{ maxWidth: 1000, mx: 'auto' }}>
+                <Paper elevation={1} sx={{ p: 4, mb: 4, borderRadius: 2 }}>
+                    <Typography variant="h6" sx={{ mb: 2 }}>
+                        Добавить новое судебное дело
+                    </Typography>
+                    <CourtCaseCreateForm onSubmit={handleCreate} />
+                </Paper>
+
+                <Paper elevation={1} sx={{ p: 4, mb: 4, borderRadius: 2 }}>
+                    <Typography variant="h6" sx={{ mb: 2 }}>
+                        Таблица судебных дел
+                    </Typography>
+                    <CourtCasesFilters
+                        filters={filters}
+                        setFilters={setFilters}
+                    />
                     <CourtCasesTable
                         rows={filteredRows}
                         loading={isLoading}
@@ -81,14 +101,15 @@ export default function CourtCasesPage() {
                         onDelete={handleDelete}
                     />
                 </Paper>
-                {viewCase && (
-                    <CourtCaseDetailsDialog
-                        open
-                        caseData={viewCase}
-                        onClose={() => setViewCase(null)}
-                    />
-                )}
-            </Container>
-        </div>
+            </Box>
+
+            {viewCase && (
+                <CourtCaseDetailsDialog
+                    open
+                    caseData={viewCase}
+                    onClose={() => setViewCase(null)}
+                />
+            )}
+        </Box>
     );
 }

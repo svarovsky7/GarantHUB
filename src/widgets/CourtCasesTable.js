@@ -11,7 +11,7 @@ const getStatusChip = (status) => {
         case 'active': return <Chip label="В процессе" color="warning" size="small" />;
         case 'won': return <Chip label="Выиграно" color="success" size="small" />;
         case 'lost': return <Chip label="Проиграно" color="error" size="small" />;
-        case 'settled': return <Chip label="Урегулировано" color="info" size="small" />;
+        case 'closed': return <Chip label="Закрыто" color="secondary" size="small" />;
         default: return <Chip label={status || "—"} size="small" />;
     }
 };
@@ -25,7 +25,7 @@ export default function CourtCasesTable({ rows, loading, onView, onDelete }) {
         <TableContainer>
             <Table size="medium">
                 <TableHead>
-                    <TableRow sx={{ backgroundColor: '#f3f4f6' }}>
+                    <TableRow>
                         <TableCell>№ дела</TableCell>
                         <TableCell>Дата</TableCell>
                         <TableCell>Объект</TableCell>
@@ -46,11 +46,7 @@ export default function CourtCasesTable({ rows, loading, onView, onDelete }) {
                         </TableRow>
                     ) : (
                         rows.map(row => (
-                            <TableRow
-                                key={row.id}
-                                hover
-                                sx={{ '&:hover': { backgroundColor: '#f1f5fa' }, transition: 'background 0.2s' }}
-                            >
+                            <TableRow key={row.id} hover>
                                 <TableCell>{row.internal_no || row.number}</TableCell>
                                 <TableCell>{formatDate(row.date)}</TableCell>
                                 <TableCell>{row.unit_name || row.projectObject}</TableCell>
@@ -67,7 +63,7 @@ export default function CourtCasesTable({ rows, loading, onView, onDelete }) {
                                                 size="small"
                                                 variant="contained"
                                                 color="primary"
-                                                sx={{ minWidth: 36, borderRadius: 2 }}
+                                                sx={{ minWidth: 36, borderRadius: 6 }}
                                             >
                                                 <Visibility />
                                             </Button>
@@ -78,7 +74,7 @@ export default function CourtCasesTable({ rows, loading, onView, onDelete }) {
                                                 size="small"
                                                 variant="contained"
                                                 color="error"
-                                                sx={{ minWidth: 36, borderRadius: 2 }}
+                                                sx={{ minWidth: 36, borderRadius: 6 }}
                                             >
                                                 <Delete />
                                             </Button>

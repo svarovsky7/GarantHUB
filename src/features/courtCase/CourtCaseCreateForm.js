@@ -1,15 +1,24 @@
 import React from 'react';
-import { Grid, TextField, Button, Paper, MenuItem, InputLabel, FormControl, Select } from '@mui/material';
+import {
+    Grid,
+    TextField,
+    Button,
+    MenuItem,
+    InputLabel,
+    FormControl,
+    Select,
+    Box,
+} from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
 
 const statusesRu = [
     { value: 'active', label: 'В процессе' },
     { value: 'won', label: 'Выиграно' },
     { value: 'lost', label: 'Проиграно' },
-    { value: 'settled', label: 'Урегулировано' },
+    { value: 'closed', label: 'Закрыто' },
 ];
 
-export default function CourtCaseCreateForm({ onSubmit, statuses }) {
+export default function CourtCaseCreateForm({ onSubmit }) {
     const { handleSubmit, control, reset } = useForm({
         defaultValues: {
             number: '',
@@ -33,11 +42,9 @@ export default function CourtCaseCreateForm({ onSubmit, statuses }) {
     };
 
     return (
-        <Paper elevation={3} sx={{ p: 4, borderRadius: 3, mb: 6 }}>
-            <h2 className="text-2xl font-bold mb-8 text-gray-800 border-b pb-3">Добавить новое судебное дело</h2>
-            <form onSubmit={handleSubmit(handleFormSubmit)} autoComplete="off">
-                <Grid container spacing={3}>
-                    <Grid item xs={12} md={4}>
+        <form onSubmit={handleSubmit(handleFormSubmit)} autoComplete="off">
+                <Grid container spacing={2}>
+                    <Grid item xs={12} md={6}>
                         <Controller
                             name="number"
                             control={control}
@@ -47,7 +54,7 @@ export default function CourtCaseCreateForm({ onSubmit, statuses }) {
                             )}
                         />
                     </Grid>
-                    <Grid item xs={12} md={4}>
+                    <Grid item xs={12} md={6}>
                         <Controller
                             name="date"
                             control={control}
@@ -57,7 +64,7 @@ export default function CourtCaseCreateForm({ onSubmit, statuses }) {
                             )}
                         />
                     </Grid>
-                    <Grid item xs={12} md={4}>
+                    <Grid item xs={12} md={6}>
                         <Controller
                             name="projectObject"
                             control={control}
@@ -67,7 +74,7 @@ export default function CourtCaseCreateForm({ onSubmit, statuses }) {
                             )}
                         />
                     </Grid>
-                    <Grid item xs={12} md={4}>
+                    <Grid item xs={12} md={6}>
                         <Controller
                             name="plaintiff"
                             control={control}
@@ -77,7 +84,7 @@ export default function CourtCaseCreateForm({ onSubmit, statuses }) {
                             )}
                         />
                     </Grid>
-                    <Grid item xs={12} md={4}>
+                    <Grid item xs={12} md={6}>
                         <Controller
                             name="defendant"
                             control={control}
@@ -87,7 +94,7 @@ export default function CourtCaseCreateForm({ onSubmit, statuses }) {
                             )}
                         />
                     </Grid>
-                    <Grid item xs={12} md={4}>
+                    <Grid item xs={12} md={6}>
                         <Controller
                             name="responsibleLawyer"
                             control={control}
@@ -97,7 +104,7 @@ export default function CourtCaseCreateForm({ onSubmit, statuses }) {
                             )}
                         />
                     </Grid>
-                    <Grid item xs={12} md={4}>
+                    <Grid item xs={12} md={6}>
                         <Controller
                             name="court"
                             control={control}
@@ -107,7 +114,7 @@ export default function CourtCaseCreateForm({ onSubmit, statuses }) {
                             )}
                         />
                     </Grid>
-                    <Grid item xs={12} md={4}>
+                    <Grid item xs={12} md={6}>
                         <Controller
                             name="status"
                             control={control}
@@ -123,7 +130,7 @@ export default function CourtCaseCreateForm({ onSubmit, statuses }) {
                             )}
                         />
                     </Grid>
-                    <Grid item xs={12} md={4}>
+                    <Grid item xs={12} md={6}>
                         <Controller
                             name="claimAmount"
                             control={control}
@@ -132,7 +139,7 @@ export default function CourtCaseCreateForm({ onSubmit, statuses }) {
                             )}
                         />
                     </Grid>
-                    <Grid item xs={12} md={4}>
+                    <Grid item xs={12} md={6}>
                         <Controller
                             name="remediationStartDate"
                             control={control}
@@ -141,7 +148,7 @@ export default function CourtCaseCreateForm({ onSubmit, statuses }) {
                             )}
                         />
                     </Grid>
-                    <Grid item xs={12} md={4}>
+                    <Grid item xs={12} md={6}>
                         <Controller
                             name="remediationEndDate"
                             control={control}
@@ -160,12 +167,16 @@ export default function CourtCaseCreateForm({ onSubmit, statuses }) {
                         />
                     </Grid>
                 </Grid>
-                <div className="flex justify-end mt-10">
-                    <Button type="submit" variant="contained" color="primary" sx={{ px: 6, py: 2, fontWeight: 600, borderRadius: 2, fontSize: 16 }}>
-                        ДОБАВИТЬ ДЕЛО
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 4 }}>
+                    <Button
+                        type="submit"
+                        variant="contained"
+                        color="primary"
+                        sx={{ px: 6, py: 2, fontWeight: 600, borderRadius: 6, fontSize: 16 }}
+                    >
+                        Добавить дело
                     </Button>
-                </div>
+                </Box>
             </form>
-        </Paper>
     );
 }
