@@ -7,7 +7,7 @@ import {
     Select,
     Button,
 } from '@mui/material';
-import Grid from '@mui/material/Grid';
+import Grid from '@mui/material/Unstable_Grid2';
 
 const statusesRu = [
     { value: '', label: 'Все статусы' },
