@@ -2,9 +2,10 @@ import React from 'react';
 import { DataGrid, GridActionsCellItem } from '@mui/x-data-grid';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import { useDeleteCourtCase } from '@/entities/courtCase';
 
-export default function CourtCasesTable({ rows, onEdit }) {
+export default function CourtCasesTable({ rows, onEdit, onView }) {
     const remove = useDeleteCourtCase();
 
     const columns = [
@@ -16,8 +17,9 @@ export default function CourtCasesTable({ rows, onEdit }) {
         {
             field: 'actions',
             type: 'actions',
-            width: 100,
+            width: 120,
             getActions: ({ row }) => [
+                <GridActionsCellItem key="view" icon={<VisibilityIcon />} label="View" onClick={() => onView?.(row)} />,
                 <GridActionsCellItem key="edit" icon={<EditIcon />} label="Edit" onClick={() => onEdit(row)} />,
                 <GridActionsCellItem
                     key="del"
