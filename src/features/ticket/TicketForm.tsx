@@ -87,7 +87,7 @@ export default function TicketForm({
     const { data: users    = [], isLoading: isLoadingUsers    } = useUsers();
 
     const methods = useForm<TicketFormValues>({
-        resolver      : yupResolver<TicketFormValues>(schema),
+        resolver      : yupResolver(schema),
         defaultValues : {
             project_id  : projectId,
             unit_id     : initialUnitId ?? null,
