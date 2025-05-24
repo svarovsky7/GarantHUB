@@ -6,8 +6,8 @@ import {
     InputLabel,
     Select,
     Button,
+    Grid,
 } from '@mui/material';
-import Grid from '@mui/material/Grid';
 
 const statusesRu = [
     { value: '', label: 'Все статусы' },

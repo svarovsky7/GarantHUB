@@ -11,7 +11,14 @@ import {
 } from '@/entities/letterType';
 import LetterTypeForm from '@/features/letterType/LetterTypeForm';
 
-export default function LetterTypesAdmin() {
+interface LetterTypesAdminProps {
+    pageSize?: number;
+    rowsPerPageOptions?: number[];
+}
+export default function LetterTypesAdmin({
+    pageSize = 25,
+    rowsPerPageOptions = [10, 25, 50, 100],
+}: LetterTypesAdminProps) {
     const { data = [], isLoading } = useLetterTypes();
     const add = useAddLetterType();
     const update = useUpdateLetterType();
@@ -63,6 +70,8 @@ export default function LetterTypesAdmin() {
                     autoHeight
                     loading={isLoading}
                     disableRowSelectionOnClick
+                    initialState={{ pagination: { paginationModel: { pageSize } } }}
+                    pageSizeOptions={rowsPerPageOptions}
                 />
             </div>
             <Dialog open={open} onClose={() => setOpen(false)} maxWidth="xs" fullWidth>

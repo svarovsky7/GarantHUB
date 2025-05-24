@@ -7,7 +7,7 @@ import {
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import 'dayjs/locale/ru';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -46,6 +46,21 @@ const schema = yup.object({
         .test('is-dayjs-or-null', 'Некорректная дата', v => v === null || (dayjs.isDayjs(v) && v.isValid())),
 }).required();
 
+interface TicketFormValues {
+    project_id: number;
+    unit_id: number | null;
+    type_id: number | null;
+    status_id: number | null;
+    title: string;
+    description: string | null;
+    customer_request_no: string | null;
+    customer_request_date: Dayjs | null;
+    responsible_engineer_id: string | null;
+    is_warranty: boolean;
+    received_at: Dayjs;
+    fixed_at: Dayjs | null;
+}
+
 export default function TicketForm({
                                        embedded = false,
                                        initialUnitId = null,
@@ -71,7 +86,7 @@ export default function TicketForm({
     const { data: units    = [], isLoading: isLoadingUnits    } = useUnitsByProject(projectId, !!projectId);
     const { data: users    = [], isLoading: isLoadingUsers    } = useUsers();
 
-    const methods = useForm({
+    const methods = useForm<TicketFormValues>({
         resolver      : yupResolver(schema),
         defaultValues : {
             project_id  : projectId,
@@ -268,7 +283,7 @@ export default function TicketForm({
                             name="customer_request_date"
                             control={control}
                             render={({ field, fieldState: { error } }) => (
-                                <DatePicker
+                                <DatePicker<Dayjs>
                                     label="Дата регистрации заявки"
                                     value={field.value}
                                     onChange={field.onChange}
@@ -282,7 +297,7 @@ export default function TicketForm({
                             name="received_at"
                             control={control}
                             render={({ field, fieldState: { error } }) => (
-                                <DatePicker
+                                <DatePicker<Dayjs>
                                     label="Дата получения *"
                                     value={field.value}
                                     onChange={field.onChange}
@@ -302,7 +317,7 @@ export default function TicketForm({
                                     color="primary"
                                     variant="outlined"
                                     onClick={() => {
-                                        const rec = methods.getValues('received_at');
+                                        const rec = methods.getValues('received_at') as Dayjs;
                                         if (dayjs(rec).isValid()) {
                                             setValue('fixed_at', dayjs(rec).add(days, 'day'));
                                         }
@@ -315,7 +330,7 @@ export default function TicketForm({
                             name="fixed_at"
                             control={control}
                             render={({ field, fieldState: { error } }) => (
-                                <DatePicker
+                                <DatePicker<Dayjs>
                                     label="Дата устранения"
                                     value={field.value}
                                     onChange={field.onChange}
