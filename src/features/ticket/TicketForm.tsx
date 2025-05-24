@@ -88,6 +88,7 @@ export default function TicketForm({
 
     const methods = useForm<TicketFormValues>({
         resolver      : yupResolver<TicketFormValues, any, TicketFormValues>(schema),
+
         defaultValues : {
             project_id  : projectId,
             unit_id     : initialUnitId ?? null,
