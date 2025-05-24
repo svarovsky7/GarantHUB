@@ -10,8 +10,7 @@
 
     <title>GarantHUB</title>
 
-    <!-- CRA подставит PUBLIC_URL -->
-
+    <!-- Манифест приложения -->
     <link rel="manifest" href="/manifest.json" />
 
     <!-- подключаем шрифт Inter -->
@@ -19,11 +18,12 @@
             rel="stylesheet"
             href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
     />
+    <link rel="stylesheet" href="/src/index.css" />
 </head>
 
 <body>
 <noscript>Вам нужен JavaScript, чтобы запустить GarantHUB.</noscript>
 <div id="root"></div>
-<!-- скрипты/бандлы CRA вставит автоматически -->
+<script type="module" src="/src/main.tsx"></script>
 </body>
 </html>
