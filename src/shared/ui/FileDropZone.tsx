@@ -1,9 +1,9 @@
 // CHANGE: переезд из ticket → shared/ui; без изменений API
 // -----------------------------------------------------------------------------
-import React from 'react';
-import { useDropzone } from 'react-dropzone';
-import { Box, Typography } from '@mui/material';
-import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined';
+import React from "react";
+import { useDropzone } from "react-dropzone";
+import { Box, Typography } from "@mui/material";
+import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
 
 /**
  * Drag-and-Drop зона без лимита размера
@@ -11,31 +11,36 @@ import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined';
  * @param {{onFiles:(File[])=>void}} props
  */
 export default function FileDropZone({ onFiles }) {
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({
-        multiple: true,
-        onDrop  : onFiles,
-    });
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    multiple: true,
+    onDrop: onFiles,
+  });
 
-    return (
-        <Box
-            {...getRootProps()}
-            sx={{
-                border      : '2px dashed',
-                borderColor : isDragActive ? 'primary.main' : 'grey.400',
-                borderRadius: 2,
-                p           : 4,
-                textAlign   : 'center',
-                color       : 'text.secondary',
-                cursor      : 'pointer',
-                transition  : '.2s',
-                '&:hover'   : { borderColor: 'primary.main' },
-            }}
-        >
-            <input {...getInputProps()} />
-            <CloudUploadOutlinedIcon sx={{ fontSize: 42, mb: 1 }} />
-            <Typography fontWeight={600}>
-                Нажмите для загрузки или перетащите файлы
-            </Typography>
-        </Box>
-    );
+  return (
+    <Box
+      {...getRootProps()}
+      sx={{
+        border: "2px dashed",
+        borderColor: isDragActive ? "primary.main" : "grey.400",
+        borderRadius: 2,
+        p: 4,
+        textAlign: "center",
+        color: "text.secondary",
+        cursor: "pointer",
+        transition: ".2s",
+        "&:hover": { borderColor: "primary.main" },
+      }}
+      data-oid="9sviigb"
+    >
+      <input {...getInputProps()} data-oid="u.cp94-" />
+      <CloudUploadOutlinedIcon
+        sx={{ fontSize: 42, mb: 1 }}
+        data-oid="fpfb9-c"
+      />
+
+      <Typography fontWeight={600} data-oid="63hfio0">
+        Нажмите для загрузки или перетащите файлы
+      </Typography>
+    </Box>
+  );
 }
