@@ -85,7 +85,7 @@ export default function TicketTypesAdmin() {
                     ]}
                     autoHeight
                     loading={isLoading}
-                    disableSelectionOnClick
+                    disableRowSelectionOnClick
                 />
             </div>
             <Dialog open={open} onClose={() => setOpen(false)} maxWidth="xs" fullWidth>

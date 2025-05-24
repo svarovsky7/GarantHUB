@@ -3,7 +3,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { Stack, TextField, Button, Dialog, DialogTitle, DialogContent, DialogActions, Autocomplete } from '@mui/material';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import { useUnitsByProject } from '@/entities/unit';
 import { useLitigationStages } from '@/entities/litigationStage';
 import { useCourtCaseStatuses } from '@/entities/courtCaseStatus';
@@ -23,6 +23,18 @@ import CaseDefectForm from '@/features/caseDefect/CaseDefectForm';
 import CaseDefectsTable from '@/widgets/CaseDefectsTable';
 import LettersTable from '@/widgets/LettersTable';
 
+interface FormValues {
+    internal_no: string;
+    project_id: number | null;
+    unit_id: number | null;
+    stage_id: number | null;
+    status: string;
+    responsible_lawyer_id: number | null;
+    fix_start_date: Dayjs | null;
+    fix_end_date: Dayjs | null;
+    comments: string;
+}
+
 export default function CourtCaseForm({ initialData, onSubmit, onCancel }) {
     const projectId = useProjectId();
     const { data: stages = [] } = useLitigationStages();
@@ -39,7 +51,7 @@ export default function CourtCaseForm({ initialData, onSubmit, onCancel }) {
     const addCaseDefect = useAddCaseDefect();
     const [defectModal, setDefectModal] = useState(false);
 
-    const { control, handleSubmit, reset, setValue } = useForm({
+    const { control, handleSubmit, reset, setValue } = useForm<FormValues>({
         defaultValues: {
             internal_no: '',
             project_id: projectId,

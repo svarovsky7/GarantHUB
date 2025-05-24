@@ -1,5 +1,5 @@
 import React from 'react';
-import { DataGrid, GridActionsCellItem, GridColDef } from '@mui/x-data-grid';
+import { DataGrid, GridActionsCellItem, GridColDef, GridActionsColDef } from '@mui/x-data-grid';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useDeleteLetter } from '@/entities/letter';
@@ -30,7 +30,7 @@ export default function LettersTable({ rows, onEdit }) {
                     }}
                 />,
             ],
-        },
+        } as GridActionsColDef,
     ];
 
     return (
