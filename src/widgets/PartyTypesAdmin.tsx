@@ -62,7 +62,7 @@ export default function PartyTypesAdmin() {
                     ]}
                     autoHeight
                     loading={isLoading}
-                    disableSelectionOnClick
+                    disableRowSelectionOnClick
                 />
             </div>
             <Dialog open={open} onClose={() => setOpen(false)} maxWidth="xs" fullWidth>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { DataGrid, GridActionsCellItem, GridColDef } from '@mui/x-data-grid';
+import { DataGrid, GridActionsCellItem, GridColDef, GridActionsColDef } from '@mui/x-data-grid';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useDeleteCaseDefect } from '@/entities/caseDefect';
 
@@ -26,7 +26,7 @@ export default function CaseDefectsTable({ rows }) {
                     }}
                 />,
             ],
-        },
+        } as GridActionsColDef,
     ];
 
     return (

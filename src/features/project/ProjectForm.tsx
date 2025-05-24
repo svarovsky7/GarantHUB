@@ -20,18 +20,14 @@ interface ProjectFormProps {
     onCancel?: () => void;
 }
 
-const ProjectForm = ({
-                         initialData = {},
-                         onSubmit,
-                         onCancel,
-                     }: ProjectFormProps) => {
+const ProjectForm = ({ initialData, onSubmit, onCancel }: ProjectFormProps) => {
     const {
         handleSubmit,
         control,
         formState: { errors, isSubmitting },
-    } = useForm({
+    } = useForm<{ name: string }>({
         resolver: zodResolver(makeSchema()),
-        defaultValues: { name: initialData.name ?? '' },
+        defaultValues: { name: initialData?.name ?? '' },
         mode: 'onTouched',
     });
 

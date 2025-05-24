@@ -15,8 +15,8 @@ interface LitigationStageFormProps {
     onCancel: () => void;
 }
 
-export default function LitigationStageForm({ initialData = {}, onSubmit, onCancel }: LitigationStageFormProps) {
-    const [name, setName] = useState(initialData.name ?? '');
+export default function LitigationStageForm({ initialData, onSubmit, onCancel }: LitigationStageFormProps) {
+    const [name, setName] = useState(initialData?.name ?? '');
 
     const handleSave = (e) => {
         e.preventDefault();
