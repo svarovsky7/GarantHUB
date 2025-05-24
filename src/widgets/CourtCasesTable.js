@@ -25,7 +25,7 @@ export default function CourtCasesTable({ rows, loading, onView, onDelete }) {
         <TableContainer>
             <Table size="medium">
                 <TableHead>
-                    <TableRow sx={{ backgroundColor: '#f3f4f6' }}>
+                    <TableRow>
                         <TableCell>№ дела</TableCell>
                         <TableCell>Дата</TableCell>
                         <TableCell>Объект</TableCell>
@@ -46,11 +46,7 @@ export default function CourtCasesTable({ rows, loading, onView, onDelete }) {
                         </TableRow>
                     ) : (
                         rows.map(row => (
-                            <TableRow
-                                key={row.id}
-                                hover
-                                sx={{ '&:hover': { backgroundColor: '#f1f5fa' }, transition: 'background 0.2s' }}
-                            >
+                            <TableRow key={row.id} hover>
                                 <TableCell>{row.internal_no || row.number}</TableCell>
                                 <TableCell>{formatDate(row.date)}</TableCell>
                                 <TableCell>{row.unit_name || row.projectObject}</TableCell>
