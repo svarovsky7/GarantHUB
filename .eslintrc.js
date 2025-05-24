@@ -23,11 +23,11 @@ module.exports = {
                     ['@entities', './src/entities'],
                     ['@shared',   './src/shared'],
                 ],
-                extensions: ['.js', '.jsx'],
+                extensions: ['.js', '.jsx', '.tsx'],
             },
             /* ---------- fallback: node_modules ---------- */
             node: {
-                extensions: ['.js', '.jsx'],
+                extensions: ['.js', '.jsx', '.tsx'],
                 paths: ['src'],
             },
         },
