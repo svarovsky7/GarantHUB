@@ -14,11 +14,17 @@ const makeSchema = (min = 2, max = 120) =>
 /**
  * Форма создания/редактирования проекта.
  */
+interface ProjectFormProps {
+    initialData?: { name?: string };
+    onSubmit: (values: { name: string }) => void;
+    onCancel?: () => void;
+}
+
 const ProjectForm = ({
                          initialData = {},
                          onSubmit,
                          onCancel,
-                     }) => {
+                     }: ProjectFormProps) => {
     const {
         handleSubmit,
         control,

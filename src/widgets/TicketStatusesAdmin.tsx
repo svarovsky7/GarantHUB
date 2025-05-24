@@ -7,7 +7,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import TicketStatusForm from '@/features/ticketStatus/TicketStatusForm';
 
-export default function TicketStatusesAdmin({ pageSize = 25, rowsPerPageOptions = [10, 25, 50, 100] }) {
+export default function TicketStatusesAdmin() {
     const { data = [], isLoading } = useTicketStatuses();
     const addMutation = useAddTicketStatus();
     const updateMutation = useUpdateTicketStatus();
@@ -82,8 +82,6 @@ export default function TicketStatusesAdmin({ pageSize = 25, rowsPerPageOptions 
                             ),
                         },
                     ]}
-                    pageSize={pageSize}
-                    rowsPerPageOptions={rowsPerPageOptions}
                     autoHeight
                     loading={isLoading}
                     disableSelectionOnClick

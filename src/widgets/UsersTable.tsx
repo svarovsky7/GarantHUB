@@ -32,7 +32,7 @@ export default function UsersTable({
 
     // Мутация для смены project_id пользователя
     const updateProject = useMutation({
-        mutationFn: async ({ id, project_id }) => {
+        mutationFn: async ({ id, project_id }: any) => {
             const { data, error } = await supabase
                 .from('profiles')
                 .update({ project_id })
@@ -43,7 +43,7 @@ export default function UsersTable({
             return data;
         },
         onSuccess: () => {
-            qc.invalidateQueries(['users', 'all']);
+            qc.invalidateQueries({ queryKey: ['users', 'all'] });
             notify.success('Проект пользователя обновлен');
         },
         onError: (e) => notify.error(e.message)
@@ -59,7 +59,7 @@ export default function UsersTable({
             headerName: 'Роль',
             flex: 0.7,
             renderCell: ({ row }) => (
-                <RoleSelect user={row} roles={roles} disabled={rLoad} />
+                <RoleSelect user={row} roles={roles} />
             ),
         },
         {

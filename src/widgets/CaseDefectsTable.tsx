@@ -1,12 +1,12 @@
 import React from 'react';
-import { DataGrid, GridActionsCellItem } from '@mui/x-data-grid';
+import { DataGrid, GridActionsCellItem, GridColDef } from '@mui/x-data-grid';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useDeleteCaseDefect } from '@/entities/caseDefect';
 
 export default function CaseDefectsTable({ rows }) {
     const remove = useDeleteCaseDefect();
 
-    const columns = [
+    const columns: GridColDef[] = [
         { field: 'id', headerName: 'ID', width: 80 },
         { field: 'description', headerName: 'Недостаток', flex: 1 },
         { field: 'fix_cost', headerName: 'Стоимость устранения', width: 160 },
