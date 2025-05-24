@@ -50,11 +50,13 @@ export default function UnitsMatrix({ projectId, building, section, onUnitsChang
     // Сохранить (обновление в базе и fetchUnits)
     const handleSaveEdit = async () => {
         if (editDialog.type === 'floor') {
-            const newFloor = isNaN(editDialog.value) ? editDialog.value : Number(editDialog.value);
+            const newFloor = isNaN(editDialog.value as any)
+                ? editDialog.value
+                : Number(editDialog.value);
             // Получаем все квартиры на выбранном этаже
-            const floorUnits = [];
-            for (const u of Object.values(unitsByFloor).flat()) {
-                if (u.floor === editDialog.target) floorUnits.push(u);
+            const floorUnits: any[] = [];
+            for (const u of Object.values(unitsByFloor).flat() as any[]) {
+                if ((u as any).floor === editDialog.target) floorUnits.push(u);
             }
             if (floorUnits.length) {
                 const ids = floorUnits.map(u => u.id);
@@ -81,7 +83,7 @@ export default function UnitsMatrix({ projectId, building, section, onUnitsChang
                 .delete()
                 .eq('project_id', projectId)
                 .eq('building', building)
-                .eq('floor', confirmDialog.target);
+                .eq('floor', Number(confirmDialog.target));
             await fetchUnits(); // Только fetchUnits, не setUnits!
         }
         if (confirmDialog.type === 'unit') {

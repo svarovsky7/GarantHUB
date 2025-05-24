@@ -7,7 +7,14 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import TicketStatusForm from '@/features/ticketStatus/TicketStatusForm';
 
-export default function TicketStatusesAdmin() {
+interface TicketStatusesAdminProps {
+    pageSize?: number;
+    rowsPerPageOptions?: number[];
+}
+export default function TicketStatusesAdmin({
+    pageSize = 25,
+    rowsPerPageOptions = [10, 25, 50, 100],
+}: TicketStatusesAdminProps) {
     const { data = [], isLoading } = useTicketStatuses();
     const addMutation = useAddTicketStatus();
     const updateMutation = useUpdateTicketStatus();
@@ -85,6 +92,8 @@ export default function TicketStatusesAdmin() {
                     autoHeight
                     loading={isLoading}
                     disableRowSelectionOnClick
+                    initialState={{ pagination: { paginationModel: { pageSize } } }}
+                    pageSizeOptions={rowsPerPageOptions}
                 />
             </div>
             <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>

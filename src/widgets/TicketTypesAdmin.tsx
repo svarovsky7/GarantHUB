@@ -12,7 +12,14 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import TicketTypeForm from '@/features/ticketType/TicketTypeForm'; // без ProjectForm!
 
-export default function TicketTypesAdmin() {
+interface TicketTypesAdminProps {
+    pageSize?: number;
+    rowsPerPageOptions?: number[];
+}
+export default function TicketTypesAdmin({
+    pageSize = 25,
+    rowsPerPageOptions = [10, 25, 50, 100],
+}: TicketTypesAdminProps) {
     const { data = [], isLoading } = useTicketTypes();
     const addMutation = useAddTicketType();
     const updateMutation = useUpdateTicketType();
@@ -86,6 +93,8 @@ export default function TicketTypesAdmin() {
                     autoHeight
                     loading={isLoading}
                     disableRowSelectionOnClick
+                    initialState={{ pagination: { paginationModel: { pageSize } } }}
+                    pageSizeOptions={rowsPerPageOptions}
                 />
             </div>
             <Dialog open={open} onClose={() => setOpen(false)} maxWidth="xs" fullWidth>

@@ -5,6 +5,7 @@ import dayjs from 'dayjs';
 import {
     Table, Tooltip, Space, Button, Popconfirm, Tag, Skeleton, message
 } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 import {
     EditOutlined,
     DeleteOutlined,
@@ -68,7 +69,7 @@ export default function TicketsTable({ tickets, filters, loading }) {
     const navigate = useNavigate();
     const { mutateAsync: remove, isPending } = useDeleteTicket();
 
-    const columns = useMemo(() => [
+    const columns: ColumnsType<any> = useMemo(() => [
         {
             title: 'Номер замечания',
             dataIndex: 'id',
@@ -94,7 +95,7 @@ export default function TicketsTable({ tickets, filters, loading }) {
             title: 'Дата получения',
             dataIndex: 'receivedAt',
             width: 140,
-            defaultSortOrder: 'descend',
+            defaultSortOrder: 'descend' as const,
             sorter: (a, b) =>
                 (a.receivedAt ? a.receivedAt.valueOf() : 0) -
                 (b.receivedAt ? b.receivedAt.valueOf() : 0),

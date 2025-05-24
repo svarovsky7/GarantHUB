@@ -7,8 +7,8 @@ import {
     FormControl,
     Select,
     Box,
+    Grid,
 } from '@mui/material';
-import Grid from '@mui/material/Grid';
 import { useForm, Controller } from 'react-hook-form';
 
 const statusesRu = [

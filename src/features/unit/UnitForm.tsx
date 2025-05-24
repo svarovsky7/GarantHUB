@@ -66,7 +66,11 @@ export default function UnitForm({ initialData, onSuccess, onCancel }) {
         } catch (err) {
             if (/уже существует/i.test(err.message)) {
                 (['project_id', 'name'] as const).forEach((f) =>
-                    setError(f as any, { type: 'duplicate', message: 'Дубликат', shouldFocus: true }),
+                    setError(
+                        f as any,
+                        { type: 'duplicate', message: 'Дубликат' },
+                        { shouldFocus: true },
+                    ),
                 );
             }
             notify.error(err.message);

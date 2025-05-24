@@ -11,7 +11,14 @@ import {
 } from '@/entities/partyType';
 import PartyTypeForm from '@/features/partyType/PartyTypeForm';
 
-export default function PartyTypesAdmin() {
+interface PartyTypesAdminProps {
+    pageSize?: number;
+    rowsPerPageOptions?: number[];
+}
+export default function PartyTypesAdmin({
+    pageSize = 25,
+    rowsPerPageOptions = [10, 25, 50, 100],
+}: PartyTypesAdminProps) {
     const { data = [], isLoading } = usePartyTypes();
     const add = useAddPartyType();
     const update = useUpdatePartyType();
@@ -63,6 +70,8 @@ export default function PartyTypesAdmin() {
                     autoHeight
                     loading={isLoading}
                     disableRowSelectionOnClick
+                    initialState={{ pagination: { paginationModel: { pageSize } } }}
+                    pageSizeOptions={rowsPerPageOptions}
                 />
             </div>
             <Dialog open={open} onClose={() => setOpen(false)} maxWidth="xs" fullWidth>
