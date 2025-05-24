@@ -17,10 +17,10 @@ const statusesRu = [
     { value: 'active', label: 'В процессе' },
     { value: 'won', label: 'Выиграно' },
     { value: 'lost', label: 'Проиграно' },
-    { value: 'settled', label: 'Урегулировано' },
+    { value: 'closed', label: 'Закрыто' },
 ];
 
-export default function CourtCaseCreateForm({ onSubmit, statuses }) {
+export default function CourtCaseCreateForm({ onSubmit }) {
     const { handleSubmit, control, reset } = useForm({
         defaultValues: {
             number: '',

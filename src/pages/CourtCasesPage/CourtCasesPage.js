@@ -4,20 +4,17 @@ import {
     Paper,
     Stack,
     Typography,
-    Container,
 } from '@mui/material';
 import CourtCaseCreateForm from '@/features/courtCase/CourtCaseCreateForm';
 import CourtCasesFilters from '@/widgets/CourtCasesFilters';
 import CourtCasesTable from '@/widgets/CourtCasesTable';
 import CourtCaseDetailsDialog from '@/widgets/CourtCaseDetailsDialog';
 import { useCourtCases, useAddCourtCase, useDeleteCourtCase } from '@/entities/courtCase';
-import { useCourtCaseStatuses } from '@/entities/courtCaseStatus';
 
 export default function CourtCasesPage() {
     const { data: cases = [], isLoading } = useCourtCases();
     const add = useAddCourtCase();
     const remove = useDeleteCourtCase();
-    const { data: statuses = [] } = useCourtCaseStatuses();
 
     const [filters, setFilters] = useState({
         status: '',
@@ -28,10 +25,7 @@ export default function CourtCasesPage() {
 
     const [viewCase, setViewCase] = useState(null);
 
-    // Сброс фильтров
-    const handleReset = () => setFilters({ status: '', unit: '', lawyer: '', search: '' });
-
-    // Фильтрация (можно вынести в функцию-утилиту)
+    // Фильтрация данных по фильтрам
     const filteredRows = useMemo(
         () =>
             cases
@@ -67,39 +61,61 @@ export default function CourtCasesPage() {
         }
     };
 
+    // Сброс фильтров
+    const handleReset = () => setFilters({ status: '', unit: '', lawyer: '', search: '' });
+
     return (
         <Box sx={{ width: '100%', px: 0, py: 3 }}>
-            <Stack
-                direction={{ xs: 'column', md: 'row' }}
-                justifyContent="space-between"
-                alignItems={{ xs: 'flex-start', md: 'center' }}
-                spacing={2}
-                sx={{ mb: 3 }}
+            {/* Header */}
+            <Box
+                sx={{
+                    height: 60,
+                    bgcolor: '#0d47a1',
+                    color: '#fff',
+                    px: 2,
+                    mb: 3,
+                    borderRadius: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                }}
             >
-                <Typography variant="h4">Судебные дела</Typography>
-            </Stack>
-
-            <Paper elevation={3} sx={{ p: { xs: 2, sm: 3, md: 4 }, mb: 3, borderRadius: 2 }}>
-                <CourtCaseCreateForm onSubmit={handleCreate} statuses={statuses} />
-            </Paper>
-
-            <Paper elevation={3} sx={{ p: { xs: 2, sm: 3, md: 4 }, borderRadius: 2 }}>
-                <Typography variant="h6" sx={{ mb: 2 }}>
-                    Таблица судебных дел
+                <Typography variant="h6" lineHeight={1.2}>
+                    Система учёта судебных дел
                 </Typography>
-                <CourtCasesFilters
-                    filters={filters}
-                    setFilters={setFilters}
-                    onReset={handleReset}
-                />
-                <CourtCasesTable
-                    rows={filteredRows}
-                    loading={isLoading}
-                    onView={setViewCase}
-                    onDelete={handleDelete}
-                />
-            </Paper>
+                <Typography variant="caption">Генподрядчик</Typography>
+            </Box>
 
+            {/* Основная сетка */}
+            <Box sx={{ maxWidth: 1100, mx: 'auto' }}>
+                {/* Форма создания дела */}
+                <Paper elevation={3} sx={{ p: 4, mb: 4, borderRadius: 3 }}>
+                    <Typography variant="h6" fontWeight={600} sx={{ mb: 3 }}>
+                        Добавить новое судебное дело
+                    </Typography>
+                    <CourtCaseCreateForm onSubmit={handleCreate} />
+                </Paper>
+
+                {/* Фильтры + таблица */}
+                <Paper elevation={3} sx={{ p: 4, mb: 4, borderRadius: 3 }}>
+                    <Typography variant="h6" fontWeight={600} sx={{ mb: 3 }}>
+                        Таблица судебных дел
+                    </Typography>
+                    <CourtCasesFilters
+                        filters={filters}
+                        setFilters={setFilters}
+                        onReset={handleReset}
+                    />
+                    <CourtCasesTable
+                        rows={filteredRows}
+                        loading={isLoading}
+                        onView={setViewCase}
+                        onDelete={handleDelete}
+                    />
+                </Paper>
+            </Box>
+
+            {/* Модалка деталей дела */}
             {viewCase && (
                 <CourtCaseDetailsDialog
                     open

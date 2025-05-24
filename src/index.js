@@ -18,7 +18,11 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
 import { queryClient } from '@/shared/config/queryClient';
 
-const theme = createTheme({ palette: { mode: 'light' } });
+const theme = createTheme({
+    palette: { mode: 'light' },
+    shape: { borderRadius: 6 },
+    typography: { fontFamily: 'Inter, system-ui, sans-serif' },
+});
 
 ReactDOM.createRoot(document.getElementById('root')).render(
     <React.StrictMode>
