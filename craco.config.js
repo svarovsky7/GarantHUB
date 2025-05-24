@@ -13,5 +13,9 @@ module.exports = {
             '@entities': alias('entities'),
             '@shared':   alias('shared'),
         },
+        configure: (webpackConfig) => {
+            webpackConfig.resolve.extensions.push('.ts', '.tsx');
+            return webpackConfig;
+        },
     },
 };
