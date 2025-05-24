@@ -65,7 +65,7 @@ export default function CourtCasesPage() {
     const handleReset = () => setFilters({ status: '', unit: '', lawyer: '', search: '' });
 
     return (
-        <Box sx={{ width: '100%', px: 0, py: 3 }}>
+        <Box sx={{ width: '100%', px: 0, py: 3, bgcolor: '#f5f7ff', minHeight: '100vh' }}>
             {/* Header */}
             <Box
                 sx={{
@@ -87,9 +87,9 @@ export default function CourtCasesPage() {
             </Box>
 
             {/* Основная сетка */}
-            <Box sx={{ maxWidth: 1100, mx: 'auto' }}>
+            <Box sx={{ width: '100%', maxWidth: 1000, mx: 'auto', mt: 3 }}>
                 {/* Форма создания дела */}
-                <Paper elevation={3} sx={{ p: 4, mb: 4, borderRadius: 3 }}>
+                <Paper elevation={1} sx={{ p: 4, mb: 4, borderRadius: '8px' }}>
                     <Typography variant="h6" fontWeight={600} sx={{ mb: 3 }}>
                         Добавить новое судебное дело
                     </Typography>
@@ -97,7 +97,7 @@ export default function CourtCasesPage() {
                 </Paper>
 
                 {/* Фильтры + таблица */}
-                <Paper elevation={3} sx={{ p: 4, mb: 4, borderRadius: 3 }}>
+                <Paper elevation={1} sx={{ p: 4, mb: 4, borderRadius: '8px' }}>
                     <Typography variant="h6" fontWeight={600} sx={{ mb: 3 }}>
                         Таблица судебных дел
                     </Typography>
