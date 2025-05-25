@@ -27,6 +27,8 @@ import { useUnitsByProject } from '@/entities/unit';
 import { useContractors } from '@/entities/contractor';
 import { useUsers } from '@/entities/user';
 import { useLitigationStages } from '@/entities/litigationStage';
+import { usePersons, useAddPerson } from '@/entities/person';
+import { PlusOutlined } from '@ant-design/icons';
 import {
   useCourtCases,
   useAddCourtCase,
@@ -77,8 +79,10 @@ export default function CourtCasesPage() {
   const { data: contractors = [], isPending: contractorsLoading } = useContractors();
   const { data: users = [], isPending: usersLoading } = useUsers();
   const { data: stages = [], isPending: stagesLoading } = useLitigationStages();
+  const { data: personsList = [] } = usePersons();
+  const [addPersonOpen, setAddPersonOpen] = useState(false);
 
-  const { data: persons = [], isPending: personsLoading } = useQuery({
+  const { data: projectPersons = [], isPending: personsLoading } = useQuery({
     queryKey: ['persons', projectId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -128,6 +132,20 @@ export default function CourtCasesPage() {
     });
   };
 
+  const casesData = cases.map((c: any) => ({
+    ...c,
+    projectName: projects.find((p) => p.id === c.project_id)?.name ?? '',
+    plaintiff:
+      personsList.find((p) => p.id === c.plaintiff_id)?.full_name ?? c.plaintiff,
+    defendant:
+      contractors.find((d) => d.id === c.defendant_id)?.name ?? c.defendant,
+    responsibleLawyer:
+      users.find((u) => u.id === c.responsible_lawyer_id)?.name ?? c.responsibleLawyer,
+    daysSinceFixStart: c.fix_start_date
+      ? dayjs(c.fix_end_date ?? dayjs()).diff(dayjs(c.fix_start_date), 'day')
+      : null,
+  }));
+
   const columns: ColumnsType<CourtCase & any> = [
     {
       title: '№ дела',
@@ -141,6 +159,10 @@ export default function CourtCasesPage() {
       width: 120,
       sorter: (a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf(),
       render: (v: string) => dayjs(v).format('DD.MM.YYYY'),
+    },
+    {
+      title: 'Проект',
+      dataIndex: 'projectName',
     },
     {
       title: 'Объект',
@@ -157,6 +179,22 @@ export default function CourtCasesPage() {
     {
       title: 'Юрист',
       dataIndex: 'responsibleLawyer',
+    },
+    {
+      title: 'Дата начала устранения',
+      dataIndex: 'fix_start_date',
+      render: (v: string | null) =>
+        v ? dayjs(v).format('DD.MM.YYYY') : '',
+    },
+    {
+      title: 'Дата завершения устранения',
+      dataIndex: 'fix_end_date',
+      render: (v: string | null) =>
+        v ? dayjs(v).format('DD.MM.YYYY') : '',
+    },
+    {
+      title: 'Дней с начала устранения',
+      dataIndex: 'daysSinceFixStart',
     },
     {
       title: 'Статус',
@@ -179,7 +217,7 @@ export default function CourtCasesPage() {
     },
   ];
 
-  const filteredCases = cases.filter((c: any) => {
+  const filteredCases = casesData.filter((c: any) => {
     const search = filters.search?.toLowerCase() ?? '';
     const matchesSearch =
       c.number.toLowerCase().includes(search) ||
@@ -226,12 +264,24 @@ export default function CourtCasesPage() {
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item name="plaintiff_id" label="Истец" rules={[{ required: true, message: 'Выберите истца' }]}>
-              <Select
-                loading={personsLoading}
-                options={persons.map((p) => ({ value: p.id, label: p.full_name }))}
-                disabled={!projectId}
-              />
+            <Form.Item label="Истец" style={{ marginBottom: 0 }}>
+              <Space.Compact style={{ width: '100%' }}>
+                <Form.Item
+                  name="plaintiff_id"
+                  noStyle
+                  rules={[{ required: true, message: 'Выберите истца' }]}
+                >
+                  <Select
+                    loading={personsLoading}
+                    options={projectPersons.map((p) => ({ value: p.id, label: p.full_name }))}
+                    disabled={!projectId}
+                  />
+                </Form.Item>
+                <Button
+                  icon={<PlusOutlined />}
+                  onClick={() => setAddPersonOpen(true)}
+                />
+              </Space.Compact>
             </Form.Item>
           </Col>
           <Col span={8}>
@@ -332,6 +382,12 @@ export default function CourtCasesPage() {
         caseData={dialogCase}
         tab={tab}
         onTabChange={setTab}
+      />
+      <AddPersonModal
+        open={addPersonOpen}
+        onClose={() => setAddPersonOpen(false)}
+        unitId={Form.useWatch('unit_id', form)}
+        onSelect={(id) => form.setFieldValue('plaintiff_id', id)}
       />
     </>
     </ConfigProvider>
@@ -681,3 +737,48 @@ function DefectsTab({ defects, onAdd, onDelete }: DefectsProps) {
     </>
   );
 }
+
+interface AddPersonModalProps {
+  open: boolean;
+  onClose: () => void;
+  unitId: number | null;
+  onSelect: (id: number) => void;
+}
+
+function AddPersonModal({ open, onClose, unitId, onSelect }: AddPersonModalProps) {
+  const [form] = Form.useForm();
+  const addPersonMutation = useAddPerson();
+  const handleFinish = (values: any) => {
+    addPersonMutation.mutate(values, {
+      onSuccess: async (person: any) => {
+        if (unitId) {
+          await supabase.from('unit_persons').insert({
+            unit_id: unitId,
+            person_id: person.id,
+          });
+        }
+        message.success('Физлицо добавлено');
+        onSelect(person.id);
+        form.resetFields();
+        onClose();
+      },
+      onError: (e: any) => message.error(e.message),
+    });
+  };
+  return (
+    <Modal open={open} onCancel={onClose} onOk={() => form.submit()} title="Новое физлицо">
+      <Form form={form} layout="vertical" onFinish={handleFinish}>
+        <Form.Item name="full_name" label="ФИО" rules={[{ required: true, message: 'Укажите ФИО' }]}> 
+          <Input />
+        </Form.Item>
+        <Form.Item name="phone" label="Телефон">
+          <Input />
+        </Form.Item>
+        <Form.Item name="email" label="Email">
+          <Input />
+        </Form.Item>
+      </Form>
+    </Modal>
+  );
+}
+
