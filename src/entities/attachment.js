@@ -46,3 +46,7 @@ async function upload(file, pathPrefix) {
 export function uploadLetterAttachment(file, projectId) {
     return upload(file, `letters/${projectId}`);
 }
+
+export function uploadCaseAttachment(file, projectId, unitId) {
+    return upload(file, `Case/${projectId}/${unitId}`);
+}
