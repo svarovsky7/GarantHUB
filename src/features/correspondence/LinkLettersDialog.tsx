@@ -1,7 +1,7 @@
 // CHANGE: Полный список писем, отдельное окно, фильтрация по номеру/теме/корреспонденту
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Modal, Input, Table, Checkbox, Button } from 'antd';
+import { Modal, Input, Table, Button } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { CorrespondenceLetter } from '@/shared/types/correspondence';
 
@@ -34,12 +34,14 @@ export default function LinkLettersDialog({
   const filteredLetters = useMemo(() => {
     const term = search.trim().toLowerCase();
     return letters
-        .filter(l => l.id !== parent?.id)
-        .filter(l =>
-            !term
-            || l.number.toLowerCase().includes(term)
-            || (l.subject ?? '').toLowerCase().includes(term)
-            || (l.correspondent ?? '').toLowerCase().includes(term)
+        .filter((l) => l.id !== parent?.id)
+        .filter((l) => l.parent_id === null)
+        .filter(
+          (l) =>
+            !term ||
+            l.number.toLowerCase().includes(term) ||
+            (l.subject ?? '').toLowerCase().includes(term) ||
+            (l.correspondent ?? '').toLowerCase().includes(term),
         );
   }, [letters, parent, search]);
 
@@ -97,7 +99,7 @@ export default function LinkLettersDialog({
         />
         <Table<CorrespondenceLetter>
             rowKey="id"
-            columns={columns}Й
+            columns={columns}
             dataSource={filteredLetters}
             size="small"
             pagination={{ pageSize: 8, showSizeChanger: false }}
