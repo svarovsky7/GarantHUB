@@ -4,10 +4,7 @@
 // -----------------------------------------------------------------------------
 
 import React, { useState } from 'react';
-import {
-    Dialog, DialogTitle, DialogContent, DialogActions,
-    TextField, Button, Stack,
-} from '@mui/material';
+import { Stack, TextField, Button, DialogActions } from '@mui/material';
 
 interface LitigationStageFormProps {
     initialData?: { id?: number; name?: string };
@@ -25,31 +22,24 @@ export default function LitigationStageForm({ initialData, onSubmit, onCancel }:
     };
 
     return (
-        <Dialog open onClose={onCancel} fullWidth maxWidth="xs">
-            <form onSubmit={handleSave}>
-                <DialogTitle>
-                    {initialData.id ? 'Редактировать стадию' : 'Новая стадия'}
-                </DialogTitle>
-
-                <DialogContent dividers>
-                    <Stack spacing={2}>
-                        <TextField
-                            label="Название"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            autoFocus
-                            required
-                            size="small"
-                            fullWidth
-                        />
-                    </Stack>
-                </DialogContent>
-
-                <DialogActions>
+        <form onSubmit={handleSave} noValidate>
+            <Stack spacing={2} sx={{ minWidth: 320 }}>
+                <TextField
+                    label="Название"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    autoFocus
+                    required
+                    size="small"
+                    fullWidth
+                />
+                <DialogActions sx={{ px: 0 }}>
                     <Button onClick={onCancel}>Отмена</Button>
-                    <Button type="submit" variant="contained">Сохранить</Button>
+                    <Button type="submit" variant="contained">
+                        Сохранить
+                    </Button>
                 </DialogActions>
-            </form>
-        </Dialog>
+            </Stack>
+        </form>
     );
 }

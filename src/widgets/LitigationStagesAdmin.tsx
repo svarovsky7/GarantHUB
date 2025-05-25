@@ -14,6 +14,7 @@ import {
 
 import LitigationStageForm from '@/features/litigationStage/LitigationStageForm';
 import AdminDataGrid from '@/shared/ui/AdminDataGrid';
+import { Dialog, DialogTitle, DialogContent } from '@mui/material';
 import { useNotify } from '@/shared/hooks/useNotify';
 
 // Интерфейс пропсов для поддержки пагинации
@@ -74,30 +75,32 @@ export default function LitigationStagesAdmin({
     /* -------- UI -------- */
     return (
         <>
-            {modal?.mode === 'add' && (
-                <LitigationStageForm
-                    onSubmit={(d) =>
-                        add.mutate(d, {
-                            onSuccess: () => ok('Стадия создана'),
-                            onError: (e) => notify.error(e.message),
-                        })}
-                    onCancel={close}
-                />
-            )}
-
-            {modal?.mode === 'edit' && (
-                <LitigationStageForm
-                    initialData={modal.data}
-                    onSubmit={(d) =>
-                        update.mutate(
-                            { id: modal.data.id, updates: d },
-                            {
-                                onSuccess: () => ok('Стадия обновлена'),
-                                onError: (e) => notify.error(e.message),
-                            },
-                        )}
-                    onCancel={close}
-                />
+            {modal && (
+                <Dialog open onClose={close} maxWidth="xs" fullWidth>
+                    <DialogTitle>
+                        {modal.mode === 'add' ? 'Новая стадия' : 'Редактировать стадию'}
+                    </DialogTitle>
+                    <DialogContent dividers>
+                        <LitigationStageForm
+                            initialData={modal.mode === 'edit' ? modal.data : undefined}
+                            onSubmit={(d) =>
+                                (modal.mode === 'add'
+                                    ? add.mutate(d, {
+                                          onSuccess: () => ok('Стадия создана'),
+                                          onError: (e) => notify.error(e.message),
+                                      })
+                                    : update.mutate(
+                                          { id: modal.data.id, updates: d },
+                                          {
+                                              onSuccess: () => ok('Стадия обновлена'),
+                                              onError: (e) => notify.error(e.message),
+                                          },
+                                      ))
+                            }
+                            onCancel={close}
+                        />
+                    </DialogContent>
+                </Dialog>
             )}
 
             <AdminDataGrid

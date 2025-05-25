@@ -6,7 +6,7 @@ import { useProjects, useAddProject, useUpdateProject, useDeleteProject } from '
 import ProjectForm from '@/features/project/ProjectForm';
 import AdminDataGrid from '@/shared/ui/AdminDataGrid';
 import { useNotify } from '@/shared/hooks/useNotify';
-import { Skeleton } from '@mui/material';
+import { Skeleton, Dialog, DialogTitle, DialogContent } from '@mui/material';
 
 // Описываем типы пропсов для поддержки pageSize и rowsPerPageOptions
 interface ProjectsTableProps {
@@ -66,29 +66,32 @@ export default function ProjectsTable({
 
     return (
         <>
-            {modal?.mode === 'add' && (
-                <ProjectForm
-                    onSubmit={(d) =>
-                        add.mutate(d, {
-                            onSuccess: () => ok('Проект создан'),
-                            onError: (e) => notify.error(e.message),
-                        })}
-                    onCancel={close}
-                />
-            )}
-            {modal?.mode === 'edit' && (
-                <ProjectForm
-                    initialData={modal.data}
-                    onSubmit={(d) =>
-                        update.mutate(
-                            { id: modal.data.id, updates: d },
-                            {
-                                onSuccess: () => ok('Проект обновлён'),
-                                onError: (e) => notify.error(e.message),
-                            },
-                        )}
-                    onCancel={close}
-                />
+            {modal && (
+                <Dialog open onClose={close} maxWidth="xs" fullWidth>
+                    <DialogTitle>
+                        {modal.mode === 'add' ? 'Новый проект' : 'Редактировать проект'}
+                    </DialogTitle>
+                    <DialogContent>
+                        <ProjectForm
+                            initialData={modal.mode === 'edit' ? modal.data : undefined}
+                            onSubmit={(d) =>
+                                (modal.mode === 'add'
+                                    ? add.mutate(d, {
+                                          onSuccess: () => ok('Проект создан'),
+                                          onError: (e) => notify.error(e.message),
+                                      })
+                                    : update.mutate(
+                                          { id: modal.data.id, updates: d },
+                                          {
+                                              onSuccess: () => ok('Проект обновлён'),
+                                              onError: (e) => notify.error(e.message),
+                                          },
+                                      ))
+                            }
+                            onCancel={close}
+                        />
+                    </DialogContent>
+                </Dialog>
             )}
             <AdminDataGrid
                 title="Проекты"

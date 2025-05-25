@@ -12,6 +12,7 @@ import {
 import ContractorForm from '@/features/contractor/ContractorForm';
 import AdminDataGrid  from '@/shared/ui/AdminDataGrid';
 import { useNotify }  from '@/shared/hooks/useNotify';
+import { Dialog, DialogTitle, DialogContent } from '@mui/material';
 
 // Интерфейс для пропсов (поддержка пагинации)
 interface ContractorAdminProps {
@@ -93,16 +94,19 @@ export default function ContractorAdmin({
 
     return (
         <>
-            {modal?.mode === 'add' && (
-                <ContractorForm onSuccess={() => ok('Компания создана')} onCancel={close} />
-            )}
-
-            {modal?.mode === 'edit' && (
-                <ContractorForm
-                    initialData={modal.data}
-                    onSuccess={() => ok('Компания обновлена')}
-                    onCancel={close}
-                />
+            {modal && (
+                <Dialog open onClose={close} maxWidth="sm" fullWidth>
+                    <DialogTitle>
+                        {modal.mode === 'add' ? 'Новая компания' : 'Редактировать компанию'}
+                    </DialogTitle>
+                    <DialogContent>
+                        <ContractorForm
+                            initialData={modal.mode === 'edit' ? modal.data : undefined}
+                            onSuccess={() => ok(modal.mode === 'add' ? 'Компания создана' : 'Компания обновлена')}
+                            onCancel={close}
+                        />
+                    </DialogContent>
+                </Dialog>
             )}
 
             <AdminDataGrid
