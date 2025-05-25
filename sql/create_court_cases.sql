@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS court_cases (
     id BIGSERIAL PRIMARY KEY,
     project_id INTEGER NOT NULL REFERENCES projects(id),
     unit_id INTEGER REFERENCES units(id),
+    date DATE NOT NULL,
     stage_id INTEGER REFERENCES litigation_stages(id),
     status INTEGER NOT NULL REFERENCES litigation_stages(id),
     responsible_lawyer_id UUID REFERENCES profiles(id),
