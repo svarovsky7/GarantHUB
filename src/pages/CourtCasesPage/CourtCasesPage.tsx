@@ -41,6 +41,7 @@ import {
   useDeleteDefect,
 } from '@/entities/courtCase';
 import { useAttachmentTypes } from '@/entities/attachmentType';
+import { uploadCaseAttachment } from '@/entities/attachment';
 import { supabase } from '@/shared/api/supabaseClient';
 import { useQuery } from '@tanstack/react-query';
 
@@ -81,6 +82,8 @@ export default function CourtCasesPage() {
   const { data: stages = [], isPending: stagesLoading } = useLitigationStages();
   const { data: personsList = [] } = usePersons();
   const [addPersonOpen, setAddPersonOpen] = useState(false);
+  const { data: attachmentTypes = [] } = useAttachmentTypes();
+  const [caseFiles, setCaseFiles] = useState<{ file: File; type_id: number | null }[]>([]);
 
   const { data: projectPersons = [], isPending: personsLoading } = useQuery({
     queryKey: ['persons', projectId],
@@ -96,9 +99,21 @@ export default function CourtCasesPage() {
     enabled: !!projectId,
   });
 
+  const handleCaseFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const arr = Array.from(e.target.files || []).map((f) => ({ file: f, type_id: null }));
+    setCaseFiles((p) => [...p, ...arr]);
+    e.target.value = '';
+  };
+
+  const setCaseFileType = (idx: number, val: number | null) =>
+    setCaseFiles((p) => p.map((f, i) => (i === idx ? { ...f, type_id: val } : f)));
+
+  const removeCaseFile = (idx: number) =>
+    setCaseFiles((p) => p.filter((_, i) => i !== idx));
+
   const handleAddCase = async (values: any) => {
-    addCaseMutation.mutate(
-      {
+    try {
+      await addCaseMutation.mutateAsync({
         project_id: values.project_id,
         unit_id: values.unit_id || null,
         number: values.number,
@@ -114,15 +129,22 @@ export default function CourtCasesPage() {
           ? (values.fix_end_date as Dayjs).format('YYYY-MM-DD')
           : null,
         description: values.description || '',
-      } as any,
-      {
-        onSuccess: () => {
-          form.resetFields();
-          message.success('Дело успешно добавлено!');
-        },
-        onError: (e: any) => message.error(e.message),
-      },
-    );
+      } as any);
+
+      if (caseFiles.length && values.project_id && values.unit_id) {
+        await Promise.all(
+          caseFiles.map(({ file }) =>
+            uploadCaseAttachment(file, values.project_id, values.unit_id),
+          ),
+        );
+      }
+
+      form.resetFields();
+      setCaseFiles([]);
+      message.success('Дело успешно добавлено!');
+    } catch (e: any) {
+      message.error(e.message);
+    }
   };
 
   const deleteCase = (id: number) => {
@@ -323,6 +345,32 @@ export default function CourtCasesPage() {
             <Form.Item name="description" label="Описание">
               <Input.TextArea rows={1} />
             </Form.Item>
+          </Col>
+        </Row>
+        <Row gutter={16}>
+          <Col span={24}>
+            <input type="file" multiple onChange={handleCaseFiles} />
+            {caseFiles.map((f, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', marginTop: 4 }}>
+                <span style={{ marginRight: 8 }}>{f.file.name}</span>
+                <Select
+                  style={{ width: 160 }}
+                  placeholder="Тип файла"
+                  value={f.type_id ?? undefined}
+                  onChange={(v) => setCaseFileType(i, v)}
+                  allowClear
+                >
+                  {attachmentTypes.map((t) => (
+                    <Select.Option key={t.id} value={t.id}>
+                      {t.name}
+                    </Select.Option>
+                  ))}
+                </Select>
+                <Button type="text" danger onClick={() => removeCaseFile(i)}>
+                  Удалить
+                </Button>
+              </div>
+            ))}
           </Col>
         </Row>
         <Form.Item style={{ textAlign: 'right' }}>
