@@ -4,17 +4,14 @@ import {
   Paper,
   Stack,
   Typography,
-  Select,
-  MenuItem,
-  Autocomplete,
-  TextField,
-  Button,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   Snackbar,
+  Button as MuiButton,
 } from '@mui/material';
+import { Form, Select, Input, Button } from 'antd';
 import dayjs from 'dayjs';
 import { AddLetterFormData } from '@/features/correspondence/AddLetterForm';
 import AddLetterForm from '@/features/correspondence/AddLetterForm';
@@ -58,6 +55,7 @@ export default function CorrespondencePage() {
     content: '',
     search: '',
   });
+  const [form] = Form.useForm();
   const [view, setView] = useState<CorrespondenceLetter | null>(null);
   const [snackbar, setSnackbar] = useState<string | null>(null);
 
@@ -75,6 +73,31 @@ export default function CorrespondencePage() {
     [letters],
   );
   const { data: allUnits = [] } = useUnitsByIds(unitIds);
+
+  const handleFiltersChange = (_: any, values: any) => {
+    setFilters({
+      type: values.type ?? '',
+      project: values.project ?? '',
+      unit: values.unit ?? '',
+      correspondent: values.correspondent ?? '',
+      subject: values.subject ?? '',
+      content: values.content ?? '',
+      search: values.search ?? '',
+    });
+  };
+
+  const resetFilters = () => {
+    form.resetFields();
+    setFilters({
+      type: '',
+      project: '',
+      unit: '',
+      correspondent: '',
+      subject: '',
+      content: '',
+      search: '',
+    });
+  };
 
 
   const handleAdd = (data: AddLetterFormData) => {
@@ -157,113 +180,54 @@ export default function CorrespondencePage() {
       </Paper>
 
       <Paper sx={{ p: 2 }}>
-        <Box className="filter-grid" sx={{ mb: 2 }}>
-          <Select
-            value={filters.type}
-            onChange={(e) =>
-              setFilters((f) => ({ ...f, type: e.target.value as any }))
-            }
-            displayEmpty
-            size="small"
-            fullWidth
-          >
-            <MenuItem value="">Все типы</MenuItem>
-            <MenuItem value="incoming">Входящее</MenuItem>
-            <MenuItem value="outgoing">Исходящее</MenuItem>
-          </Select>
-          <Autocomplete
-            options={projects}
-            getOptionLabel={(o) => o?.name ?? ''}
-            isOptionEqualToValue={(o, v) => o?.id === v?.id}
-            value={projects.find((p) => p.id === Number(filters.project)) || null}
-            onChange={(_, v) =>
-              setFilters((f) => ({ ...f, project: v ? v.id : '', unit: '' }))
-            }
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                size="small"
-                label="Проект"
-                autoComplete="off"
-              />
-            )}
-            fullWidth
-          />
-          <Autocomplete
-            options={projectUnits}
-            getOptionLabel={(o) => o?.name ?? ''}
-            isOptionEqualToValue={(o, v) => o?.id === v?.id}
-            value={projectUnits.find((u) => u.id === Number(filters.unit)) || null}
-            onChange={(_, v) =>
-              setFilters((f) => ({ ...f, unit: v ? v.id : '' }))
-            }
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                size="small"
-                label="Объект"
-                autoComplete="off"
-              />
-            )}
-            fullWidth
-            disabled={!filters.project}
-          />
-          <TextField
-            size="small"
-            label="Корреспондент"
-            value={filters.correspondent}
-            onChange={(e) =>
-              setFilters((f) => ({ ...f, correspondent: e.target.value }))
-            }
-            fullWidth
-            autoComplete="off"
-          />
-          <TextField
-            size="small"
-            label="В теме"
-            value={filters.subject}
-            onChange={(e) =>
-              setFilters((f) => ({ ...f, subject: e.target.value }))
-            }
-            fullWidth
-            autoComplete="off"
-          />
-          <TextField
-            size="small"
-            label="В содержании"
-            value={filters.content}
-            onChange={(e) =>
-              setFilters((f) => ({ ...f, content: e.target.value }))
-            }
-            fullWidth
-            autoComplete="off"
-          />
-          <TextField
-            size="small"
-            placeholder="Поиск"
-            value={filters.search}
-            onChange={(e) =>
-              setFilters((f) => ({ ...f, search: e.target.value }))
-            }
-            fullWidth
-            autoComplete="off"
-          />
-          <Button
-            onClick={() =>
-              setFilters({
-                type: '',
-                project: '',
-                unit: '',
-                correspondent: '',
-                subject: '',
-                content: '',
-                search: '',
-              })
-            }
-          >
-            Сбросить фильтры
-          </Button>
-        </Box>
+        <Form
+          form={form}
+          layout="vertical"
+          onValuesChange={handleFiltersChange}
+          initialValues={filters}
+          className="filter-grid"
+          style={{ marginBottom: 16 }}
+        >
+          <Form.Item name="type" label="Тип письма">
+            <Select allowClear placeholder="Все типы">
+              <Select.Option value="incoming">Входящее</Select.Option>
+              <Select.Option value="outgoing">Исходящее</Select.Option>
+            </Select>
+          </Form.Item>
+          <Form.Item name="project" label="Проект">
+            <Select
+              showSearch
+              allowClear
+              options={projects.map((p) => ({ value: p.id, label: p.name }))}
+              onChange={() => form.setFieldValue('unit', undefined)}
+            />
+          </Form.Item>
+          <Form.Item name="unit" label="Объект">
+            <Select
+              showSearch
+              allowClear
+              options={projectUnits.map((u) => ({ value: u.id, label: u.name }))}
+              disabled={!form.getFieldValue('project')}
+            />
+          </Form.Item>
+          <Form.Item name="correspondent" label="Корреспондент">
+            <Input allowClear autoComplete="off" />
+          </Form.Item>
+          <Form.Item name="subject" label="В теме">
+            <Input allowClear autoComplete="off" />
+          </Form.Item>
+          <Form.Item name="content" label="В содержании">
+            <Input allowClear autoComplete="off" />
+          </Form.Item>
+          <Form.Item name="search" label="Поиск">
+            <Input allowClear autoComplete="off" />
+          </Form.Item>
+          <Form.Item>
+            <Button onClick={resetFilters} block>
+              Сбросить фильтры
+            </Button>
+          </Form.Item>
+        </Form>
         <CorrespondenceTable
           letters={filtered}
           onView={setView}
@@ -322,7 +286,7 @@ export default function CorrespondencePage() {
           </DialogContent>
         )}
         <DialogActions>
-          <Button onClick={() => setView(null)}>Закрыть</Button>
+          <MuiButton onClick={() => setView(null)}>Закрыть</MuiButton>
         </DialogActions>
       </Dialog>
 

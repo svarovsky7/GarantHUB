@@ -15,7 +15,10 @@ body {
 }
 
 .filter-grid .MuiTextField-root,
-.filter-grid .MuiFormControl-root {
+.filter-grid .MuiFormControl-root,
+.filter-grid .ant-input,
+.filter-grid .ant-select,
+.filter-grid button {
     width: 100%;
 }
 
