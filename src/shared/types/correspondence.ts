@@ -4,6 +4,9 @@ export interface CorrespondenceLetter {
   /** Тип письма: входящее или исходящее */
   type: 'incoming' | 'outgoing';
 
+  /** Идентификатор родительского письма */
+  parent_id: string | null;
+
   /** Идентификатор ответственного пользователя */
   responsible_user_id: string | null;
   /** Идентификатор категории письма */
