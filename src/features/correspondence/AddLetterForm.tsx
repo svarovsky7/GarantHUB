@@ -20,14 +20,16 @@ export interface AddLetterFormData {
   project_id: number | null;
   unit_ids: number[];
   attachments: { file: File; type_id: number | null }[];
+  parent_id: string | null;
 }
 
 interface AddLetterFormProps {
   onSubmit: (data: AddLetterFormData) => void;
+  parentId?: string | null;
 }
 
 /** Форма добавления нового письма на Ant Design */
-export default function AddLetterForm({ onSubmit }: AddLetterFormProps) {
+export default function AddLetterForm({ onSubmit, parentId = null }: AddLetterFormProps) {
   const [form] = Form.useForm<Omit<AddLetterFormData, 'attachments'>>();
   const projectId = Form.useWatch('project_id', form);
 
@@ -59,7 +61,12 @@ export default function AddLetterForm({ onSubmit }: AddLetterFormProps) {
     setFiles((p) => p.filter((_, i) => i !== idx));
 
   const submit = (values: Omit<AddLetterFormData, 'attachments'>) => {
-    onSubmit({ ...values, date: values.date ?? dayjs(), attachments: files });
+    onSubmit({
+      ...values,
+      date: values.date ?? dayjs(),
+      attachments: files,
+      parent_id: parentId,
+    });
     form.resetFields();
     setFiles([]);
   };

@@ -27,6 +27,7 @@ function loadLetters(): CorrespondenceLetter[] {
         ? [l.unit_id]
         : [],
       attachments: Array.isArray(l.attachments) ? l.attachments : [],
+      parent_id: l.parent_id ?? null,
     }));
   } catch {
     return [];
@@ -66,6 +67,7 @@ export function useAddLetter() {
         ...(payload as any),
         id: Date.now().toString(),
         attachments,
+        parent_id: (payload as any).parent_id ?? null,
       };
       letters.push(newLetter);
       saveLetters(letters);

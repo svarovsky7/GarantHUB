@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import dayjs from 'dayjs';
 import { Table, Space, Button, Popconfirm, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { EyeOutlined, DeleteOutlined } from '@ant-design/icons';
+import { EyeOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { CorrespondenceLetter } from '@/shared/types/correspondence';
 
 interface Option { id: number | string; name: string; }
@@ -11,6 +11,7 @@ interface CorrespondenceTableProps {
   letters: CorrespondenceLetter[];
   onView: (letter: CorrespondenceLetter) => void;
   onDelete: (id: string) => void;
+  onAddChild: (parent: CorrespondenceLetter) => void;
   users: Option[];
   letterTypes: Option[];
   projects: Option[];
@@ -22,6 +23,7 @@ export default function CorrespondenceTable({
   letters,
   onView,
   onDelete,
+  onAddChild,
   users,
   letterTypes,
   projects,
@@ -109,6 +111,11 @@ export default function CorrespondenceTable({
             icon={<EyeOutlined />}
             onClick={() => onView(record)}
           />
+          <Button
+            type="text"
+            icon={<PlusOutlined />}
+            onClick={() => onAddChild(record)}
+          />
           <Popconfirm
             title="Удалить письмо?"
             okText="Да"
@@ -122,9 +129,12 @@ export default function CorrespondenceTable({
     },
   ];
 
-  const dataSource = useMemo(
-    () =>
-      letters.map((l) => ({
+  const dataSource = useMemo(() => {
+    const map = new Map<string, any>();
+    const roots: any[] = [];
+
+    letters.forEach((l) => {
+      const row = {
         ...l,
         projectName: l.project_id ? maps.project[l.project_id] : null,
         unitNames: l.unit_ids
@@ -135,9 +145,27 @@ export default function CorrespondenceTable({
         responsibleName: l.responsible_user_id
           ? maps.user[l.responsible_user_id]
           : null,
-      })),
-    [letters, maps],
-  );
+      } as any;
+      map.set(l.id, row);
+    });
+
+    letters.forEach((l) => {
+      const row = map.get(l.id);
+      if (l.parent_id) {
+        const parent = map.get(l.parent_id);
+        if (parent) {
+          if (!parent.children) parent.children = [];
+          parent.children.push(row);
+        } else {
+          roots.push(row);
+        }
+      } else {
+        roots.push(row);
+      }
+    });
+
+    return roots;
+  }, [letters, maps]);
 
   return (
     <Table

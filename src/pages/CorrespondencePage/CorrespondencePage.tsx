@@ -59,6 +59,7 @@ export default function CorrespondencePage() {
   const [form] = Form.useForm();
   const [view, setView] = useState<CorrespondenceLetter | null>(null);
   const [snackbar, setSnackbar] = useState<string | null>(null);
+  const [addFor, setAddFor] = useState<CorrespondenceLetter | null>(null);
 
 
 
@@ -116,9 +117,13 @@ export default function CorrespondencePage() {
         project_id: data.project_id,
         unit_ids: data.unit_ids,
         attachments: data.attachments,
+        parent_id: data.parent_id,
       },
       {
-        onSuccess: () => setSnackbar('Письмо добавлено'),
+        onSuccess: () => {
+          setSnackbar('Письмо добавлено');
+          setAddFor(null);
+        },
       },
     );
   };
@@ -183,6 +188,18 @@ export default function CorrespondencePage() {
         <AddLetterForm onSubmit={handleAdd} />
       </Paper>
 
+      <Dialog open={!!addFor} onClose={() => setAddFor(null)} maxWidth="md" fullWidth>
+        <DialogTitle>Добавить связанное письмо</DialogTitle>
+        {addFor && (
+          <DialogContent dividers>
+            <AddLetterForm onSubmit={handleAdd} parentId={addFor.id} />
+          </DialogContent>
+        )}
+        <DialogActions>
+          <MuiButton onClick={() => setAddFor(null)}>Отмена</MuiButton>
+        </DialogActions>
+      </Dialog>
+
       <Paper sx={{ p: 2 }}>
         <Form
           form={form}
@@ -236,6 +253,7 @@ export default function CorrespondencePage() {
           letters={filtered}
           onView={setView}
           onDelete={handleDelete}
+          onAddChild={setAddFor}
           users={users}
           letterTypes={letterTypes}
           projects={projects}
