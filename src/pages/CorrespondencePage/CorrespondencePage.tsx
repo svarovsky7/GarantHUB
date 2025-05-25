@@ -134,27 +134,31 @@ export default function CorrespondencePage() {
     if (filters.type && l.type !== filters.type) return false;
     if (filters.project && l.project_id !== Number(filters.project)) return false;
     if (filters.unit && !l.unit_ids.includes(Number(filters.unit))) return false;
+    const correspondent = (l.correspondent || '').toLowerCase();
+    const subject = (l.subject || '').toLowerCase();
+    const content = (l.content || '').toLowerCase();
+
     if (
       filters.correspondent &&
-      !l.correspondent.toLowerCase().includes(filters.correspondent.toLowerCase())
+      !correspondent.includes(filters.correspondent.toLowerCase())
     )
       return false;
     if (
       filters.subject &&
-      !l.subject.toLowerCase().includes(filters.subject.toLowerCase())
+      !subject.includes(filters.subject.toLowerCase())
     )
       return false;
     if (
       filters.content &&
-      !l.content.toLowerCase().includes(filters.content.toLowerCase())
+      !content.includes(filters.content.toLowerCase())
     )
       return false;
     if (
       filters.search &&
       !(
         l.number.includes(filters.search) ||
-        l.correspondent.toLowerCase().includes(filters.search.toLowerCase()) ||
-        l.subject.toLowerCase().includes(filters.search.toLowerCase())
+        correspondent.includes(filters.search.toLowerCase()) ||
+        subject.includes(filters.search.toLowerCase())
       )
     )
       return false;
