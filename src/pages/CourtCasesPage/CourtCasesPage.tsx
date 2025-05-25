@@ -23,7 +23,7 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import type { CourtCase, Letter, Defect } from '@/shared/types/courtCase';
 import { useProjects } from '@/entities/project';
-import { useUnitsByProject } from '@/entities/unit';
+import { useUnitsByProject, useUnitsByIds } from '@/entities/unit';
 import { useContractors } from '@/entities/contractor';
 import { useUsers } from '@/entities/user';
 import { useLitigationStages } from '@/entities/litigationStage';
@@ -84,6 +84,12 @@ export default function CourtCasesPage() {
   const [addPersonOpen, setAddPersonOpen] = useState(false);
   const { data: attachmentTypes = [] } = useAttachmentTypes();
   const [caseFiles, setCaseFiles] = useState<{ file: File; type_id: number | null }[]>([]);
+
+  const unitIds = React.useMemo(
+    () => Array.from(new Set(cases.map((c) => c.unit_id).filter(Boolean))),
+    [cases],
+  );
+  const { data: caseUnits = [] } = useUnitsByIds(unitIds);
 
   const { data: projectPersons = [], isPending: personsLoading } = useQuery({
     queryKey: ['persons', projectId],
@@ -157,6 +163,7 @@ export default function CourtCasesPage() {
   const casesData = cases.map((c: any) => ({
     ...c,
     projectName: projects.find((p) => p.id === c.project_id)?.name ?? '',
+    projectObject: caseUnits.find((u) => u.id === c.unit_id)?.name ?? '',
     plaintiff:
       personsList.find((p) => p.id === c.plaintiff_id)?.full_name ?? c.plaintiff,
     defendant:
@@ -453,6 +460,7 @@ interface CaseDialogProps {
 function CaseDialog({ open, onClose, caseData, tab, onTabChange }: CaseDialogProps) {
   const { data: letters = [] } = useCaseLetters(caseData ? Number(caseData.id) : 0);
   const { data: defects = [] } = useCaseDefects(caseData ? Number(caseData.id) : 0);
+  const { data: stages = [] } = useLitigationStages();
   const addLetterMutation = useAddLetter();
   const deleteLetterMutation = useDeleteLetter();
   const addDefectMutation = useAddDefect();
@@ -505,49 +513,49 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange }: CaseDialogPro
           <Row gutter={16} style={{ marginBottom: 16 }}>
             <Col span={8}>
               <div>
-                <small>Номер дела</small>
+                <strong>Номер дела</strong>
                 <div>{caseData.number}</div>
               </div>
             </Col>
             <Col span={8}>
               <div>
-                <small>Дата открытия</small>
+                <strong>Дата открытия</strong>
                 <div>{dayjs(caseData.date).format('DD.MM.YYYY')}</div>
               </div>
             </Col>
             <Col span={8}>
               <div>
-                <small>Объект</small>
+                <strong>Объект</strong>
                 <div>{(caseData as any).projectObject}</div>
               </div>
             </Col>
             <Col span={8}>
               <div>
-                <small>Истец</small>
+                <strong>Истец</strong>
                 <div>{(caseData as any).plaintiff}</div>
               </div>
             </Col>
             <Col span={8}>
               <div>
-                <small>Ответчик</small>
+                <strong>Ответчик</strong>
                 <div>{(caseData as any).defendant}</div>
               </div>
             </Col>
             <Col span={8}>
               <div>
-                <small>Ответственный юрист</small>
+                <strong>Ответственный юрист</strong>
                 <div>{(caseData as any).responsibleLawyer}</div>
               </div>
             </Col>
             <Col span={8}>
               <div>
-                <small>Статус</small>
-                <div>{(caseData as any).status}</div>
+                <strong>Статус</strong>
+                <div>{stages.find((s) => s.id === (caseData as any).status)?.name}</div>
               </div>
             </Col>
             <Col span={8}>
               <div>
-                <small>Дата начала устранения</small>
+                <strong>Дата начала устранения</strong>
                 <div>
                   {(caseData as any).remediationStartDate
                     ? dayjs((caseData as any).remediationStartDate).format('DD.MM.YYYY')
@@ -557,7 +565,7 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange }: CaseDialogPro
             </Col>
             <Col span={8}>
               <div>
-                <small>Дата завершения устранения</small>
+                <strong>Дата завершения устранения</strong>
                 <div>
                   {(caseData as any).remediationEndDate
                     ? dayjs((caseData as any).remediationEndDate).format('DD.MM.YYYY')
@@ -567,7 +575,7 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange }: CaseDialogPro
             </Col>
             <Col span={24}>
               <div>
-                <small>Описание</small>
+                <strong>Описание</strong>
                 <div>{caseData.description || 'Нет описания'}</div>
               </div>
             </Col>
@@ -578,6 +586,9 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange }: CaseDialogPro
             </Tabs.TabPane>
             <Tabs.TabPane tab="Недостатки" key="defects">
               <DefectsTab defects={defects} onAdd={addDefect} onDelete={deleteDefect} />
+            </Tabs.TabPane>
+            <Tabs.TabPane tab="Файлы" key="files">
+              <CaseFilesTab caseData={caseData} />
             </Tabs.TabPane>
           </Tabs>
         </>
@@ -783,6 +794,67 @@ function DefectsTab({ defects, onAdd, onDelete }: DefectsProps) {
         </div>
       )}
     </>
+  );
+}
+
+interface CaseFilesTabProps {
+  caseData: CourtCase;
+}
+
+function CaseFilesTab({ caseData }: CaseFilesTabProps) {
+  const [files, setFiles] = useState<{ name: string; path: string; url: string }[]>([]);
+
+  const loadFiles = async () => {
+    const prefix = `Case/${caseData.project_id}/${caseData.unit_id}`;
+    const { data, error } = await supabase.storage.from('attachments').list(prefix);
+    if (error) return message.error(error.message);
+    const arr = (data || []).map((f) => {
+      const path = `${prefix}/${f.name}`;
+      const { data: pub } = supabase.storage.from('attachments').getPublicUrl(path);
+      return { name: f.name, path, url: pub.publicUrl };
+    });
+    setFiles(arr);
+  };
+
+  useEffect(() => {
+    loadFiles();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [caseData.id]);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const fls = Array.from(e.target.files || []);
+    try {
+      await Promise.all(fls.map((f) => uploadCaseAttachment(f, caseData.project_id, caseData.unit_id)));
+      message.success('Файлы загружены');
+      loadFiles();
+    } catch (err: any) {
+      message.error(err.message);
+    }
+    e.target.value = '';
+  };
+
+  const handleDelete = async (path: string) => {
+    await supabase.storage.from('attachments').remove([path]);
+    message.success('Файл удалён');
+    loadFiles();
+  };
+
+  return (
+    <div>
+      <input type="file" multiple onChange={handleUpload} />
+      <ul>
+        {files.map((f) => (
+          <li key={f.path} style={{ marginTop: 8 }}>
+            <a href={f.url} target="_blank" rel="noopener noreferrer">
+              {f.name}
+            </a>{' '}
+            <Button type="text" danger size="small" onClick={() => handleDelete(f.path)}>
+              Удалить
+            </Button>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
