@@ -2,11 +2,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   CorrespondenceLetter,
   CorrespondenceAttachment,
+  LetterLink,
 } from '@/shared/types/correspondence';
 import { uploadLetterAttachment, ATTACH_BUCKET } from '../attachment';
 import { supabase } from '@/shared/api/supabaseClient';
 
 const LS_KEY = 'correspondenceLetters';
+const LINK_KEY = 'correspondenceLetterLinks';
 
 function readFileAsDataURL(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -40,6 +42,26 @@ function saveLetters(letters: CorrespondenceLetter[]) {
   localStorage.setItem(LS_KEY, JSON.stringify(letters));
 }
 
+function loadLinks(): LetterLink[] {
+  try {
+    const raw = localStorage.getItem(LINK_KEY);
+    return raw ? (JSON.parse(raw) as LetterLink[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveLinks(links: LetterLink[]) {
+  localStorage.setItem(LINK_KEY, JSON.stringify(links));
+}
+
+export function useLetterLinks() {
+  return useQuery({
+    queryKey: [LINK_KEY],
+    queryFn: async () => loadLinks(),
+  });
+}
+
 export function useLetters() {
   return useQuery({
     queryKey: [LS_KEY],
@@ -56,6 +78,7 @@ export function useAddLetter() {
       },
     ) => {
       const letters = loadLetters();
+      const links = loadLinks();
       const attachments: CorrespondenceAttachment[] = await Promise.all(
         (payload.attachments ?? []).map(async ({ file, type_id }) => {
           if (payload.project_id) {
@@ -89,11 +112,16 @@ export function useAddLetter() {
         parent_id: (payload as any).parent_id ?? null,
       };
       letters.push(newLetter);
+      if (newLetter.parent_id) {
+        links.push({ parent_id: newLetter.parent_id, child_id: newLetter.id });
+      }
       saveLetters(letters);
+      saveLinks(links);
       return newLetter;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [LS_KEY] });
+      qc.invalidateQueries({ queryKey: [LINK_KEY] });
     },
   });
 }
@@ -103,6 +131,7 @@ export function useDeleteLetter() {
   return useMutation({
     mutationFn: async (id: string) => {
       const letters = loadLetters();
+      let links = loadLinks();
       const letter = letters.find((l) => l.id === id);
       if (letter && letter.attachments?.length) {
         const paths = letter.attachments
@@ -112,12 +141,21 @@ export function useDeleteLetter() {
           await supabase.storage.from(ATTACH_BUCKET).remove(paths);
         }
       }
-      const updated = letters.filter((l) => l.id !== id);
+      const updated = letters
+        .filter((l) => l.id !== id)
+        .map((l) =>
+          l.parent_id === id ? { ...l, parent_id: null } : l,
+        );
+      links = links.filter(
+        (link) => link.parent_id !== id && link.child_id !== id,
+      );
       saveLetters(updated);
+      saveLinks(links);
       return id;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [LS_KEY] });
+      qc.invalidateQueries({ queryKey: [LINK_KEY] });
     },
   });
 }
@@ -127,15 +165,21 @@ export function useLinkLetters() {
   return useMutation({
     mutationFn: async ({ parentId, childIds }: { parentId: string; childIds: string[] }) => {
       const letters = loadLetters();
+      let links = loadLinks().filter((lnk) => !childIds.includes(lnk.child_id));
       const map = new Map(letters.map((l) => [l.id, l]));
       childIds.forEach((id) => {
         const l = map.get(id);
-        if (l) l.parent_id = parentId;
+        if (l) {
+          l.parent_id = parentId;
+          links.push({ parent_id: parentId, child_id: id });
+        }
       });
       saveLetters(Array.from(map.values()));
+      saveLinks(links);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [LS_KEY] });
+      qc.invalidateQueries({ queryKey: [LINK_KEY] });
     },
   });
 }
@@ -146,16 +190,20 @@ export function useUnlinkLetter() {
   return useMutation({
     mutationFn: async (id: string) => {
       const letters = loadLetters();
+      let links = loadLinks();
       const map = new Map(letters.map((l) => [l.id, l]));
       const letter = map.get(id);
       if (letter) {
         letter.parent_id = null;
         map.set(id, letter);
-        saveLetters(Array.from(map.values()));
       }
+      links = links.filter((lnk) => lnk.child_id !== id);
+      saveLetters(Array.from(map.values()));
+      saveLinks(links);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [LS_KEY] });
+      qc.invalidateQueries({ queryKey: [LINK_KEY] });
     },
   });
 }
