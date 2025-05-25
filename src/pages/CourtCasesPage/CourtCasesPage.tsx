@@ -93,9 +93,12 @@ export default function CourtCasesPage() {
     });
     return map;
   }, [stages]);
-  const { data: persons = [], isPending: personsLoading } = useQuery(
-    ["persons", newCase.project],
-    async () => {
+  const {
+    data: persons = [],
+    isPending: personsLoading,
+  } = useQuery({
+    queryKey: ["persons", newCase.project],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from("persons")
         .select("id, full_name")
@@ -104,8 +107,8 @@ export default function CourtCasesPage() {
       if (error) throw error;
       return data ?? [];
     },
-    { enabled: !!newCase.project }
-  );
+    enabled: !!newCase.project,
+  });
 
   const { data: letters = [] } = useCaseLetters(
     dialogCase ? Number(dialogCase.id) : 0,
