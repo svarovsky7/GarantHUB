@@ -12,6 +12,7 @@ import TicketsPage from "@/pages/TicketsPage/TicketsPage";
 import TicketFormPage from "@/pages/TicketsPage/TicketFormPage";
 import StatsPage from "@/pages/StatsPage/StatsPage";
 import CourtCasesPage from "@/pages/CourtCasesPage/CourtCasesPage";
+import CorrespondencePage from "@/pages/CorrespondencePage/CorrespondencePage";
 import LoginPage from "@/pages/UnitsPage/LoginPage"; // ← CHANGE
 import RegisterPage from "@/pages/UnitsPage/RegisterPage"; // ← CHANGE
 import AdminPage from "@/pages/UnitsPage/AdminPage";
@@ -83,6 +84,15 @@ export default function AppRouter() {
         element={
           <RequireAuth>
             <CourtCasesPage />
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/correspondence"
+        element={
+          <RequireAuth>
+            <CorrespondencePage />
           </RequireAuth>
         }
       />
