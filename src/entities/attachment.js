@@ -1,9 +1,22 @@
 import { supabase } from '@/shared/api/supabaseClient';
 
-const ATTACH_BUCKET =
+let ATTACH_BUCKET =
     (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ATTACH_BUCKET) ||
     process.env.REACT_APP_ATTACH_BUCKET ||
     'attachments';
+
+// На практике переменная может по ошибке содержать полный URL вроде
+// "https://.../storage/v1/s3". В этом случае используем только название корзины
+// (последний сегмент пути), чтобы избежать обращения к несуществующему bucket.
+try {
+    if (ATTACH_BUCKET.includes('://')) {
+        const { pathname } = new URL(ATTACH_BUCKET);
+        const parts = pathname.split('/').filter(Boolean);
+        if (parts.length) ATTACH_BUCKET = parts[parts.length - 1];
+    }
+} catch {
+    /* ignore invalid URL */
+}
 
 export const slugify = (str) =>
     str
@@ -45,4 +58,8 @@ async function upload(file, pathPrefix) {
 
 export function uploadLetterAttachment(file, projectId) {
     return upload(file, `letters/${projectId}`);
+}
+
+export function uploadCaseAttachment(file, projectId, unitId) {
+    return upload(file, `Case/${projectId}/${unitId}`);
 }
