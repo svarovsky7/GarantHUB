@@ -34,14 +34,14 @@ export default function LitigationStageForm({
   };
 
   return (
-    <Dialog open onClose={onCancel} fullWidth maxWidth="xs" data-oid=":7q_n1a">
-      <form onSubmit={handleSave} data-oid="250bna8">
-        <DialogTitle data-oid="vtp.thp">
+    <Dialog open onClose={onCancel} fullWidth maxWidth="xs">
+      <form onSubmit={handleSave}>
+        <DialogTitle>
           {initialData.id ? "Редактировать стадию" : "Новая стадия"}
         </DialogTitle>
 
-        <DialogContent dividers data-oid="qigbtgz">
-          <Stack spacing={2} data-oid="i_3u255">
+        <DialogContent dividers>
+          <Stack spacing={2}>
             <TextField
               label="Название"
               value={name}
@@ -50,16 +50,13 @@ export default function LitigationStageForm({
               required
               size="small"
               fullWidth
-              data-oid="fhy7cqs"
             />
           </Stack>
         </DialogContent>
 
-        <DialogActions data-oid="dlfk4tg">
-          <Button onClick={onCancel} data-oid="4-_3kwh">
-            Отмена
-          </Button>
-          <Button type="submit" variant="contained" data-oid="8jejipq">
+        <DialogActions>
+          <Button onClick={onCancel}>Отмена</Button>
+          <Button type="submit" variant="contained">
             Сохранить
           </Button>
         </DialogActions>

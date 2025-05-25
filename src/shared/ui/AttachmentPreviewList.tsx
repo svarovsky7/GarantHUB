@@ -49,37 +49,32 @@ export default function AttachmentPreviewList({
   if (!remoteFiles.length && !newFiles.length) return null;
 
   return (
-    <List dense sx={{ mt: 1 }} data-oid="5yeycr1">
+    <List dense sx={{ mt: 1 }}>
       {remoteFiles.map((f) => (
         <ListItem
           key={`r-${f.id}`}
           secondaryAction={
             <>
-              <Tooltip title="Скачать" data-oid="vvnt2ay">
-                <IconButton
-                  onClick={() => forceDownload(f.id, f.path, f.name)}
-                  data-oid="-8ai_kz"
-                >
-                  <DownloadIcon data-oid="wl6e25f" />
+              <Tooltip title="Скачать">
+                <IconButton onClick={() => forceDownload(f.id, f.path, f.name)}>
+                  <DownloadIcon />
                 </IconButton>
               </Tooltip>
-              <Tooltip title="Удалить" data-oid="-tda5wj">
+              <Tooltip title="Удалить">
                 <IconButton
                   onClick={() => onRemoveRemote?.(f.id)}
                   sx={{ ml: 0.5 }}
-                  data-oid="h8oneg7"
                 >
-                  <DeleteIcon data-oid="z5rxqkq" />
+                  <DeleteIcon />
                 </IconButton>
               </Tooltip>
             </>
           }
-          data-oid="-.46box"
         >
-          <ListItemIcon data-oid="58s8a50">
-            <FileIcon data-oid=".wt3r2f" />
+          <ListItemIcon>
+            <FileIcon />
           </ListItemIcon>
-          <ListItemText primary={f.name} data-oid="bv46sa-" />
+          <ListItemText primary={f.name} />
         </ListItem>
       ))}
 
@@ -88,36 +83,25 @@ export default function AttachmentPreviewList({
           key={`n-${i}`}
           secondaryAction={
             <>
-              <Tooltip title="Скачать" data-oid="rf56.jc">
-                <IconButton
-                  component="a"
-                  href={objUrls[i]}
-                  download={f.name}
-                  data-oid="gd0:fu8"
-                >
-                  <DownloadIcon data-oid="zfdysu:" />
+              <Tooltip title="Скачать">
+                <IconButton component="a" href={objUrls[i]} download={f.name}>
+                  <DownloadIcon />
                 </IconButton>
               </Tooltip>
-              <Tooltip title="Удалить" data-oid="a8lmx.b">
-                <IconButton
-                  onClick={() => onRemoveNew?.(i)}
-                  sx={{ ml: 0.5 }}
-                  data-oid="w8af_ht"
-                >
-                  <DeleteIcon data-oid="-wxz3mb" />
+              <Tooltip title="Удалить">
+                <IconButton onClick={() => onRemoveNew?.(i)} sx={{ ml: 0.5 }}>
+                  <DeleteIcon />
                 </IconButton>
               </Tooltip>
             </>
           }
-          data-oid="43c6i5j"
         >
-          <ListItemIcon data-oid="z_ucfbd">
-            <FileIcon data-oid="z_68thv" />
+          <ListItemIcon>
+            <FileIcon />
           </ListItemIcon>
           <ListItemText
             primary={f.name}
             secondary={`${(f.size / 1024).toFixed(1)} KB`}
-            data-oid="0v2xkma"
           />
         </ListItem>
       ))}

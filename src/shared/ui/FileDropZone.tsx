@@ -30,15 +30,11 @@ export default function FileDropZone({ onFiles }) {
         transition: ".2s",
         "&:hover": { borderColor: "primary.main" },
       }}
-      data-oid="9sviigb"
     >
-      <input {...getInputProps()} data-oid="u.cp94-" />
-      <CloudUploadOutlinedIcon
-        sx={{ fontSize: 42, mb: 1 }}
-        data-oid="fpfb9-c"
-      />
+      <input {...getInputProps()} />
+      <CloudUploadOutlinedIcon sx={{ fontSize: 42, mb: 1 }} />
 
-      <Typography fontWeight={600} data-oid="63hfio0">
+      <Typography fontWeight={600}>
         Нажмите для загрузки или перетащите файлы
       </Typography>
     </Box>

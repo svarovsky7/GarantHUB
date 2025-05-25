@@ -35,81 +35,48 @@ export default function TicketsFilters({ options, onChange }) {
         gap: 12,
         alignItems: "end",
       }}
-      data-oid=":ow1_-k"
     >
-      <Form.Item name="period" label="Период" data-oid="05iz:r7">
-        <RangePicker
-          format="DD.MM.YYYY"
-          style={{ width: "100%" }}
-          data-oid="b.n.vg6"
-        />
+      <Form.Item name="period" label="Период">
+        <RangePicker format="DD.MM.YYYY" style={{ width: "100%" }} />
       </Form.Item>
-      <Form.Item name="project" label="Проект" data-oid="3hg:cz7">
-        <Select allowClear options={options.projects} data-oid="5svce4y" />
+      <Form.Item name="project" label="Проект">
+        <Select allowClear options={options.projects} />
       </Form.Item>
-      <Form.Item name="unit" label="Объект" data-oid="-pto0ot">
-        <Select allowClear options={options.units} data-oid="i_g:46b" />
+      <Form.Item name="unit" label="Объект">
+        <Select allowClear options={options.units} />
       </Form.Item>
-      <Form.Item name="warranty" label="Гарантия" data-oid="z8n34mg">
-        <Select allowClear data-oid="w.xtto8">
-          <Option value="yes" data-oid="5yq64r6">
-            Да
-          </Option>
-          <Option value="no" data-oid="82bmp0j">
-            Нет
-          </Option>
+      <Form.Item name="warranty" label="Гарантия">
+        <Select allowClear>
+          <Option value="yes">Да</Option>
+          <Option value="no">Нет</Option>
         </Select>
       </Form.Item>
-      <Form.Item name="status" label="Статусы" data-oid="k15gi_g">
-        <Select allowClear options={options.statuses} data-oid="sdsd10l" />
+      <Form.Item name="status" label="Статусы">
+        <Select allowClear options={options.statuses} />
       </Form.Item>
-      <Form.Item name="type" label="Тип замечания" data-oid="v:r13lz">
-        <Select allowClear options={options.types} data-oid=".7on6ku" />
+      <Form.Item name="type" label="Тип замечания">
+        <Select allowClear options={options.types} />
       </Form.Item>
-      <Form.Item name="author" label="Кем добавлено" data-oid="w3j9v8x">
-        <Select allowClear options={options.authors} data-oid="d5djtym" />
+      <Form.Item name="author" label="Кем добавлено">
+        <Select allowClear options={options.authors} />
       </Form.Item>
-      <Form.Item name="ticketId" label="Номер замечания" data-oid="9io3ze7">
-        <Input placeholder="ID" data-oid=":w_ycw5" />
+      <Form.Item name="ticketId" label="Номер замечания">
+        <Input placeholder="ID" />
       </Form.Item>
-      <Form.Item
-        name="requestNo"
-        label="№ заявки от Заказчика"
-        data-oid="dnx.ncb"
-      >
-        <Input data-oid="ht8.w9v" />
+      <Form.Item name="requestNo" label="№ заявки от Заказчика">
+        <Input />
       </Form.Item>
-      <Form.Item
-        name="requestPeriod"
-        label="Дата регистрации заявки"
-        data-oid="3_7ep93"
-      >
-        <RangePicker
-          format="DD.MM.YYYY"
-          style={{ width: "100%" }}
-          data-oid="md-hq-6"
-        />
+      <Form.Item name="requestPeriod" label="Дата регистрации заявки">
+        <RangePicker format="DD.MM.YYYY" style={{ width: "100%" }} />
       </Form.Item>
-      <Form.Item
-        name="days"
-        label="Прошло дней с Даты получения"
-        data-oid="gppiib4"
-      >
-        <Input data-oid="k5-k105" />
+      <Form.Item name="days" label="Прошло дней с Даты получения">
+        <Input />
       </Form.Item>
-      <Form.Item
-        name="responsible"
-        label="Ответственный инженер"
-        data-oid="cp1q57w"
-      >
-        <Select
-          allowClear
-          options={options.responsibleEngineers}
-          data-oid="36ep0wv"
-        />
+      <Form.Item name="responsible" label="Ответственный инженер">
+        <Select allowClear options={options.responsibleEngineers} />
       </Form.Item>
-      <Form.Item data-oid="b2cl35t">
-        <Button onClick={reset} block data-oid="hitdtt:">
+      <Form.Item>
+        <Button onClick={reset} block>
           Сброс
         </Button>
       </Form.Item>

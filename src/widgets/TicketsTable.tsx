@@ -154,9 +154,7 @@ export default function TicketsTable({ tickets, filters, loading }) {
         width: 140,
         sorter: (a, b) => a.statusName.localeCompare(b.statusName),
         render: (_, row) => (
-          <Tag color={row.statusColor || "default"} data-oid="vghceii">
-            {row.statusName}
-          </Tag>
+          <Tag color={row.statusColor || "default"}>{row.statusName}</Tag>
         ),
       },
       {
@@ -167,21 +165,15 @@ export default function TicketsTable({ tickets, filters, loading }) {
         render: (v) =>
           v ? (
             <Tag
-              icon={
-                <CheckCircleTwoTone twoToneColor="#52c41a" data-oid="b-pr7j7" />
-              }
+              icon={<CheckCircleTwoTone twoToneColor="#52c41a" />}
               color="success"
-              data-oid="2clmer5"
             >
               Да
             </Tag>
           ) : (
             <Tag
-              icon={
-                <CloseCircleTwoTone twoToneColor="#eb2f96" data-oid="8z_7u2." />
-              }
+              icon={<CloseCircleTwoTone twoToneColor="#eb2f96" />}
               color="default"
-              data-oid="-8xomt1"
             >
               Нет
             </Tag>
@@ -207,14 +199,13 @@ export default function TicketsTable({ tickets, filters, loading }) {
         key: "actions",
         width: 100,
         render: (_, record) => (
-          <Space size="middle" data-oid="9oli_6r">
-            <Tooltip title="Редактировать" data-oid="g9m92uy">
+          <Space size="middle">
+            <Tooltip title="Редактировать">
               <Button
                 size="small"
                 type="text"
-                icon={<EditOutlined data-oid="z0aojn4" />}
+                icon={<EditOutlined />}
                 onClick={() => navigate(`/tickets/${record.id}/edit`)}
-                data-oid="x54hyix"
               />
             </Tooltip>
             <Popconfirm
@@ -226,15 +217,13 @@ export default function TicketsTable({ tickets, filters, loading }) {
                 message.success("Удалено");
               }}
               disabled={isPending}
-              data-oid="zg.5y_q"
             >
               <Button
                 size="small"
                 type="text"
                 danger
-                icon={<DeleteOutlined data-oid="kvk7g_." />}
+                icon={<DeleteOutlined />}
                 loading={isPending}
-                data-oid="sg3w2vz"
               />
             </Popconfirm>
           </Space>
@@ -260,8 +249,7 @@ export default function TicketsTable({ tickets, filters, loading }) {
     [tickets, filters],
   );
 
-  if (loading)
-    return <Skeleton active paragraph={{ rows: 6 }} data-oid="rbbw1zf" />;
+  if (loading) return <Skeleton active paragraph={{ rows: 6 }} />;
 
   return (
     <Table
@@ -271,7 +259,6 @@ export default function TicketsTable({ tickets, filters, loading }) {
       loading={isPending}
       pagination={{ pageSize: 25, showSizeChanger: true }}
       size="middle"
-      data-oid="pz457dv"
     />
   );
 }

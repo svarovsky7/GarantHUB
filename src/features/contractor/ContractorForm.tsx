@@ -71,8 +71,8 @@ export default function ContractorForm({
   const fields = ["name", "inn", "phone", "email", "comment"] as const;
 
   return (
-    <form onSubmit={handleSubmit(submit)} noValidate data-oid="0r4e-yp">
-      <Stack spacing={2} sx={{ maxWidth: 480 }} data-oid=":va_wd_">
+    <form onSubmit={handleSubmit(submit)} noValidate data-oid="5.e52j6">
+      <Stack spacing={2} sx={{ maxWidth: 480 }} data-oid="l54:pc3">
         {fields.map((f) => (
           <Controller
             key={f}
@@ -95,10 +95,10 @@ export default function ContractorForm({
                 autoComplete="off"
                 error={!!errors[f]}
                 helperText={errors[f]?.message}
-                data-oid="p39.s4."
+                data-oid="8azvuoq"
               />
             )}
-            data-oid="m5ffapy"
+            data-oid="cxyjjli"
           />
         ))}
 
@@ -106,16 +106,16 @@ export default function ContractorForm({
           direction="row"
           spacing={2}
           justifyContent="flex-end"
-          data-oid="zn6gcbo"
+          data-oid="x7ee_fo"
         >
           <Button
             type="submit"
             variant="contained"
             disabled={isSubmitting}
             startIcon={
-              isSubmitting && <CircularProgress size={18} data-oid="chr6oaf" />
+              isSubmitting && <CircularProgress size={18} data-oid="ttajpdb" />
             }
-            data-oid="mml_34m"
+            data-oid="7:7s:98"
           >
             Сохранить
           </Button>
@@ -123,7 +123,7 @@ export default function ContractorForm({
             variant="text"
             onClick={onCancel}
             disabled={isSubmitting}
-            data-oid="jtkvssb"
+            data-oid="lr-tvy5"
           >
             Отмена
           </Button>

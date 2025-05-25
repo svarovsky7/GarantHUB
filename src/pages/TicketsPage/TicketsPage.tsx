@@ -59,25 +59,21 @@ export default function TicketsPage() {
   }, [ticketsWithNames]);
 
   return (
-    <Box sx={{ width: "100%", px: 0, py: 3 }} data-oid="xgskkih">
+    <Box sx={{ width: "100%", px: 0, py: 3 }}>
       <Stack
         direction={{ xs: "column", md: "row" }}
         justifyContent="space-between"
         alignItems={{ xs: "flex-start", md: "center" }}
         spacing={2}
         sx={{ mb: 3 }}
-        data-oid="26b9pux"
       >
-        <Typography variant="h4" data-oid="bh_qc5y">
-          Список замечаний
-        </Typography>
+        <Typography variant="h4">Список замечаний</Typography>
 
         <Button
           component={RouterLink}
           to="/tickets/new"
           variant="contained"
-          startIcon={<AddIcon data-oid="liuaza-" />}
-          data-oid="i8g5_ev"
+          startIcon={<AddIcon />}
         >
           Новое замечание
         </Button>
@@ -86,13 +82,8 @@ export default function TicketsPage() {
       <Paper
         elevation={3}
         sx={{ p: { xs: 2, sm: 3, md: 4 }, mb: 3, borderRadius: 2 }}
-        data-oid="29vdet-"
       >
-        <TicketsFilters
-          options={options}
-          onChange={setFilters}
-          data-oid="j-:l604"
-        />
+        <TicketsFilters options={options} onChange={setFilters} />
       </Paper>
 
       <Paper
@@ -102,10 +93,9 @@ export default function TicketsPage() {
           borderRadius: 2,
           overflow: "visible",
         }}
-        data-oid="nuk8jv8"
       >
         {error ? (
-          <Alert severity="error" sx={{ mt: 2 }} data-oid="xwp46so">
+          <Alert severity="error" sx={{ mt: 2 }}>
             {error.message}
           </Alert>
         ) : (
@@ -113,7 +103,6 @@ export default function TicketsPage() {
             tickets={ticketsWithNames}
             filters={filters}
             loading={isLoading}
-            data-oid="hkg:gqk"
           />
         )}
       </Paper>

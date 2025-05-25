@@ -23,36 +23,32 @@ const DashboardPage = () => {
       enqueueSnackbar("Ошибка загрузки проектов.", { variant: "error" });
   }, [error, enqueueSnackbar]);
 
-  if (isPending)
-    return <Skeleton variant="rectangular" height={160} data-oid="x--n:zh" />;
+  if (isPending) return <Skeleton variant="rectangular" height={160} />;
 
   return (
-    <Stack spacing={3} data-oid="-8-e.v9">
-      <Paper sx={{ p: 3 }} data-oid="rftx3eb">
-        <Typography variant="h5" gutterBottom data-oid="sxr9ms6">
+    <Stack spacing={3}>
+      <Paper sx={{ p: 3 }}>
+        <Typography variant="h5" gutterBottom>
           Добро пожаловать, {profile?.name ?? profile?.email ?? "гость"}!
         </Typography>
-        <Typography data-oid="6-bfgrr">
-          Всего проектов: {projects.length}
-        </Typography>
+        <Typography>Всего проектов: {projects.length}</Typography>
       </Paper>
 
-      <Paper sx={{ p: 3 }} data-oid="rjosfxf">
-        <Typography variant="h6" gutterBottom data-oid="kgr-2il">
+      <Paper sx={{ p: 3 }}>
+        <Typography variant="h6" gutterBottom>
           Список проектов
         </Typography>
         {projects.length === 0 ? (
-          <Typography data-oid=".kpnhu9">Проектов пока нет.</Typography>
+          <Typography>Проектов пока нет.</Typography>
         ) : (
-          <List dense data-oid="eqse0r4">
+          <List dense>
             {projects.map((p) => (
               <ListItemButton
                 key={p.id}
                 component={RouterLink}
                 to={`/units?project=${p.id}`}
-                data-oid="473.7k6"
               >
-                <ListItemText primary={p.name} data-oid="qmji_.a" />
+                <ListItemText primary={p.name} />
               </ListItemButton>
             ))}
           </List>

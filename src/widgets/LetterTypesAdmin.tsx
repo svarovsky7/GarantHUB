@@ -54,21 +54,14 @@ export default function LetterTypesAdmin({
   };
 
   return (
-    <Stack spacing={2} data-oid="n0d-8zf">
-      <Stack
-        direction="row"
-        justifyContent="space-between"
-        alignItems="center"
-        data-oid="3avd2i5"
-      >
-        <span style={{ fontWeight: 600, fontSize: 18 }} data-oid="-dkea3m">
-          Типы писем
-        </span>
-        <Button onClick={handleAdd} variant="contained" data-oid="z1.t9v_">
+    <Stack spacing={2}>
+      <Stack direction="row" justifyContent="space-between" alignItems="center">
+        <span style={{ fontWeight: 600, fontSize: 18 }}>Типы писем</span>
+        <Button onClick={handleAdd} variant="contained">
           Добавить
         </Button>
       </Stack>
-      <div style={{ width: "100%" }} data-oid="_qf6exz">
+      <div style={{ width: "100%" }}>
         <DataGrid
           rows={data}
           columns={[
@@ -80,22 +73,20 @@ export default function LetterTypesAdmin({
               width: 100,
               sortable: false,
               renderCell: (params) => (
-                <Stack direction="row" spacing={0} data-oid="zt01:6e">
+                <Stack direction="row" spacing={0}>
                   <IconButton
                     size="small"
                     onClick={() => handleEdit(params.row)}
                     color="primary"
-                    data-oid="hz-y7.:"
                   >
-                    <EditIcon fontSize="small" data-oid="tf4rt2p" />
+                    <EditIcon fontSize="small" />
                   </IconButton>
                   <IconButton
                     size="small"
                     color="error"
                     onClick={() => handleDelete(params.row.id)}
-                    data-oid="9caw006"
                   >
-                    <DeleteIcon fontSize="small" data-oid="ias53bh" />
+                    <DeleteIcon fontSize="small" />
                   </IconButton>
                 </Stack>
               ),
@@ -106,7 +97,6 @@ export default function LetterTypesAdmin({
           disableRowSelectionOnClick
           initialState={{ pagination: { paginationModel: { pageSize } } }}
           pageSizeOptions={rowsPerPageOptions}
-          data-oid="xrlo15r"
         />
       </div>
       <Dialog
@@ -114,17 +104,15 @@ export default function LetterTypesAdmin({
         onClose={() => setOpen(false)}
         maxWidth="xs"
         fullWidth
-        data-oid="vbwxrg6"
       >
-        <DialogTitle data-oid="j:g4fo1">
+        <DialogTitle>
           {editRow ? "Редактировать тип" : "Добавить тип"}
         </DialogTitle>
-        <DialogContent data-oid="_:36.1z">
+        <DialogContent>
           <LetterTypeForm
             initialData={editRow}
             onSubmit={handleSubmit}
             onCancel={() => setOpen(false)}
-            data-oid="h__5wop"
           />
         </DialogContent>
       </Dialog>

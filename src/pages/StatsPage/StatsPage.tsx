@@ -23,29 +23,25 @@ export default function StatsPage() {
   }, [tickets]);
 
   if (loadingProjects || loadingTickets) {
-    return <CircularProgress data-oid="vu7rjr-" />;
+    return <CircularProgress />;
   }
 
   return (
-    <Paper sx={{ p: 3 }} data-oid="hpqw32s">
-      <Typography variant="h4" gutterBottom data-oid="7rxjnl3">
+    <Paper sx={{ p: 3 }}>
+      <Typography variant="h4" gutterBottom>
         Статистика
       </Typography>
-      <Typography data-oid=".zp_urh">
-        Количество проектов: {projects.length}
-      </Typography>
-      <Typography sx={{ mt: 1 }} data-oid="e0g2:bg">
-        Всего замечаний: {totalTickets}
-      </Typography>
-      <Box sx={{ mt: 2 }} data-oid="hcynarv">
+      <Typography>Количество проектов: {projects.length}</Typography>
+      <Typography sx={{ mt: 1 }}>Всего замечаний: {totalTickets}</Typography>
+      <Box sx={{ mt: 2 }}>
         {statuses.map((st) => (
-          <Typography key={st.id} data-oid="9h_6632">
+          <Typography key={st.id}>
             {st.name}: {byStatus[st.id] ?? 0}
           </Typography>
         ))}
       </Box>
       {error && (
-        <Typography color="error" sx={{ mt: 2 }} data-oid="6zpmpep">
+        <Typography color="error" sx={{ mt: 2 }}>
           {error.message}
         </Typography>
       )}

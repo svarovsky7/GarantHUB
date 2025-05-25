@@ -67,17 +67,17 @@ export default function App() {
   return (
     <Box
       sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
-      data-oid="2y2e_y8"
+      data-oid=":l5ev61"
     >
-      {!hideNavBar && <NavBar data-oid="n7rr2vl" />}
-      {!hideNavBar && <Toolbar data-oid="1f-y7q7" />}{" "}
+      {!hideNavBar && <NavBar data-oid="fyv_m5h" />}
+      {!hideNavBar && <Toolbar data-oid="xulvruw" />}{" "}
       {/* Компенсация высоты фиксированной шапки */}
       <Container
         maxWidth={false}
         sx={{ flexGrow: 1, py: 3 }}
-        data-oid="58qztm:"
+        data-oid=".x4sl-p"
       >
-        <AppRouter data-oid="nlkhm26" />
+        <AppRouter data-oid="ozp552w" />
       </Container>
     </Box>
   );

@@ -149,7 +149,7 @@ export default function ProjectStructurePage() {
   ).length;
 
   return (
-    <Stack spacing={4} alignItems="flex-start" data-oid="ydr.j3o">
+    <Stack spacing={4} alignItems="flex-start">
       {/* Шапка */}
       <Box
         sx={{
@@ -165,7 +165,6 @@ export default function ProjectStructurePage() {
           mx: "auto",
           fontFamily: 'Roboto, "Segoe UI", Arial, sans-serif',
         }}
-        data-oid="w39pds7"
       >
         <Typography
           variant="h5"
@@ -176,7 +175,6 @@ export default function ProjectStructurePage() {
             fontFamily: "inherit",
             letterSpacing: "-0.5px",
           }}
-          data-oid="75lre5r"
         >
           Шахматка квартир
         </Typography>
@@ -187,17 +185,10 @@ export default function ProjectStructurePage() {
             flexWrap: "wrap",
             gap: 3,
           }}
-          data-oid=":q:vqpk"
         >
           {/* Проект */}
-          <Box
-            sx={{ display: "flex", alignItems: "center", gap: 1 }}
-            data-oid="i5hrv40"
-          >
-            <Typography
-              sx={{ fontWeight: 500, fontSize: 16 }}
-              data-oid="828piwv"
-            >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Typography sx={{ fontWeight: 500, fontSize: 16 }}>
               Проект:
             </Typography>
             <FormControl
@@ -211,7 +202,6 @@ export default function ProjectStructurePage() {
                 },
                 "& .MuiSelect-icon": { color: "#fff" },
               }}
-              data-oid="ecdmqud"
             >
               <Select
                 value={projectId || ""}
@@ -223,10 +213,9 @@ export default function ProjectStructurePage() {
                   color: "#fff",
                   fontWeight: 600,
                 }}
-                data-oid="0nsl_rw"
               >
                 {projects.map((prj) => (
-                  <MenuItem key={prj.id} value={prj.id} data-oid="epwzk5w">
+                  <MenuItem key={prj.id} value={prj.id}>
                     {prj.name}
                   </MenuItem>
                 ))}
@@ -246,21 +235,14 @@ export default function ProjectStructurePage() {
                   minWidth: 32,
                   textAlign: "center",
                 }}
-                data-oid="nafg06_"
               >
                 ({countProject} {pluralObj(countProject)})
               </Box>
             )}
           </Box>
           {/* Корпус */}
-          <Box
-            sx={{ display: "flex", alignItems: "center", gap: 1 }}
-            data-oid="acnwpyl"
-          >
-            <Typography
-              sx={{ fontWeight: 500, fontSize: 16 }}
-              data-oid=".f3:r5d"
-            >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Typography sx={{ fontWeight: 500, fontSize: 16 }}>
               Корпус:
             </Typography>
             <FormControl
@@ -274,7 +256,6 @@ export default function ProjectStructurePage() {
                 },
                 "& .MuiSelect-icon": { color: "#fff" },
               }}
-              data-oid="oz4v8xn"
             >
               <Select
                 value={building || ""}
@@ -287,10 +268,9 @@ export default function ProjectStructurePage() {
                   fontWeight: 600,
                 }}
                 disabled={!buildings.length}
-                data-oid="k4ku3nv"
               >
                 {buildings.map((bld) => (
-                  <MenuItem key={bld} value={bld} data-oid="6ed2b.5">
+                  <MenuItem key={bld} value={bld}>
                     {bld}
                   </MenuItem>
                 ))}
@@ -310,7 +290,6 @@ export default function ProjectStructurePage() {
                   minWidth: 32,
                   textAlign: "center",
                 }}
-                data-oid="nw64xk:"
               >
                 ({countBuilding} {pluralObj(countBuilding)})
               </Box>
@@ -324,9 +303,8 @@ export default function ProjectStructurePage() {
                 ml: 0.5,
                 p: "6px",
               }}
-              data-oid="ooe-hcv"
             >
-              <AddIcon fontSize="small" data-oid="-7:x3og" />
+              <AddIcon fontSize="small" />
             </IconButton>
             {Boolean(building) && (
               <IconButton
@@ -337,19 +315,15 @@ export default function ProjectStructurePage() {
                   opacity: 0.88,
                   p: "6px",
                 }}
-                data-oid="k7sbqyq"
               >
-                <DeleteOutline fontSize="small" data-oid="ds:imks" />
+                <DeleteOutline fontSize="small" />
               </IconButton>
             )}
           </Box>
         </Box>
         {/* Секция отдельной строкой с небольшим отступом */}
-        <Box
-          sx={{ display: "flex", alignItems: "center", gap: 1, mt: 2 }}
-          data-oid="bmdr-gb"
-        >
-          <Typography sx={{ fontWeight: 500, fontSize: 16 }} data-oid="zq73k4n">
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 2 }}>
+          <Typography sx={{ fontWeight: 500, fontSize: 16 }}>
             Секция:
           </Typography>
           <FormControl
@@ -363,7 +337,6 @@ export default function ProjectStructurePage() {
               },
               "& .MuiSelect-icon": { color: "#fff" },
             }}
-            data-oid="rlnu0b6"
           >
             <Select
               value={section}
@@ -376,13 +349,10 @@ export default function ProjectStructurePage() {
                 fontWeight: 600,
               }}
               disabled={!sections.length}
-              data-oid="wxyo-wv"
             >
-              <MenuItem value="" data-oid="czaj6h4">
-                Не выбрана
-              </MenuItem>
+              <MenuItem value="">Не выбрана</MenuItem>
               {sections.map((sec) => (
-                <MenuItem key={sec} value={sec} data-oid="z868n6d">
+                <MenuItem key={sec} value={sec}>
                   {sec}
                 </MenuItem>
               ))}
@@ -402,7 +372,6 @@ export default function ProjectStructurePage() {
                 minWidth: 32,
                 textAlign: "center",
               }}
-              data-oid=":psaofe"
             >
               ({countSection} {pluralObj(countSection)})
             </Box>
@@ -416,9 +385,8 @@ export default function ProjectStructurePage() {
               ml: 0.5,
               p: "6px",
             }}
-            data-oid="jndl:51"
           >
-            <AddIcon fontSize="small" data-oid=":ygg.4p" />
+            <AddIcon fontSize="small" />
           </IconButton>
           {Boolean(section) && (
             <IconButton
@@ -429,9 +397,8 @@ export default function ProjectStructurePage() {
                 opacity: 0.88,
                 p: "6px",
               }}
-              data-oid="x9cg-5:"
             >
-              <DeleteOutline fontSize="small" data-oid="9b1rag9" />
+              <DeleteOutline fontSize="small" />
             </IconButton>
           )}
         </Box>
@@ -445,34 +412,26 @@ export default function ProjectStructurePage() {
         projectId={projectId}
         building={building}
         afterAdd={refreshAll}
-        data-oid="--k:uf5"
       />
 
       {/* Диалог подтверждения удаления */}
-      <Dialog
-        open={confirmDialog.open}
-        onClose={handleCancelDelete}
-        data-oid="4bbj6:."
-      >
-        <DialogTitle data-oid="4a5:jlf">
+      <Dialog open={confirmDialog.open} onClose={handleCancelDelete}>
+        <DialogTitle>
           {confirmDialog.type === "building"
             ? `Удалить корпус "${confirmDialog.value}"?`
             : `Удалить секцию "${confirmDialog.value}"?`}
         </DialogTitle>
-        <DialogContent data-oid="xvpi2xe">
+        <DialogContent>
           {confirmDialog.type === "building"
             ? "Все секции и квартиры корпуса будут удалены безвозвратно."
             : "Все квартиры секции будут удалены безвозвратно."}
         </DialogContent>
-        <DialogActions data-oid="2:zauad">
-          <Button onClick={handleCancelDelete} data-oid="zg2w_0c">
-            Отмена
-          </Button>
+        <DialogActions>
+          <Button onClick={handleCancelDelete}>Отмена</Button>
           <Button
             color="error"
             variant="contained"
             onClick={handleConfirmDelete}
-            data-oid="bn362_7"
           >
             Удалить
           </Button>
@@ -482,7 +441,6 @@ export default function ProjectStructurePage() {
       {!buildings.length && (
         <Box
           sx={{ color: "#1976d2", mt: 4, mb: 3, fontSize: 17, fontWeight: 600 }}
-          data-oid="y3dzv1s"
         >
           Сначала создайте корпус
         </Box>
@@ -494,7 +452,6 @@ export default function ProjectStructurePage() {
           building={building}
           section={section}
           onUnitsChanged={setUnits}
-          data-oid="xc08v39"
         />
       )}
     </Stack>

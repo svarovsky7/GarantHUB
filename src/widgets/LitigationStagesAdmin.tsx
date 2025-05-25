@@ -50,15 +50,14 @@ export default function LitigationStagesAdmin({
       getActions: ({ row }) => [
         <GridActionsCellItem
           key="edit"
-          icon={<EditIcon data-oid="93xi-l5" />}
+          icon={<EditIcon />}
           label="Редактировать"
           onClick={() => setModal({ mode: "edit", data: row })}
-          data-oid="mcawuu3"
         />,
 
         <GridActionsCellItem
           key="del"
-          icon={<DeleteIcon color="error" data-oid="ffpzkqa" />}
+          icon={<DeleteIcon color="error" />}
           label="Удалить"
           onClick={() => {
             if (!window.confirm("Удалить стадию?")) return;
@@ -67,7 +66,6 @@ export default function LitigationStagesAdmin({
               onError: (e) => notify.error(e.message),
             });
           }}
-          data-oid="sbeochm"
         />,
       ],
     },
@@ -92,7 +90,6 @@ export default function LitigationStagesAdmin({
             })
           }
           onCancel={close}
-          data-oid="2a41dra"
         />
       )}
 
@@ -109,7 +106,6 @@ export default function LitigationStagesAdmin({
             )
           }
           onCancel={close}
-          data-oid="t9mfdap"
         />
       )}
 
@@ -121,7 +117,6 @@ export default function LitigationStagesAdmin({
         onAdd={() => setModal({ mode: "add" })}
         pageSize={pageSize}
         rowsPerPageOptions={rowsPerPageOptions}
-        data-oid=":9ob.h7"
       />
     </>
   );

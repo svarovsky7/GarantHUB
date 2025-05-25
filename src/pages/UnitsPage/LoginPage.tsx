@@ -42,10 +42,10 @@ export default function LoginPage() {
   };
 
   return (
-    <Paper sx={{ p: 4, maxWidth: 380, mx: "auto", mt: 6 }} data-oid=".e6l:g5">
-      <form onSubmit={login} data-oid="orajb4f">
-        <Stack spacing={2} data-oid="297r_01">
-          <Typography variant="h5" align="center" data-oid="dcq:o1t">
+    <Paper sx={{ p: 4, maxWidth: 380, mx: "auto", mt: 6 }}>
+      <form onSubmit={login}>
+        <Stack spacing={2}>
+          <Typography variant="h5" align="center">
             Вход
           </Typography>
 
@@ -56,7 +56,6 @@ export default function LoginPage() {
             onChange={(e) => setEmail(e.target.value)}
             required
             fullWidth
-            data-oid="uxbgsei"
           />
 
           <TextField
@@ -66,25 +65,21 @@ export default function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
             required
             fullWidth
-            data-oid="ozxu8wc"
           />
 
           <Button
             type="submit"
             variant="contained"
             disabled={loading}
-            startIcon={
-              loading && <CircularProgress size={18} data-oid="v4f97m:" />
-            }
-            data-oid="ctjdw.1"
+            startIcon={loading && <CircularProgress size={18} />}
             className="bg-[#D24619]"
           >
             Войти
           </Button>
 
-          <Typography align="center" variant="body2" data-oid="bho8l_i">
+          <Typography align="center" variant="body2">
             Нет аккаунта?{" "}
-            <Link component={RouterLink} to="/register" data-oid="9swgyha">
+            <Link component={RouterLink} to="/register">
               Регистрация
             </Link>
           </Typography>

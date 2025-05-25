@@ -33,13 +33,13 @@ export default function TicketStatusForm({ initialData, onSubmit, onCancel }) {
   });
 
   return (
-    <Dialog open onClose={onCancel} fullWidth maxWidth="sm" data-oid="kb2n.2u">
-      <DialogTitle data-oid="6ou6:_8">
+    <Dialog open onClose={onCancel} fullWidth maxWidth="sm">
+      <DialogTitle>
         {initialData ? "Редактировать статус" : "Создать статус"}
       </DialogTitle>
 
-      <DialogContent dividers data-oid="g0z-sq1">
-        <Stack spacing={2} sx={{ mt: 1 }} data-oid="fkl3fj_">
+      <DialogContent dividers>
+        <Stack spacing={2} sx={{ mt: 1 }}>
           <Controller
             name="name"
             control={control}
@@ -52,10 +52,8 @@ export default function TicketStatusForm({ initialData, onSubmit, onCancel }) {
                 helperText={fieldState.error?.message}
                 fullWidth
                 autoFocus
-                data-oid="alhf.bj"
               />
             )}
-            data-oid="4u_ltub"
           />
 
           <Controller
@@ -68,10 +66,8 @@ export default function TicketStatusForm({ initialData, onSubmit, onCancel }) {
                 multiline
                 rows={3}
                 fullWidth
-                data-oid="u9slr01"
               />
             )}
-            data-oid="pkdv2m4"
           />
 
           <Controller
@@ -85,23 +81,18 @@ export default function TicketStatusForm({ initialData, onSubmit, onCancel }) {
                 type="color"
                 fullWidth
                 inputProps={{ style: { height: 48, padding: 0 } }}
-                data-oid="xn_isv:"
               />
             )}
-            data-oid="y1fpu-z"
           />
         </Stack>
       </DialogContent>
 
-      <DialogActions data-oid="wt7zh:4">
-        <Button onClick={onCancel} data-oid="l72lnr0">
-          Отмена
-        </Button>
+      <DialogActions>
+        <Button onClick={onCancel}>Отмена</Button>
         <Button
           variant="contained"
           onClick={handleSubmit(onSubmit)}
           disabled={isSubmitting}
-          data-oid="291hljj"
         >
           Сохранить
         </Button>

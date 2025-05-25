@@ -51,11 +51,11 @@ export default function AddBuildingOrSectionDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} data-oid="0.pz735">
-      <DialogTitle data-oid="xt.w95g">
+    <Dialog open={open} onClose={onClose} data-oid="n_2rafr">
+      <DialogTitle data-oid="7nlr6k1">
         {type === "building" ? "Добавить корпус" : "Добавить секцию"}
       </DialogTitle>
-      <DialogContent data-oid="xhotonp">
+      <DialogContent data-oid="vk6n.jk">
         <TextField
           autoFocus
           fullWidth
@@ -63,18 +63,18 @@ export default function AddBuildingOrSectionDialog({
           value={value}
           onChange={(e) => setValue(e.target.value)}
           sx={{ mt: 1 }}
-          data-oid="3f1o5pw"
+          data-oid="jnk:nhf"
         />
       </DialogContent>
-      <DialogActions data-oid="75s3tr1">
-        <Button onClick={onClose} data-oid="shr0-7p">
+      <DialogActions data-oid="vx2hi9u">
+        <Button onClick={onClose} data-oid="odjk6cm">
           Отмена
         </Button>
         <Button
           onClick={handleConfirm}
           variant="contained"
           disabled={!value.trim()}
-          data-oid="secba6y"
+          data-oid="ml1q2-a"
         >
           Добавить
         </Button>

@@ -31,10 +31,10 @@ const NavBar = () => {
   };
 
   return (
-    <AppBar position="fixed" data-oid="cqdp.ks">
+    <AppBar position="fixed">
       {" "}
       {/* Исправлено: fixed вместо static */}
-      <Toolbar sx={{ gap: 2 }} data-oid="p6h3yh0">
+      <Toolbar sx={{ gap: 2 }}>
         {/* --- логотип --- */}
         <Typography
           variant="h6"
@@ -42,65 +42,34 @@ const NavBar = () => {
           to="/"
           color="inherit"
           sx={{ textDecoration: "none" }}
-          data-oid="5v9ja8b"
         >
           Garantie&nbsp;Hub
         </Typography>
 
         {/* --- навигация --- */}
-        <Button
-          color="inherit"
-          component={RouterLink}
-          to="/structure"
-          data-oid="pdv31:4"
-        >
+        <Button color="inherit" component={RouterLink} to="/structure">
           Структура&nbsp;проекта
         </Button>
-        <Button
-          color="inherit"
-          component={RouterLink}
-          to="/stats"
-          data-oid="8_9qx-u"
-        >
+        <Button color="inherit" component={RouterLink} to="/stats">
           Статистика
         </Button>
-        <Button
-          color="inherit"
-          component={RouterLink}
-          to="/tickets/new"
-          data-oid="db7j852"
-        >
+        <Button color="inherit" component={RouterLink} to="/tickets/new">
           Добавить&nbsp;замечание
         </Button>
-        <Button
-          color="inherit"
-          component={RouterLink}
-          to="/tickets"
-          data-oid="h2_lls3"
-        >
+        <Button color="inherit" component={RouterLink} to="/tickets">
           Таблица&nbsp;замечаний
         </Button>
-        <Button
-          color="inherit"
-          component={RouterLink}
-          to="/court-cases"
-          data-oid="pr504.h"
-        >
+        <Button color="inherit" component={RouterLink} to="/court-cases">
           Судебные&nbsp;дела
         </Button>
         {profile?.role === "ADMIN" && (
-          <Button
-            color="inherit"
-            component={RouterLink}
-            to="/admin"
-            data-oid="o:lfrz_"
-          >
+          <Button color="inherit" component={RouterLink} to="/admin">
             Администрирование
           </Button>
         )}
 
         {/* гибкий отступ – прижимаем профиль к правому краю */}
-        <span style={{ flexGrow: 1 }} data-oid="wq38-h6" />
+        <span style={{ flexGrow: 1 }} />
 
         {/* --- профиль + выбор проекта + выход --- */}
         {profile && (
@@ -111,17 +80,16 @@ const NavBar = () => {
               alignItems: "flex-end",
               mr: 2,
             }}
-            data-oid="7td:8ey"
           >
-            <Typography variant="body2" data-oid="ykbw4t4">
+            <Typography variant="body2">
               {profile.name ?? profile.email}
             </Typography>
 
             {/* выпадающий список проектов */}
             {isPending ? (
-              <CircularProgress size={14} sx={{ mt: 0.5 }} data-oid="buplsqg" />
+              <CircularProgress size={14} sx={{ mt: 0.5 }} />
             ) : (
-              <FormControl variant="standard" size="small" data-oid="_7zzzyl">
+              <FormControl variant="standard" size="small">
                 <Select
                   value={profile.project_id ?? ""}
                   onChange={(e) => setProjectId(e.target.value)}
@@ -134,10 +102,9 @@ const NavBar = () => {
                       borderBottomColor: "rgba(255,255,255,0.5)",
                     },
                   }}
-                  data-oid="ff3xvar"
                 >
                   {projects.map((p) => (
-                    <MenuItem key={p.id} value={p.id} data-oid="xcs8-y6">
+                    <MenuItem key={p.id} value={p.id}>
                       {p.name}
                     </MenuItem>
                   ))}
@@ -148,12 +115,7 @@ const NavBar = () => {
         )}
 
         {profile && (
-          <Button
-            color="inherit"
-            startIcon={<LogoutIcon data-oid="qcc94tc" />}
-            onClick={logout}
-            data-oid="ez22td."
-          >
+          <Button color="inherit" startIcon={<LogoutIcon />} onClick={logout}>
             Выйти
           </Button>
         )}

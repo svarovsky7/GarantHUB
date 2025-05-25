@@ -27,8 +27,8 @@ export default function TicketTypeForm({ initialData, onSubmit, onCancel }) {
   });
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate data-oid="zakwb00">
-      <Stack spacing={2} sx={{ minWidth: 320 }} data-oid="4_bn:wp">
+    <form onSubmit={handleSubmit(onSubmit)} noValidate>
+      <Stack spacing={2} sx={{ minWidth: 320 }}>
         <Controller
           name="name"
           control={control}
@@ -42,30 +42,19 @@ export default function TicketTypeForm({ initialData, onSubmit, onCancel }) {
               error={!!fieldState.error}
               helperText={fieldState.error?.message}
               autoFocus
-              data-oid="fugvyb4"
             />
           )}
-          data-oid="t740p2q"
         />
 
-        <DialogActions sx={{ px: 0 }} data-oid="hq:678s">
-          <Button onClick={onCancel} data-oid="v_8lyp6">
-            Отмена
-          </Button>
+        <DialogActions sx={{ px: 0 }}>
+          <Button onClick={onCancel}>Отмена</Button>
           <Button
             type="submit"
             variant="contained"
             disabled={isSubmitting}
             startIcon={
-              isSubmitting && (
-                <CircularProgress
-                  size={18}
-                  color="inherit"
-                  data-oid="kxius71"
-                />
-              )
+              isSubmitting && <CircularProgress size={18} color="inherit" />
             }
-            data-oid="34z9mm-"
           >
             Сохранить
           </Button>

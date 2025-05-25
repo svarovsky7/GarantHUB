@@ -136,7 +136,6 @@ export default function UnitsMatrix({
           justifyContent: "center",
           minHeight: 100,
         }}
-        data-oid="k8ndm0."
       >
         <IconButton
           onClick={handleAddFloor}
@@ -150,14 +149,10 @@ export default function UnitsMatrix({
             fontSize: 38,
             "&:hover": { background: "#e3ecfb" },
           }}
-          data-oid="sg:z3he"
         >
-          <AddIcon fontSize="inherit" data-oid="quzkjkp" />
+          <AddIcon fontSize="inherit" />
         </IconButton>
-        <Box
-          sx={{ color: "#888", mt: 1, fontSize: 15, fontWeight: 500 }}
-          data-oid="c9koqbt"
-        >
+        <Box sx={{ color: "#888", mt: 1, fontSize: 15, fontWeight: 500 }}>
           Добавить первый этаж
         </Box>
       </Box>
@@ -176,7 +171,6 @@ export default function UnitsMatrix({
           mt: 2,
           gap: 1,
         }}
-        data-oid="s5p9kjq"
       >
         {floors.map((floor) => (
           <FloorCell
@@ -190,7 +184,6 @@ export default function UnitsMatrix({
             onEditUnit={handleEditUnit}
             onDeleteUnit={handleDeleteUnit}
             onUnitClick={handleUnitAction}
-            data-oid="n7-y_3p"
           />
         ))}
         {/* Кнопка добавления нового этажа */}
@@ -201,7 +194,6 @@ export default function UnitsMatrix({
             alignItems: "center",
             mt: 1,
           }}
-          data-oid="hmsfq-d"
         >
           <Box
             sx={{
@@ -215,7 +207,6 @@ export default function UnitsMatrix({
               borderRadius: "12px 0 0 12px",
               background: "#fff",
             }}
-            data-oid="otdyeas"
           >
             <IconButton
               onClick={handleAddFloor}
@@ -227,9 +218,8 @@ export default function UnitsMatrix({
                 color: "#1976d2",
                 "&:hover": { background: "#e3ecfb" },
               }}
-              data-oid="ef352ce"
             >
-              <AddIcon fontSize="large" data-oid="3oghgj2" />
+              <AddIcon fontSize="large" />
             </IconButton>
           </Box>
         </Box>
@@ -240,14 +230,13 @@ export default function UnitsMatrix({
           onClose={() =>
             setEditDialog({ open: false, type: "", target: null, value: "" })
           }
-          data-oid=".h855ie"
         >
-          <DialogTitle data-oid="mt9s9:b">
+          <DialogTitle>
             {editDialog.type === "floor"
               ? "Переименовать этаж"
               : "Переименовать квартиру"}
           </DialogTitle>
-          <DialogContent data-oid="8nyeqry">
+          <DialogContent>
             <TextField
               fullWidth
               autoFocus
@@ -256,10 +245,9 @@ export default function UnitsMatrix({
                 setEditDialog({ ...editDialog, value: e.target.value })
               }
               sx={{ mt: 2 }}
-              data-oid="lanoa-8"
             />
           </DialogContent>
-          <DialogActions data-oid="io2k0g.">
+          <DialogActions>
             <Button
               onClick={() =>
                 setEditDialog({
@@ -269,15 +257,10 @@ export default function UnitsMatrix({
                   value: "",
                 })
               }
-              data-oid="t96ako2"
             >
               Отмена
             </Button>
-            <Button
-              variant="contained"
-              onClick={handleSaveEdit}
-              data-oid="y_g_x06"
-            >
+            <Button variant="contained" onClick={handleSaveEdit}>
               Сохранить
             </Button>
           </DialogActions>
@@ -287,24 +270,22 @@ export default function UnitsMatrix({
           onClose={() =>
             setConfirmDialog({ open: false, type: "", target: null })
           }
-          data-oid="3sq9ku-"
         >
-          <DialogTitle data-oid="u-:kpzq">
+          <DialogTitle>
             {confirmDialog.type === "floor"
               ? `Удалить этаж "${confirmDialog.target}" со всеми квартирами?`
               : `Удалить квартиру "${confirmDialog.target?.name}"?`}
           </DialogTitle>
-          <DialogContent data-oid="s7_iaw2">
+          <DialogContent>
             {confirmDialog.type === "floor"
               ? "Все квартиры на этом этаже будут удалены безвозвратно."
               : "Квартира будет удалена безвозвратно."}
           </DialogContent>
-          <DialogActions data-oid="0.61eq6">
+          <DialogActions>
             <Button
               onClick={() =>
                 setConfirmDialog({ open: false, type: "", target: null })
               }
-              data-oid="wt8eebn"
             >
               Отмена
             </Button>
@@ -312,7 +293,6 @@ export default function UnitsMatrix({
               color="error"
               variant="contained"
               onClick={handleConfirmDelete}
-              data-oid="tbemt_c"
             >
               Удалить
             </Button>
@@ -329,18 +309,13 @@ export default function UnitsMatrix({
         PaperProps={{
           sx: { minWidth: 540, maxWidth: 900 },
         }}
-        data-oid="juyi6_7"
       >
-        <DialogTitle
-          sx={{ fontWeight: 600, textAlign: "center" }}
-          data-oid="wcse6es"
-        >
+        <DialogTitle sx={{ fontWeight: 600, textAlign: "center" }}>
           Квартира {actionDialog.unit?.name}
         </DialogTitle>
         {!actionDialog.action && (
           <DialogContent
             sx={{ display: "flex", flexDirection: "column", gap: 2 }}
-            data-oid="p1hvufk"
           >
             <Button
               variant="contained"
@@ -349,17 +324,10 @@ export default function UnitsMatrix({
               onClick={() =>
                 setActionDialog((ad) => ({ ...ad, action: "ticket" }))
               }
-              data-oid="ihmf4ul"
             >
               Добавить замечание
             </Button>
-            <Button
-              variant="outlined"
-              color="secondary"
-              fullWidth
-              disabled
-              data-oid="zus4j72"
-            >
+            <Button variant="outlined" color="secondary" fullWidth disabled>
               Добавить судебное дело
             </Button>
             <Button
@@ -369,30 +337,20 @@ export default function UnitsMatrix({
               onClick={() =>
                 setActionDialog((ad) => ({ ...ad, action: "tickets" }))
               }
-              data-oid="qsm51wq"
             >
               Посмотреть все замечания
             </Button>
-            <Button
-              variant="text"
-              color="info"
-              fullWidth
-              disabled
-              data-oid="a51l3wg"
-            >
+            <Button variant="text" color="info" fullWidth disabled>
               Показать историю
             </Button>
           </DialogContent>
         )}
         {actionDialog.action === "ticket" && (
-          <DialogContent sx={{ p: 0, pt: 2 }} data-oid="bdm-zfq">
-            <Typography
-              sx={{ fontWeight: 500, textAlign: "center", mb: 2 }}
-              data-oid="4p161bz"
-            >
+          <DialogContent sx={{ p: 0, pt: 2 }}>
+            <Typography sx={{ fontWeight: 500, textAlign: "center", mb: 2 }}>
               Добавление замечания для квартиры {actionDialog.unit?.name}
             </Typography>
-            <Box sx={{ px: 2, pb: 2 }} data-oid="i165.zl">
+            <Box sx={{ px: 2, pb: 2 }}>
               <TicketForm
                 embedded
                 initialUnitId={actionDialog.unit?.id}
@@ -404,7 +362,6 @@ export default function UnitsMatrix({
                   setActionDialog({ open: false, unit: null, action: "" })
                 }
                 ticketId={undefined}
-                data-oid="h5e_0am"
               />
             </Box>
           </DialogContent>
@@ -416,7 +373,6 @@ export default function UnitsMatrix({
         unit={actionDialog.unit}
         onClose={() => setActionDialog({ open: false, unit: null, action: "" })}
         onTicketsChanged={fetchUnits}
-        data-oid="j88yt1h"
       />
     </>
   );

@@ -83,10 +83,10 @@ export default function RegisterPage() {
   }
 
   return (
-    <Paper sx={{ p: 4, maxWidth: 440, mx: "auto", mt: 6 }} data-oid="0krfknp">
-      <form onSubmit={signUp} noValidate data-oid="s9vckp2">
-        <Stack spacing={2} data-oid=":xl8zpw">
-          <Typography variant="h5" align="center" data-oid="cxc-:nf">
+    <Paper sx={{ p: 4, maxWidth: 440, mx: "auto", mt: 6 }}>
+      <form onSubmit={signUp} noValidate>
+        <Stack spacing={2}>
+          <Typography variant="h5" align="center">
             Регистрация
           </Typography>
 
@@ -96,7 +96,6 @@ export default function RegisterPage() {
             onChange={(e) => setFullName(e.target.value)}
             required
             fullWidth
-            data-oid="2q4cwpx"
           />
 
           <TextField
@@ -106,7 +105,6 @@ export default function RegisterPage() {
             onChange={(e) => setEmail(e.target.value)}
             required
             fullWidth
-            data-oid="lld.4ep"
           />
 
           <TextField
@@ -117,17 +115,13 @@ export default function RegisterPage() {
             required
             inputProps={{ minLength: 6 }}
             fullWidth
-            data-oid="cq7nct-"
           />
 
           {/* Проект ОБЯЗАТЕЛЕН */}
           {projLoad ? (
-            <Skeleton variant="rectangular" height={56} data-oid="roca91h" />
+            <Skeleton variant="rectangular" height={56} />
           ) : (
-            <Tooltip
-              title="Без проекта регистрация невозможна"
-              data-oid="m9rs9kf"
-            >
+            <Tooltip title="Без проекта регистрация невозможна">
               <Autocomplete
                 options={projects}
                 loading={projLoad}
@@ -140,10 +134,8 @@ export default function RegisterPage() {
                     label="Проект"
                     placeholder="Выберите проект"
                     required
-                    data-oid="kme3qgc"
                   />
                 )}
-                data-oid="hu4:2f3"
               />
             </Tooltip>
           )}
@@ -152,17 +144,14 @@ export default function RegisterPage() {
             variant="contained"
             type="submit"
             disabled={loading}
-            startIcon={
-              loading && <CircularProgress size={18} data-oid="4e.ex30" />
-            }
-            data-oid="i5dxkmz"
+            startIcon={loading && <CircularProgress size={18} />}
           >
             Создать аккаунт
           </Button>
 
-          <Typography align="center" variant="body2" data-oid="oqduf07">
+          <Typography align="center" variant="body2">
             Уже зарегистрированы?{" "}
-            <Link component={RouterLink} to="/login" data-oid="4zpe2gs">
+            <Link component={RouterLink} to="/login">
               Войти
             </Link>
           </Typography>

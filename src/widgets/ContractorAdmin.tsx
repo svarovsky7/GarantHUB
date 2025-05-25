@@ -64,15 +64,14 @@ export default function ContractorAdmin({
       getActions: ({ row }) => [
         <GridActionsCellItem
           key="edit"
-          icon={<EditIcon data-oid="_4uuj75" />}
+          icon={<EditIcon />}
           label="Редактировать"
           onClick={() => setModal({ mode: "edit", data: row })}
-          data-oid="xsg.nmo"
         />,
 
         <GridActionsCellItem
           key="del"
-          icon={<DeleteIcon color="error" data-oid="2igrj6l" />}
+          icon={<DeleteIcon color="error" />}
           label="Удалить"
           onClick={() => {
             if (!window.confirm("Удалить контрагента?")) return;
@@ -81,7 +80,6 @@ export default function ContractorAdmin({
               onError: (e) => notify.error(e.message),
             });
           }}
-          data-oid="681pexo"
         />,
       ],
     },
@@ -99,7 +97,6 @@ export default function ContractorAdmin({
         <ContractorForm
           onSuccess={() => ok("Компания создана")}
           onCancel={close}
-          data-oid="g.y_kn5"
         />
       )}
 
@@ -108,7 +105,6 @@ export default function ContractorAdmin({
           initialData={modal.data}
           onSuccess={() => ok("Компания обновлена")}
           onCancel={close}
-          data-oid="ei8-gqs"
         />
       )}
 
@@ -120,7 +116,6 @@ export default function ContractorAdmin({
         onAdd={() => setModal({ mode: "add" })}
         pageSize={pageSize}
         rowsPerPageOptions={rowsPerPageOptions}
-        data-oid="f-f2q33"
       />
     </>
   );

@@ -54,21 +54,14 @@ export default function PartyTypesAdmin({
   };
 
   return (
-    <Stack spacing={2} data-oid="uuyu4-p">
-      <Stack
-        direction="row"
-        justifyContent="space-between"
-        alignItems="center"
-        data-oid="0gkv1pk"
-      >
-        <span style={{ fontWeight: 600, fontSize: 18 }} data-oid="usei69v">
-          Типы участников
-        </span>
-        <Button onClick={handleAdd} variant="contained" data-oid="0i:dved">
+    <Stack spacing={2}>
+      <Stack direction="row" justifyContent="space-between" alignItems="center">
+        <span style={{ fontWeight: 600, fontSize: 18 }}>Типы участников</span>
+        <Button onClick={handleAdd} variant="contained">
           Добавить
         </Button>
       </Stack>
-      <div style={{ width: "100%" }} data-oid="blq8sqf">
+      <div style={{ width: "100%" }}>
         <DataGrid
           rows={data}
           columns={[
@@ -80,22 +73,20 @@ export default function PartyTypesAdmin({
               width: 100,
               sortable: false,
               renderCell: (params) => (
-                <Stack direction="row" spacing={0} data-oid="j:y2scm">
+                <Stack direction="row" spacing={0}>
                   <IconButton
                     size="small"
                     onClick={() => handleEdit(params.row)}
                     color="primary"
-                    data-oid="54o33r9"
                   >
-                    <EditIcon fontSize="small" data-oid="iwicj89" />
+                    <EditIcon fontSize="small" />
                   </IconButton>
                   <IconButton
                     size="small"
                     color="error"
                     onClick={() => handleDelete(params.row.id)}
-                    data-oid="ehk12na"
                   >
-                    <DeleteIcon fontSize="small" data-oid="e1_rgzk" />
+                    <DeleteIcon fontSize="small" />
                   </IconButton>
                 </Stack>
               ),
@@ -106,7 +97,6 @@ export default function PartyTypesAdmin({
           disableRowSelectionOnClick
           initialState={{ pagination: { paginationModel: { pageSize } } }}
           pageSizeOptions={rowsPerPageOptions}
-          data-oid="q6km142"
         />
       </div>
       <Dialog
@@ -114,17 +104,15 @@ export default function PartyTypesAdmin({
         onClose={() => setOpen(false)}
         maxWidth="xs"
         fullWidth
-        data-oid="c1zhbor"
       >
-        <DialogTitle data-oid="wjg4f4n">
+        <DialogTitle>
           {editRow ? "Редактировать тип" : "Добавить тип"}
         </DialogTitle>
-        <DialogContent data-oid="9uypqtk">
+        <DialogContent>
           <PartyTypeForm
             initialData={editRow}
             onSubmit={handleSubmit}
             onCancel={() => setOpen(false)}
-            data-oid="gbel30n"
           />
         </DialogContent>
       </Dialog>

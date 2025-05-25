@@ -57,21 +57,14 @@ export default function TicketStatusesAdmin({
   };
 
   return (
-    <Stack spacing={2} data-oid="77sb1ax">
-      <Stack
-        direction="row"
-        justifyContent="space-between"
-        alignItems="center"
-        data-oid="d7kf8d2"
-      >
-        <span style={{ fontWeight: 600, fontSize: 18 }} data-oid="dpoy7zl">
-          Статусы замечаний
-        </span>
-        <Button onClick={handleAdd} variant="contained" data-oid="7qy.s0_">
+    <Stack spacing={2}>
+      <Stack direction="row" justifyContent="space-between" alignItems="center">
+        <span style={{ fontWeight: 600, fontSize: 18 }}>Статусы замечаний</span>
+        <Button onClick={handleAdd} variant="contained">
           Добавить
         </Button>
       </Stack>
-      <div style={{ width: "100%" }} data-oid="mj3g6fj">
+      <div style={{ width: "100%" }}>
         <DataGrid
           rows={data}
           columns={[
@@ -91,7 +84,6 @@ export default function TicketStatusesAdmin({
                     border: "1px solid #bbb",
                     borderRadius: 0.5,
                   }}
-                  data-oid="_1i7m_x"
                 />
               ),
             },
@@ -101,22 +93,20 @@ export default function TicketStatusesAdmin({
               width: 100,
               sortable: false,
               renderCell: (params) => (
-                <Stack direction="row" spacing={0} data-oid="ki-46_w">
+                <Stack direction="row" spacing={0}>
                   <IconButton
                     size="small"
                     onClick={() => handleEdit(params.row)}
                     color="primary"
-                    data-oid="qxrzgm_"
                   >
-                    <EditIcon fontSize="small" data-oid="kr5f_1v" />
+                    <EditIcon fontSize="small" />
                   </IconButton>
                   <IconButton
                     size="small"
                     color="error"
                     onClick={() => handleDelete(params.row.id)}
-                    data-oid="0.x-750"
                   >
-                    <DeleteIcon fontSize="small" data-oid="724npt:" />
+                    <DeleteIcon fontSize="small" />
                   </IconButton>
                 </Stack>
               ),
@@ -127,7 +117,6 @@ export default function TicketStatusesAdmin({
           disableRowSelectionOnClick
           initialState={{ pagination: { paginationModel: { pageSize } } }}
           pageSizeOptions={rowsPerPageOptions}
-          data-oid="v0my.z9"
         />
       </div>
       <Dialog
@@ -135,17 +124,15 @@ export default function TicketStatusesAdmin({
         onClose={() => setOpen(false)}
         maxWidth="sm"
         fullWidth
-        data-oid="hq6xfba"
       >
-        <DialogTitle data-oid="00r16d:">
+        <DialogTitle>
           {editRow ? "Редактировать статус" : "Добавить статус"}
         </DialogTitle>
-        <DialogContent data-oid="35vy3qw">
+        <DialogContent>
           <TicketStatusForm
             initialData={editRow}
             onSubmit={handleSubmit}
             onCancel={() => setOpen(false)}
-            data-oid="qz8j0km"
           />
         </DialogContent>
       </Dialog>

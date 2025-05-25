@@ -27,7 +27,7 @@ export default function FloorCell({
         alignItems: "center",
         mb: 1,
       }}
-      data-oid="3qk64g4"
+      data-oid="0y4bqhw"
     >
       <Box
         sx={{
@@ -48,9 +48,9 @@ export default function FloorCell({
           boxShadow: "0 1px 6px 0 #E3ECFB",
           mr: 1,
         }}
-        data-oid="mqutt-0"
+        data-oid="b2o0a0s"
       >
-        <span data-oid="w:p0.bi">{floor}</span>
+        <span data-oid="79w3yn4">{floor}</span>
         <Box
           sx={{
             display: "flex",
@@ -61,9 +61,9 @@ export default function FloorCell({
             top: 6,
             zIndex: 2,
           }}
-          data-oid=":f:m4-y"
+          data-oid="ry3jcl1"
         >
-          <Tooltip title="Переименовать этаж" data-oid="6b0aqoa">
+          <Tooltip title="Переименовать этаж" data-oid="w.a3.uu">
             <IconButton
               size="small"
               sx={{
@@ -74,12 +74,12 @@ export default function FloorCell({
                 "&:hover": { color: FLOOR_COLOR, background: "#e3ecfb" },
               }}
               onClick={() => onEditFloor?.(floor)}
-              data-oid="jfobjod"
+              data-oid="71wt38n"
             >
-              <EditOutlined fontSize="small" data-oid="vxz3pfz" />
+              <EditOutlined fontSize="small" data-oid="8_:7xt7" />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Удалить этаж" data-oid="f.jdi33">
+          <Tooltip title="Удалить этаж" data-oid="o_1zkbh">
             <IconButton
               size="small"
               sx={{
@@ -90,9 +90,9 @@ export default function FloorCell({
                 "&:hover": { color: "#e53935", background: "#fdeaea" },
               }}
               onClick={() => onDeleteFloor?.(floor)}
-              data-oid="6hs5m8i"
+              data-oid="ha0rwke"
             >
-              <DeleteOutline fontSize="small" data-oid="r1aki2n" />
+              <DeleteOutline fontSize="small" data-oid="b.aximf" />
             </IconButton>
           </Tooltip>
         </Box>
@@ -105,7 +105,7 @@ export default function FloorCell({
           onEditUnit={() => onEditUnit?.(unit)}
           onDeleteUnit={() => onDeleteUnit?.(unit)}
           onAction={() => onUnitClick?.(unit)}
-          data-oid="0c0357c"
+          data-oid="acj2jio"
         />
       ))}
       <Box
@@ -124,12 +124,12 @@ export default function FloorCell({
           "&:hover": { bgcolor: "#e3ecfb" },
         }}
         onClick={onAddUnit}
-        data-oid="hbg86t1"
+        data-oid="kxqr4ho"
       >
         <AddIcon
           fontSize="medium"
           sx={{ color: FLOOR_COLOR }}
-          data-oid="d51n7hi"
+          data-oid="62-0u9e"
         />
       </Box>
     </Box>

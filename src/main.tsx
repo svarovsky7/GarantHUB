@@ -7,12 +7,12 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { queryClient } from "@/shared/config/queryClient";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode data-oid="1on4tqp">
-    <QueryClientProvider client={queryClient} data-oid="wbf.rtk">
-      <BrowserRouter data-oid="bj59asp">
-        <App data-oid="z9suoo-" />
+  <React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <App />
       </BrowserRouter>
-      <ReactQueryDevtools initialIsOpen={false} data-oid="fcpiyun" />
+      <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   </React.StrictMode>,
 );

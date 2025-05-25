@@ -24,14 +24,14 @@ function RequireAuth({ children }) {
 
   if (profile === undefined) {
     return (
-      <Backdrop open data-oid="_b.0km4">
-        <CircularProgress size={48} data-oid="fzms4oz" />
+      <Backdrop open data-oid="adbphkk">
+        <CircularProgress size={48} data-oid="1i1455r" />
       </Backdrop>
     );
   }
 
   if (profile === null) {
-    return <Navigate to="/login" replace data-oid="hu3popo" />;
+    return <Navigate to="/login" replace data-oid="bnm5-em" />;
   }
 
   return children;
@@ -42,96 +42,96 @@ function RequireAuth({ children }) {
  *  -------------------------------------------------------------------------*/
 export default function AppRouter() {
   return (
-    <Routes data-oid="ruw1tw2">
+    <Routes data-oid="t89l.33">
       {/* Публичные -------------------------------------------------------*/}
       <Route
         path="/login"
-        element={<LoginPage data-oid=":2eb:5p" />}
-        data-oid=":1kpe3a"
+        element={<LoginPage data-oid="dom6-ww" />}
+        data-oid="p7gyp9j"
       />
 
       <Route
         path="/register"
-        element={<RegisterPage data-oid="fpkfpf1" />}
-        data-oid="ws8fl2:"
+        element={<RegisterPage data-oid="mmc85_1" />}
+        data-oid="0xz52qw"
       />
 
       {/* Приватные -------------------------------------------------------*/}
       <Route
         path="/"
         element={
-          <RequireAuth data-oid="rptqkuu">
-            <DashboardPage data-oid="o15tqwc" />
+          <RequireAuth data-oid="_5wblnc">
+            <DashboardPage data-oid="mxrre2o" />
           </RequireAuth>
         }
-        data-oid="v691dn1"
+        data-oid="9:ob6bt"
       />
 
       <Route
         path="/tickets"
         element={
-          <RequireAuth data-oid="chl-fj_">
-            <TicketsPage data-oid="tqdbckz" />
+          <RequireAuth data-oid="nq-xmuj">
+            <TicketsPage data-oid="i99wikm" />
           </RequireAuth>
         }
-        data-oid="t9:n-i1"
+        data-oid="41m4r4h"
       />
 
       <Route
         path="/structure"
         element={
-          <RequireAuth data-oid="lu7tggr">
-            <ProjectStructurePage data-oid="v3k.:x-" />
+          <RequireAuth data-oid="khk60eg">
+            <ProjectStructurePage data-oid="1zm.al-" />
           </RequireAuth>
         }
-        data-oid="er:7idy"
+        data-oid="50g:286"
       />
 
       <Route
         path="/tickets/new"
         element={
-          <RequireAuth data-oid="s48ld_t">
-            <TicketFormPage data-oid=":.dupuk" />
+          <RequireAuth data-oid="6_l.ukc">
+            <TicketFormPage data-oid="-r80421" />
           </RequireAuth>
         }
-        data-oid="071rhxx"
+        data-oid="c6h.k1h"
       />
 
       <Route
         path="/tickets/:ticketId/edit"
         element={
-          <RequireAuth data-oid="6-8jbfm">
-            <TicketFormPage data-oid="xdn478x" />
+          <RequireAuth data-oid="jw4mt.4">
+            <TicketFormPage data-oid="r9pp63u" />
           </RequireAuth>
         }
-        data-oid="7i4eigl"
+        data-oid="rdc_d7y"
       />
 
       <Route
         path="/stats"
         element={
-          <RequireAuth data-oid="cg7xsi8">
-            <StatsPage data-oid="1tc7jco" />
+          <RequireAuth data-oid="h4w-vcl">
+            <StatsPage data-oid="w2703fq" />
           </RequireAuth>
         }
-        data-oid=":za0y8-"
+        data-oid="9csi_3u"
       />
 
       <Route
         path="/admin"
         element={
-          <RequireAuth data-oid="x8a6w87">
-            <AdminPage data-oid="st0-nba" />
+          <RequireAuth data-oid="f0b3w1p">
+            <AdminPage data-oid="rs22ppe" />
           </RequireAuth>
         }
-        data-oid="uaq5me0"
+        data-oid="b1_45g_"
       />
 
       {/* Fallback --------------------------------------------------------*/}
       <Route
         path="*"
-        element={<Navigate to="/" replace data-oid="f33ncow" />}
-        data-oid="7u9kbc."
+        element={<Navigate to="/" replace data-oid="6dl71c8" />}
+        data-oid="r4:ccsh"
       />
     </Routes>
   );

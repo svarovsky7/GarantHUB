@@ -18,8 +18,8 @@ export default function LetterTypeForm({ initialData, onSubmit, onCancel }) {
   });
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate data-oid="qlhsm:y">
-      <Stack spacing={2} sx={{ minWidth: 320 }} data-oid="4uq:fo8">
+    <form onSubmit={handleSubmit(onSubmit)} noValidate data-oid="zzxen8z">
+      <Stack spacing={2} sx={{ minWidth: 320 }} data-oid="jrj.-d0">
         <Controller
           name="name"
           control={control}
@@ -33,14 +33,14 @@ export default function LetterTypeForm({ initialData, onSubmit, onCancel }) {
               error={!!fieldState.error}
               helperText={fieldState.error?.message}
               autoFocus
-              data-oid="6o0k08k"
+              data-oid="z4ukg6h"
             />
           )}
-          data-oid="z9j7kyj"
+          data-oid="aw0e902"
         />
 
-        <DialogActions sx={{ px: 0 }} data-oid="r9_zpt-">
-          <Button onClick={onCancel} data-oid="bual-5k">
+        <DialogActions sx={{ px: 0 }} data-oid="jzxoh6t">
+          <Button onClick={onCancel} data-oid="qfxeb_z">
             Отмена
           </Button>
           <Button
@@ -52,11 +52,11 @@ export default function LetterTypeForm({ initialData, onSubmit, onCancel }) {
                 <CircularProgress
                   size={18}
                   color="inherit"
-                  data-oid="rjx61_0"
+                  data-oid="50pl38j"
                 />
               )
             }
-            data-oid="h4k059i"
+            data-oid="qnwysle"
           >
             Сохранить
           </Button>

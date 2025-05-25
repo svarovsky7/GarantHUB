@@ -238,9 +238,8 @@ export default function TicketForm({
           alignItems: "center",
           minHeight: 240,
         }}
-        data-oid="-dgbo4."
       >
-        <CircularProgress data-oid="wez2ntw" />
+        <CircularProgress />
       </Box>
     );
   }
@@ -253,11 +252,8 @@ export default function TicketForm({
           alignItems: "center",
           justifyContent: "center",
         }}
-        data-oid="v_p8e_j"
       >
-        <Alert severity="warning" data-oid="svkk:_c">
-          Авторизуйтесь для создания замечаний.
-        </Alert>
+        <Alert severity="warning">Авторизуйтесь для создания замечаний.</Alert>
       </Box>
     );
   }
@@ -270,9 +266,8 @@ export default function TicketForm({
           alignItems: "center",
           justifyContent: "center",
         }}
-        data-oid="615fmo6"
       >
-        <Alert severity="warning" data-oid="lw3f17q">
+        <Alert severity="warning">
           Не выбран проект. Выберите проект в верхней панели.
         </Alert>
       </Box>
@@ -296,22 +291,17 @@ export default function TicketForm({
           alignItems: "center",
           minHeight: 240,
         }}
-        data-oid=".h8x6y0"
       >
-        <CircularProgress data-oid="2fhrj5u" />
+        <CircularProgress />
       </Box>
     );
   }
 
   return (
-    <LocalizationProvider
-      dateAdapter={AdapterDayjs}
-      adapterLocale="ru"
-      data-oid="1e8ve9b"
-    >
-      <FormProvider {...methods} data-oid="98k-.7c">
-        <form onSubmit={handleSubmit(onSubmit)} noValidate data-oid="pql95ie">
-          <Stack spacing={3} data-oid="0k3piqi">
+    <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ru">
+      <FormProvider {...methods}>
+        <form onSubmit={handleSubmit(onSubmit)} noValidate>
+          <Stack spacing={3}>
             {/* Unit */}
             <Controller
               name="unit_id"
@@ -335,21 +325,16 @@ export default function TicketForm({
                         ...params.InputProps,
                         endAdornment: (
                           <>
-                            {isLoadingUnits && (
-                              <CircularProgress size={20} data-oid="2i2f8pn" />
-                            )}
+                            {isLoadingUnits && <CircularProgress size={20} />}
                             {params.InputProps.endAdornment}
                           </>
                         ),
                       }}
-                      data-oid="47yj-vo"
                     />
                   )}
                   disabled={Boolean(embedded && initialUnitId)}
-                  data-oid="bvkd8-e"
                 />
               )}
-              data-oid="p04eidp"
             />
 
             <Controller
@@ -362,10 +347,8 @@ export default function TicketForm({
                   fullWidth
                   error={!!error}
                   helperText={error?.message}
-                  data-oid="3nz9.q5"
                 />
               )}
-              data-oid="-t:e10k"
             />
 
             <Controller
@@ -383,10 +366,8 @@ export default function TicketForm({
                       helperText: error?.message,
                     },
                   }}
-                  data-oid="vd2ridt"
                 />
               )}
-              data-oid="lc5a29e"
             />
 
             <Controller
@@ -405,14 +386,12 @@ export default function TicketForm({
                       helperText: error?.message,
                     },
                   }}
-                  data-oid="3wlm80w"
                 />
               )}
-              data-oid="ieg8dk5"
             />
 
             {/* Быстрые чипы прибавления дней */}
-            <Box sx={{ display: "flex", gap: 1, mt: 0.5 }} data-oid="odmqe:4">
+            <Box sx={{ display: "flex", gap: 1, mt: 0.5 }}>
               {[10, 30, 45].map((days) => (
                 <Chip
                   key={days}
@@ -427,7 +406,6 @@ export default function TicketForm({
                     }
                   }}
                   sx={{ fontWeight: 500 }}
-                  data-oid="a.1sqwy"
                 />
               ))}
             </Box>
@@ -446,10 +424,8 @@ export default function TicketForm({
                       helperText: error?.message,
                     },
                   }}
-                  data-oid="rv75ubi"
                 />
               )}
-              data-oid=":wu_r_4"
             />
 
             <Controller
@@ -476,19 +452,16 @@ export default function TicketForm({
                         endAdornment: (
                           <>
                             {isLoadingStatuses && (
-                              <CircularProgress size={20} data-oid="iqi99wr" />
+                              <CircularProgress size={20} />
                             )}
                             {params.InputProps.endAdornment}
                           </>
                         ),
                       }}
-                      data-oid="z04flcr"
                     />
                   )}
-                  data-oid="a:wiz_b"
                 />
               )}
-              data-oid="04-ogbu"
             />
 
             <Controller
@@ -514,43 +487,31 @@ export default function TicketForm({
                         ...params.InputProps,
                         endAdornment: (
                           <>
-                            {isLoadingTypes && (
-                              <CircularProgress size={20} data-oid="yxk4q7v" />
-                            )}
+                            {isLoadingTypes && <CircularProgress size={20} />}
                             {params.InputProps.endAdornment}
                           </>
                         ),
                       }}
-                      data-oid="sufs5p2"
                     />
                   )}
-                  data-oid="gs8czr_"
                 />
               )}
-              data-oid="b72pdmm"
             />
 
             <Controller
               name="is_warranty"
               control={control}
               render={({ field }) => (
-                <Stack
-                  direction="row"
-                  alignItems="center"
-                  spacing={1}
-                  data-oid="ei2lv_."
-                >
-                  <Switch {...field} checked={field.value} data-oid="es8sl5y" />
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <Switch {...field} checked={field.value} />
                   <Typography
                     onClick={() => field.onChange(!field.value)}
                     sx={{ cursor: "pointer" }}
-                    data-oid="q_hkn7-"
                   >
                     Гарантийный случай
                   </Typography>
                 </Stack>
               )}
-              data-oid="29rwcwj"
             />
 
             <Controller
@@ -564,10 +525,8 @@ export default function TicketForm({
                   fullWidth
                   error={!!error}
                   helperText={error?.message}
-                  data-oid="vso6zq."
                 />
               )}
-              data-oid="cro-99h"
             />
 
             <Controller
@@ -582,10 +541,8 @@ export default function TicketForm({
                   fullWidth
                   error={!!error}
                   helperText={error?.message}
-                  data-oid="hkliip7"
                 />
               )}
-              data-oid="i3:h-zf"
             />
 
             <Controller
@@ -610,56 +567,38 @@ export default function TicketForm({
                         ...params.InputProps,
                         endAdornment: (
                           <>
-                            {isLoadingUsers && (
-                              <CircularProgress size={20} data-oid=":-rh.4v" />
-                            )}
+                            {isLoadingUsers && <CircularProgress size={20} />}
                             {params.InputProps.endAdornment}
                           </>
                         ),
                       }}
-                      data-oid="jg4bx18"
                     />
                   )}
-                  data-oid="pq:-pxl"
                 />
               )}
-              data-oid="4f8ko99"
             />
 
             {/* Attachments */}
-            <Divider data-oid="zr695o5" />
-            <Typography variant="h6" data-oid="udn.9le">
-              Вложения
-            </Typography>
-            <FileDropZone onFiles={handleDropFiles} data-oid="0xc8nxm" />
+            <Divider />
+            <Typography variant="h6">Вложения</Typography>
+            <FileDropZone onFiles={handleDropFiles} />
             <AttachmentPreviewList
               remoteFiles={remoteFiles}
               newFiles={newFiles}
               onRemoveRemote={handleRemoveRemoteFile}
               onRemoveNew={handleRemoveNewFile}
               getSignedUrl={signedUrl}
-              data-oid="m15lh15"
             />
 
             {/* Buttons */}
-            <Stack
-              direction="row"
-              spacing={2}
-              justifyContent="flex-end"
-              data-oid="ypc_5ad"
-            >
+            <Stack direction="row" spacing={2} justifyContent="flex-end">
               <Button
                 type="submit"
                 variant="contained"
                 disabled={isSubmitting || isCreatingTicket || isUpdatingTicket}
-                data-oid="nahd399"
               >
                 {isSubmitting || isCreatingTicket || isUpdatingTicket ? (
-                  <CircularProgress
-                    size={24}
-                    sx={{ color: "white" }}
-                    data-oid="997-xp_"
-                  />
+                  <CircularProgress size={24} sx={{ color: "white" }} />
                 ) : isEditMode ? (
                   "Сохранить"
                 ) : (
@@ -674,7 +613,6 @@ export default function TicketForm({
                   disabled={
                     isSubmitting || isCreatingTicket || isUpdatingTicket
                   }
-                  data-oid="ipf.oh1"
                 >
                   Отмена
                 </Button>
@@ -686,7 +624,6 @@ export default function TicketForm({
                   disabled={
                     isSubmitting || isCreatingTicket || isUpdatingTicket
                   }
-                  data-oid="7d84ao1"
                 >
                   Отмена
                 </Button>

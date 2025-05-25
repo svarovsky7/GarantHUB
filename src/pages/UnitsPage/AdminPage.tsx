@@ -12,55 +12,35 @@ import LetterTypesAdmin from "../../widgets/LetterTypesAdmin";
 
 export default function AdminPage() {
   return (
-    <Container maxWidth="md" sx={{ py: 4 }} data-oid="zd3gnr1">
-      <Stack spacing={4} data-oid="4ye5apx">
-        <ProjectsTable
-          pageSize={25}
-          rowsPerPageOptions={[10, 25, 50, 100]}
-          data-oid="8y8lszs"
-        />
+    <Container maxWidth="md" sx={{ py: 4 }}>
+      <Stack spacing={4}>
+        <ProjectsTable pageSize={25} rowsPerPageOptions={[10, 25, 50, 100]} />
 
-        <ContractorAdmin
-          pageSize={25}
-          rowsPerPageOptions={[10, 25, 50, 100]}
-          data-oid="fu68kpx"
-        />
+        <ContractorAdmin pageSize={25} rowsPerPageOptions={[10, 25, 50, 100]} />
 
         <TicketStatusesAdmin
           pageSize={25}
           rowsPerPageOptions={[10, 25, 50, 100]}
-          data-oid="6fz4oqw"
         />
 
         <TicketTypesAdmin
           pageSize={25}
           rowsPerPageOptions={[10, 25, 50, 100]}
-          data-oid="4djg04y"
         />
 
         <LitigationStagesAdmin
           pageSize={25}
           rowsPerPageOptions={[10, 25, 50, 100]}
-          data-oid="99dqyvl"
         />
 
-        <PartyTypesAdmin
-          pageSize={25}
-          rowsPerPageOptions={[10, 25, 50, 100]}
-          data-oid="rvvoje1"
-        />
+        <PartyTypesAdmin pageSize={25} rowsPerPageOptions={[10, 25, 50, 100]} />
 
         <LetterTypesAdmin
           pageSize={25}
           rowsPerPageOptions={[10, 25, 50, 100]}
-          data-oid="rldkmw7"
         />
 
-        <UsersTable
-          pageSize={25}
-          rowsPerPageOptions={[10, 25, 50, 100]}
-          data-oid="8y7q0sk"
-        />
+        <UsersTable pageSize={25} rowsPerPageOptions={[10, 25, 50, 100]} />
       </Stack>
     </Container>
   );

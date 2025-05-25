@@ -177,7 +177,7 @@
   {
     "table_name": "court_case_parties",
     "column_name": "party_type",
-    "data_type": "USER-DEFINED",
+    "data_type": "text",
     "is_nullable": "NO",
     "column_default": null
   },
@@ -371,6 +371,20 @@
     "column_default": "now()"
   },
   {
+    "table_name": "letter_types",
+    "column_name": "id",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": "nextval('letter_types_id_seq'::regclass)"
+  },
+  {
+    "table_name": "letter_types",
+    "column_name": "name",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
     "table_name": "letters",
     "column_name": "id",
     "data_type": "bigint",
@@ -441,14 +455,14 @@
     "column_default": "now()"
   },
   {
-    "table_name": "letter_types",
+    "table_name": "litigation_stages",
     "column_name": "id",
-    "data_type": "bigint",
+    "data_type": "integer",
     "is_nullable": "NO",
-    "column_default": "nextval('letter_types_id_seq'::regclass)"
+    "column_default": "nextval('litigation_stages_id_seq'::regclass)"
   },
   {
-    "table_name": "letter_types",
+    "table_name": "litigation_stages",
     "column_name": "name",
     "data_type": "text",
     "is_nullable": "NO",
@@ -463,20 +477,6 @@
   },
   {
     "table_name": "party_types",
-    "column_name": "name",
-    "data_type": "text",
-    "is_nullable": "NO",
-    "column_default": null
-  },
-  {
-    "table_name": "litigation_stages",
-    "column_name": "id",
-    "data_type": "integer",
-    "is_nullable": "NO",
-    "column_default": "nextval('litigation_stages_id_seq'::regclass)"
-  },
-  {
-    "table_name": "litigation_stages",
     "column_name": "name",
     "data_type": "text",
     "is_nullable": "NO",

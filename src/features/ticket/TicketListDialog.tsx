@@ -180,41 +180,33 @@ export default function TicketListDialog({
         maxWidth="md"
         fullWidth
         PaperProps={{ sx: { minWidth: 700 } }}
-        data-oid="stnd530"
       >
-        <DialogTitle data-oid="rfltqrs">
-          Все замечания по квартире {unit?.name}
-        </DialogTitle>
-        <DialogContent data-oid="ai-6-bs">
+        <DialogTitle>Все замечания по квартире {unit?.name}</DialogTitle>
+        <DialogContent>
           {loading ? (
-            <Box sx={{ py: 4, textAlign: "center" }} data-oid="wuwgaua">
-              <CircularProgress data-oid="hm-dupm" />
+            <Box sx={{ py: 4, textAlign: "center" }}>
+              <CircularProgress />
             </Box>
           ) : (
             <>
-              <Table size="small" sx={{ my: 2 }} data-oid="jh8-jp3">
-                <TableHead data-oid="wx6rzp8">
-                  <TableRow data-oid="bi:5w8e">
-                    <TableCell data-oid="n6t3gj6">№</TableCell>
-                    <TableCell data-oid="aacxm-.">Заголовок</TableCell>
-                    <TableCell data-oid="qehzoh.">Статус</TableCell>
-                    <TableCell data-oid="bgo5ddt">Акты об устранении</TableCell>
-                    <TableCell data-oid="padwwd-">Действия</TableCell>
+              <Table size="small" sx={{ my: 2 }}>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>№</TableCell>
+                    <TableCell>Заголовок</TableCell>
+                    <TableCell>Статус</TableCell>
+                    <TableCell>Акты об устранении</TableCell>
+                    <TableCell>Действия</TableCell>
                   </TableRow>
                 </TableHead>
-                <TableBody data-oid="abrcacp">
+                <TableBody>
                   {tickets.map((t, i) => (
-                    <TableRow key={t.id} data-oid="ps9qpfw">
-                      <TableCell sx={{ width: 50 }} data-oid="t5hp_pr">
-                        {i + 1}
-                      </TableCell>
-                      <TableCell
-                        sx={{ minWidth: 160, maxWidth: 300 }}
-                        data-oid="jnp33n5"
-                      >
+                    <TableRow key={t.id}>
+                      <TableCell sx={{ width: 50 }}>{i + 1}</TableCell>
+                      <TableCell sx={{ minWidth: 160, maxWidth: 300 }}>
                         {t.title}
                       </TableCell>
-                      <TableCell sx={{ minWidth: 180 }} data-oid=":bueeof">
+                      <TableCell sx={{ minWidth: 180 }}>
                         <Select
                           size="small"
                           value={String(t.status_id) || ""}
@@ -226,14 +218,9 @@ export default function TicketListDialog({
                             bgcolor: getStatus(t.status_id)?.color || undefined,
                             fontWeight: 600,
                           }}
-                          data-oid="stgyeqb"
                         >
                           {statuses.map((s) => (
-                            <MenuItem
-                              key={s.id}
-                              value={String(s.id)}
-                              data-oid=":xyrsqn"
-                            >
+                            <MenuItem key={s.id} value={String(s.id)}>
                               <Box
                                 component="span"
                                 sx={{
@@ -245,7 +232,6 @@ export default function TicketListDialog({
                                   mr: 1,
                                   verticalAlign: "middle",
                                 }}
-                                data-oid="kd9s5f6"
                               />
 
                               {s.name}
@@ -253,7 +239,7 @@ export default function TicketListDialog({
                           ))}
                         </Select>
                       </TableCell>
-                      <TableCell sx={{ minWidth: 180 }} data-oid="7ehv58x">
+                      <TableCell sx={{ minWidth: 180 }}>
                         <Box
                           sx={{
                             display: "flex",
@@ -261,25 +247,16 @@ export default function TicketListDialog({
                             flexWrap: "wrap",
                             gap: 1,
                           }}
-                          data-oid="pa8ek.."
                         >
                           {(
                             attachments[t.id]?.filter((a) => a.is_fix_act) || []
                           ).map((a, idx) => (
                             <Chip
                               key={a.file_url}
-                              icon={
-                                <AttachFileIcon
-                                  sx={{ fontSize: 16 }}
-                                  data-oid="e:27358"
-                                />
-                              }
+                              icon={<AttachFileIcon sx={{ fontSize: 16 }} />}
                               label={
                                 downloadingId === a.id ? (
-                                  <CircularProgress
-                                    size={16}
-                                    data-oid="ho8.jl."
-                                  />
+                                  <CircularProgress size={16} />
                                 ) : (
                                   `Акт ${idx + 1}`
                                 )
@@ -289,7 +266,6 @@ export default function TicketListDialog({
                               clickable
                               onClick={() => handleDownload(a)}
                               sx={{ mr: 1, mb: 0.2, cursor: "pointer" }}
-                              data-oid="q1rmk.8"
                             />
                           ))}
                           <input
@@ -298,36 +274,27 @@ export default function TicketListDialog({
                             style={{ display: "none" }}
                             id={`file-upload-${t.id}`}
                             onChange={(e) => handleUploadFile(t.id, e)}
-                            data-oid="zit0pj0"
                           />
 
-                          <label
-                            htmlFor={`file-upload-${t.id}`}
-                            data-oid=":s61vo:"
-                          >
+                          <label htmlFor={`file-upload-${t.id}`}>
                             <IconButton
                               component="span"
                               size="small"
                               color="primary"
-                              data-oid="7hmkab3"
                             >
-                              <CloudUploadIcon
-                                fontSize="small"
-                                data-oid="y04xbb5"
-                              />
+                              <CloudUploadIcon fontSize="small" />
                             </IconButton>
                           </label>
                         </Box>
                       </TableCell>
-                      <TableCell data-oid="6j29z:4">
+                      <TableCell>
                         <Button
                           size="small"
                           variant="outlined"
-                          startIcon={<InfoOutlinedIcon data-oid="9ol_lfc" />}
+                          startIcon={<InfoOutlinedIcon />}
                           onClick={() =>
                             setOpenTicketForm({ open: true, ticket: t })
                           }
-                          data-oid="zf5seb5"
                         >
                           Подробно
                         </Button>
@@ -337,20 +304,15 @@ export default function TicketListDialog({
                 </TableBody>
               </Table>
               {tickets.length === 0 && (
-                <Typography
-                  sx={{ color: "#777", py: 2, textAlign: "center" }}
-                  data-oid=".jc_xa1"
-                >
+                <Typography sx={{ color: "#777", py: 2, textAlign: "center" }}>
                   Нет замечаний по данной квартире
                 </Typography>
               )}
             </>
           )}
         </DialogContent>
-        <DialogActions data-oid="tn5c09j">
-          <Button onClick={onClose} data-oid="ghp8h59">
-            Закрыть
-          </Button>
+        <DialogActions>
+          <Button onClick={onClose}>Закрыть</Button>
         </DialogActions>
       </Dialog>
 
@@ -360,10 +322,9 @@ export default function TicketListDialog({
           onClose={() => setOpenTicketForm({ open: false, ticket: null })}
           maxWidth="sm"
           fullWidth
-          data-oid="apja_ff"
         >
-          <DialogTitle data-oid="-f7bc6b">Замечание</DialogTitle>
-          <DialogContent data-oid="t.si:sm">
+          <DialogTitle>Замечание</DialogTitle>
+          <DialogContent>
             <TicketForm
               embedded
               ticketId={openTicketForm.ticket?.id} // передаем явно!
@@ -372,7 +333,6 @@ export default function TicketListDialog({
                 setOpenTicketForm({ open: false, ticket: null });
                 if (onTicketsChanged) onTicketsChanged();
               }}
-              data-oid="y3_4j4x"
             />
           </DialogContent>
         </Dialog>

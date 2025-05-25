@@ -43,16 +43,15 @@ export default function ProjectsTable({
       getActions: ({ row }) => [
         <GridActionsCellItem
           key="edit"
-          icon={<EditIcon data-oid="6kx_lxl" />}
+          icon={<EditIcon />}
           label="Редактировать"
           onClick={() => setModal({ mode: "edit", data: row })}
           showInMenu={false}
-          data-oid=".ev8-rf"
         />,
 
         <GridActionsCellItem
           key="del"
-          icon={<DeleteIcon color="error" data-oid=".1:5jo-" />}
+          icon={<DeleteIcon color="error" />}
           label="Удалить"
           onClick={() => {
             if (!window.confirm("Удалить проект?")) return;
@@ -62,7 +61,6 @@ export default function ProjectsTable({
             });
           }}
           showInMenu={false}
-          data-oid="4bklfgn"
         />,
       ],
     },
@@ -75,14 +73,7 @@ export default function ProjectsTable({
   };
 
   if (isPending) {
-    return (
-      <Skeleton
-        variant="rectangular"
-        width="100%"
-        height={400}
-        data-oid="ao.et05"
-      />
-    );
+    return <Skeleton variant="rectangular" width="100%" height={400} />;
   }
 
   return (
@@ -96,7 +87,6 @@ export default function ProjectsTable({
             })
           }
           onCancel={close}
-          data-oid="xg:1d.s"
         />
       )}
       {modal?.mode === "edit" && (
@@ -112,7 +102,6 @@ export default function ProjectsTable({
             )
           }
           onCancel={close}
-          data-oid="8pm-y9e"
         />
       )}
       <AdminDataGrid
@@ -123,7 +112,6 @@ export default function ProjectsTable({
         onAdd={() => setModal({ mode: "add" })}
         pageSize={pageSize}
         rowsPerPageOptions={rowsPerPageOptions}
-        data-oid="rqdw_gn"
       />
     </>
   );

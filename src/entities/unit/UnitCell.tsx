@@ -69,7 +69,7 @@ export default function UnitCell({
           return;
         onAction?.(unit);
       }}
-      data-oid="qw4tyjs"
+      data-oid="21x1tb3"
     >
       <Box
         sx={{
@@ -79,7 +79,7 @@ export default function UnitCell({
           alignItems: "center",
           justifyContent: "center",
         }}
-        data-oid="276ahgb"
+        data-oid="v.oy_pi"
       >
         <Typography
           sx={{
@@ -93,7 +93,7 @@ export default function UnitCell({
             userSelect: "none",
           }}
           title={unit.name}
-          data-oid="agmahu5"
+          data-oid="jm.:qjs"
         >
           {unit.name}
         </Typography>
@@ -109,9 +109,9 @@ export default function UnitCell({
           borderTop: "1px solid #f0f0f8",
           background: "#f9fafd",
         }}
-        data-oid="vvr5wdr"
+        data-oid="f1-.akk"
       >
-        <Tooltip title="Переименовать" data-oid="_13fmky">
+        <Tooltip title="Переименовать" data-oid="a9kbysn">
           <IconButton
             size="small"
             className="unit-action-icon"
@@ -124,12 +124,12 @@ export default function UnitCell({
               e.stopPropagation();
               onEditUnit?.(unit);
             }}
-            data-oid="tw063lp"
+            data-oid="d9h-8:5"
           >
-            <EditOutlined fontSize="small" data-oid="mur4fui" />
+            <EditOutlined fontSize="small" data-oid="jkghpj6" />
           </IconButton>
         </Tooltip>
-        <Tooltip title="Удалить" data-oid="jvhitts">
+        <Tooltip title="Удалить" data-oid="jtua5h7">
           <IconButton
             size="small"
             className="unit-action-icon"
@@ -142,9 +142,9 @@ export default function UnitCell({
               e.stopPropagation();
               onDeleteUnit?.(unit);
             }}
-            data-oid="l6g:gf."
+            data-oid="2-y:84k"
           >
-            <DeleteOutline fontSize="small" data-oid="0mcqjxr" />
+            <DeleteOutline fontSize="small" data-oid="f8dxba0" />
           </IconButton>
         </Tooltip>
       </Box>

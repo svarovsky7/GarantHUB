@@ -58,16 +58,14 @@ export default function UsersTable({
       field: "role",
       headerName: "Роль",
       flex: 0.7,
-      renderCell: ({ row }) => (
-        <RoleSelect user={row} roles={roles} data-oid="daifmg7" />
-      ),
+      renderCell: ({ row }) => <RoleSelect user={row} roles={roles} />,
     },
     {
       field: "project_id",
       headerName: "Проект",
       flex: 1,
       renderCell: ({ row }) => {
-        if (pLoad) return <CircularProgress size={18} data-oid="fzsdbni" />;
+        if (pLoad) return <CircularProgress size={18} />;
         return (
           <Select
             size="small"
@@ -78,13 +76,10 @@ export default function UsersTable({
             }
             sx={{ minWidth: 160 }}
             displayEmpty
-            data-oid=":5a7j_h"
           >
-            <MenuItem value="" data-oid="47zc64b">
-              —
-            </MenuItem>
+            <MenuItem value="">—</MenuItem>
             {projects.map((proj) => (
-              <MenuItem key={proj.id} value={proj.id} data-oid="rmbq_vp">
+              <MenuItem key={proj.id} value={proj.id}>
                 {proj.name}
               </MenuItem>
             ))}
@@ -99,7 +94,7 @@ export default function UsersTable({
       getActions: ({ row }) => [
         <GridActionsCellItem
           key="del"
-          icon={<DeleteIcon color="error" data-oid="z6bv0uw" />}
+          icon={<DeleteIcon color="error" />}
           label="Удалить"
           onClick={() => {
             if (!window.confirm("Удалить пользователя?")) return;
@@ -108,7 +103,6 @@ export default function UsersTable({
               onError: (e) => notify.error(e.message),
             });
           }}
-          data-oid="044csr_"
         />,
       ],
     },
@@ -122,7 +116,6 @@ export default function UsersTable({
       loading={uLoad || rLoad || pLoad}
       pageSize={pageSize}
       rowsPerPageOptions={rowsPerPageOptions}
-      data-oid="o82z_zh"
     />
   );
 }

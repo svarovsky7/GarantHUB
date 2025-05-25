@@ -37,13 +37,8 @@ const ProjectForm = ({ initialData, onSubmit, onCancel }: ProjectFormProps) => {
 
   return (
     /* CHANGE: выключаем автозаполнение всей формы */
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      noValidate
-      autoComplete="off"
-      data-oid="lqg5c7n"
-    >
-      <Stack spacing={3} sx={{ p: 3, maxWidth: 420 }} data-oid="_l76x0q">
+    <form onSubmit={handleSubmit(onSubmit)} noValidate autoComplete="off">
+      <Stack spacing={3} sx={{ p: 3, maxWidth: 420 }}>
         <Controller
           name="name"
           control={control}
@@ -58,32 +53,18 @@ const ProjectForm = ({ initialData, onSubmit, onCancel }: ProjectFormProps) => {
               /* CHANGE: бронебойно отключаем подсказки браузера */
               autoComplete="off"
               inputProps={{ autoCorrect: "off", spellCheck: "false" }}
-              data-oid="0xr.vfq"
             />
           )}
-          data-oid="c9eg62."
         />
 
-        <Stack
-          direction="row"
-          spacing={2}
-          justifyContent="flex-end"
-          data-oid="xm47_mn"
-        >
+        <Stack direction="row" spacing={2} justifyContent="flex-end">
           <Button
             type="submit"
             variant="contained"
             disabled={isSubmitting}
             startIcon={
-              isSubmitting && (
-                <CircularProgress
-                  size={18}
-                  color="inherit"
-                  data-oid="kf98oq8"
-                />
-              )
+              isSubmitting && <CircularProgress size={18} color="inherit" />
             }
-            data-oid="j.m:omo"
           >
             Сохранить
           </Button>
@@ -93,7 +74,6 @@ const ProjectForm = ({ initialData, onSubmit, onCancel }: ProjectFormProps) => {
               color="secondary"
               onClick={onCancel}
               disabled={isSubmitting}
-              data-oid="tezwvho"
             >
               Отмена
             </Button>
