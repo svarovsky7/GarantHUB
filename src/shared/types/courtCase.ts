@@ -21,6 +21,7 @@ export interface CourtCase {
   id: number;
   project_id: number;
   unit_id: number | null;
+  date: string;
   number: string;
   plaintiff_id: number;
   defendant_id: number;
