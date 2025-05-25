@@ -6,6 +6,7 @@ import {
   Typography,
   Select,
   MenuItem,
+  Autocomplete,
   TextField,
   Button,
   Dialog,
@@ -35,6 +36,11 @@ import { useUnitsByProject } from '@/entities/unit';
 
 interface Filters {
   type?: 'incoming' | 'outgoing' | '';
+  project?: number | '';
+  unit?: number | '';
+  correspondent?: string;
+  subject?: string;
+  content?: string;
   search?: string;
 }
 
@@ -43,7 +49,15 @@ export default function CorrespondencePage() {
   const { data: letters = [] } = useLetters();
   const add = useAddLetter();
   const remove = useDeleteLetter();
-  const [filters, setFilters] = useState<Filters>({ type: '', search: '' });
+  const [filters, setFilters] = useState<Filters>({
+    type: '',
+    project: '',
+    unit: '',
+    correspondent: '',
+    subject: '',
+    content: '',
+    search: '',
+  });
   const [view, setView] = useState<CorrespondenceLetter | null>(null);
   const [snackbar, setSnackbar] = useState<string | null>(null);
 
@@ -52,7 +66,9 @@ export default function CorrespondencePage() {
   const { data: users = [] } = useUsers();
   const { data: letterTypes = [] } = useLetterTypes();
   const { data: projects = [] } = useProjects();
-  const { data: units = [] } = useUnitsByProject(view?.project_id ?? null);
+  const { data: units = [] } = useUnitsByProject(
+    view?.project_id ?? (filters.project ? Number(filters.project) : null),
+  );
 
 
   const handleAdd = (data: AddLetterFormData) => {
@@ -87,6 +103,23 @@ export default function CorrespondencePage() {
 
   const filtered = letters.filter((l) => {
     if (filters.type && l.type !== filters.type) return false;
+    if (filters.project && l.project_id !== Number(filters.project)) return false;
+    if (filters.unit && l.unit_id !== Number(filters.unit)) return false;
+    if (
+      filters.correspondent &&
+      !l.correspondent.toLowerCase().includes(filters.correspondent.toLowerCase())
+    )
+      return false;
+    if (
+      filters.subject &&
+      !l.subject.toLowerCase().includes(filters.subject.toLowerCase())
+    )
+      return false;
+    if (
+      filters.content &&
+      !l.content.toLowerCase().includes(filters.content.toLowerCase())
+    )
+      return false;
     if (
       filters.search &&
       !(
@@ -118,14 +151,7 @@ export default function CorrespondencePage() {
       </Paper>
 
       <Paper sx={{ p: 2 }}>
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            gap: 2,
-            mb: 2,
-          }}
-        >
+        <Box className="filter-grid" sx={{ mb: 2 }}>
           <Select
             value={filters.type}
             onChange={(e) =>
@@ -133,11 +159,66 @@ export default function CorrespondencePage() {
             }
             displayEmpty
             size="small"
+            fullWidth
           >
             <MenuItem value="">Все типы</MenuItem>
             <MenuItem value="incoming">Входящее</MenuItem>
             <MenuItem value="outgoing">Исходящее</MenuItem>
           </Select>
+          <Autocomplete
+            options={projects}
+            getOptionLabel={(o) => o?.name ?? ''}
+            isOptionEqualToValue={(o, v) => o?.id === v?.id}
+            value={projects.find((p) => p.id === Number(filters.project)) || null}
+            onChange={(_, v) =>
+              setFilters((f) => ({ ...f, project: v ? v.id : '', unit: '' }))
+            }
+            renderInput={(params) => (
+              <TextField {...params} size="small" label="Проект" />
+            )}
+            fullWidth
+          />
+          <Autocomplete
+            options={units}
+            getOptionLabel={(o) => o?.name ?? ''}
+            isOptionEqualToValue={(o, v) => o?.id === v?.id}
+            value={units.find((u) => u.id === Number(filters.unit)) || null}
+            onChange={(_, v) =>
+              setFilters((f) => ({ ...f, unit: v ? v.id : '' }))
+            }
+            renderInput={(params) => (
+              <TextField {...params} size="small" label="Объект" />
+            )}
+            fullWidth
+            disabled={!filters.project}
+          />
+          <TextField
+            size="small"
+            label="Корреспондент"
+            value={filters.correspondent}
+            onChange={(e) =>
+              setFilters((f) => ({ ...f, correspondent: e.target.value }))
+            }
+            fullWidth
+          />
+          <TextField
+            size="small"
+            label="В теме"
+            value={filters.subject}
+            onChange={(e) =>
+              setFilters((f) => ({ ...f, subject: e.target.value }))
+            }
+            fullWidth
+          />
+          <TextField
+            size="small"
+            label="В содержании"
+            value={filters.content}
+            onChange={(e) =>
+              setFilters((f) => ({ ...f, content: e.target.value }))
+            }
+            fullWidth
+          />
           <TextField
             size="small"
             placeholder="Поиск"
@@ -145,8 +226,21 @@ export default function CorrespondencePage() {
             onChange={(e) =>
               setFilters((f) => ({ ...f, search: e.target.value }))
             }
+            fullWidth
           />
-          <Button onClick={() => setFilters({ type: '', search: '' })}>
+          <Button
+            onClick={() =>
+              setFilters({
+                type: '',
+                project: '',
+                unit: '',
+                correspondent: '',
+                subject: '',
+                content: '',
+                search: '',
+              })
+            }
+          >
             Сбросить фильтры
           </Button>
         </Box>

@@ -4,8 +4,7 @@ import React, { useEffect } from 'react';
 
 import { useForm, Controller } from 'react-hook-form';
 import {
-  Stack,
-
+  Grid,
   TextField,
   Select,
   MenuItem,
@@ -90,18 +89,20 @@ export default function AddLetterForm({ onSubmit }: AddLetterFormProps) {
 
     <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ru">
       <form onSubmit={handleSubmit(submit)} noValidate>
-        <Stack spacing={2} sx={{ maxWidth: 400 }}>
-
+        <Grid container spacing={2}>
+        <Grid item xs={12} md={4}>
         <Controller
           name="type"
           control={control}
           render={({ field }) => (
-            <Select {...field} label="Тип письма">
+            <Select {...field} label="Тип письма" fullWidth>
               <MenuItem value="incoming">Входящее</MenuItem>
               <MenuItem value="outgoing">Исходящее</MenuItem>
             </Select>
           )}
         />
+        </Grid>
+        <Grid item xs={12} md={4}>
         <Controller
           name="number"
           control={control}
@@ -110,11 +111,14 @@ export default function AddLetterForm({ onSubmit }: AddLetterFormProps) {
             <TextField
               {...field}
               label="Номер письма"
+              fullWidth
               error={!!fieldState.error}
               helperText={fieldState.error?.message}
             />
           )}
         />
+        </Grid>
+        <Grid item xs={12} md={4}>
         <Controller
           name="date"
           control={control}
@@ -124,11 +128,13 @@ export default function AddLetterForm({ onSubmit }: AddLetterFormProps) {
               {...field}
               label="Дата"
               format="DD.MM.YYYY"
+              slotProps={{ textField: { fullWidth: true } }}
             />
           )}
         />
+        </Grid>
+        <Grid item xs={12} md={4}>
         <Controller
-
           name="responsible_user_id"
           control={control}
           render={({ field, fieldState: { error } }) => (
@@ -136,6 +142,7 @@ export default function AddLetterForm({ onSubmit }: AddLetterFormProps) {
               {...field}
               options={users}
               loading={loadingUsers}
+              fullWidth
               getOptionLabel={(o) => o?.name ?? ''}
               isOptionEqualToValue={(o, v) => o?.id === v?.id}
               onChange={(_, v) => field.onChange(v ? v.id : null)}
@@ -160,6 +167,8 @@ export default function AddLetterForm({ onSubmit }: AddLetterFormProps) {
             />
           )}
         />
+        </Grid>
+        <Grid item xs={12} md={4}>
         <Controller
           name="letter_type_id"
           control={control}
@@ -168,6 +177,7 @@ export default function AddLetterForm({ onSubmit }: AddLetterFormProps) {
               {...field}
               options={letterTypes}
               loading={loadingTypes}
+              fullWidth
               getOptionLabel={(o) => o?.name ?? ''}
               isOptionEqualToValue={(o, v) => o?.id === v?.id}
               onChange={(_, v) => field.onChange(v ? v.id : null)}
@@ -192,6 +202,8 @@ export default function AddLetterForm({ onSubmit }: AddLetterFormProps) {
             />
           )}
         />
+        </Grid>
+        <Grid item xs={12} md={4}>
         <Controller
           name="project_id"
           control={control}
@@ -200,6 +212,7 @@ export default function AddLetterForm({ onSubmit }: AddLetterFormProps) {
               {...field}
               options={projects}
               loading={loadingProjects}
+              fullWidth
               getOptionLabel={(o) => o?.name ?? ''}
               isOptionEqualToValue={(o, v) => o?.id === v?.id}
               onChange={(_, v) => field.onChange(v ? v.id : null)}
@@ -224,6 +237,8 @@ export default function AddLetterForm({ onSubmit }: AddLetterFormProps) {
             />
           )}
         />
+        </Grid>
+        <Grid item xs={12} md={4}>
         <Controller
           name="unit_id"
           control={control}
@@ -232,6 +247,7 @@ export default function AddLetterForm({ onSubmit }: AddLetterFormProps) {
               {...field}
               options={units}
               loading={loadingUnits}
+              fullWidth
               getOptionLabel={(o) => o?.name ?? ''}
               isOptionEqualToValue={(o, v) => o?.id === v?.id}
               onChange={(_, v) => field.onChange(v ? v.id : null)}
@@ -256,33 +272,41 @@ export default function AddLetterForm({ onSubmit }: AddLetterFormProps) {
             />
           )}
         />
+        </Grid>
+        <Grid item xs={12} md={4}>
         <Controller
-
           name="correspondent"
           control={control}
           render={({ field }) => (
-            <TextField {...field} label="Корреспондент" />
+            <TextField {...field} label="Корреспондент" fullWidth />
           )}
         />
+        </Grid>
+        <Grid item xs={12} md={4}>
         <Controller
           name="subject"
           control={control}
           render={({ field }) => (
-            <TextField {...field} label="Тема" />
+            <TextField {...field} label="Тема" fullWidth />
           )}
         />
+        </Grid>
+        <Grid item xs={12}>
         <Controller
           name="content"
           control={control}
           render={({ field }) => (
-            <TextField {...field} label="Содержание" multiline rows={3} />
+            <TextField {...field} label="Содержание" multiline rows={3} fullWidth />
           )}
         />
-        <Button variant="contained" type="submit" sx={{ alignSelf: 'flex-end' }}>
-          Добавить письмо
-        </Button>
-      </Stack>
-    </form>
+        </Grid>
+        <Grid item xs={12} sx={{ textAlign: 'right' }}>
+          <Button variant="contained" type="submit">
+            Добавить письмо
+          </Button>
+        </Grid>
+        </Grid>
+      </form>
 
     </LocalizationProvider>
 
