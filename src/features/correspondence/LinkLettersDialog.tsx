@@ -31,11 +31,20 @@ export default function LinkLettersDialog({
   }, [parent, open]);
 
   // CHANGE: Исключаем текущее письмо и применяем фильтр поиска
+  const parents = useMemo(() => {
+    const ids = new Set<string>();
+    letters.forEach((l) => {
+      if (l.parent_id) ids.add(l.parent_id);
+    });
+    return ids;
+  }, [letters]);
+
   const filteredLetters = useMemo(() => {
     const term = search.trim().toLowerCase();
     return letters
         .filter((l) => l.id !== parent?.id)
         .filter((l) => l.parent_id === null)
+        .filter((l) => !parents.has(l.id))
         .filter(
           (l) =>
             !term ||
@@ -43,7 +52,7 @@ export default function LinkLettersDialog({
             (l.subject ?? '').toLowerCase().includes(term) ||
             (l.correspondent ?? '').toLowerCase().includes(term),
         );
-  }, [letters, parent, search]);
+  }, [letters, parent, search, parents]);
 
   // CHANGE: Описываем колонки таблицы для Antd Table
   const columns: ColumnsType<CorrespondenceLetter> = [
