@@ -22,6 +22,7 @@ import {
   useAddLetter,
   useDeleteLetter,
   useLinkLetters,
+  useUnlinkLetter,
 } from '@/entities/correspondence';
 import { CorrespondenceLetter } from '@/shared/types/correspondence';
 
@@ -50,6 +51,7 @@ export default function CorrespondencePage() {
   const add = useAddLetter();
   const remove = useDeleteLetter();
   const linkLetters = useLinkLetters();
+  const unlinkLetter = useUnlinkLetter();
   const [filters, setFilters] = useState<Filters>({
     type: '',
     project: '',
@@ -134,6 +136,12 @@ export default function CorrespondencePage() {
     if (!window.confirm('Удалить письмо?')) return;
     remove.mutate(id, {
       onSuccess: () => setSnackbar('Письмо удалено'),
+    });
+  };
+
+  const handleUnlink = (id: string) => {
+    unlinkLetter.mutate(id, {
+      onSuccess: () => setSnackbar('Письмо исключено из связи'),
     });
   };
 
@@ -260,6 +268,7 @@ export default function CorrespondencePage() {
           onView={setView}
           onDelete={handleDelete}
           onAddChild={setLinkFor}
+          onUnlink={handleUnlink}
           users={users}
           letterTypes={letterTypes}
           projects={projects}
