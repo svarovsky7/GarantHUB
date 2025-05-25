@@ -1,84 +1,148 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import dayjs from 'dayjs';
-import {
-  Paper,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-  Chip,
-  IconButton,
-  Typography,
-} from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import VisibilityIcon from '@mui/icons-material/Visibility';
+import { Table, Space, Button, Popconfirm, Tag } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
+import { EyeOutlined, DeleteOutlined } from '@ant-design/icons';
 import { CorrespondenceLetter } from '@/shared/types/correspondence';
+
+interface Option { id: number | string; name: string; }
 
 interface CorrespondenceTableProps {
   letters: CorrespondenceLetter[];
   onView: (letter: CorrespondenceLetter) => void;
   onDelete: (id: string) => void;
+  users: Option[];
+  letterTypes: Option[];
+  projects: Option[];
+  units: Option[];
 }
 
-/** Таблица писем */
+/** Таблица писем на Ant Design */
 export default function CorrespondenceTable({
   letters,
   onView,
   onDelete,
+  users,
+  letterTypes,
+  projects,
+  units,
 }: CorrespondenceTableProps) {
+  const maps = useMemo(() => {
+    const m = {
+      user: {} as Record<string, string>,
+      type: {} as Record<number, string>,
+      project: {} as Record<number, string>,
+      unit: {} as Record<number, string>,
+    };
+    users.forEach((u) => (m.user[u.id as string] = u.name));
+    letterTypes.forEach((t) => (m.type[t.id as number] = t.name));
+    projects.forEach((p) => (m.project[p.id as number] = p.name));
+    units.forEach((u) => (m.unit[u.id as number] = u.name));
+    return m;
+  }, [users, letterTypes, projects, units]);
+
+  const columns: ColumnsType<any> = [
+    {
+      title: 'Тип',
+      dataIndex: 'type',
+      width: 100,
+      sorter: (a, b) => a.type.localeCompare(b.type),
+      render: (v: string) => (
+        <Tag color={v === 'incoming' ? 'success' : 'processing'}>
+          {v === 'incoming' ? 'Входящее' : 'Исходящее'}
+        </Tag>
+      ),
+    },
+    {
+      title: 'Номер',
+      dataIndex: 'number',
+      width: 120,
+      sorter: (a, b) => a.number.localeCompare(b.number),
+    },
+    {
+      title: 'Дата',
+      dataIndex: 'date',
+      width: 120,
+      sorter: (a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf(),
+      render: (v: string) => dayjs(v).format('DD.MM.YYYY'),
+    },
+    {
+      title: 'Корреспондент',
+      dataIndex: 'correspondent',
+      sorter: (a, b) => a.correspondent.localeCompare(b.correspondent),
+    },
+    {
+      title: 'Тема',
+      dataIndex: 'subject',
+      sorter: (a, b) => a.subject.localeCompare(b.subject),
+    },
+    {
+      title: 'Проект',
+      dataIndex: 'projectName',
+      sorter: (a, b) => (a.projectName || '').localeCompare(b.projectName || ''),
+    },
+    {
+      title: 'Объект',
+      dataIndex: 'unitName',
+      sorter: (a, b) => (a.unitName || '').localeCompare(b.unitName || ''),
+    },
+    {
+      title: 'Категория',
+      dataIndex: 'letterTypeName',
+      sorter: (a, b) =>
+        (a.letterTypeName || '').localeCompare(b.letterTypeName || ''),
+    },
+    {
+      title: 'Ответственный',
+      dataIndex: 'responsibleName',
+      sorter: (a, b) =>
+        (a.responsibleName || '').localeCompare(b.responsibleName || ''),
+    },
+    {
+      title: 'Действия',
+      key: 'actions',
+      width: 100,
+      render: (_: any, record: CorrespondenceLetter) => (
+        <Space size="middle">
+          <Button
+            type="text"
+            icon={<EyeOutlined />}
+            onClick={() => onView(record)}
+          />
+          <Popconfirm
+            title="Удалить письмо?"
+            okText="Да"
+            cancelText="Нет"
+            onConfirm={() => onDelete(record.id)}
+          >
+            <Button type="text" danger icon={<DeleteOutlined />} />
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
+
+  const dataSource = useMemo(
+    () =>
+      letters.map((l) => ({
+        ...l,
+        projectName: l.project_id ? maps.project[l.project_id] : null,
+        unitName: l.unit_id ? maps.unit[l.unit_id] : null,
+        letterTypeName: l.letter_type_id ? maps.type[l.letter_type_id] : null,
+        responsibleName: l.responsible_user_id
+          ? maps.user[l.responsible_user_id]
+          : null,
+      })),
+    [letters, maps],
+  );
+
   return (
-    <Paper sx={{ p: 2 }}>
-      <Table size="small">
-        <TableHead>
-          <TableRow>
-            <TableCell>Тип</TableCell>
-            <TableCell>Номер</TableCell>
-            <TableCell>Дата</TableCell>
-            <TableCell>Корреспондент</TableCell>
-            <TableCell>Тема</TableCell>
-            <TableCell align="right">Действия</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {letters.map((l) => (
-            <TableRow key={l.id} hover>
-              <TableCell>
-                <Chip
-                  label={l.type === 'incoming' ? 'Входящее' : 'Исходящее'}
-                  color={l.type === 'incoming' ? 'success' : 'primary'}
-                  size="small"
-                />
-              </TableCell>
-              <TableCell>{l.number}</TableCell>
-              <TableCell>{dayjs(l.date).format('DD.MM.YYYY')}</TableCell>
-              <TableCell>{l.correspondent}</TableCell>
-              <TableCell>{l.subject}</TableCell>
-              <TableCell align="right">
-                <IconButton size="small" onClick={() => onView(l)}>
-                  <VisibilityIcon />
-                </IconButton>
-                <IconButton
-                  size="small"
-                  color="error"
-                  onClick={() => onDelete(l.id)}
-                >
-                  <DeleteIcon />
-                </IconButton>
-              </TableCell>
-            </TableRow>
-          ))}
-          {letters.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={6} align="center">
-                <Typography variant="body2" sx={{ py: 3 }}>
-                  Нет писем
-                </Typography>
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-    </Paper>
+    <Table
+      rowKey="id"
+      columns={columns}
+      dataSource={dataSource}
+      pagination={{ pageSize: 25, showSizeChanger: true }}
+      size="middle"
+    />
   );
 }
