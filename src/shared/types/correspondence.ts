@@ -39,8 +39,10 @@ export interface CorrespondenceAttachment {
   name: string;
   /** MIME‑тип файла */
   file_type: string;
-  /** Данные файла в Base64 */
-  data_url: string;
+  /** Путь к файлу в хранилище */
+  storage_path: string;
+  /** Публичная ссылка на файл */
+  file_url: string;
   /** Тип вложения */
   attachment_type_id: number | null;
 }

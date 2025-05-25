@@ -15,11 +15,13 @@ import { Form, Select, Input, Button } from 'antd';
 import dayjs from 'dayjs';
 import { AddLetterFormData } from '@/features/correspondence/AddLetterForm';
 import AddLetterForm from '@/features/correspondence/AddLetterForm';
+import LinkLettersDialog from '@/features/correspondence/LinkLettersDialog';
 import CorrespondenceTable from '@/widgets/CorrespondenceTable';
 import {
   useLetters,
   useAddLetter,
   useDeleteLetter,
+  useLinkLetters,
 } from '@/entities/correspondence';
 import { CorrespondenceLetter } from '@/shared/types/correspondence';
 
@@ -47,6 +49,7 @@ export default function CorrespondencePage() {
   const { data: letters = [] } = useLetters();
   const add = useAddLetter();
   const remove = useDeleteLetter();
+  const linkLetters = useLinkLetters();
   const [filters, setFilters] = useState<Filters>({
     type: '',
     project: '',
@@ -59,7 +62,7 @@ export default function CorrespondencePage() {
   const [form] = Form.useForm();
   const [view, setView] = useState<CorrespondenceLetter | null>(null);
   const [snackbar, setSnackbar] = useState<string | null>(null);
-  const [addFor, setAddFor] = useState<CorrespondenceLetter | null>(null);
+  const [linkFor, setLinkFor] = useState<CorrespondenceLetter | null>(null);
 
 
 
@@ -122,7 +125,6 @@ export default function CorrespondencePage() {
       {
         onSuccess: () => {
           setSnackbar('Письмо добавлено');
-          setAddFor(null);
         },
       },
     );
@@ -188,17 +190,21 @@ export default function CorrespondencePage() {
         <AddLetterForm onSubmit={handleAdd} />
       </Paper>
 
-      <Dialog open={!!addFor} onClose={() => setAddFor(null)} maxWidth="md" fullWidth>
-        <DialogTitle>Добавить связанное письмо</DialogTitle>
-        {addFor && (
-          <DialogContent dividers>
-            <AddLetterForm onSubmit={handleAdd} parentId={addFor.id} />
-          </DialogContent>
-        )}
-        <DialogActions>
-          <MuiButton onClick={() => setAddFor(null)}>Отмена</MuiButton>
-        </DialogActions>
-      </Dialog>
+      <LinkLettersDialog
+        open={!!linkFor}
+        parent={linkFor}
+        letters={letters}
+        onClose={() => setLinkFor(null)}
+        onSubmit={(ids) => {
+          if (!linkFor) return;
+          linkLetters.mutate({ parentId: linkFor.id, childIds: ids }, {
+            onSuccess: () => {
+              setSnackbar('Письма связаны');
+              setLinkFor(null);
+            },
+          });
+        }}
+      />
 
       <Paper sx={{ p: 2 }}>
         <Form
@@ -253,7 +259,7 @@ export default function CorrespondencePage() {
           letters={filtered}
           onView={setView}
           onDelete={handleDelete}
-          onAddChild={setAddFor}
+          onAddChild={setLinkFor}
           users={users}
           letterTypes={letterTypes}
           projects={projects}
@@ -312,7 +318,7 @@ export default function CorrespondencePage() {
                 </Typography>
                 {view.attachments.map((a) => (
                   <div key={a.id} style={{ marginBottom: 4 }}>
-                    <a href={a.data_url} download={a.name} style={{ marginRight: 8 }}>
+                    <a href={a.file_url} download={a.name} style={{ marginRight: 8 }}>
                       {a.name}
                     </a>
                     {a.attachment_type_id && (

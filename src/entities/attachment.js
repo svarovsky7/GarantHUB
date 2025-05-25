@@ -70,3 +70,5 @@ export function uploadLetterAttachment(file, projectId) {
 export function uploadCaseAttachment(file, projectId, unitId) {
     return upload(file, `Case/${projectId}/${unitId}`);
 }
+
+export { ATTACH_BUCKET };
