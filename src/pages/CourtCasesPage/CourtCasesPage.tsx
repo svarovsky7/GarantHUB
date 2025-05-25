@@ -25,12 +25,7 @@ import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
 import "dayjs/locale/ru";
-import type {
-  Letter,
-  Defect,
-  CourtCase,
-  CaseStatus,
-} from "@/shared/types/courtCase";
+import type { Letter, Defect, CourtCase } from "@/shared/types/courtCase";
 import { useProjects } from "@/entities/project";
 import { useUnitsByProject } from "@/entities/unit";
 import { useContractors } from "@/entities/contractor";
@@ -49,20 +44,6 @@ import {
 } from "@/entities/courtCase";
 import { supabase } from "@/shared/api/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
-
-const statusText: Record<CaseStatus, string> = {
-  active: "В процессе",
-  won: "Выиграно",
-  lost: "Проиграно",
-  settled: "Урегулировано",
-};
-
-const statusColor: Record<CaseStatus, "warning" | "success" | "error" | "info"> = {
-  active: "warning",
-  won: "success",
-  lost: "error",
-  settled: "info",
-};
 
 const fmtCurrency = (n: number) =>
   new Intl.NumberFormat("ru-RU", {
@@ -92,7 +73,6 @@ export default function CourtCasesPage() {
     lawyer: null as string | null,
     court: "",
     status: null as number | null,
-    claimAmount: "",
     fixStart: null as Dayjs | null,
     fixEnd: null as Dayjs | null,
     description: "",
@@ -106,9 +86,16 @@ export default function CourtCasesPage() {
   const { data: contractors = [], isPending: contractorsLoading } = useContractors();
   const { data: users = [], isPending: usersLoading } = useUsers();
   const { data: stages = [], isPending: stagesLoading } = useLitigationStages();
-  const { data: persons = [], isPending: personsLoading } = useQuery({
-    queryKey: ["persons", newCase.project],
-    queryFn: async () => {
+  const stageMap = useMemo(() => {
+    const map: Record<number, string> = {};
+    stages.forEach((s) => {
+      map[s.id] = s.name;
+    });
+    return map;
+  }, [stages]);
+  const { data: persons = [], isPending: personsLoading } = useQuery(
+    ["persons", newCase.project],
+    async () => {
       const { data, error } = await supabase
         .from("persons")
         .select("id, full_name")
@@ -117,11 +104,15 @@ export default function CourtCasesPage() {
       if (error) throw error;
       return data ?? [];
     },
-    enabled: !!newCase.project,
-  });
+    { enabled: !!newCase.project }
+  );
 
-  const { data: letters = [] } = useCaseLetters(dialogCase?.id ?? 0);
-  const { data: defects = [] } = useCaseDefects(dialogCase?.id ?? 0);
+  const { data: letters = [] } = useCaseLetters(
+    dialogCase ? Number(dialogCase.id) : 0,
+  );
+  const { data: defects = [] } = useCaseDefects(
+    dialogCase ? Number(dialogCase.id) : 0,
+  );
   const addLetterMutation = useAddLetter();
   const deleteLetterMutation = useDeleteLetter();
   const addDefectMutation = useAddDefect();
@@ -152,7 +143,6 @@ export default function CourtCasesPage() {
         responsible_lawyer_id: newCase.lawyer,
         court: newCase.court,
         status: newCase.status,
-        claim_amount: Number(newCase.claimAmount) || null,
         fix_start_date: newCase.fixStart ? newCase.fixStart.format("YYYY-MM-DD") : null,
         fix_end_date: newCase.fixEnd ? newCase.fixEnd.format("YYYY-MM-DD") : null,
         description: newCase.description,
@@ -169,7 +159,6 @@ export default function CourtCasesPage() {
             lawyer: null,
             court: "",
             status: null,
-            claimAmount: "",
             fixStart: null,
             fixEnd: null,
             description: "",
@@ -207,7 +196,7 @@ export default function CourtCasesPage() {
     });
   };
 
-  const addLetter = (caseId: number, letter: Omit<Letter, "id">) => {
+  const addLetter = (caseId: number, letter: Omit<Letter, "id" | "case_id">) => {
     addLetterMutation.mutate(
       { ...letter, case_id: caseId },
       {
@@ -388,15 +377,6 @@ export default function CourtCasesPage() {
                   </Select>
                 </Grid>
                 <Grid item xs={12} md={4}>
-                  <TextField
-                    label="Сумма иска"
-                    type="number"
-                    value={newCase.claimAmount}
-                    onChange={(e) => setNewCase({ ...newCase, claimAmount: e.target.value })}
-                    fullWidth
-                  />
-                </Grid>
-                <Grid item xs={12} md={4}>
                   <DatePicker
                     label="Дата начала устранения"
                     format="DD.MM.YYYY"
@@ -500,12 +480,12 @@ export default function CourtCasesPage() {
                     <TableCell>{c.defendant}</TableCell>
                     <TableCell>{c.responsibleLawyer}</TableCell>
                     <TableCell>
-                      <Chip size="small" label={statusText[c.status]} color={statusColor[c.status]} />
+                      <Chip size="small" label={stageMap[c.status] ?? c.status} color="primary" />
                     </TableCell>
                     <TableCell>{fmtCurrency(c.claimAmount)}</TableCell>
                     <TableCell>
                       <Button size="small" onClick={() => { setDialogCase(c); setTab(0); }}>Просмотр</Button>
-                      <Button size="small" color="error" onClick={() => deleteCase(c.id)}>
+                      <Button size="small" color="error" onClick={() => deleteCase(Number(c.id))}>
                         Удалить
                       </Button>
                     </TableCell>
@@ -570,7 +550,7 @@ export default function CourtCasesPage() {
                 </Grid>
                 <Grid item xs={12} md={4}>
                   <Typography variant="caption">Статус дела</Typography>
-                  <Typography>{statusText[dialogCase.status]}</Typography>
+                  <Typography>{stageMap[dialogCase.status]}</Typography>
                 </Grid>
                 <Grid item xs={12} md={4}>
                   <Typography variant="caption">Сумма иска</Typography>
@@ -602,10 +582,20 @@ export default function CourtCasesPage() {
                 <Tab label="Недостатки и стоимость устранения" />
               </Tabs>
               {tab === 0 && (
-                <LettersTab caseId={dialogCase.id} letters={letters} onAdd={addLetter} onDelete={deleteLetter} />
+                <LettersTab
+                  caseId={Number(dialogCase.id)}
+                  letters={letters}
+                  onAdd={addLetter}
+                  onDelete={deleteLetter}
+                />
               )}
               {tab === 1 && (
-                <DefectsTab caseId={dialogCase.id} defects={defects} onAdd={addDefect} onDelete={deleteDefect} />
+                <DefectsTab
+                  caseId={Number(dialogCase.id)}
+                  defects={defects}
+                  onAdd={addDefect}
+                  onDelete={deleteDefect}
+                />
               )}
             </>
           )}
@@ -625,7 +615,7 @@ export default function CourtCasesPage() {
 interface LettersTabProps {
   caseId: number;
   letters: Letter[];
-  onAdd: (caseId: number, letter: Omit<Letter, "id">) => void;
+  onAdd: (caseId: number, letter: Omit<Letter, "id" | "case_id">) => void;
   onDelete: (caseId: number, letterId: number) => void;
 }
 
