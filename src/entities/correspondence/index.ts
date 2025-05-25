@@ -1,7 +1,19 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { CorrespondenceLetter } from '@/shared/types/correspondence';
+import {
+  CorrespondenceLetter,
+  CorrespondenceAttachment,
+} from '@/shared/types/correspondence';
 
 const LS_KEY = 'correspondenceLetters';
+
+function readFileAsDataURL(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
 
 function loadLetters(): CorrespondenceLetter[] {
   try {
@@ -14,6 +26,7 @@ function loadLetters(): CorrespondenceLetter[] {
         : l.unit_id
         ? [l.unit_id]
         : [],
+      attachments: Array.isArray(l.attachments) ? l.attachments : [],
     }));
   } catch {
     return [];
@@ -34,9 +47,26 @@ export function useLetters() {
 export function useAddLetter() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: Omit<CorrespondenceLetter, 'id'>) => {
+    mutationFn: async (
+      payload: Omit<CorrespondenceLetter, 'id' | 'attachments'> & {
+        attachments?: { file: File; type_id: number | null }[];
+      },
+    ) => {
       const letters = loadLetters();
-      const newLetter = { ...payload, id: Date.now().toString() } as CorrespondenceLetter;
+      const attachments: CorrespondenceAttachment[] = await Promise.all(
+        (payload.attachments ?? []).map(async ({ file, type_id }) => ({
+          id: Date.now().toString() + Math.random().toString(16).slice(2),
+          name: file.name,
+          file_type: file.type,
+          data_url: await readFileAsDataURL(file),
+          attachment_type_id: type_id,
+        })),
+      );
+      const newLetter: CorrespondenceLetter = {
+        ...(payload as any),
+        id: Date.now().toString(),
+        attachments,
+      };
       letters.push(newLetter);
       saveLetters(letters);
       return newLetter;

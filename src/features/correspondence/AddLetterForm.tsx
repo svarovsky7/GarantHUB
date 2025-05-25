@@ -6,6 +6,7 @@ import { useLetterTypes } from '@/entities/letterType';
 import { useProjects } from '@/entities/project';
 import { useUnitsByProject } from '@/entities/unit';
 import { useContractors } from '@/entities/contractor';
+import { useAttachmentTypes } from '@/entities/attachmentType';
 
 export interface AddLetterFormData {
   type: 'incoming' | 'outgoing';
@@ -18,6 +19,7 @@ export interface AddLetterFormData {
   letter_type_id: number | null;
   project_id: number | null;
   unit_ids: number[];
+  attachments: { file: File; type_id: number | null }[];
 }
 
 interface AddLetterFormProps {
@@ -26,8 +28,10 @@ interface AddLetterFormProps {
 
 /** Форма добавления нового письма на Ant Design */
 export default function AddLetterForm({ onSubmit }: AddLetterFormProps) {
-  const [form] = Form.useForm<AddLetterFormData>();
+  const [form] = Form.useForm<Omit<AddLetterFormData, 'attachments'>>();
   const projectId = Form.useWatch('project_id', form);
+
+  const [files, setFiles] = React.useState<{ file: File; type_id: number | null }[]>([]);
 
   const { data: users = [], isLoading: loadingUsers } = useUsers();
   const { data: letterTypes = [], isLoading: loadingTypes } = useLetterTypes();
@@ -35,14 +39,29 @@ export default function AddLetterForm({ onSubmit }: AddLetterFormProps) {
   const { data: units = [], isLoading: loadingUnits } = useUnitsByProject(projectId);
   const { data: contractors = [], isLoading: loadingContractors } =
     useContractors();
+  const { data: attachmentTypes = [], isLoading: loadingAttachmentTypes } =
+    useAttachmentTypes();
 
   useEffect(() => {
     form.setFieldValue('unit_ids', []);
   }, [projectId, form]);
 
-  const submit = (values: AddLetterFormData) => {
-    onSubmit({ ...values, date: values.date ?? dayjs() });
+  const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const arr = Array.from(e.target.files || []).map((f) => ({ file: f, type_id: null }));
+    setFiles((p) => [...p, ...arr]);
+    e.target.value = '';
+  };
+
+  const setType = (idx: number, val: number | null) =>
+    setFiles((p) => p.map((f, i) => (i === idx ? { ...f, type_id: val } : f)));
+
+  const removeFile = (idx: number) =>
+    setFiles((p) => p.filter((_, i) => i !== idx));
+
+  const submit = (values: Omit<AddLetterFormData, 'attachments'>) => {
+    onSubmit({ ...values, date: values.date ?? dayjs(), attachments: files });
     form.resetFields();
+    setFiles([]);
   };
 
   return (
@@ -155,6 +174,31 @@ export default function AddLetterForm({ onSubmit }: AddLetterFormProps) {
           placeholder="Введите содержание письма"
           autoComplete="off"
         />
+      </Form.Item>
+      <Form.Item label="Вложения">
+        <input type="file" multiple onChange={handleFiles} />
+        {files.map((f, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', marginTop: 4 }}>
+            <span style={{ marginRight: 8 }}>{f.file.name}</span>
+            <Select
+              style={{ width: 160 }}
+              placeholder="Тип файла"
+              value={f.type_id ?? undefined}
+              onChange={(v) => setType(i, v)}
+              allowClear
+              loading={loadingAttachmentTypes}
+            >
+              {attachmentTypes.map((t) => (
+                <Select.Option key={t.id} value={t.id}>
+                  {t.name}
+                </Select.Option>
+              ))}
+            </Select>
+            <Button type="text" danger onClick={() => removeFile(i)}>
+              Удалить
+            </Button>
+          </div>
+        ))}
       </Form.Item>
       <Form.Item style={{ textAlign: 'right' }}>
         <Button type="primary" htmlType="submit">

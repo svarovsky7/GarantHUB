@@ -24,4 +24,20 @@ export interface CorrespondenceLetter {
   subject: string;
   /** Содержание письма */
   content: string;
+
+  /** Загруженные файлы */
+  attachments: CorrespondenceAttachment[];
+}
+
+export interface CorrespondenceAttachment {
+  /** Уникальный идентификатор вложения */
+  id: string;
+  /** Имя файла */
+  name: string;
+  /** MIME‑тип файла */
+  file_type: string;
+  /** Данные файла в Base64 */
+  data_url: string;
+  /** Тип вложения */
+  attachment_type_id: number | null;
 }
