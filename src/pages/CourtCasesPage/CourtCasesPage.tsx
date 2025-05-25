@@ -1,5 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import dayjs, { Dayjs } from 'dayjs';
+import 'dayjs/locale/ru';
+import { ConfigProvider } from 'antd';
+import ruRU from 'antd/locale/ru_RU';
+
+dayjs.locale('ru');
 import {
   Row,
   Col,
@@ -62,6 +67,10 @@ export default function CourtCasesPage() {
   const [form] = Form.useForm();
   const projectId = Form.useWatch('project_id', form);
 
+  useEffect(() => {
+    form.setFieldValue('unit_id', null);
+  }, [projectId, form]);
+
   const { data: projects = [] } = useProjects();
   const { data: units = [], isPending: unitsLoading } = useUnitsByProject(projectId);
   const { data: contractors = [], isPending: contractorsLoading } = useContractors();
@@ -100,7 +109,6 @@ export default function CourtCasesPage() {
           ? (values.fix_end_date as Dayjs).format('YYYY-MM-DD')
           : null,
         description: values.description || '',
-        claim_amount: values.claim_amount ? Number(values.claim_amount) : null,
       } as any,
       {
         onSuccess: () => {
@@ -155,11 +163,6 @@ export default function CourtCasesPage() {
       render: (s: number) => <Tag color="blue">{stages.find((st) => st.id === s)?.name}</Tag>,
     },
     {
-      title: 'Сумма иска',
-      dataIndex: 'claimAmount',
-      render: (v: number) => fmtCurrency(v || 0),
-    },
-    {
       title: 'Действия',
       key: 'actions',
       render: (_: any, record) => (
@@ -191,28 +194,29 @@ export default function CourtCasesPage() {
   });
 
   return (
-    <>
-      <Form form={form} layout="vertical" onFinish={handleAddCase} autoComplete="off">
+    <ConfigProvider locale={ruRU}>
+      <>
+        <Form form={form} layout="vertical" onFinish={handleAddCase} autoComplete="off">
         <Row gutter={16}>
           <Col span={8}>
-            <Form.Item name="number" label="Номер дела" rules={[{ required: true, message: 'Укажите номер' }]}>\
+            <Form.Item name="number" label="Номер дела" rules={[{ required: true, message: 'Укажите номер' }]}>
               <Input />
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item name="date" label="Дата" rules={[{ required: true, message: 'Укажите дату' }]}>\
+            <Form.Item name="date" label="Дата" rules={[{ required: true, message: 'Укажите дату' }]}>
               <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item name="project_id" label="Проект" rules={[{ required: true, message: 'Выберите проект' }]}>\
+            <Form.Item name="project_id" label="Проект" rules={[{ required: true, message: 'Выберите проект' }]}>
               <Select options={projects.map((p) => ({ value: p.id, label: p.name }))} />
             </Form.Item>
           </Col>
         </Row>
         <Row gutter={16}>
           <Col span={8}>
-            <Form.Item name="unit_id" label="Объект" rules={[{ required: true, message: 'Выберите объект' }]}>\
+            <Form.Item name="unit_id" label="Объект" rules={[{ required: true, message: 'Выберите объект' }]}>
               <Select
                 loading={unitsLoading}
                 options={units.map((u) => ({ value: u.id, label: u.name }))}
@@ -221,7 +225,7 @@ export default function CourtCasesPage() {
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item name="plaintiff_id" label="Истец" rules={[{ required: true, message: 'Выберите истца' }]}>\
+            <Form.Item name="plaintiff_id" label="Истец" rules={[{ required: true, message: 'Выберите истца' }]}>
               <Select
                 loading={personsLoading}
                 options={persons.map((p) => ({ value: p.id, label: p.full_name }))}
@@ -230,7 +234,7 @@ export default function CourtCasesPage() {
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item name="defendant_id" label="Ответчик" rules={[{ required: true, message: 'Выберите ответчика' }]}>\
+            <Form.Item name="defendant_id" label="Ответчик" rules={[{ required: true, message: 'Выберите ответчика' }]}>
               <Select
                 loading={contractorsLoading}
                 options={contractors.map((c) => ({ value: c.id, label: c.name }))}
@@ -240,7 +244,7 @@ export default function CourtCasesPage() {
         </Row>
         <Row gutter={16}>
           <Col span={8}>
-            <Form.Item name="responsible_lawyer_id" label="Ответственный юрист" rules={[{ required: true, message: 'Выберите юриста' }]}>\
+            <Form.Item name="responsible_lawyer_id" label="Ответственный юрист" rules={[{ required: true, message: 'Выберите юриста' }]}>
               <Select
                 loading={usersLoading}
                 options={users.map((u) => ({ value: u.id, label: u.name }))}
@@ -248,24 +252,19 @@ export default function CourtCasesPage() {
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item name="status" label="Статус" rules={[{ required: true, message: 'Выберите статус' }]}>\
+            <Form.Item name="status" label="Статус" rules={[{ required: true, message: 'Выберите статус' }]}>
               <Select loading={stagesLoading} options={stages.map((s) => ({ value: s.id, label: s.name }))} />
-            </Form.Item>
-          </Col>
-          <Col span={8}>
-            <Form.Item name="claim_amount" label="Сумма иска">
-              <Input type="number" />
             </Form.Item>
           </Col>
         </Row>
         <Row gutter={16}>
           <Col span={8}>
-            <Form.Item name="fix_start_date" label="Дата начала устранения">\
+            <Form.Item name="fix_start_date" label="Дата начала устранения">
               <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item name="fix_end_date" label="Дата завершения устранения">\
+            <Form.Item name="fix_end_date" label="Дата завершения устранения">
               <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
             </Form.Item>
           </Col>
@@ -334,6 +333,7 @@ export default function CourtCasesPage() {
         onTabChange={setTab}
       />
     </>
+    </ConfigProvider>
   );
 }
 
@@ -438,12 +438,6 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange }: CaseDialogPro
               <div>
                 <small>Статус</small>
                 <div>{(caseData as any).status}</div>
-              </div>
-            </Col>
-            <Col span={8}>
-              <div>
-                <small>Сумма иска</small>
-                <div>{fmtCurrency((caseData as any).claimAmount)}</div>
               </div>
             </Col>
             <Col span={8}>
