@@ -10,8 +10,8 @@ export interface CorrespondenceLetter {
   letter_type_id: number | null;
   /** Проект */
   project_id: number | null;
-  /** Объект проекта */
-  unit_id: number | null;
+  /** Объекты проекта */
+  unit_ids: number[];
 
 
   /** Номер письма */

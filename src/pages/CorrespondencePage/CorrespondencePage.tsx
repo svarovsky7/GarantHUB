@@ -85,7 +85,7 @@ export default function CorrespondencePage() {
         responsible_user_id: data.responsible_user_id,
         letter_type_id: data.letter_type_id,
         project_id: data.project_id,
-        unit_id: data.unit_id,
+        unit_ids: data.unit_ids,
 
       },
       {
@@ -104,7 +104,7 @@ export default function CorrespondencePage() {
   const filtered = letters.filter((l) => {
     if (filters.type && l.type !== filters.type) return false;
     if (filters.project && l.project_id !== Number(filters.project)) return false;
-    if (filters.unit && l.unit_id !== Number(filters.unit)) return false;
+    if (filters.unit && !l.unit_ids.includes(Number(filters.unit))) return false;
     if (
       filters.correspondent &&
       !l.correspondent.toLowerCase().includes(filters.correspondent.toLowerCase())
@@ -290,9 +290,13 @@ export default function CorrespondencePage() {
                 Проект: {projects.find((p) => p.id === view.project_id)?.name}
               </Typography>
             )}
-            {view.unit_id && (
+            {view.unit_ids.length > 0 && (
               <Typography gutterBottom>
-                Объект: {units.find((u) => u.id === view.unit_id)?.name}
+                Объекты:{' '}
+                {view.unit_ids
+                  .map((id) => units.find((u) => u.id === id)?.name)
+                  .filter(Boolean)
+                  .join(', ')}
               </Typography>
             )}
             {view.letter_type_id && (
