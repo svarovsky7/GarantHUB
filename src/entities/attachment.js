@@ -18,6 +18,13 @@ try {
     /* ignore invalid URL */
 }
 
+// Если из переменной окружения получилось название «s3», это скорее всего
+// базовый путь без указания корзины.  В таком случае переключаемся на
+// используемую в проекте корзину «attachments».
+if (ATTACH_BUCKET.toLowerCase() === 's3') {
+    ATTACH_BUCKET = 'attachments';
+}
+
 export const slugify = (str) =>
     str
         .normalize('NFKD')

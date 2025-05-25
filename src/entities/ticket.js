@@ -29,6 +29,12 @@ try {
     /* ignore invalid URL */
 }
 
+// Если по ошибке указали только базовый путь «s3», используем корзину
+// «attachments», которая настроена в Supabase.
+if (ATTACH_BUCKET.toLowerCase() === 's3') {
+    ATTACH_BUCKET = 'attachments';
+}
+
 // ──────────────────────────── helpers ──────────────────────────────
 export const slugify = (str) =>
     str
