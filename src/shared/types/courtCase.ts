@@ -25,7 +25,6 @@ export interface CourtCase {
   plaintiff_id: number;
   defendant_id: number;
   responsible_lawyer_id: string | null;
-  court: string;
   status: number;
   fix_start_date?: string | null;
   fix_end_date?: string | null;
