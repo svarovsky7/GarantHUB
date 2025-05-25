@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Grid,
   TextField,
@@ -25,26 +25,25 @@ import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
 import "dayjs/locale/ru";
-import type {
-  Letter,
-  Defect,
-  CourtCase,
-  CaseStatus,
-} from "@/shared/types/courtCase";
-
-const statusText: Record<CaseStatus, string> = {
-  active: "В процессе",
-  won: "Выиграно",
-  lost: "Проиграно",
-  settled: "Урегулировано",
-};
-
-const statusColor: Record<CaseStatus, "warning" | "success" | "error" | "info"> = {
-  active: "warning",
-  won: "success",
-  lost: "error",
-  settled: "info",
-};
+import type { Letter, Defect, CourtCase } from "@/shared/types/courtCase";
+import { useProjects } from "@/entities/project";
+import { useUnitsByProject } from "@/entities/unit";
+import { useContractors } from "@/entities/contractor";
+import { useUsers } from "@/entities/user";
+import { useLitigationStages } from "@/entities/litigationStage";
+import {
+  useCourtCases,
+  useAddCourtCase,
+  useDeleteCourtCase,
+  useCaseLetters,
+  useAddLetter,
+  useDeleteLetter,
+  useCaseDefects,
+  useAddDefect,
+  useDeleteDefect,
+} from "@/entities/courtCase";
+import { supabase } from "@/shared/api/supabaseClient";
+import { useQuery } from "@tanstack/react-query";
 
 const fmtCurrency = (n: number) =>
   new Intl.NumberFormat("ru-RU", {
@@ -53,114 +52,11 @@ const fmtCurrency = (n: number) =>
     maximumFractionDigits: 0,
   }).format(n);
 
-const initialCases: CourtCase[] = [
-  {
-    id: "1",
-    number: "А40-123456/2023",
-    date: "2023-05-15",
-    projectObject: 'ЖК "Солнечный берег"',
-    plaintiff: 'ООО "Строитель"',
-    defendant: 'ООО "Генподрядчик"',
-    responsibleLawyer: "Иванов И.И.",
-    court: "Арбитражный суд г. Москвы",
-    status: "active",
-    claimAmount: 2500000,
-    remediationStartDate: "2023-06-10",
-    remediationEndDate: "2023-07-15",
-    description:
-      "Иск о взыскании задолженности по договору подряда на сумму 2,500,000 руб.",
-    letters: [
-      {
-        id: "101",
-        number: "ИСХ-123",
-        date: "2023-04-10",
-        content: "Претензия о погашении задолженности по договору подряда.",
-      },
-      {
-        id: "102",
-        number: "ИСХ-145",
-        date: "2023-04-25",
-        content: "Уведомление о намерении обратиться в суд.",
-      },
-    ],
-    defects: [
-      {
-        id: "201",
-        name: "Трещины в фундаменте",
-        location: "Секция А, оси 1-3",
-        description:
-          "Обнаружены трещины в фундаменте здания шириной до 5 мм.",
-        cost: 850000,
-        duration: 30,
-      },
-      {
-        id: "202",
-        name: "Протечки кровли",
-        location: "Секция Б, кв. 45-48",
-        description:
-          "Обнаружены протечки кровли в местах примыкания к вентшахтам.",
-        cost: 320000,
-        duration: 14,
-      },
-    ],
-  },
-  {
-    id: "2",
-    number: "А40-789012/2023",
-    date: "2023-06-20",
-    projectObject: 'БЦ "Меркурий"',
-    plaintiff: 'ООО "Генподрядчик"',
-    defendant: 'ООО "Заказчик"',
-    responsibleLawyer: "Петров П.П.",
-    court: "Арбитражный суд г. Москвы",
-    status: "won",
-    claimAmount: 5800000,
-    remediationStartDate: "",
-    remediationEndDate: "",
-    description:
-      "Иск о взыскании задолженности по договору генерального подряда на сумму 5,800,000 руб.",
-    letters: [],
-    defects: [],
-  },
-  {
-    id: "3",
-    number: "А40-345678/2023",
-    date: "2023-07-05",
-    projectObject: 'ЖК "Зеленый квартал"',
-    plaintiff: 'ТСЖ "Зеленый квартал"',
-    defendant: 'ООО "Генподрядчик"',
-    responsibleLawyer: "Сидорова С.С.",
-    court: "Арбитражный суд г. Москвы",
-    status: "active",
-    claimAmount: 3200000,
-    remediationStartDate: "2023-08-01",
-    remediationEndDate: "",
-    description:
-      "Иск о возмещении ущерба, причиненного некачественным выполнением строительных работ.",
-    letters: [
-      {
-        id: "103",
-        number: "ВХ-78",
-        date: "2023-06-15",
-        content:
-          "Претензия от ТСЖ с требованием устранить выявленные недостатки.",
-      },
-    ],
-    defects: [
-      {
-        id: "203",
-        name: "Некачественная отделка фасада",
-        location: "Корпус 2, северная сторона",
-        description: "Отслоение декоративной штукатурки, выцветание покрытия.",
-        cost: 1200000,
-        duration: 45,
-      },
-    ],
-  },
-];
 
 export default function CourtCasesPage() {
-  const [cases, setCases] = useState<CourtCase[]>([]);
+  const { data: cases = [], isPending: casesLoading } = useCourtCases();
+  const addCaseMutation = useAddCourtCase();
+  const deleteCaseMutation = useDeleteCourtCase();
   const [filters, setFilters] = useState({
     status: "",
     object: "",
@@ -170,13 +66,13 @@ export default function CourtCasesPage() {
   const [newCase, setNewCase] = useState({
     number: "",
     date: null as Dayjs | null,
-    object: "",
-    plaintiff: "",
-    defendant: "",
-    lawyer: "",
+    project: null as number | null,
+    unit: null as number | null,
+    plaintiff: null as number | null,
+    defendant: null as number | null,
+    lawyer: null as string | null,
     court: "",
-    status: "active" as CaseStatus,
-    claimAmount: "",
+    status: null as number | null,
     fixStart: null as Dayjs | null,
     fixEnd: null as Dayjs | null,
     description: "",
@@ -185,46 +81,94 @@ export default function CourtCasesPage() {
   const [tab, setTab] = useState(0);
   const [snackbar, setSnackbar] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
-  useEffect(() => {
-    setCases(initialCases);
-  }, []);
+  const { data: projects = [] } = useProjects();
+  const { data: units = [], isPending: unitsLoading } = useUnitsByProject(newCase.project);
+  const { data: contractors = [], isPending: contractorsLoading } = useContractors();
+  const { data: users = [], isPending: usersLoading } = useUsers();
+  const { data: stages = [], isPending: stagesLoading } = useLitigationStages();
+  const stageMap = useMemo(() => {
+    const map: Record<number, string> = {};
+    stages.forEach((s) => {
+      map[s.id] = s.name;
+    });
+    return map;
+  }, [stages]);
+  const { data: persons = [], isPending: personsLoading } = useQuery(
+    ["persons", newCase.project],
+    async () => {
+      const { data, error } = await supabase
+        .from("persons")
+        .select("id, full_name")
+        .eq("project_id", newCase.project)
+        .order("full_name");
+      if (error) throw error;
+      return data ?? [];
+    },
+    { enabled: !!newCase.project }
+  );
+
+  const { data: letters = [] } = useCaseLetters(
+    dialogCase ? Number(dialogCase.id) : 0,
+  );
+  const { data: defects = [] } = useCaseDefects(
+    dialogCase ? Number(dialogCase.id) : 0,
+  );
+  const addLetterMutation = useAddLetter();
+  const deleteLetterMutation = useDeleteLetter();
+  const addDefectMutation = useAddDefect();
+  const deleteDefectMutation = useDeleteDefect();
 
   const handleAddCase = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!newCase.number || !newCase.date || !newCase.object || !newCase.plaintiff || !newCase.defendant || !newCase.lawyer || !newCase.court) return;
-    const caseToAdd: CourtCase = {
-      id: Date.now().toString(),
-      number: newCase.number,
-      date: newCase.date.format("YYYY-MM-DD"),
-      projectObject: newCase.object,
-      plaintiff: newCase.plaintiff,
-      defendant: newCase.defendant,
-      responsibleLawyer: newCase.lawyer,
-      court: newCase.court,
-      status: newCase.status,
-      claimAmount: Number(newCase.claimAmount) || 0,
-      remediationStartDate: newCase.fixStart ? newCase.fixStart.format("YYYY-MM-DD") : "",
-      remediationEndDate: newCase.fixEnd ? newCase.fixEnd.format("YYYY-MM-DD") : "",
-      description: newCase.description,
-      letters: [],
-      defects: [],
-    };
-    setCases((prev) => [...prev, caseToAdd]);
-    setNewCase({
-      number: "",
-      date: null,
-      object: "",
-      plaintiff: "",
-      defendant: "",
-      lawyer: "",
-      court: "",
-      status: "active",
-      claimAmount: "",
-      fixStart: null,
-      fixEnd: null,
-      description: "",
-    });
-    setSnackbar({ message: "Дело успешно добавлено!", type: "success" });
+    if (
+      !newCase.number ||
+      !newCase.date ||
+      !newCase.project ||
+      !newCase.unit ||
+      !newCase.plaintiff ||
+      !newCase.defendant ||
+      !newCase.lawyer ||
+      !newCase.status
+    )
+      return;
+
+    addCaseMutation.mutate(
+      {
+        project_id: newCase.project,
+        unit_id: newCase.unit,
+        number: newCase.number,
+        date: newCase.date.format("YYYY-MM-DD"),
+        plaintiff_id: newCase.plaintiff,
+        defendant_id: newCase.defendant,
+        responsible_lawyer_id: newCase.lawyer,
+        court: newCase.court,
+        status: newCase.status,
+        fix_start_date: newCase.fixStart ? newCase.fixStart.format("YYYY-MM-DD") : null,
+        fix_end_date: newCase.fixEnd ? newCase.fixEnd.format("YYYY-MM-DD") : null,
+        description: newCase.description,
+      } as any,
+      {
+        onSuccess: () => {
+          setNewCase({
+            number: "",
+            date: null,
+            project: null,
+            unit: null,
+            plaintiff: null,
+            defendant: null,
+            lawyer: null,
+            court: "",
+            status: null,
+            fixStart: null,
+            fixEnd: null,
+            description: "",
+          });
+          setSnackbar({ message: "Дело успешно добавлено!", type: "success" });
+        },
+        onError: (e: any) =>
+          setSnackbar({ message: e.message, type: "error" }),
+      }
+    );
   };
 
   const filteredCases = useMemo(() => {
@@ -244,47 +188,52 @@ export default function CourtCasesPage() {
     });
   }, [cases, filters]);
 
-  const deleteCase = (id: string) => {
-    if (window.confirm("Удалить дело?")) {
-      setCases((prev) => prev.filter((c) => c.id !== id));
-      setSnackbar({ message: "Дело удалено!", type: "success" });
-    }
+  const deleteCase = (id: number) => {
+    if (!window.confirm("Удалить дело?")) return;
+    deleteCaseMutation.mutate(id, {
+      onSuccess: () => setSnackbar({ message: "Дело удалено!", type: "success" }),
+      onError: (e: any) => setSnackbar({ message: e.message, type: "error" }),
+    });
   };
 
-  const addLetter = (caseId: string, letter: Omit<Letter, "id">) => {
-    setCases((prev) =>
-      prev.map((c) =>
-        c.id === caseId ? { ...c, letters: [...c.letters, { ...letter, id: Date.now().toString() }] } : c,
-      ),
+  const addLetter = (caseId: number, letter: Omit<Letter, "id" | "case_id">) => {
+    addLetterMutation.mutate(
+      { ...letter, case_id: caseId },
+      {
+        onSuccess: () => setSnackbar({ message: "Письмо добавлено!", type: "success" }),
+        onError: (e: any) => setSnackbar({ message: e.message, type: "error" }),
+      },
     );
-    setSnackbar({ message: "Письмо добавлено!", type: "success" });
   };
 
-  const deleteLetter = (caseId: string, letterId: string) => {
-    setCases((prev) =>
-      prev.map((c) =>
-        c.id === caseId ? { ...c, letters: c.letters.filter((l) => l.id !== letterId) } : c,
-      ),
+  const deleteLetter = (caseId: number, letterId: number) => {
+    deleteLetterMutation.mutate(
+      { id: letterId, case_id: caseId },
+      {
+        onSuccess: () => setSnackbar({ message: "Письмо удалено!", type: "success" }),
+        onError: (e: any) => setSnackbar({ message: e.message, type: "error" }),
+      },
     );
-    setSnackbar({ message: "Письмо удалено!", type: "success" });
   };
 
-  const addDefect = (caseId: string, defect: Omit<Defect, "id">) => {
-    setCases((prev) =>
-      prev.map((c) =>
-        c.id === caseId ? { ...c, defects: [...c.defects, { ...defect, id: Date.now().toString() }] } : c,
-      ),
+  const addDefect = (caseId: number, defect: Omit<Defect, "id">) => {
+    addDefectMutation.mutate(
+      { case_id: caseId, ...defect },
+      {
+        onSuccess: () => setSnackbar({ message: "Недостаток добавлен!", type: "success" }),
+        onError: (e: any) => setSnackbar({ message: e.message, type: "error" }),
+      },
     );
-    setSnackbar({ message: "Недостаток добавлен!", type: "success" });
   };
 
-  const deleteDefect = (caseId: string, defectId: string) => {
-    setCases((prev) =>
-      prev.map((c) =>
-        c.id === caseId ? { ...c, defects: c.defects.filter((d) => d.id !== defectId) } : c,
-      ),
+  const deleteDefect = (caseId: number, defectId: number) => {
+    deleteDefectMutation.mutate(
+      { id: defectId, case_id: caseId },
+      {
+        onSuccess: () => setSnackbar({ message: "Недостаток удален!", type: "success" }),
+        onError: (e: any) => setSnackbar({ message: e.message, type: "error" }),
+      },
     );
-    setSnackbar({ message: "Недостаток удален!", type: "success" });
   };
 
   return (
@@ -316,40 +265,90 @@ export default function CourtCasesPage() {
                   />
                 </Grid>
                 <Grid item xs={12} md={4}>
-                  <TextField
-                    label="Объект"
+                  <Select
                     fullWidth
+                    value={newCase.project ?? ""}
+                    onChange={(e) =>
+                      setNewCase({ ...newCase, project: Number(e.target.value), unit: null, plaintiff: null })
+                    }
+                    displayEmpty
                     required
-                    value={newCase.object}
-                    onChange={(e) => setNewCase({ ...newCase, object: e.target.value })}
-                  />
+                  >
+                    <MenuItem value="">Проект</MenuItem>
+                    {projects.map((p) => (
+                      <MenuItem key={p.id} value={p.id}>
+                        {p.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
                 </Grid>
                 <Grid item xs={12} md={4}>
-                  <TextField
-                    label="Истец"
+                  <Select
                     fullWidth
+                    value={newCase.unit ?? ""}
+                    onChange={(e) => setNewCase({ ...newCase, unit: Number(e.target.value) })}
+                    displayEmpty
+                    disabled={!newCase.project || unitsLoading}
                     required
-                    value={newCase.plaintiff}
-                    onChange={(e) => setNewCase({ ...newCase, plaintiff: e.target.value })}
-                  />
+                  >
+                    <MenuItem value="">Объект</MenuItem>
+                    {units.map((u) => (
+                      <MenuItem key={u.id} value={u.id}>
+                        {u.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
                 </Grid>
                 <Grid item xs={12} md={4}>
-                  <TextField
-                    label="Ответчик"
+                  <Select
                     fullWidth
+                    value={newCase.plaintiff ?? ""}
+                    onChange={(e) => setNewCase({ ...newCase, plaintiff: Number(e.target.value) })}
+                    displayEmpty
+                    disabled={!newCase.project || personsLoading}
                     required
-                    value={newCase.defendant}
-                    onChange={(e) => setNewCase({ ...newCase, defendant: e.target.value })}
-                  />
+                  >
+                    <MenuItem value="">Истец</MenuItem>
+                    {persons.map((p) => (
+                      <MenuItem key={p.id} value={p.id}>
+                        {p.full_name}
+                      </MenuItem>
+                    ))}
+                  </Select>
                 </Grid>
                 <Grid item xs={12} md={4}>
-                  <TextField
-                    label="Ответственный юрист"
+                  <Select
                     fullWidth
+                    value={newCase.defendant ?? ""}
+                    onChange={(e) => setNewCase({ ...newCase, defendant: Number(e.target.value) })}
+                    displayEmpty
+                    disabled={contractorsLoading}
                     required
-                    value={newCase.lawyer}
-                    onChange={(e) => setNewCase({ ...newCase, lawyer: e.target.value })}
-                  />
+                  >
+                    <MenuItem value="">Ответчик</MenuItem>
+                    {contractors.map((c) => (
+                      <MenuItem key={c.id} value={c.id}>
+                        {c.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Select
+                    fullWidth
+                    value={newCase.lawyer ?? ""}
+                    onChange={(e) => setNewCase({ ...newCase, lawyer: e.target.value as string })}
+                    displayEmpty
+                    disabled={usersLoading}
+                    required
+                  >
+                    <MenuItem value="">Ответственный юрист</MenuItem>
+                    {users.map((u) => (
+                      <MenuItem key={u.id} value={u.id}>
+                        {u.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
                 </Grid>
                 <Grid item xs={12} md={4}>
                   <TextField
@@ -363,24 +362,19 @@ export default function CourtCasesPage() {
                 <Grid item xs={12} md={4}>
                   <Select
                     fullWidth
-                    value={newCase.status}
-                    onChange={(e) => setNewCase({ ...newCase, status: e.target.value as CaseStatus })}
+                    value={newCase.status ?? ""}
+                    onChange={(e) => setNewCase({ ...newCase, status: Number(e.target.value) })}
+                    displayEmpty
+                    disabled={stagesLoading}
                     required
                   >
-                    <MenuItem value="active">В процессе</MenuItem>
-                    <MenuItem value="won">Выиграно</MenuItem>
-                    <MenuItem value="lost">Проиграно</MenuItem>
-                    <MenuItem value="settled">Урегулировано</MenuItem>
+                    <MenuItem value="">Статус</MenuItem>
+                    {stages.map((s) => (
+                      <MenuItem key={s.id} value={s.id}>
+                        {s.name}
+                      </MenuItem>
+                    ))}
                   </Select>
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <TextField
-                    label="Сумма иска"
-                    type="number"
-                    value={newCase.claimAmount}
-                    onChange={(e) => setNewCase({ ...newCase, claimAmount: e.target.value })}
-                    fullWidth
-                  />
                 </Grid>
                 <Grid item xs={12} md={4}>
                   <DatePicker
@@ -486,12 +480,12 @@ export default function CourtCasesPage() {
                     <TableCell>{c.defendant}</TableCell>
                     <TableCell>{c.responsibleLawyer}</TableCell>
                     <TableCell>
-                      <Chip size="small" label={statusText[c.status]} color={statusColor[c.status]} />
+                      <Chip size="small" label={stageMap[c.status] ?? c.status} color="primary" />
                     </TableCell>
                     <TableCell>{fmtCurrency(c.claimAmount)}</TableCell>
                     <TableCell>
                       <Button size="small" onClick={() => { setDialogCase(c); setTab(0); }}>Просмотр</Button>
-                      <Button size="small" color="error" onClick={() => deleteCase(c.id)}>
+                      <Button size="small" color="error" onClick={() => deleteCase(Number(c.id))}>
                         Удалить
                       </Button>
                     </TableCell>
@@ -556,7 +550,7 @@ export default function CourtCasesPage() {
                 </Grid>
                 <Grid item xs={12} md={4}>
                   <Typography variant="caption">Статус дела</Typography>
-                  <Typography>{statusText[dialogCase.status]}</Typography>
+                  <Typography>{stageMap[dialogCase.status]}</Typography>
                 </Grid>
                 <Grid item xs={12} md={4}>
                   <Typography variant="caption">Сумма иска</Typography>
@@ -588,10 +582,20 @@ export default function CourtCasesPage() {
                 <Tab label="Недостатки и стоимость устранения" />
               </Tabs>
               {tab === 0 && (
-                <LettersTab caseId={dialogCase.id} letters={dialogCase.letters} onAdd={addLetter} onDelete={deleteLetter} />
+                <LettersTab
+                  caseId={Number(dialogCase.id)}
+                  letters={letters}
+                  onAdd={addLetter}
+                  onDelete={deleteLetter}
+                />
               )}
               {tab === 1 && (
-                <DefectsTab caseId={dialogCase.id} defects={dialogCase.defects} onAdd={addDefect} onDelete={deleteDefect} />
+                <DefectsTab
+                  caseId={Number(dialogCase.id)}
+                  defects={defects}
+                  onAdd={addDefect}
+                  onDelete={deleteDefect}
+                />
               )}
             </>
           )}
@@ -609,10 +613,10 @@ export default function CourtCasesPage() {
 }
 
 interface LettersTabProps {
-  caseId: string;
+  caseId: number;
   letters: Letter[];
-  onAdd: (caseId: string, letter: Omit<Letter, "id">) => void;
-  onDelete: (caseId: string, letterId: string) => void;
+  onAdd: (caseId: number, letter: Omit<Letter, "id" | "case_id">) => void;
+  onDelete: (caseId: number, letterId: number) => void;
 }
 
 function LettersTab({ caseId, letters, onAdd, onDelete }: LettersTabProps) {
@@ -698,10 +702,10 @@ function LettersTab({ caseId, letters, onAdd, onDelete }: LettersTabProps) {
 }
 
 interface DefectsTabProps {
-  caseId: string;
+  caseId: number;
   defects: Defect[];
-  onAdd: (caseId: string, defect: Omit<Defect, "id">) => void;
-  onDelete: (caseId: string, defectId: string) => void;
+  onAdd: (caseId: number, defect: Omit<Defect, "id">) => void;
+  onDelete: (caseId: number, defectId: number) => void;
 }
 
 function DefectsTab({ caseId, defects, onAdd, onDelete }: DefectsTabProps) {

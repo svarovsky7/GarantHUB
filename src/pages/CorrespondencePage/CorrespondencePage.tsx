@@ -25,6 +25,14 @@ import {
 } from '@/entities/correspondence';
 import { CorrespondenceLetter } from '@/shared/types/correspondence';
 
+
+import { useUsers } from '@/entities/user';
+import { useLetterTypes } from '@/entities/letterType';
+import { useProjects } from '@/entities/project';
+import { useUnitsByProject } from '@/entities/unit';
+
+
+
 interface Filters {
   type?: 'incoming' | 'outgoing' | '';
   search?: string;
@@ -39,6 +47,14 @@ export default function CorrespondencePage() {
   const [view, setView] = useState<CorrespondenceLetter | null>(null);
   const [snackbar, setSnackbar] = useState<string | null>(null);
 
+
+
+  const { data: users = [] } = useUsers();
+  const { data: letterTypes = [] } = useLetterTypes();
+  const { data: projects = [] } = useProjects();
+  const { data: units = [] } = useUnitsByProject(view?.project_id ?? null);
+
+
   const handleAdd = (data: AddLetterFormData) => {
     add.mutate(
       {
@@ -48,6 +64,13 @@ export default function CorrespondencePage() {
         correspondent: data.correspondent,
         subject: data.subject,
         content: data.content,
+
+
+        responsible_user_id: data.responsible_user_id,
+        letter_type_id: data.letter_type_id,
+        project_id: data.project_id,
+        unit_id: data.unit_id,
+
       },
       {
         onSuccess: () => setSnackbar('Письмо добавлено'),
@@ -79,7 +102,10 @@ export default function CorrespondencePage() {
   const total = letters.length;
 
   return (
+
+
     <Stack spacing={3} sx={{ mt: 2 }}>
+
       <Paper sx={{ p: 3 }}>
         <Typography variant="h5" gutterBottom>
           Система учета корреспонденции
@@ -145,6 +171,29 @@ export default function CorrespondencePage() {
             <Typography gutterBottom>
               Дата: {dayjs(view.date).format('DD.MM.YYYY')}
             </Typography>
+
+
+            {view.project_id && (
+              <Typography gutterBottom>
+                Проект: {projects.find((p) => p.id === view.project_id)?.name}
+              </Typography>
+            )}
+            {view.unit_id && (
+              <Typography gutterBottom>
+                Объект: {units.find((u) => u.id === view.unit_id)?.name}
+              </Typography>
+            )}
+            {view.letter_type_id && (
+              <Typography gutterBottom>
+                Категория: {letterTypes.find((t) => t.id === view.letter_type_id)?.name}
+              </Typography>
+            )}
+            {view.responsible_user_id && (
+              <Typography gutterBottom>
+                Ответственный: {users.find((u) => u.id === view.responsible_user_id)?.name}
+              </Typography>
+            )}
+
             <Typography gutterBottom>Корреспондент: {view.correspondent}</Typography>
             <Typography gutterBottom>Тема: {view.subject}</Typography>
             <Typography sx={{ whiteSpace: 'pre-wrap' }}>{view.content}</Typography>
@@ -161,6 +210,10 @@ export default function CorrespondencePage() {
         onClose={() => setSnackbar(null)}
         message={snackbar}
       />
+
+
     </Stack>
+
+
   );
 }

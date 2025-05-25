@@ -127,7 +127,6 @@ export function useAddDefect() {
       const { data, error } = await supabase
         .from(DEFECTS_TABLE)
         .insert({
-          project_id: payload.project_id ?? null,
           description: payload.description,
           fix_cost: payload.cost,
         })

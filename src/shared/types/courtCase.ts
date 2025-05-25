@@ -1,12 +1,13 @@
 export interface Letter {
-  id: string;
+  id: number;
+  case_id: number;
   number: string;
   date: string;
   content: string;
 }
 
 export interface Defect {
-  id: string;
+  id: number;
   name: string;
   location: string;
   description: string;
@@ -17,19 +18,19 @@ export interface Defect {
 export type CaseStatus = 'active' | 'won' | 'lost' | 'settled';
 
 export interface CourtCase {
-  id: string;
+  id: number;
+  project_id: number;
+  unit_id: number | null;
   number: string;
-  date: string;
-  projectObject: string;
-  plaintiff: string;
-  defendant: string;
-  responsibleLawyer: string;
+  plaintiff_id: number;
+  defendant_id: number;
+  responsible_lawyer_id: string | null;
   court: string;
-  status: CaseStatus;
-  claimAmount: number;
-  remediationStartDate?: string;
-  remediationEndDate?: string;
+  status: number;
+  fix_start_date?: string | null;
+  fix_end_date?: string | null;
   description: string;
+  claim_amount?: number | null;
   letters: Letter[];
   defects: Defect[];
 }
