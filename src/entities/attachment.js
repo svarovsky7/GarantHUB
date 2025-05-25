@@ -1,6 +1,6 @@
 import { supabase } from '@/shared/api/supabaseClient';
 
-const ATTACH_BUCKET =
+export const ATTACH_BUCKET =
     (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ATTACH_BUCKET) ||
     process.env.REACT_APP_ATTACH_BUCKET ||
     'attachments';
@@ -45,4 +45,9 @@ async function upload(file, pathPrefix) {
 
 export function uploadLetterAttachment(file, projectId) {
     return upload(file, `letters/${projectId}`);
+}
+
+export function uploadCorrespondenceAttachment(file, projectId) {
+    const prefix = `correspondence/${projectId ?? 'common'}`;
+    return upload(file, prefix);
 }
