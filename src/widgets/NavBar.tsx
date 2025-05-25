@@ -62,6 +62,9 @@ const NavBar = () => {
         <Button color="inherit" component={RouterLink} to="/court-cases">
           Судебные&nbsp;дела
         </Button>
+        <Button color="inherit" component={RouterLink} to="/correspondence">
+          Система&nbsp;учета
+        </Button>
         {profile?.role === "ADMIN" && (
           <Button color="inherit" component={RouterLink} to="/admin">
             Администрирование
