@@ -6,8 +6,6 @@ import { useLetterTypes } from '@/entities/letterType';
 import { useProjects } from '@/entities/project';
 import { useUnitsByProject } from '@/entities/unit';
 import { useContractors } from '@/entities/contractor';
-import { supabase } from '@/shared/api/supabaseClient';
-import { useQuery } from '@tanstack/react-query';
 
 export interface AddLetterFormData {
   type: 'incoming' | 'outgoing';
@@ -35,23 +33,8 @@ export default function AddLetterForm({ onSubmit }: AddLetterFormProps) {
   const { data: letterTypes = [], isLoading: loadingTypes } = useLetterTypes();
   const { data: projects = [], isLoading: loadingProjects } = useProjects();
   const { data: units = [], isLoading: loadingUnits } = useUnitsByProject(projectId);
-  const { data: contractors = [], isLoading: loadingContractors } = useContractors();
-  const {
-    data: persons = [],
-    isPending: loadingPersons,
-  } = useQuery({
-    queryKey: ['persons', projectId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('persons')
-        .select('id, full_name')
-        .eq('project_id', projectId)
-        .order('full_name');
-      if (error) throw error;
-      return data ?? [];
-    },
-    enabled: !!projectId,
-  });
+  const { data: contractors = [], isLoading: loadingContractors } =
+    useContractors();
 
   useEffect(() => {
     form.setFieldValue('unit_ids', []);
@@ -103,7 +86,7 @@ export default function AddLetterForm({ onSubmit }: AddLetterFormProps) {
           <Form.Item name="correspondent" label="Корреспондент">
             <Select
               showSearch
-              loading={loadingContractors || loadingPersons}
+              loading={loadingContractors}
               placeholder="Выберите корреспондента"
               optionFilterProp="children"
               allowClear
@@ -112,13 +95,6 @@ export default function AddLetterForm({ onSubmit }: AddLetterFormProps) {
                 {contractors.map((c) => (
                   <Select.Option key={`c-${c.id}`} value={c.name}>
                     {c.name}
-                  </Select.Option>
-                ))}
-              </Select.OptGroup>
-              <Select.OptGroup label="Физические лица">
-                {persons.map((p: any) => (
-                  <Select.Option key={`p-${p.id}`} value={p.full_name}>
-                    {p.full_name}
                   </Select.Option>
                 ))}
               </Select.OptGroup>
