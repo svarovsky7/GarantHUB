@@ -139,3 +139,23 @@ export function useLinkLetters() {
     },
   });
 }
+
+
+export function useUnlinkLetter() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const letters = loadLetters();
+      const map = new Map(letters.map((l) => [l.id, l]));
+      const letter = map.get(id);
+      if (letter) {
+        letter.parent_id = null;
+        map.set(id, letter);
+        saveLetters(Array.from(map.values()));
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [LS_KEY] });
+    },
+  });
+}
