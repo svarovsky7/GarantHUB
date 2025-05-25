@@ -46,3 +46,9 @@ export interface CorrespondenceAttachment {
   /** Тип вложения */
   attachment_type_id: number | null;
 }
+
+/** Связь писем: parent_id - родительское письмо, child_id - дочернее */
+export interface LetterLink {
+  parent_id: string;
+  child_id: string;
+}
