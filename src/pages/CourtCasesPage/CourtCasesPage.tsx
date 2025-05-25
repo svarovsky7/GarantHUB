@@ -38,6 +38,7 @@ import {
   useAddDefect,
   useDeleteDefect,
 } from '@/entities/courtCase';
+import { useAttachmentTypes } from '@/entities/attachmentType';
 import { supabase } from '@/shared/api/supabaseClient';
 import { useQuery } from '@tanstack/react-query';
 
@@ -489,6 +490,19 @@ interface LettersProps {
 
 function LettersTab({ letters, onAdd, onDelete }: LettersProps) {
   const [form] = Form.useForm();
+  const { data: attachmentTypes = [] } = useAttachmentTypes();
+  const [files, setFiles] = useState<{ file: File; type_id: number | null }[]>([]);
+
+  const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const arr = Array.from(e.target.files || []).map((f) => ({ file: f, type_id: null }));
+    setFiles((p) => [...p, ...arr]);
+    e.target.value = '';
+  };
+
+  const setType = (idx: number, val: number | null) =>
+    setFiles((p) => p.map((f, i) => (i === idx ? { ...f, type_id: val } : f)));
+
+  const removeFile = (idx: number) => setFiles((p) => p.filter((_, i) => i !== idx));
 
   const add = (values: any) => {
     if (!values.number || !values.date || !values.content) return;
@@ -496,8 +510,10 @@ function LettersTab({ letters, onAdd, onDelete }: LettersProps) {
       number: values.number,
       date: (values.date as Dayjs).format('YYYY-MM-DD'),
       content: values.content,
+      attachments: files,
     });
     form.resetFields();
+    setFiles([]);
   };
 
   const columns: ColumnsType<Letter> = [
@@ -541,13 +557,37 @@ function LettersTab({ letters, onAdd, onDelete }: LettersProps) {
               </Button>
             </Form.Item>
           </Col>
-          <Col span={24}>
-            <Form.Item name="content" label="Содержание">
-              <Input.TextArea rows={2} />
-            </Form.Item>
-          </Col>
-        </Row>
-      </Form>
+        <Col span={24}>
+          <Form.Item name="content" label="Содержание">
+            <Input.TextArea rows={2} />
+          </Form.Item>
+        </Col>
+        <Col span={24}>
+          <input type="file" multiple onChange={handleFiles} />
+          {files.map((f, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', marginTop: 4 }}>
+              <span style={{ marginRight: 8 }}>{f.file.name}</span>
+              <Select
+                style={{ width: 160 }}
+                placeholder="Тип файла"
+                value={f.type_id ?? undefined}
+                onChange={(v) => setType(i, v)}
+                allowClear
+              >
+                {attachmentTypes.map((t) => (
+                  <Select.Option key={t.id} value={t.id}>
+                    {t.name}
+                  </Select.Option>
+                ))}
+              </Select>
+              <Button type="text" danger onClick={() => removeFile(i)}>
+                Удалить
+              </Button>
+            </div>
+          ))}
+        </Col>
+      </Row>
+    </Form>
       <Table rowKey="id" columns={columns} dataSource={letters} pagination={false} size="middle" />
     </>
   );

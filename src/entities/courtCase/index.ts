@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/shared/api/supabaseClient';
 import { useProjectId } from '@/shared/hooks/useProjectId';
 import type { CourtCase, Letter, Defect } from '@/shared/types/courtCase';
+import { uploadLetterAttachment } from '../attachment';
 
 const CASES_TABLE = 'court_cases';
 const LETTERS_TABLE = 'letters';
@@ -60,7 +61,7 @@ export function useCaseLetters(caseId: number) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from(LETTERS_TABLE)
-        .select('*')
+        .select(`*, attachments(id, storage_path, file_url, file_type, attachment_type_id)`)
         .eq('case_id', caseId)
         .order('letter_date');
       if (error) throw error;
@@ -74,14 +75,29 @@ export function useCaseLetters(caseId: number) {
 export function useAddLetter() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: Omit<Letter, 'id'>) => {
+    mutationFn: async ({ attachments = [], ...payload }: Omit<Letter, 'id' | 'attachments'> & { attachments?: { file: File; type_id: number | null }[] }) => {
       const { data, error } = await supabase
         .from(LETTERS_TABLE)
         .insert(payload)
         .select('*')
         .single();
       if (error) throw error;
-      return data as Letter;
+      const letter = data as Letter;
+      if (attachments.length && payload.project_id) {
+        await Promise.all(
+          attachments.map(async ({ file, type_id }) => {
+            const { path, type, url } = await uploadLetterAttachment(file, payload.project_id!);
+            await supabase.from('attachments').insert({
+              letter_id: letter.id,
+              file_type: type,
+              storage_path: path,
+              file_url: url,
+              attachment_type_id: type_id,
+            });
+          })
+        );
+      }
+      return letter;
     },
     onSuccess: (_d, vars) => {
       qc.invalidateQueries({ queryKey: [LETTERS_TABLE, vars.case_id] });

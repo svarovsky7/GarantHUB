@@ -49,6 +49,20 @@
     "column_default": "false"
   },
   {
+    "table_name": "attachments",
+    "column_name": "letter_id",
+    "data_type": "bigint",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "attachments",
+    "column_name": "attachment_type_id",
+    "data_type": "bigint",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
     "table_name": "contractors",
     "column_name": "id",
     "data_type": "integer",
@@ -288,6 +302,20 @@
   },
   {
     "table_name": "letter_types",
+    "column_name": "name",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "attachment_types",
+    "column_name": "id",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": "nextval('attachment_types_id_seq'::regclass)"
+  },
+  {
+    "table_name": "attachment_types",
     "column_name": "name",
     "data_type": "text",
     "is_nullable": "NO",
