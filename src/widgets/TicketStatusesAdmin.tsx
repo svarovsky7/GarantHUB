@@ -38,7 +38,6 @@ export default function TicketStatusesAdmin({
     const columns = [
         { field: 'id', headerName: 'ID', width: 80 },
         { field: 'name', headerName: 'Название статуса', flex: 1 },
-        { field: 'description', headerName: 'Описание', flex: 1 },
         {
             field: 'color',
             headerName: 'Цвет',
