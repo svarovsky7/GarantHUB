@@ -6,7 +6,15 @@ const LS_KEY = 'correspondenceLetters';
 function loadLetters(): CorrespondenceLetter[] {
   try {
     const raw = localStorage.getItem(LS_KEY);
-    return raw ? (JSON.parse(raw) as CorrespondenceLetter[]) : [];
+    const arr = raw ? (JSON.parse(raw) as any[]) : [];
+    return arr.map((l) => ({
+      ...l,
+      unit_ids: Array.isArray(l.unit_ids)
+        ? l.unit_ids
+        : l.unit_id
+        ? [l.unit_id]
+        : [],
+    }));
   } catch {
     return [];
   }

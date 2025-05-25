@@ -5,6 +5,9 @@ import { useUsers } from '@/entities/user';
 import { useLetterTypes } from '@/entities/letterType';
 import { useProjects } from '@/entities/project';
 import { useUnitsByProject } from '@/entities/unit';
+import { useContractors } from '@/entities/contractor';
+import { supabase } from '@/shared/api/supabaseClient';
+import { useQuery } from '@tanstack/react-query';
 
 export interface AddLetterFormData {
   type: 'incoming' | 'outgoing';
@@ -16,7 +19,7 @@ export interface AddLetterFormData {
   responsible_user_id: string | null;
   letter_type_id: number | null;
   project_id: number | null;
-  unit_id: number | null;
+  unit_ids: number[];
 }
 
 interface AddLetterFormProps {
@@ -32,9 +35,26 @@ export default function AddLetterForm({ onSubmit }: AddLetterFormProps) {
   const { data: letterTypes = [], isLoading: loadingTypes } = useLetterTypes();
   const { data: projects = [], isLoading: loadingProjects } = useProjects();
   const { data: units = [], isLoading: loadingUnits } = useUnitsByProject(projectId);
+  const { data: contractors = [], isLoading: loadingContractors } = useContractors();
+  const {
+    data: persons = [],
+    isPending: loadingPersons,
+  } = useQuery({
+    queryKey: ['persons', projectId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('persons')
+        .select('id, full_name')
+        .eq('project_id', projectId)
+        .order('full_name');
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!projectId,
+  });
 
   useEffect(() => {
-    form.setFieldValue('unit_id', null);
+    form.setFieldValue('unit_ids', []);
   }, [projectId, form]);
 
   const submit = (values: AddLetterFormData) => {
@@ -47,7 +67,7 @@ export default function AddLetterForm({ onSubmit }: AddLetterFormProps) {
       form={form}
       layout="vertical"
       onFinish={submit}
-      initialValues={{ type: 'incoming', date: dayjs() }}
+      initialValues={{ type: 'incoming', date: dayjs(), unit_ids: [] }}
       autoComplete="off"
     >
       <Row gutter={16}>
@@ -81,7 +101,28 @@ export default function AddLetterForm({ onSubmit }: AddLetterFormProps) {
       <Row gutter={16}>
         <Col span={8}>
           <Form.Item name="correspondent" label="Корреспондент">
-            <Input placeholder="Укажите отправителя/получателя" autoComplete="off" />
+            <Select
+              showSearch
+              loading={loadingContractors || loadingPersons}
+              placeholder="Выберите корреспондента"
+              optionFilterProp="children"
+              allowClear
+            >
+              <Select.OptGroup label="Компании">
+                {contractors.map((c) => (
+                  <Select.Option key={`c-${c.id}`} value={c.name}>
+                    {c.name}
+                  </Select.Option>
+                ))}
+              </Select.OptGroup>
+              <Select.OptGroup label="Физические лица">
+                {persons.map((p: any) => (
+                  <Select.Option key={`p-${p.id}`} value={p.full_name}>
+                    {p.full_name}
+                  </Select.Option>
+                ))}
+              </Select.OptGroup>
+            </Select>
           </Form.Item>
         </Col>
         <Col span={8}>
@@ -117,12 +158,12 @@ export default function AddLetterForm({ onSubmit }: AddLetterFormProps) {
           </Form.Item>
         </Col>
         <Col span={8}>
-          <Form.Item name="unit_id" label="Объект">
+          <Form.Item name="unit_ids" label="Объекты">
             <Select
+              mode="multiple"
               loading={loadingUnits}
               options={units.map((u) => ({ value: u.id, label: u.name }))}
-              allowClear
-              placeholder="Выберите объект"
+              placeholder="Выберите объекты"
               disabled={!projectId}
             />
           </Form.Item>

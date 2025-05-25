@@ -82,9 +82,9 @@ export default function CorrespondenceTable({
       sorter: (a, b) => (a.projectName || '').localeCompare(b.projectName || ''),
     },
     {
-      title: 'Объект',
-      dataIndex: 'unitName',
-      sorter: (a, b) => (a.unitName || '').localeCompare(b.unitName || ''),
+      title: 'Объекты',
+      dataIndex: 'unitNames',
+      sorter: (a, b) => (a.unitNames || '').localeCompare(b.unitNames || ''),
     },
     {
       title: 'Категория',
@@ -127,7 +127,10 @@ export default function CorrespondenceTable({
       letters.map((l) => ({
         ...l,
         projectName: l.project_id ? maps.project[l.project_id] : null,
-        unitName: l.unit_id ? maps.unit[l.unit_id] : null,
+        unitNames: l.unit_ids
+          .map((id) => maps.unit[id])
+          .filter(Boolean)
+          .join(', '),
         letterTypeName: l.letter_type_id ? maps.type[l.letter_type_id] : null,
         responsibleName: l.responsible_user_id
           ? maps.user[l.responsible_user_id]
