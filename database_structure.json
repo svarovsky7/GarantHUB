@@ -238,6 +238,13 @@
     "column_default": "now()"
   },
   {
+    "table_name": "court_cases",
+    "column_name": "date",
+    "data_type": "date",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
     "table_name": "defects",
     "column_name": "id",
     "data_type": "bigint",
