@@ -802,16 +802,35 @@ interface CaseFilesTabProps {
 }
 
 function CaseFilesTab({ caseData }: CaseFilesTabProps) {
-  const [files, setFiles] = useState<{ name: string; path: string; url: string }[]>([]);
+  const { data: attachmentTypes = [] } = useAttachmentTypes();
+  const [files, setFiles] = useState<{
+    name: string;
+    path: string;
+    url: string;
+    type_id: number | null;
+  }[]>([]);
+
+  const storageKey = React.useMemo(
+    () => `case_file_types_${caseData.id}`,
+    [caseData.id],
+  );
 
   const loadFiles = async () => {
     const prefix = `Case/${caseData.project_id}/${caseData.unit_id}`;
     const { data, error } = await supabase.storage.from('attachments').list(prefix);
     if (error) return message.error(error.message);
+    const typeMap: Record<string, number> = JSON.parse(
+      localStorage.getItem(storageKey) || '{}',
+    );
     const arr = (data || []).map((f) => {
       const path = `${prefix}/${f.name}`;
       const { data: pub } = supabase.storage.from('attachments').getPublicUrl(path);
-      return { name: f.name, path, url: pub.publicUrl };
+      return {
+        name: f.name,
+        path,
+        url: pub.publicUrl,
+        type_id: typeMap[path] ?? null,
+      };
     });
     setFiles(arr);
   };
@@ -824,9 +843,25 @@ function CaseFilesTab({ caseData }: CaseFilesTabProps) {
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const fls = Array.from(e.target.files || []);
     try {
-      await Promise.all(fls.map((f) => uploadCaseAttachment(f, caseData.project_id, caseData.unit_id)));
+      const uploaded = await Promise.all(
+        fls.map((f) => uploadCaseAttachment(f, caseData.project_id, caseData.unit_id)),
+      );
+      const typeMap: Record<string, number> = JSON.parse(
+        localStorage.getItem(storageKey) || '{}',
+      );
+      const newFiles = uploaded.map((res, idx) => {
+        const obj = {
+          name: fls[idx].name,
+          path: res.path,
+          url: res.url,
+          type_id: null as number | null,
+        };
+        typeMap[res.path] = obj.type_id as any;
+        return obj;
+      });
+      localStorage.setItem(storageKey, JSON.stringify(typeMap));
+      setFiles((p) => [...p, ...newFiles]);
       message.success('Файлы загружены');
-      loadFiles();
     } catch (err: any) {
       message.error(err.message);
     }
@@ -835,19 +870,52 @@ function CaseFilesTab({ caseData }: CaseFilesTabProps) {
 
   const handleDelete = async (path: string) => {
     await supabase.storage.from('attachments').remove([path]);
+    const typeMap: Record<string, number> = JSON.parse(
+      localStorage.getItem(storageKey) || '{}',
+    );
+    delete typeMap[path];
+    localStorage.setItem(storageKey, JSON.stringify(typeMap));
+    setFiles((p) => p.filter((f) => f.path !== path));
     message.success('Файл удалён');
-    loadFiles();
+  };
+
+  const setType = (idx: number, val: number | null) => {
+    setFiles((p) => {
+      const updated = p.map((f, i) => (i === idx ? { ...f, type_id: val } : f));
+      const map: Record<string, number> = {};
+      updated.forEach((f) => {
+        if (f.type_id != null) map[f.path] = f.type_id;
+      });
+      localStorage.setItem(storageKey, JSON.stringify(map));
+      return updated;
+    });
   };
 
   return (
     <div>
       <input type="file" multiple onChange={handleUpload} />
       <ul>
-        {files.map((f) => (
-          <li key={f.path} style={{ marginTop: 8 }}>
-            <a href={f.url} target="_blank" rel="noopener noreferrer">
+        {files.map((f, i) => (
+          <li
+            key={f.path}
+            style={{ marginTop: 8, display: 'flex', alignItems: 'center' }}
+          >
+            <a href={f.url} target="_blank" rel="noopener noreferrer" style={{ marginRight: 8 }}>
               {f.name}
-            </a>{' '}
+            </a>
+            <Select
+              style={{ width: 160, marginRight: 8 }}
+              placeholder="Тип файла"
+              value={f.type_id ?? undefined}
+              onChange={(v) => setType(i, v)}
+              allowClear
+            >
+              {attachmentTypes.map((t) => (
+                <Select.Option key={t.id} value={t.id}>
+                  {t.name}
+                </Select.Option>
+              ))}
+            </Select>
             <Button type="text" danger size="small" onClick={() => handleDelete(f.path)}>
               Удалить
             </Button>
