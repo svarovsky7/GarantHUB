@@ -28,6 +28,7 @@ import { useUsers } from '@/entities/user';
 import { useLetterTypes } from '@/entities/letterType';
 import { useProjects } from '@/entities/project';
 import { useUnitsByProject, useUnitsByIds } from '@/entities/unit';
+import { useAttachmentTypes } from '@/entities/attachmentType';
 
 
 
@@ -64,6 +65,7 @@ export default function CorrespondencePage() {
   const { data: users = [] } = useUsers();
   const { data: letterTypes = [] } = useLetterTypes();
   const { data: projects = [] } = useProjects();
+  const { data: attachmentTypes = [] } = useAttachmentTypes();
   const { data: projectUnits = [] } = useUnitsByProject(
     view?.project_id ?? (filters.project ? Number(filters.project) : null),
   );
@@ -109,13 +111,11 @@ export default function CorrespondencePage() {
         correspondent: data.correspondent,
         subject: data.subject,
         content: data.content,
-
-
         responsible_user_id: data.responsible_user_id,
         letter_type_id: data.letter_type_id,
         project_id: data.project_id,
         unit_ids: data.unit_ids,
-
+        attachments: data.attachments,
       },
       {
         onSuccess: () => setSnackbar('Письмо добавлено'),
@@ -287,6 +287,28 @@ export default function CorrespondencePage() {
             <Typography gutterBottom>Корреспондент: {view.correspondent}</Typography>
             <Typography gutterBottom>Тема: {view.subject}</Typography>
             <Typography sx={{ whiteSpace: 'pre-wrap' }}>{view.content}</Typography>
+            {view.attachments.length > 0 && (
+              <Box sx={{ mt: 1 }}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Вложения:
+                </Typography>
+                {view.attachments.map((a) => (
+                  <div key={a.id} style={{ marginBottom: 4 }}>
+                    <a href={a.data_url} download={a.name} style={{ marginRight: 8 }}>
+                      {a.name}
+                    </a>
+                    {a.attachment_type_id && (
+                      <Typography component="span" variant="body2" color="text.secondary">
+                        (
+                        {attachmentTypes.find((t) => t.id === a.attachment_type_id)?.name ||
+                          'Тип не указан'}
+                        )
+                      </Typography>
+                    )}
+                  </div>
+                ))}
+              </Box>
+            )}
           </DialogContent>
         )}
         <DialogActions>
