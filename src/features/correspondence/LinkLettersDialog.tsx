@@ -42,11 +42,13 @@ export default function LinkLettersDialog({
       <DialogContent dividers>
         <Select
           mode="multiple"
+          showSearch
           style={{ width: '100%' }}
           options={options}
           value={selected}
           onChange={(vals) => setSelected(vals as string[])}
           placeholder="Выберите письма"
+          getPopupContainer={(trigger) => trigger.parentElement!}
         />
       </DialogContent>
       <DialogActions>
