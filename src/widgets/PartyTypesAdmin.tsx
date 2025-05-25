@@ -1,6 +1,6 @@
 import React from 'react';
-import { DataGrid } from '@mui/x-data-grid';
 import { Button, Stack, Dialog, DialogTitle, DialogContent, IconButton } from '@mui/material';
+import AdminDataGrid from '@/shared/ui/AdminDataGrid';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import {
@@ -38,42 +38,29 @@ export default function PartyTypesAdmin({
         setOpen(false);
     };
 
+    const columns = [
+        { field: 'id', headerName: 'ID', width: 80 },
+        { field: 'name', headerName: 'Название', flex: 1 },
+        {
+            field: 'actions',
+            headerName: '',
+            width: 100,
+            sortable: false,
+            renderCell: (params) => (
+                <Stack direction="row" spacing={0}>
+                    <IconButton size="small" onClick={() => handleEdit(params.row)} color="primary">
+                        <EditIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton size="small" color="error" onClick={() => handleDelete(params.row.id)}>
+                        <DeleteIcon fontSize="small" />
+                    </IconButton>
+                </Stack>
+            ),
+        },
+    ];
+
     return (
-        <Stack spacing={2}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <span style={{ fontWeight: 600, fontSize: 18 }}>Типы участников</span>
-                <Button onClick={handleAdd} variant="contained">Добавить</Button>
-            </Stack>
-            <div style={{ width: '100%' }}>
-                <DataGrid
-                    rows={data}
-                    columns={[
-                        { field: 'id', headerName: 'ID', width: 80 },
-                        { field: 'name', headerName: 'Название', flex: 1 },
-                        {
-                            field: 'actions',
-                            headerName: '',
-                            width: 100,
-                            sortable: false,
-                            renderCell: (params) => (
-                                <Stack direction="row" spacing={0}>
-                                    <IconButton size="small" onClick={() => handleEdit(params.row)} color="primary">
-                                        <EditIcon fontSize="small" />
-                                    </IconButton>
-                                    <IconButton size="small" color="error" onClick={() => handleDelete(params.row.id)}>
-                                        <DeleteIcon fontSize="small" />
-                                    </IconButton>
-                                </Stack>
-                            ),
-                        },
-                    ]}
-                    autoHeight
-                    loading={isLoading}
-                    disableRowSelectionOnClick
-                    initialState={{ pagination: { paginationModel: { pageSize } } }}
-                    pageSizeOptions={rowsPerPageOptions}
-                />
-            </div>
+        <>
             <Dialog open={open} onClose={() => setOpen(false)} maxWidth="xs" fullWidth>
                 <DialogTitle>{editRow ? 'Редактировать тип' : 'Добавить тип'}</DialogTitle>
                 <DialogContent>
@@ -84,6 +71,16 @@ export default function PartyTypesAdmin({
                     />
                 </DialogContent>
             </Dialog>
-        </Stack>
+
+            <AdminDataGrid
+                title="Типы участников"
+                rows={data}
+                columns={columns}
+                loading={isLoading}
+                onAdd={handleAdd}
+                pageSize={pageSize}
+                rowsPerPageOptions={rowsPerPageOptions}
+            />
+        </>
     );
 }

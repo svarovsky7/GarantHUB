@@ -1,8 +1,8 @@
 // src/widgets/TicketStatusesAdmin.js
 import React from 'react';
 import { useTicketStatuses, useAddTicketStatus, useUpdateTicketStatus, useDeleteTicketStatus } from '@/entities/ticketStatus';
-import { DataGrid } from '@mui/x-data-grid';
 import { Button, Stack, Dialog, DialogTitle, DialogContent, IconButton, Box } from '@mui/material';
+import AdminDataGrid from '@/shared/ui/AdminDataGrid';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import TicketStatusForm from '@/features/ticketStatus/TicketStatusForm';
@@ -35,67 +35,46 @@ export default function TicketStatusesAdmin({
         setOpen(false);
     };
 
-    return (
-        <Stack spacing={2}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <span style={{ fontWeight: 600, fontSize: 18 }}>Статусы замечаний</span>
-                <Button onClick={handleAdd} variant="contained">Добавить</Button>
-            </Stack>
-            <div style={{ width: '100%' }}>
-                <DataGrid
-                    rows={data}
-                    columns={[
-                        { field: 'id', headerName: 'ID', width: 80 },
-                        { field: 'name', headerName: 'Название статуса', flex: 1 },
-                        { field: 'description', headerName: 'Описание', flex: 1 },
-                        {
-                            field: 'color',
-                            headerName: 'Цвет',
-                            width: 90,
-                            renderCell: (params) => (
-                                <Box
-                                    sx={{
-                                        width: 32,
-                                        height: 24,
-                                        bgcolor: params.value,
-                                        border: '1px solid #bbb',
-                                        borderRadius: 0.5,
-                                    }}
-                                />
-                            ),
-                        },
-                        {
-                            field: 'actions',
-                            headerName: '',
-                            width: 100,
-                            sortable: false,
-                            renderCell: (params) => (
-                                <Stack direction="row" spacing={0}>
-                                    <IconButton
-                                        size="small"
-                                        onClick={() => handleEdit(params.row)}
-                                        color="primary"
-                                    >
-                                        <EditIcon fontSize="small" />
-                                    </IconButton>
-                                    <IconButton
-                                        size="small"
-                                        color="error"
-                                        onClick={() => handleDelete(params.row.id)}
-                                    >
-                                        <DeleteIcon fontSize="small" />
-                                    </IconButton>
-                                </Stack>
-                            ),
-                        },
-                    ]}
-                    autoHeight
-                    loading={isLoading}
-                    disableRowSelectionOnClick
-                    initialState={{ pagination: { paginationModel: { pageSize } } }}
-                    pageSizeOptions={rowsPerPageOptions}
+    const columns = [
+        { field: 'id', headerName: 'ID', width: 80 },
+        { field: 'name', headerName: 'Название статуса', flex: 1 },
+        { field: 'description', headerName: 'Описание', flex: 1 },
+        {
+            field: 'color',
+            headerName: 'Цвет',
+            width: 90,
+            renderCell: (params) => (
+                <Box
+                    sx={{
+                        width: 32,
+                        height: 24,
+                        bgcolor: params.value,
+                        border: '1px solid #bbb',
+                        borderRadius: 0.5,
+                    }}
                 />
-            </div>
+            ),
+        },
+        {
+            field: 'actions',
+            headerName: '',
+            width: 100,
+            sortable: false,
+            renderCell: (params) => (
+                <Stack direction="row" spacing={0}>
+                    <IconButton size="small" onClick={() => handleEdit(params.row)} color="primary">
+                        <EditIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton size="small" color="error" onClick={() => handleDelete(params.row.id)}>
+                        <DeleteIcon fontSize="small" />
+                    </IconButton>
+                </Stack>
+            ),
+        },
+    ];
+
+    return (
+        <>
             <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
                 <DialogTitle>{editRow ? 'Редактировать статус' : 'Добавить статус'}</DialogTitle>
                 <DialogContent>
@@ -106,6 +85,16 @@ export default function TicketStatusesAdmin({
                     />
                 </DialogContent>
             </Dialog>
-        </Stack>
+
+            <AdminDataGrid
+                title="Статусы замечаний"
+                rows={data}
+                columns={columns}
+                loading={isLoading}
+                onAdd={handleAdd}
+                pageSize={pageSize}
+                rowsPerPageOptions={rowsPerPageOptions}
+            />
+        </>
     );
 }
