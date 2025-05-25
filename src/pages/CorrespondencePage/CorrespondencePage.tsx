@@ -30,7 +30,7 @@ import { CorrespondenceLetter } from '@/shared/types/correspondence';
 import { useUsers } from '@/entities/user';
 import { useLetterTypes } from '@/entities/letterType';
 import { useProjects } from '@/entities/project';
-import { useUnitsByProject } from '@/entities/unit';
+import { useUnitsByProject, useUnitsByIds } from '@/entities/unit';
 
 
 
@@ -66,9 +66,15 @@ export default function CorrespondencePage() {
   const { data: users = [] } = useUsers();
   const { data: letterTypes = [] } = useLetterTypes();
   const { data: projects = [] } = useProjects();
-  const { data: units = [] } = useUnitsByProject(
+  const { data: projectUnits = [] } = useUnitsByProject(
     view?.project_id ?? (filters.project ? Number(filters.project) : null),
   );
+
+  const unitIds = React.useMemo(
+    () => Array.from(new Set(letters.flatMap((l) => l.unit_ids))),
+    [letters],
+  );
+  const { data: allUnits = [] } = useUnitsByIds(unitIds);
 
 
   const handleAdd = (data: AddLetterFormData) => {
@@ -184,10 +190,10 @@ export default function CorrespondencePage() {
             fullWidth
           />
           <Autocomplete
-            options={units}
+            options={projectUnits}
             getOptionLabel={(o) => o?.name ?? ''}
             isOptionEqualToValue={(o, v) => o?.id === v?.id}
-            value={units.find((u) => u.id === Number(filters.unit)) || null}
+            value={projectUnits.find((u) => u.id === Number(filters.unit)) || null}
             onChange={(_, v) =>
               setFilters((f) => ({ ...f, unit: v ? v.id : '' }))
             }
@@ -265,7 +271,7 @@ export default function CorrespondencePage() {
           users={users}
           letterTypes={letterTypes}
           projects={projects}
-          units={units}
+          units={allUnits}
         />
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
           <Typography variant="body2">Всего писем: {total}</Typography>
@@ -294,7 +300,7 @@ export default function CorrespondencePage() {
               <Typography gutterBottom>
                 Объекты:{' '}
                 {view.unit_ids
-                  .map((id) => units.find((u) => u.id === id)?.name)
+                  .map((id) => projectUnits.find((u) => u.id === id)?.name)
                   .filter(Boolean)
                   .join(', ')}
               </Typography>

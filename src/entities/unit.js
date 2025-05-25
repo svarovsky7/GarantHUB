@@ -75,6 +75,21 @@ export const useUnitsByProject = (projectId) =>
         staleTime: 5 * 60_000,
     });
 
+export const useUnitsByIds = (ids) =>
+    useQuery({
+        queryKey: ['units-by-ids', ids?.join(',')],
+        enabled : Array.isArray(ids) && ids.length > 0,
+        queryFn : async () => {
+            const { data, error } = await supabase
+                .from('units')
+                .select('id, name')
+                .in('id', ids);
+            if (error) throw error;
+            return data ?? [];
+        },
+        staleTime: 5 * 60_000,
+    });
+
 export const useUnit = (unitId) => {
     const projectId = useProjectId();
     return useQuery({
