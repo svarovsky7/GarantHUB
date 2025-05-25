@@ -18,9 +18,8 @@ export default function TicketStatusForm({ initialData, onSubmit, onCancel }) {
         formState: { isSubmitting },
     } = useForm({
         defaultValues: {
-            name       : initialData?.name        ?? '',
-            description: initialData?.description ?? '',
-            color      : initialData?.color       ?? '#1976d2', // CHANGE
+            name : initialData?.name  ?? '',
+            color: initialData?.color ?? '#1976d2', // CHANGE
         },
     });
 
@@ -43,19 +42,6 @@ export default function TicketStatusForm({ initialData, onSubmit, onCancel }) {
                     )}
                 />
 
-                    <Controller
-                        name="description"
-                        control={control}
-                        render={({ field }) => (
-                            <TextField
-                                {...field}
-                                label="Описание"
-                                multiline
-                                rows={3}
-                                fullWidth
-                            />
-                        )}
-                    />
 
                 <Controller
                     name="color"
