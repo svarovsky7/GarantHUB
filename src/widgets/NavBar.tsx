@@ -34,7 +34,7 @@ const NavBar = () => {
     <AppBar position="fixed">
       {" "}
       {/* Исправлено: fixed вместо static */}
-      <Toolbar sx={{ gap: 2 }}>
+      <Toolbar sx={{ gap: 2, flexWrap: "wrap" }}>
         {/* --- логотип --- */}
         <Typography
           variant="h6"
@@ -43,33 +43,70 @@ const NavBar = () => {
           color="inherit"
           sx={{ textDecoration: "none" }}
         >
-          Garantie&nbsp;Hub
+          Garantie Hub
         </Typography>
 
         {/* --- навигация --- */}
-        <Button color="inherit" component={RouterLink} to="/structure">
-          Структура&nbsp;проекта
-        </Button>
-        <Button color="inherit" component={RouterLink} to="/stats">
-          Статистика
-        </Button>
-        <Button color="inherit" component={RouterLink} to="/tickets/new">
-          Добавить&nbsp;замечание
-        </Button>
-        <Button color="inherit" component={RouterLink} to="/tickets">
-          Таблица&nbsp;замечаний
-        </Button>
-        <Button color="inherit" component={RouterLink} to="/court-cases">
-          Судебные&nbsp;дела
-        </Button>
-        <Button color="inherit" component={RouterLink} to="/correspondence">
-          Письма
-        </Button>
-        {profile?.role === "ADMIN" && (
-          <Button color="inherit" component={RouterLink} to="/admin">
-            Администрирование
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+          <Button
+            color="inherit"
+            component={RouterLink}
+            to="/structure"
+            sx={{ whiteSpace: "normal" }}
+          >
+            Структура проекта
           </Button>
-        )}
+          <Button
+            color="inherit"
+            component={RouterLink}
+            to="/stats"
+            sx={{ whiteSpace: "normal" }}
+          >
+            Статистика
+          </Button>
+          <Button
+            color="inherit"
+            component={RouterLink}
+            to="/tickets/new"
+            sx={{ whiteSpace: "normal" }}
+          >
+            Добавить замечание
+          </Button>
+          <Button
+            color="inherit"
+            component={RouterLink}
+            to="/tickets"
+            sx={{ whiteSpace: "normal" }}
+          >
+            Таблица замечаний
+          </Button>
+          <Button
+            color="inherit"
+            component={RouterLink}
+            to="/court-cases"
+            sx={{ whiteSpace: "normal" }}
+          >
+            Судебные дела
+          </Button>
+          <Button
+            color="inherit"
+            component={RouterLink}
+            to="/correspondence"
+            sx={{ whiteSpace: "normal" }}
+          >
+            Письма
+          </Button>
+          {profile?.role === "ADMIN" && (
+            <Button
+              color="inherit"
+              component={RouterLink}
+              to="/admin"
+              sx={{ whiteSpace: "normal" }}
+            >
+              Администрирование
+            </Button>
+          )}
+        </Box>
 
         {/* гибкий отступ – прижимаем профиль к правому краю */}
         <span style={{ flexGrow: 1 }} />
