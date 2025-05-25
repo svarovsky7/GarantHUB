@@ -48,6 +48,7 @@ export default function LinkLettersDialog({
           value={selected}
           onChange={(vals) => setSelected(vals as string[])}
           placeholder="Выберите письма"
+          optionFilterProp="label"
           getPopupContainer={(trigger) => trigger.parentElement!}
         />
       </DialogContent>
