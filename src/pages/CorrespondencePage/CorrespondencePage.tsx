@@ -174,7 +174,12 @@ export default function CorrespondencePage() {
               setFilters((f) => ({ ...f, project: v ? v.id : '', unit: '' }))
             }
             renderInput={(params) => (
-              <TextField {...params} size="small" label="Проект" />
+              <TextField
+                {...params}
+                size="small"
+                label="Проект"
+                autoComplete="off"
+              />
             )}
             fullWidth
           />
@@ -187,7 +192,12 @@ export default function CorrespondencePage() {
               setFilters((f) => ({ ...f, unit: v ? v.id : '' }))
             }
             renderInput={(params) => (
-              <TextField {...params} size="small" label="Объект" />
+              <TextField
+                {...params}
+                size="small"
+                label="Объект"
+                autoComplete="off"
+              />
             )}
             fullWidth
             disabled={!filters.project}
@@ -200,6 +210,7 @@ export default function CorrespondencePage() {
               setFilters((f) => ({ ...f, correspondent: e.target.value }))
             }
             fullWidth
+            autoComplete="off"
           />
           <TextField
             size="small"
@@ -209,6 +220,7 @@ export default function CorrespondencePage() {
               setFilters((f) => ({ ...f, subject: e.target.value }))
             }
             fullWidth
+            autoComplete="off"
           />
           <TextField
             size="small"
@@ -218,6 +230,7 @@ export default function CorrespondencePage() {
               setFilters((f) => ({ ...f, content: e.target.value }))
             }
             fullWidth
+            autoComplete="off"
           />
           <TextField
             size="small"
@@ -227,6 +240,7 @@ export default function CorrespondencePage() {
               setFilters((f) => ({ ...f, search: e.target.value }))
             }
             fullWidth
+            autoComplete="off"
           />
           <Button
             onClick={() =>
