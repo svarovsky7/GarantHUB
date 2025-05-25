@@ -48,6 +48,7 @@ export default function AddLetterForm({ onSubmit }: AddLetterFormProps) {
       layout="vertical"
       onFinish={submit}
       initialValues={{ type: 'incoming', date: dayjs() }}
+      autoComplete="off"
     >
       <Row gutter={16}>
         <Col span={8}>
@@ -64,7 +65,7 @@ export default function AddLetterForm({ onSubmit }: AddLetterFormProps) {
             label="Номер письма"
             rules={[{ required: true, message: 'Укажите номер письма' }]}
           >
-            <Input placeholder="Введите номер письма" />
+            <Input placeholder="Введите номер письма" autoComplete="off" />
           </Form.Item>
         </Col>
         <Col span={8}>
@@ -80,7 +81,7 @@ export default function AddLetterForm({ onSubmit }: AddLetterFormProps) {
       <Row gutter={16}>
         <Col span={8}>
           <Form.Item name="correspondent" label="Корреспондент">
-            <Input placeholder="Укажите отправителя/получателя" />
+            <Input placeholder="Укажите отправителя/получателя" autoComplete="off" />
           </Form.Item>
         </Col>
         <Col span={8}>
@@ -129,10 +130,14 @@ export default function AddLetterForm({ onSubmit }: AddLetterFormProps) {
         <Col span={8} />
       </Row>
       <Form.Item name="subject" label="Тема письма">
-        <Input placeholder="Введите тему письма" />
+        <Input placeholder="Введите тему письма" autoComplete="off" />
       </Form.Item>
       <Form.Item name="content" label="Содержание">
-        <Input.TextArea rows={3} placeholder="Введите содержание письма" />
+        <Input.TextArea
+          rows={3}
+          placeholder="Введите содержание письма"
+          autoComplete="off"
+        />
       </Form.Item>
       <Form.Item style={{ textAlign: 'right' }}>
         <Button type="primary" htmlType="submit">
