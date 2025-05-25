@@ -1,5 +1,19 @@
 [
   {
+    "table_name": "attachment_types",
+    "column_name": "id",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": "nextval('attachment_types_id_seq'::regclass)"
+  },
+  {
+    "table_name": "attachment_types",
+    "column_name": "name",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
     "table_name": "attachments",
     "column_name": "id",
     "data_type": "integer",
@@ -197,13 +211,6 @@
   },
   {
     "table_name": "court_cases",
-    "column_name": "stage_id",
-    "data_type": "integer",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
-    "table_name": "court_cases",
     "column_name": "status",
     "data_type": "integer",
     "is_nullable": "NO",
@@ -259,6 +266,41 @@
     "column_default": null
   },
   {
+    "table_name": "court_cases",
+    "column_name": "number",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "court_cases",
+    "column_name": "plaintiff_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "court_cases",
+    "column_name": "defendant_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "court_cases",
+    "column_name": "claim_amount",
+    "data_type": "numeric",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "court_cases",
+    "column_name": "description",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
     "table_name": "defects",
     "column_name": "id",
     "data_type": "bigint",
@@ -302,20 +344,6 @@
   },
   {
     "table_name": "letter_types",
-    "column_name": "name",
-    "data_type": "text",
-    "is_nullable": "NO",
-    "column_default": null
-  },
-  {
-    "table_name": "attachment_types",
-    "column_name": "id",
-    "data_type": "bigint",
-    "is_nullable": "NO",
-    "column_default": "nextval('attachment_types_id_seq'::regclass)"
-  },
-  {
-    "table_name": "attachment_types",
     "column_name": "name",
     "data_type": "text",
     "is_nullable": "NO",
