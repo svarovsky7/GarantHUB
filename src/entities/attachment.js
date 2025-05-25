@@ -1,0 +1,48 @@
+import { supabase } from '@/shared/api/supabaseClient';
+
+const ATTACH_BUCKET =
+    (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ATTACH_BUCKET) ||
+    process.env.REACT_APP_ATTACH_BUCKET ||
+    'attachments';
+
+export const slugify = (str) =>
+    str
+        .normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[А-ЯЁ]/gi, (c) => {
+            const map = {
+                а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'e', ж: 'zh',
+                з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o',
+                п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'h', ц: 'c',
+                ч: 'ch', ш: 'sh', щ: 'sch', ъ: '', ы: 'y', ь: '', э: 'e',
+                ю: 'yu', я: 'ya',
+            };
+            return map[c.toLowerCase()] ?? '';
+        })
+        .replace(/[^0-9a-z._/-]+/gi, '_')
+        .replace(/_+/g, '_')
+        .toLowerCase();
+
+async function upload(file, pathPrefix) {
+    const safe = slugify(file.name);
+    const path = `${pathPrefix}/${Date.now()}_${safe}`;
+
+    const { error } = await supabase
+        .storage.from(ATTACH_BUCKET)
+        .upload(path, file, { upsert: true, contentType: file.type });
+
+    if (error?.message?.includes('Bucket not found')) {
+        throw new Error(`Storage bucket «${ATTACH_BUCKET}» отсутствует.`);
+    }
+    if (error) throw error;
+
+    const {
+        data: { publicUrl },
+    } = supabase.storage.from(ATTACH_BUCKET).getPublicUrl(path);
+
+    return { path, type: file.type, url: publicUrl };
+}
+
+export function uploadLetterAttachment(file, projectId) {
+    return upload(file, `letters/${projectId}`);
+}
