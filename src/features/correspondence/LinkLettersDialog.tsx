@@ -1,12 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button as MuiButton,
-} from '@mui/material';
-import { Select } from 'antd';
+// CHANGE: Полный список писем, отдельное окно, фильтрация по номеру/теме/корреспонденту
+
+import React, { useEffect, useMemo, useState } from 'react';
+import { Modal, Input, Table, Checkbox, Button } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 import { CorrespondenceLetter } from '@/shared/types/correspondence';
 
 interface Props {
@@ -17,53 +13,101 @@ interface Props {
   onSubmit: (ids: string[]) => void;
 }
 
+/** Диалог выбора писем для связывания */
 export default function LinkLettersDialog({
-  open,
-  parent,
-  letters,
-  onClose,
-  onSubmit,
-}: Props) {
+                                            open,
+                                            parent,
+                                            letters,
+                                            onClose,
+                                            onSubmit,
+                                          }: Props) {
+  // CHANGE: Состояние фильтра и выбранных писем
   const [selected, setSelected] = useState<string[]>([]);
+  const [search, setSearch] = useState('');
 
-  useEffect(() => setSelected([]), [parent]);
+  useEffect(() => {
+    setSelected([]); // сбрасываем при открытии
+    setSearch('');
+  }, [parent, open]);
 
-  const options = letters
-    .filter((l) => l.id !== parent?.id)
-    .map((l) => ({ value: l.id, label: `${l.number} - ${l.subject}` }));
+  // CHANGE: Исключаем текущее письмо и применяем фильтр поиска
+  const filteredLetters = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return letters
+        .filter(l => l.id !== parent?.id)
+        .filter(l =>
+            !term
+            || l.number.toLowerCase().includes(term)
+            || (l.subject ?? '').toLowerCase().includes(term)
+            || (l.correspondent ?? '').toLowerCase().includes(term)
+        );
+  }, [letters, parent, search]);
 
-  const handleSubmit = () => {
-    onSubmit(selected);
-  };
+  // CHANGE: Описываем колонки таблицы для Antd Table
+  const columns: ColumnsType<CorrespondenceLetter> = [
+    {
+      title: '№ письма',
+      dataIndex: 'number',
+      key: 'number',
+      width: 120,
+    },
+    {
+      title: 'Тема',
+      dataIndex: 'subject',
+      key: 'subject',
+      ellipsis: true,
+    },
+    {
+      title: 'Корреспондент',
+      dataIndex: 'correspondent',
+      key: 'correspondent',
+      ellipsis: true,
+      width: 180,
+    },
+  ];
 
+  // CHANGE: рендерим окно с фильтром, таблицей и кнопками
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Связать существующие письма</DialogTitle>
-      <DialogContent dividers>
-        <Select
-          mode="multiple"
-          showSearch
-          style={{ width: '100%' }}
-          options={options}
-          value={selected}
-          onChange={(vals) => setSelected(vals as string[])}
-          placeholder="Выберите письма"
-          optionFilterProp="label"
-
-          getPopupContainer={(trigger) => trigger.parentElement!}
-
+      <Modal
+          title="Связать существующие письма"
+          open={open}
+          onCancel={onClose}
+          footer={[
+            <Button key="cancel" onClick={onClose}>
+              Отмена
+            </Button>,
+            <Button
+                key="link"
+                type="primary"
+                disabled={selected.length === 0}
+                onClick={() => onSubmit(selected)}
+            >
+              Связать
+            </Button>,
+          ]}
+          width={700}
+          destroyOnClose
+      >
+        <Input
+            placeholder="Поиск по номеру, теме, корреспонденту"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            allowClear
+            style={{ marginBottom: 16 }}
         />
-      </DialogContent>
-      <DialogActions>
-        <MuiButton onClick={onClose}>Отмена</MuiButton>
-        <MuiButton
-          variant="contained"
-          onClick={handleSubmit}
-          disabled={selected.length === 0}
-        >
-          Связать
-        </MuiButton>
-      </DialogActions>
-    </Dialog>
+        <Table<CorrespondenceLetter>
+            rowKey="id"
+            columns={columns}Й
+            dataSource={filteredLetters}
+            size="small"
+            pagination={{ pageSize: 8, showSizeChanger: false }}
+            scroll={{ y: 320 }}
+            rowSelection={{
+              selectedRowKeys: selected,
+              onChange: (keys) => setSelected(keys as string[]),
+            }}
+            locale={{ emptyText: 'Нет подходящих писем' }}
+        />
+      </Modal>
   );
 }
