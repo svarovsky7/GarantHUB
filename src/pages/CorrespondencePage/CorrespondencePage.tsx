@@ -248,6 +248,10 @@ export default function CorrespondencePage() {
           letters={filtered}
           onView={setView}
           onDelete={handleDelete}
+          users={users}
+          letterTypes={letterTypes}
+          projects={projects}
+          units={units}
         />
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
           <Typography variant="body2">Всего писем: {total}</Typography>

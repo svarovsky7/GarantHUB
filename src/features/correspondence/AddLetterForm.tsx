@@ -1,20 +1,5 @@
 import React, { useEffect } from 'react';
-import { useForm, Controller } from 'react-hook-form';
-import {
-    Box,
-    TextField,
-    Select,
-    MenuItem,
-    Button,
-    Autocomplete,
-    CircularProgress,
-    Typography,
-    Tooltip,
-    Grid,
-} from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { Form, Input, Select, DatePicker, Row, Col, Button } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import { useUsers } from '@/entities/user';
 import { useLetterTypes } from '@/entities/letterType';
@@ -22,299 +7,138 @@ import { useProjects } from '@/entities/project';
 import { useUnitsByProject } from '@/entities/unit';
 
 export interface AddLetterFormData {
-    type: 'incoming' | 'outgoing';
-    number: string;
-    date: Dayjs | null;
-    correspondent: string;
-    subject: string;
-    content: string;
-    responsible_user_id: string | null;
-    letter_type_id: number | null;
-    project_id: number | null;
-    unit_id: number | null;
+  type: 'incoming' | 'outgoing';
+  number: string;
+  date: Dayjs | null;
+  correspondent: string;
+  subject: string;
+  content: string;
+  responsible_user_id: string | null;
+  letter_type_id: number | null;
+  project_id: number | null;
+  unit_id: number | null;
 }
 
 interface AddLetterFormProps {
-    onSubmit: (data: AddLetterFormData) => void;
+  onSubmit: (data: AddLetterFormData) => void;
 }
 
-/** Форма добавления нового письма с полями в 3 столбца */
+/** Форма добавления нового письма на Ant Design */
 export default function AddLetterForm({ onSubmit }: AddLetterFormProps) {
-    const { control, handleSubmit, reset, watch, setValue } = useForm<AddLetterFormData>({
-        defaultValues: {
-            type: 'incoming',
-            number: '',
-            date: dayjs(),
-            correspondent: '',
-            subject: '',
-            content: '',
-            responsible_user_id: null,
-            letter_type_id: null,
-            project_id: null,
-            unit_id: null,
-        },
-    });
+  const [form] = Form.useForm<AddLetterFormData>();
+  const projectId = Form.useWatch('project_id', form);
 
-    const projectId = watch('project_id');
+  const { data: users = [], isLoading: loadingUsers } = useUsers();
+  const { data: letterTypes = [], isLoading: loadingTypes } = useLetterTypes();
+  const { data: projects = [], isLoading: loadingProjects } = useProjects();
+  const { data: units = [], isLoading: loadingUnits } = useUnitsByProject(projectId);
 
-    const { data: users = [], isLoading: loadingUsers } = useUsers();
-    const { data: letterTypes = [], isLoading: loadingTypes } = useLetterTypes();
-    const { data: projects = [], isLoading: loadingProjects } = useProjects();
-    const { data: units = [], isLoading: loadingUnits } = useUnitsByProject(projectId);
+  useEffect(() => {
+    form.setFieldValue('unit_id', null);
+  }, [projectId, form]);
 
-    useEffect(() => {
-        setValue('unit_id', null);
-    }, [projectId, setValue]);
+  const submit = (values: AddLetterFormData) => {
+    onSubmit({ ...values, date: values.date ?? dayjs() });
+    form.resetFields();
+  };
 
-    const submit = (data: AddLetterFormData) => {
-        onSubmit(data);
-        reset();
-    };
-
-    return (
-        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ru">
-            <form onSubmit={handleSubmit(submit)} noValidate>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: 1200, mx: 'auto' }}>
-                    <Typography variant="h6" component="h2">
-                        Добавить новое письмо
-                    </Typography>
-
-                    <Grid container spacing={2}>
-                        {/* Поля в 3 столбца */}
-                        <Grid item xs={4}>
-                            <Controller
-                                name="type"
-                                control={control}
-                                render={({ field }) => (
-                                    <Select {...field} label="Тип письма" fullWidth displayEmpty>
-                                        <MenuItem value="incoming">Входящее</MenuItem>
-                                        <MenuItem value="outgoing">Исходящее</MenuItem>
-                                    </Select>
-                                )}
-                            />
-                        </Grid>
-                        <Grid item xs={4}>
-                            <Controller
-                                name="number"
-                                control={control}
-                                rules={{ required: 'Номер обязателен' }}
-                                render={({ field, fieldState }) => (
-                                    <TextField
-                                        {...field}
-                                        label="Номер письма"
-                                        fullWidth
-                                        error={!!fieldState.error}
-                                        helperText={fieldState.error?.message}
-                                        InputProps={{
-                                            endAdornment: (
-                                                <Tooltip title="Выберите дату">
-                                                    <span>📅</span>
-                                                </Tooltip>
-                                            ),
-                                        }}
-                                    />
-                                )}
-                            />
-                        </Grid>
-                        <Grid item xs={4}>
-                            <Controller
-                                name="date"
-                                control={control}
-                                rules={{ required: 'Дата обязательна' }}
-                                render={({ field }) => (
-                                    <DatePicker
-                                        {...field}
-                                        label="Дата"
-                                        format="DD.MM.YYYY"
-                                        slotProps={{ textField: { fullWidth: true } }}
-                                    />
-                                )}
-                            />
-                        </Grid>
-
-                        <Grid item xs={4}>
-                            <Controller
-                                name="subject"
-                                control={control}
-                                render={({ field }) => (
-                                    <TextField {...field} label="Тема письма" fullWidth placeholder="Введите тему письма" />
-                                )}
-                            />
-                        </Grid>
-                        <Grid item xs={4}>
-                            <Controller
-                                name="content"
-                                control={control}
-                                render={({ field }) => (
-                                    <TextField
-                                        {...field}
-                                        label="Содержание"
-                                        fullWidth
-                                        placeholder="Краткое содержание письма"
-                                    />
-                                )}
-                            />
-                        </Grid>
-                        <Grid item xs={4}>
-                            <Controller
-                                name="correspondent"
-                                control={control}
-                                render={({ field }) => (
-                                    <TextField
-                                        {...field}
-                                        label="Корреспондент"
-                                        fullWidth
-                                        placeholder="Укажите отправителя/получателя"
-                                    />
-                                )}
-                            />
-                        </Grid>
-
-                        <Grid item xs={4}>
-                            <Controller
-                                name="responsible_user_id"
-                                control={control}
-                                render={({ field }) => (
-                                    <Autocomplete
-                                        {...field}
-                                        options={users}
-                                        loading={loadingUsers}
-                                        fullWidth
-                                        getOptionLabel={(o) => o?.name ?? ''}
-                                        isOptionEqualToValue={(o, v) => o?.id === v?.id}
-                                        onChange={(_, v) => field.onChange(v ? v.id : null)}
-                                        value={users.find((u) => u.id === field.value) || null}
-                                        renderInput={(params) => (
-                                            <TextField
-                                                {...params}
-                                                label="Ответственный"
-                                                InputProps={{
-                                                    ...params.InputProps,
-                                                    endAdornment: (
-                                                        <>
-                                                            {loadingUsers && <CircularProgress size={20} />}
-                                                            {params.InputProps.endAdornment}
-                                                        </>
-                                                    ),
-                                                }}
-                                            />
-                                        )}
-                                    />
-                                )}
-                            />
-                        </Grid>
-                        <Grid item xs={4}>
-                            <Controller
-                                name="letter_type_id"
-                                control={control}
-                                render={({ field }) => (
-                                    <Autocomplete
-                                        {...field}
-                                        options={letterTypes}
-                                        loading={loadingTypes}
-                                        fullWidth
-                                        getOptionLabel={(o) => o?.name ?? ''}
-                                        isOptionEqualToValue={(o, v) => o?.id === v?.id}
-                                        onChange={(_, v) => field.onChange(v ? v.id : null)}
-                                        value={letterTypes.find((t) => t.id === field.value) || null}
-                                        renderInput={(params) => (
-                                            <TextField
-                                                {...params}
-                                                label="Категория письма"
-                                                InputProps={{
-                                                    ...params.InputProps,
-                                                    endAdornment: (
-                                                        <>
-                                                            {loadingTypes && <CircularProgress size={20} />}
-                                                            {params.InputProps.endAdornment}
-                                                        </>
-                                                    ),
-                                                }}
-                                            />
-                                        )}
-                                    />
-                                )}
-                            />
-                        </Grid>
-                        <Grid item xs={4}>
-                            <Controller
-                                name="project_id"
-                                control={control}
-                                render={({ field }) => (
-                                    <Autocomplete
-                                        {...field}
-                                        options={projects}
-                                        loading={loadingProjects}
-                                        fullWidth
-                                        getOptionLabel={(o) => o?.name ?? ''}
-                                        isOptionEqualToValue={(o, v) => o?.id === v?.id}
-                                        onChange={(_, v) => field.onChange(v ? v.id : null)}
-                                        value={projects.find((p) => p.id === field.value) || null}
-                                        renderInput={(params) => (
-                                            <TextField
-                                                {...params}
-                                                label="Проект"
-                                                InputProps={{
-                                                    ...params.InputProps,
-                                                    endAdornment: (
-                                                        <>
-                                                            {loadingProjects && <CircularProgress size={20} />}
-                                                            {params.InputProps.endAdornment}
-                                                        </>
-                                                    ),
-                                                }}
-                                            />
-                                        )}
-                                    />
-                                )}
-                            />
-                        </Grid>
-
-                        <Grid item xs={4}>
-                            <Controller
-                                name="unit_id"
-                                control={control}
-                                render={({ field }) => (
-                                    <Autocomplete
-                                        {...field}
-                                        options={units}
-                                        loading={loadingUnits}
-                                        fullWidth
-                                        getOptionLabel={(o) => o?.name ?? ''}
-                                        isOptionEqualToValue={(o, v) => o?.id === v?.id}
-                                        onChange={(_, v) => field.onChange(v ? v.id : null)}
-                                        value={units.find((u) => u.id === field.value) || null}
-                                        renderInput={(params) => (
-                                            <TextField
-                                                {...params}
-                                                label="Объект"
-                                                InputProps={{
-                                                    ...params.InputProps,
-                                                    endAdornment: (
-                                                        <>
-                                                            {loadingUnits && <CircularProgress size={20} />}
-                                                            {params.InputProps.endAdornment}
-                                                        </>
-                                                    ),
-                                                }}
-                                            />
-                                        )}
-                                    />
-                                )}
-                            />
-                        </Grid>
-                        {/* Пустые ячейки для выравнивания */}
-                        <Grid item xs={4} />
-                        <Grid item xs={4} />
-                    </Grid>
-
-                    <Box sx={{ textAlign: 'right' }}>
-                        <Button variant="contained" type="submit" sx={{ borderRadius: 2 }}>
-                            Добавить письмо
-                        </Button>
-                    </Box>
-                </Box>
-            </form>
-        </LocalizationProvider>
-    );
+  return (
+    <Form
+      form={form}
+      layout="vertical"
+      onFinish={submit}
+      initialValues={{ type: 'incoming', date: dayjs() }}
+    >
+      <Row gutter={16}>
+        <Col span={8}>
+          <Form.Item name="type" label="Тип письма">
+            <Select placeholder="Выберите тип письма">
+              <Select.Option value="incoming">Входящее</Select.Option>
+              <Select.Option value="outgoing">Исходящее</Select.Option>
+            </Select>
+          </Form.Item>
+        </Col>
+        <Col span={8}>
+          <Form.Item
+            name="number"
+            label="Номер письма"
+            rules={[{ required: true, message: 'Укажите номер письма' }]}
+          >
+            <Input placeholder="Введите номер письма" />
+          </Form.Item>
+        </Col>
+        <Col span={8}>
+          <Form.Item
+            name="date"
+            label="Дата"
+            rules={[{ required: true, message: 'Укажите дату' }]}
+          >
+            <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
+          </Form.Item>
+        </Col>
+      </Row>
+      <Row gutter={16}>
+        <Col span={8}>
+          <Form.Item name="correspondent" label="Корреспондент">
+            <Input placeholder="Укажите отправителя/получателя" />
+          </Form.Item>
+        </Col>
+        <Col span={8}>
+          <Form.Item name="responsible_user_id" label="Ответственный">
+            <Select
+              loading={loadingUsers}
+              options={users.map((u) => ({ value: u.id, label: u.name }))}
+              allowClear
+              placeholder="Выберите ответственного"
+            />
+          </Form.Item>
+        </Col>
+        <Col span={8}>
+          <Form.Item name="letter_type_id" label="Категория письма">
+            <Select
+              loading={loadingTypes}
+              options={letterTypes.map((t) => ({ value: t.id, label: t.name }))}
+              allowClear
+              placeholder="Выберите категорию"
+            />
+          </Form.Item>
+        </Col>
+      </Row>
+      <Row gutter={16}>
+        <Col span={8}>
+          <Form.Item name="project_id" label="Проект">
+            <Select
+              loading={loadingProjects}
+              options={projects.map((p) => ({ value: p.id, label: p.name }))}
+              allowClear
+              placeholder="Выберите проект"
+            />
+          </Form.Item>
+        </Col>
+        <Col span={8}>
+          <Form.Item name="unit_id" label="Объект">
+            <Select
+              loading={loadingUnits}
+              options={units.map((u) => ({ value: u.id, label: u.name }))}
+              allowClear
+              placeholder="Выберите объект"
+              disabled={!projectId}
+            />
+          </Form.Item>
+        </Col>
+        <Col span={8} />
+      </Row>
+      <Form.Item name="subject" label="Тема письма">
+        <Input placeholder="Введите тему письма" />
+      </Form.Item>
+      <Form.Item name="content" label="Содержание">
+        <Input.TextArea rows={3} placeholder="Введите содержание письма" />
+      </Form.Item>
+      <Form.Item style={{ textAlign: 'right' }}>
+        <Button type="primary" htmlType="submit">
+          Добавить письмо
+        </Button>
+      </Form.Item>
+    </Form>
+  );
 }
