@@ -12,7 +12,6 @@ export interface CourtCaseFormValues {
   plaintiff: string;
   defendant: string;
   responsible_lawyer: string;
-  court: string;
   status: CaseStatus;
   claim_amount: number | '';
   remediation_start_date: string | null;
@@ -33,7 +32,6 @@ export default function CourtCaseForm({ onSubmit }: Props) {
       plaintiff: '',
       defendant: '',
       responsible_lawyer: '',
-      court: '',
       status: 'active',
       claim_amount: '',
       remediation_start_date: null,
@@ -102,14 +100,6 @@ export default function CourtCaseForm({ onSubmit }: Props) {
           rules={{ required: 'Юрист обязателен' }}
           render={({ field, fieldState }) => (
             <TextField {...field} label="Ответственный юрист" fullWidth required error={!!fieldState.error} helperText={fieldState.error?.message} />
-          )}
-        />
-        <Controller
-          name="court"
-          control={control}
-          rules={{ required: 'Наименование суда обязательно' }}
-          render={({ field, fieldState }) => (
-            <TextField {...field} label="Наименование суда" fullWidth required error={!!fieldState.error} helperText={fieldState.error?.message} />
           )}
         />
         <Controller

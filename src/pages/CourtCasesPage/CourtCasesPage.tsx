@@ -71,7 +71,6 @@ export default function CourtCasesPage() {
     plaintiff: null as number | null,
     defendant: null as number | null,
     lawyer: null as string | null,
-    court: "",
     status: null as number | null,
     fixStart: null as Dayjs | null,
     fixEnd: null as Dayjs | null,
@@ -144,7 +143,6 @@ export default function CourtCasesPage() {
         plaintiff_id: newCase.plaintiff,
         defendant_id: newCase.defendant,
         responsible_lawyer_id: newCase.lawyer,
-        court: newCase.court,
         status: newCase.status,
         fix_start_date: newCase.fixStart ? newCase.fixStart.format("YYYY-MM-DD") : null,
         fix_end_date: newCase.fixEnd ? newCase.fixEnd.format("YYYY-MM-DD") : null,
@@ -160,7 +158,6 @@ export default function CourtCasesPage() {
             plaintiff: null,
             defendant: null,
             lawyer: null,
-            court: "",
             status: null,
             fixStart: null,
             fixEnd: null,
@@ -354,15 +351,6 @@ export default function CourtCasesPage() {
                   </Select>
                 </Grid>
                 <Grid item xs={12} md={4}>
-                  <TextField
-                    label="Наименование суда"
-                    fullWidth
-                    required
-                    value={newCase.court}
-                    onChange={(e) => setNewCase({ ...newCase, court: e.target.value })}
-                  />
-                </Grid>
-                <Grid item xs={12} md={4}>
                   <Select
                     fullWidth
                     value={newCase.status ?? ""}
@@ -546,10 +534,6 @@ export default function CourtCasesPage() {
                 <Grid item xs={12} md={4}>
                   <Typography variant="caption">Ответственный юрист</Typography>
                   <Typography>{dialogCase.responsibleLawyer}</Typography>
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <Typography variant="caption">Наименование суда</Typography>
-                  <Typography>{dialogCase.court}</Typography>
                 </Grid>
                 <Grid item xs={12} md={4}>
                   <Typography variant="caption">Статус дела</Typography>
