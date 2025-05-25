@@ -29,4 +29,17 @@ body {
 .MuiTableBody-root tr:nth-child(even) { background: #fafafa; }
 .MuiTableBody-root tr:hover           { background: #e5edff; }
 
+.root-letter-row .ant-table-cell {
+    font-weight: 600;
+}
+
+.child-letter-row {
+    background-color: #fafcff;
+}
+
+.child-letter-number::before {
+    content: '↳';
+    margin-right: 4px;
+}
+
 /* Skeleton эффекты были выше (оставил без изменений) */

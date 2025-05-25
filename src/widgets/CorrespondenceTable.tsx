@@ -60,6 +60,12 @@ export default function CorrespondenceTable({
       dataIndex: 'number',
       width: 120,
       sorter: (a, b) => a.number.localeCompare(b.number),
+      render: (v: string, record: any) => (
+        <span className={record.parent_id ? 'child-letter-number' : undefined} style={{ paddingLeft: record.level * 16 }}>
+          {record.parent_id ? '↳ ' : ''}
+          {v}
+        </span>
+      ),
     },
     {
       title: 'Дата',
@@ -145,6 +151,7 @@ export default function CorrespondenceTable({
         responsibleName: l.responsible_user_id
           ? maps.user[l.responsible_user_id]
           : null,
+        level: 0,
       } as any;
       map.set(l.id, row);
     });
@@ -156,6 +163,7 @@ export default function CorrespondenceTable({
         if (parent) {
           if (!parent.children) parent.children = [];
           parent.children.push(row);
+          row.level = (parent.level ?? 0) + 1;
         } else {
           roots.push(row);
         }
@@ -163,6 +171,12 @@ export default function CorrespondenceTable({
         roots.push(row);
       }
     });
+
+    const assign = (node: any, lvl: number) => {
+      node.level = lvl;
+      if (node.children) node.children.forEach((c: any) => assign(c, lvl + 1));
+    };
+    roots.forEach((r) => assign(r, 0));
 
     return roots;
   }, [letters, maps]);
@@ -174,6 +188,10 @@ export default function CorrespondenceTable({
       dataSource={dataSource}
       pagination={{ pageSize: 25, showSizeChanger: true }}
       size="middle"
+      rowClassName={(record: any) =>
+        record.parent_id ? 'child-letter-row' : 'root-letter-row'
+      }
+      expandable={{ defaultExpandAllRows: true, expandIcon: () => null }}
     />
   );
 }
