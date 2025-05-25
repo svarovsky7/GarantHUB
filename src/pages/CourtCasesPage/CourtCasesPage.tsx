@@ -358,25 +358,31 @@ export default function CourtCasesPage() {
           <Col span={24}>
             <input type="file" multiple onChange={handleCaseFiles} />
             {caseFiles.map((f, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', marginTop: 4 }}>
-                <span style={{ marginRight: 8 }}>{f.file.name}</span>
-                <Select
-                  style={{ width: 160 }}
-                  placeholder="Тип файла"
-                  value={f.type_id ?? undefined}
-                  onChange={(v) => setCaseFileType(i, v)}
-                  allowClear
-                >
-                  {attachmentTypes.map((t) => (
-                    <Select.Option key={t.id} value={t.id}>
-                      {t.name}
-                    </Select.Option>
-                  ))}
-                </Select>
-                <Button type="text" danger onClick={() => removeCaseFile(i)}>
-                  Удалить
-                </Button>
-              </div>
+              <Row key={i} gutter={8} align="middle" style={{ marginTop: 4 }}>
+                <Col flex="auto">
+                  <span>{f.file.name}</span>
+                </Col>
+                <Col flex="160px">
+                  <Select
+                    style={{ width: '100%' }}
+                    placeholder="Тип файла"
+                    value={f.type_id ?? undefined}
+                    onChange={(v) => setCaseFileType(i, v)}
+                    allowClear
+                  >
+                    {attachmentTypes.map((t) => (
+                      <Select.Option key={t.id} value={t.id}>
+                        {t.name}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </Col>
+                <Col>
+                  <Button type="text" danger onClick={() => removeCaseFile(i)}>
+                    Удалить
+                  </Button>
+                </Col>
+              </Row>
             ))}
           </Col>
         </Row>
@@ -461,6 +467,9 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange }: CaseDialogPro
   const { data: letters = [] } = useCaseLetters(caseData ? Number(caseData.id) : 0);
   const { data: defects = [] } = useCaseDefects(caseData ? Number(caseData.id) : 0);
   const { data: stages = [] } = useLitigationStages();
+  const { data: unitInfo = [] } = useUnitsByIds(
+    caseData && caseData.unit_id ? [caseData.unit_id] : [],
+  );
   const addLetterMutation = useAddLetter();
   const deleteLetterMutation = useDeleteLetter();
   const addDefectMutation = useAddDefect();
@@ -506,6 +515,9 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange }: CaseDialogPro
     );
   };
 
+  const objectName =
+    (caseData as any)?.projectObject || unitInfo[0]?.name || caseData?.unit_id;
+
   return (
     <Modal open={open} onCancel={onClose} width="80%" footer={null} title={caseData ? `Дело № ${caseData.number}` : ''}>
       {caseData && (
@@ -526,7 +538,7 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange }: CaseDialogPro
             <Col span={8}>
               <div>
                 <strong>Объект</strong>
-                <div>{(caseData as any).projectObject}</div>
+                <div>{objectName}</div>
               </div>
             </Col>
             <Col span={8}>
@@ -557,8 +569,8 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange }: CaseDialogPro
               <div>
                 <strong>Дата начала устранения</strong>
                 <div>
-                  {(caseData as any).remediationStartDate
-                    ? dayjs((caseData as any).remediationStartDate).format('DD.MM.YYYY')
+                  {caseData.fix_start_date
+                    ? dayjs(caseData.fix_start_date).format('DD.MM.YYYY')
                     : 'Не указано'}
                 </div>
               </div>
@@ -567,8 +579,8 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange }: CaseDialogPro
               <div>
                 <strong>Дата завершения устранения</strong>
                 <div>
-                  {(caseData as any).remediationEndDate
-                    ? dayjs((caseData as any).remediationEndDate).format('DD.MM.YYYY')
+                  {caseData.fix_end_date
+                    ? dayjs(caseData.fix_end_date).format('DD.MM.YYYY')
                     : 'Не указано'}
                 </div>
               </div>
@@ -680,25 +692,31 @@ function LettersTab({ letters, onAdd, onDelete }: LettersProps) {
         <Col span={24}>
           <input type="file" multiple onChange={handleFiles} />
           {files.map((f, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', marginTop: 4 }}>
-              <span style={{ marginRight: 8 }}>{f.file.name}</span>
-              <Select
-                style={{ width: 160 }}
-                placeholder="Тип файла"
-                value={f.type_id ?? undefined}
-                onChange={(v) => setType(i, v)}
-                allowClear
-              >
-                {attachmentTypes.map((t) => (
-                  <Select.Option key={t.id} value={t.id}>
-                    {t.name}
-                  </Select.Option>
-                ))}
-              </Select>
-              <Button type="text" danger onClick={() => removeFile(i)}>
-                Удалить
-              </Button>
-            </div>
+            <Row key={i} gutter={8} align="middle" style={{ marginTop: 4 }}>
+              <Col flex="auto">
+                <span>{f.file.name}</span>
+              </Col>
+              <Col flex="160px">
+                <Select
+                  style={{ width: '100%' }}
+                  placeholder="Тип файла"
+                  value={f.type_id ?? undefined}
+                  onChange={(v) => setType(i, v)}
+                  allowClear
+                >
+                  {attachmentTypes.map((t) => (
+                    <Select.Option key={t.id} value={t.id}>
+                      {t.name}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Col>
+              <Col>
+                <Button type="text" danger onClick={() => removeFile(i)}>
+                  Удалить
+                </Button>
+              </Col>
+            </Row>
           ))}
         </Col>
       </Row>
@@ -894,17 +912,16 @@ function CaseFilesTab({ caseData }: CaseFilesTabProps) {
   return (
     <div>
       <input type="file" multiple onChange={handleUpload} />
-      <ul>
-        {files.map((f, i) => (
-          <li
-            key={f.path}
-            style={{ marginTop: 8, display: 'flex', alignItems: 'center' }}
-          >
-            <a href={f.url} target="_blank" rel="noopener noreferrer" style={{ marginRight: 8 }}>
+      {files.map((f, i) => (
+        <Row key={f.path} gutter={8} align="middle" style={{ marginTop: 8 }}>
+          <Col flex="auto">
+            <a href={f.url} target="_blank" rel="noopener noreferrer">
               {f.name}
             </a>
+          </Col>
+          <Col flex="160px">
             <Select
-              style={{ width: 160, marginRight: 8 }}
+              style={{ width: '100%' }}
               placeholder="Тип файла"
               value={f.type_id ?? undefined}
               onChange={(v) => setType(i, v)}
@@ -916,12 +933,14 @@ function CaseFilesTab({ caseData }: CaseFilesTabProps) {
                 </Select.Option>
               ))}
             </Select>
+          </Col>
+          <Col>
             <Button type="text" danger size="small" onClick={() => handleDelete(f.path)}>
               Удалить
             </Button>
-          </li>
-        ))}
-      </ul>
+          </Col>
+        </Row>
+      ))}
     </div>
   );
 }
