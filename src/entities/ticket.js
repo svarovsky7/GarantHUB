@@ -14,10 +14,20 @@ import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useAuthStore } from '@/shared/store/authStore';
 
 // ──────────────────────────── constants ────────────────────────────
-const ATTACH_BUCKET =
+let ATTACH_BUCKET =
     (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ATTACH_BUCKET) ||
     process.env.REACT_APP_ATTACH_BUCKET ||
     'attachments';
+
+try {
+    if (ATTACH_BUCKET.includes('://')) {
+        const { pathname } = new URL(ATTACH_BUCKET);
+        const parts = pathname.split('/').filter(Boolean);
+        if (parts.length) ATTACH_BUCKET = parts[parts.length - 1];
+    }
+} catch {
+    /* ignore invalid URL */
+}
 
 // ──────────────────────────── helpers ──────────────────────────────
 export const slugify = (str) =>
