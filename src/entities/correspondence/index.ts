@@ -3,6 +3,8 @@ import {
   CorrespondenceLetter,
   CorrespondenceAttachment,
 } from '@/shared/types/correspondence';
+import { uploadLetterAttachment, ATTACH_BUCKET } from '../attachment';
+import { supabase } from '@/shared/api/supabaseClient';
 
 const LS_KEY = 'correspondenceLetters';
 
@@ -55,13 +57,30 @@ export function useAddLetter() {
     ) => {
       const letters = loadLetters();
       const attachments: CorrespondenceAttachment[] = await Promise.all(
-        (payload.attachments ?? []).map(async ({ file, type_id }) => ({
-          id: Date.now().toString() + Math.random().toString(16).slice(2),
-          name: file.name,
-          file_type: file.type,
-          data_url: await readFileAsDataURL(file),
-          attachment_type_id: type_id,
-        })),
+        (payload.attachments ?? []).map(async ({ file, type_id }) => {
+          if (payload.project_id) {
+            const { path, type, url } = await uploadLetterAttachment(
+              file,
+              payload.project_id!,
+            );
+            return {
+              id: Date.now().toString() + Math.random().toString(16).slice(2),
+              name: file.name,
+              file_type: type,
+              storage_path: path,
+              file_url: url,
+              attachment_type_id: type_id,
+            } as CorrespondenceAttachment;
+          }
+          return {
+            id: Date.now().toString() + Math.random().toString(16).slice(2),
+            name: file.name,
+            file_type: file.type,
+            storage_path: '',
+            file_url: await readFileAsDataURL(file),
+            attachment_type_id: type_id,
+          } as CorrespondenceAttachment;
+        }),
       );
       const newLetter: CorrespondenceLetter = {
         ...(payload as any),
@@ -84,9 +103,36 @@ export function useDeleteLetter() {
   return useMutation({
     mutationFn: async (id: string) => {
       const letters = loadLetters();
+      const letter = letters.find((l) => l.id === id);
+      if (letter && letter.attachments?.length) {
+        const paths = letter.attachments
+          .map((a) => a.storage_path)
+          .filter((p) => !!p);
+        if (paths.length) {
+          await supabase.storage.from(ATTACH_BUCKET).remove(paths);
+        }
+      }
       const updated = letters.filter((l) => l.id !== id);
       saveLetters(updated);
       return id;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [LS_KEY] });
+    },
+  });
+}
+
+export function useLinkLetters() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ parentId, childIds }: { parentId: string; childIds: string[] }) => {
+      const letters = loadLetters();
+      const map = new Map(letters.map((l) => [l.id, l]));
+      childIds.forEach((id) => {
+        const l = map.get(id);
+        if (l) l.parent_id = parentId;
+      });
+      saveLetters(Array.from(map.values()));
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [LS_KEY] });
