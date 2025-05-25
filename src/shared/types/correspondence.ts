@@ -3,6 +3,7 @@ export interface CorrespondenceLetter {
   id: string;
   /** Тип письма: входящее или исходящее */
   type: 'incoming' | 'outgoing';
+
   /** Идентификатор ответственного пользователя */
   responsible_user_id: string | null;
   /** Идентификатор категории письма */
@@ -11,6 +12,7 @@ export interface CorrespondenceLetter {
   project_id: number | null;
   /** Объект проекта */
   unit_id: number | null;
+
 
   /** Номер письма */
   number: string;

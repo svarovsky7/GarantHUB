@@ -1,13 +1,16 @@
 
+
 import React, { useEffect } from 'react';
 
 import { useForm, Controller } from 'react-hook-form';
 import {
   Stack,
+
   TextField,
   Select,
   MenuItem,
   Button,
+
 
   Autocomplete,
   CircularProgress,
@@ -22,6 +25,7 @@ import { useProjects } from '@/entities/project';
 import { useUnitsByProject } from '@/entities/unit';
 
 
+
 export interface AddLetterFormData {
   type: 'incoming' | 'outgoing';
   number: string;
@@ -30,10 +34,12 @@ export interface AddLetterFormData {
   subject: string;
   content: string;
 
+
   responsible_user_id: string | null;
   letter_type_id: number | null;
   project_id: number | null;
   unit_id: number | null;
+
 
 }
 
@@ -43,6 +49,7 @@ interface AddLetterFormProps {
 
 /** Форма добавления письма */
 export default function AddLetterForm({ onSubmit }: AddLetterFormProps) {
+
 
   const { control, handleSubmit, reset, watch, setValue } =
     useForm<AddLetterFormData>({
@@ -72,12 +79,14 @@ export default function AddLetterForm({ onSubmit }: AddLetterFormProps) {
   }, [projectId, setValue]);
 
 
+
   const submit = (data: AddLetterFormData) => {
     onSubmit(data);
     reset();
   };
 
   return (
+
 
     <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ru">
       <form onSubmit={handleSubmit(submit)} noValidate>
@@ -276,6 +285,7 @@ export default function AddLetterForm({ onSubmit }: AddLetterFormProps) {
     </form>
 
     </LocalizationProvider>
+
 
   );
 }

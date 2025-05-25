@@ -25,10 +25,12 @@ import {
 } from '@/entities/correspondence';
 import { CorrespondenceLetter } from '@/shared/types/correspondence';
 
+
 import { useUsers } from '@/entities/user';
 import { useLetterTypes } from '@/entities/letterType';
 import { useProjects } from '@/entities/project';
 import { useUnitsByProject } from '@/entities/unit';
+
 
 
 interface Filters {
@@ -46,6 +48,7 @@ export default function CorrespondencePage() {
   const [snackbar, setSnackbar] = useState<string | null>(null);
 
 
+
   const { data: users = [] } = useUsers();
   const { data: letterTypes = [] } = useLetterTypes();
   const { data: projects = [] } = useProjects();
@@ -61,6 +64,7 @@ export default function CorrespondencePage() {
         correspondent: data.correspondent,
         subject: data.subject,
         content: data.content,
+
 
         responsible_user_id: data.responsible_user_id,
         letter_type_id: data.letter_type_id,
@@ -98,6 +102,7 @@ export default function CorrespondencePage() {
   const total = letters.length;
 
   return (
+
 
     <Stack spacing={3} sx={{ mt: 2 }}>
 
@@ -167,6 +172,7 @@ export default function CorrespondencePage() {
               Дата: {dayjs(view.date).format('DD.MM.YYYY')}
             </Typography>
 
+
             {view.project_id && (
               <Typography gutterBottom>
                 Проект: {projects.find((p) => p.id === view.project_id)?.name}
@@ -205,7 +211,9 @@ export default function CorrespondencePage() {
         message={snackbar}
       />
 
+
     </Stack>
+
 
   );
 }
