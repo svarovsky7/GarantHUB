@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import dayjs from 'dayjs';
-import { Table, Space, Button, Popconfirm, Tag } from 'antd';
+import { Table, Space, Button, Popconfirm, Tag, Tooltip } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { EyeOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import { EyeOutlined, DeleteOutlined, PlusOutlined, MailOutlined, BranchesOutlined, LinkOutlined } from '@ant-design/icons';
 import { CorrespondenceLetter } from '@/shared/types/correspondence';
 
 interface Option { id: number | string; name: string; }
@@ -12,23 +12,25 @@ interface CorrespondenceTableProps {
   onView: (letter: CorrespondenceLetter) => void;
   onDelete: (id: string) => void;
   onAddChild: (parent: CorrespondenceLetter) => void;
+  onUnlink: (letterId: string) => void; // <--- новый проп
   users: Option[];
   letterTypes: Option[];
   projects: Option[];
   units: Option[];
 }
 
-/** Таблица писем на Ant Design */
+/** Таблица писем с иерархией и кнопкой "исключить из связи" */
 export default function CorrespondenceTable({
-  letters,
-  onView,
-  onDelete,
-  onAddChild,
-  users,
-  letterTypes,
-  projects,
-  units,
-}: CorrespondenceTableProps) {
+                                              letters,
+                                              onView,
+                                              onDelete,
+                                              onAddChild,
+                                              onUnlink,
+                                              users,
+                                              letterTypes,
+                                              projects,
+                                              units,
+                                            }: CorrespondenceTableProps) {
   const maps = useMemo(() => {
     const m = {
       user: {} as Record<string, string>,
@@ -43,16 +45,75 @@ export default function CorrespondenceTable({
     return m;
   }, [users, letterTypes, projects, units]);
 
+  const treeData = useMemo(() => {
+    const map = new Map<string, any>();
+    const roots: any[] = [];
+
+    letters.forEach((l) => {
+      const row = {
+        ...l,
+        key: l.id,
+        projectName: l.project_id ? maps.project[l.project_id] : null,
+        unitNames: l.unit_ids
+            .map((id) => maps.unit[id])
+            .filter(Boolean)
+            .join(', '),
+        letterTypeName: l.letter_type_id ? maps.type[l.letter_type_id] : null,
+        responsibleName: l.responsible_user_id
+            ? maps.user[l.responsible_user_id]
+            : null,
+        children: [],
+      };
+      map.set(l.id, row);
+    });
+
+    letters.forEach((l) => {
+      const row = map.get(l.id);
+      if (l.parent_id && map.has(l.parent_id)) {
+        map.get(l.parent_id).children.push(row);
+      } else {
+        roots.push(row);
+      }
+    });
+
+    map.forEach((row) => {
+      if (!row.children || row.children.length === 0) {
+        row.children = undefined;
+      }
+    });
+
+    return roots;
+  }, [letters, maps]);
+
   const columns: ColumnsType<any> = [
+    {
+      title: '',
+      dataIndex: 'treeIcon',
+      width: 40,
+      render: (_: any, record: any) => {
+        if (!record.parent_id) {
+          return (
+              <Tooltip title="Главное письмо">
+                <MailOutlined style={{ color: '#1890ff', fontSize: 17 }} />
+              </Tooltip>
+          );
+        }
+        return (
+            <Tooltip title="Связанное письмо">
+              <BranchesOutlined style={{ color: '#52c41a', fontSize: 16 }} />
+            </Tooltip>
+        );
+      },
+    },
     {
       title: 'Тип',
       dataIndex: 'type',
       width: 100,
       sorter: (a, b) => a.type.localeCompare(b.type),
       render: (v: string) => (
-        <Tag color={v === 'incoming' ? 'success' : 'processing'}>
-          {v === 'incoming' ? 'Входящее' : 'Исходящее'}
-        </Tag>
+          <Tag color={v === 'incoming' ? 'success' : 'processing'}>
+            {v === 'incoming' ? 'Входящее' : 'Исходящее'}
+          </Tag>
       ),
     },
     {
@@ -60,12 +121,8 @@ export default function CorrespondenceTable({
       dataIndex: 'number',
       width: 120,
       sorter: (a, b) => a.number.localeCompare(b.number),
-      render: (v: string, record: any) => (
-        <span className={record.parent_id ? 'child-letter-number' : undefined} style={{ paddingLeft: record.level * 16 }}>
-          {record.parent_id ? '↳ ' : ''}
-          {v}
-        </span>
-      ),
+      render: (num: string, record: any) =>
+          <b style={!record.parent_id ? { fontWeight: 600 } : {}}>{num}</b>,
     },
     {
       title: 'Дата',
@@ -78,11 +135,15 @@ export default function CorrespondenceTable({
       title: 'Корреспондент',
       dataIndex: 'correspondent',
       sorter: (a, b) => a.correspondent.localeCompare(b.correspondent),
+      render: (val: string, record: any) =>
+          <span style={record.parent_id ? { color: '#888' } : {}}>{val}</span>,
     },
     {
       title: 'Тема',
       dataIndex: 'subject',
       sorter: (a, b) => a.subject.localeCompare(b.subject),
+      render: (val: string, record: any) =>
+          <span style={record.parent_id ? { color: '#888' } : {}}>{val}</span>,
     },
     {
       title: 'Проект',
@@ -98,100 +159,94 @@ export default function CorrespondenceTable({
       title: 'Категория',
       dataIndex: 'letterTypeName',
       sorter: (a, b) =>
-        (a.letterTypeName || '').localeCompare(b.letterTypeName || ''),
+          (a.letterTypeName || '').localeCompare(b.letterTypeName || ''),
     },
     {
       title: 'Ответственный',
       dataIndex: 'responsibleName',
       sorter: (a, b) =>
-        (a.responsibleName || '').localeCompare(b.responsibleName || ''),
+          (a.responsibleName || '').localeCompare(b.responsibleName || ''),
     },
     {
       title: 'Действия',
       key: 'actions',
-      width: 100,
+      width: 130,
       render: (_: any, record: CorrespondenceLetter) => (
-        <Space size="middle">
-          <Button
-            type="text"
-            icon={<EyeOutlined />}
-            onClick={() => onView(record)}
-          />
-          <Button
-            type="text"
-            icon={<PlusOutlined />}
-            onClick={() => onAddChild(record)}
-          />
-          <Popconfirm
-            title="Удалить письмо?"
-            okText="Да"
-            cancelText="Нет"
-            onConfirm={() => onDelete(record.id)}
-          >
-            <Button type="text" danger icon={<DeleteOutlined />} />
-          </Popconfirm>
-        </Space>
+          <Space size="middle">
+            <Button
+                type="text"
+                icon={<EyeOutlined />}
+                onClick={() => onView(record)}
+            />
+            <Button
+                type="text"
+                icon={<PlusOutlined />}
+                onClick={() => onAddChild(record)}
+            />
+            {/* Только для связанных писем — показать кнопку "исключить" */}
+            {record.parent_id && (
+                <Tooltip title="Исключить из связи">
+                  <Button
+                      type="text"
+                      icon={
+                        <LinkOutlined
+                            style={{
+                              color: '#c41d7f',
+                              textDecoration: 'line-through',
+                              fontWeight: 700,
+                            }}
+                        />
+                      }
+                      onClick={() => onUnlink(record.id)}
+                  />
+                </Tooltip>
+            )}
+            <Popconfirm
+                title="Удалить письмо?"
+                okText="Да"
+                cancelText="Нет"
+                onConfirm={() => onDelete(record.id)}
+            >
+              <Button type="text" danger icon={<DeleteOutlined />} />
+            </Popconfirm>
+          </Space>
       ),
     },
   ];
 
-  const dataSource = useMemo(() => {
-    const map = new Map<string, any>();
-    const roots: any[] = [];
-
-    letters.forEach((l) => {
-      const row = {
-        ...l,
-        projectName: l.project_id ? maps.project[l.project_id] : null,
-        unitNames: l.unit_ids
-          .map((id) => maps.unit[id])
-          .filter(Boolean)
-          .join(', '),
-        letterTypeName: l.letter_type_id ? maps.type[l.letter_type_id] : null,
-        responsibleName: l.responsible_user_id
-          ? maps.user[l.responsible_user_id]
-          : null,
-        level: 0,
-      } as any;
-      map.set(l.id, row);
-    });
-
-    letters.forEach((l) => {
-      const row = map.get(l.id);
-      if (l.parent_id) {
-        const parent = map.get(l.parent_id);
-        if (parent) {
-          if (!parent.children) parent.children = [];
-          parent.children.push(row);
-          row.level = (parent.level ?? 0) + 1;
-        } else {
-          roots.push(row);
-        }
-      } else {
-        roots.push(row);
-      }
-    });
-
-    const assign = (node: any, lvl: number) => {
-      node.level = lvl;
-      if (node.children) node.children.forEach((c: any) => assign(c, lvl + 1));
-    };
-    roots.forEach((r) => assign(r, 0));
-
-    return roots;
-  }, [letters, maps]);
+  const rowClassName = (record: any) => {
+    if (!record.parent_id) return 'main-letter-row';
+    return 'child-letter-row';
+  };
 
   return (
-    <Table
-      rowKey="id"
-      columns={columns}
-      dataSource={dataSource}
-      pagination={{ pageSize: 25, showSizeChanger: true }}
-      size="middle"
-      rowClassName={(record: any) =>
-        record.parent_id ? 'child-letter-row' : 'root-letter-row'
-      }
-      expandable={{ defaultExpandAllRows: true, expandIcon: () => null }}
-    />
+      <Table
+          rowKey="id"
+          columns={columns}
+          dataSource={treeData}
+          pagination={{ pageSize: 25, showSizeChanger: true }}
+          size="middle"
+          expandable={{
+            expandRowByClick: true,
+            defaultExpandAllRows: true,
+            indentSize: 24,
+          }}
+          rowClassName={rowClassName}
+          style={{ background: '#fff' }}
+      />
   );
 }
+
+/** Стили (пример, вставить в index.css)
+ .main-letter-row {
+ background: #eaf4ff !important;
+ font-weight: 600;
+ box-shadow: 0 1px 0 #b5d3f7;
+ }
+ .child-letter-row {
+ background: #f8fafb !important;
+ color: #888;
+ font-style: italic;
+ border-left: 3px solid #52c41a;
+ }
+ */
