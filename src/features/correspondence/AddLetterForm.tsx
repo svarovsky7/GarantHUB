@@ -1,4 +1,6 @@
+
 import React, { useEffect } from 'react';
+
 import { useForm, Controller } from 'react-hook-form';
 import {
   Stack,
@@ -6,6 +8,7 @@ import {
   Select,
   MenuItem,
   Button,
+
   Autocomplete,
   CircularProgress,
 } from '@mui/material';
@@ -18,6 +21,7 @@ import { useLetterTypes } from '@/entities/letterType';
 import { useProjects } from '@/entities/project';
 import { useUnitsByProject } from '@/entities/unit';
 
+
 export interface AddLetterFormData {
   type: 'incoming' | 'outgoing';
   number: string;
@@ -25,10 +29,12 @@ export interface AddLetterFormData {
   correspondent: string;
   subject: string;
   content: string;
+
   responsible_user_id: string | null;
   letter_type_id: number | null;
   project_id: number | null;
   unit_id: number | null;
+
 }
 
 interface AddLetterFormProps {
@@ -37,6 +43,7 @@ interface AddLetterFormProps {
 
 /** Форма добавления письма */
 export default function AddLetterForm({ onSubmit }: AddLetterFormProps) {
+
   const { control, handleSubmit, reset, watch, setValue } =
     useForm<AddLetterFormData>({
       defaultValues: {
@@ -64,15 +71,18 @@ export default function AddLetterForm({ onSubmit }: AddLetterFormProps) {
     setValue('unit_id', null);
   }, [projectId, setValue]);
 
+
   const submit = (data: AddLetterFormData) => {
     onSubmit(data);
     reset();
   };
 
   return (
+
     <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ru">
       <form onSubmit={handleSubmit(submit)} noValidate>
         <Stack spacing={2} sx={{ maxWidth: 400 }}>
+
         <Controller
           name="type"
           control={control}
@@ -109,6 +119,7 @@ export default function AddLetterForm({ onSubmit }: AddLetterFormProps) {
           )}
         />
         <Controller
+
           name="responsible_user_id"
           control={control}
           render={({ field, fieldState: { error } }) => (
@@ -237,6 +248,7 @@ export default function AddLetterForm({ onSubmit }: AddLetterFormProps) {
           )}
         />
         <Controller
+
           name="correspondent"
           control={control}
           render={({ field }) => (
@@ -262,6 +274,8 @@ export default function AddLetterForm({ onSubmit }: AddLetterFormProps) {
         </Button>
       </Stack>
     </form>
+
     </LocalizationProvider>
+
   );
 }

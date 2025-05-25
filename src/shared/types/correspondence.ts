@@ -11,6 +11,7 @@ export interface CorrespondenceLetter {
   project_id: number | null;
   /** Объект проекта */
   unit_id: number | null;
+
   /** Номер письма */
   number: string;
   /** Дата письма ISO */
