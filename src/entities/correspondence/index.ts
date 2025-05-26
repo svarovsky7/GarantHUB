@@ -7,8 +7,9 @@ import {
 import { uploadLetterAttachment, ATTACH_BUCKET } from '../attachment';
 import { supabase } from '@/shared/api/supabaseClient';
 
-const LS_KEY = 'correspondenceLetters';
-const LINK_KEY = 'correspondenceLetterLinks';
+const LETTERS_TABLE = 'letters';
+const LINKS_TABLE = 'letter_links';
+const ATTACH_TABLE = 'attachments';
 
 function readFileAsDataURL(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -19,53 +20,59 @@ function readFileAsDataURL(file: File): Promise<string> {
   });
 }
 
-function loadLetters(): CorrespondenceLetter[] {
-  try {
-    const raw = localStorage.getItem(LS_KEY);
-    const arr = raw ? (JSON.parse(raw) as any[]) : [];
-    return arr.map((l) => ({
-      ...l,
-      unit_ids: Array.isArray(l.unit_ids)
-        ? l.unit_ids
-        : l.unit_id
-        ? [l.unit_id]
-        : [],
-      attachments: Array.isArray(l.attachments) ? l.attachments : [],
-      parent_id: l.parent_id ?? null,
-    }));
-  } catch {
-    return [];
-  }
-}
-
-function saveLetters(letters: CorrespondenceLetter[]) {
-  localStorage.setItem(LS_KEY, JSON.stringify(letters));
-}
-
-function loadLinks(): LetterLink[] {
-  try {
-    const raw = localStorage.getItem(LINK_KEY);
-    return raw ? (JSON.parse(raw) as LetterLink[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveLinks(links: LetterLink[]) {
-  localStorage.setItem(LINK_KEY, JSON.stringify(links));
-}
-
 export function useLetterLinks() {
   return useQuery({
-    queryKey: [LINK_KEY],
-    queryFn: async () => loadLinks(),
+    queryKey: [LINKS_TABLE],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from(LINKS_TABLE)
+        .select('parent_id, child_id');
+      if (error) throw error;
+      return (data ?? []) as LetterLink[];
+    },
+    staleTime: 5 * 60_000,
   });
 }
 
 export function useLetters() {
   return useQuery({
-    queryKey: [LS_KEY],
-    queryFn: async () => loadLetters(),
+    queryKey: [LETTERS_TABLE],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from(LETTERS_TABLE)
+        .select(
+          `id, project_id, case_id, number, letter_type_id, letter_date, subject, sender, receiver, created_at, attachments(id, storage_path, file_url, file_type, attachment_type_id)`
+        )
+        .order('id');
+      if (error) throw error;
+      const { data: links, error: linkErr } = await supabase
+        .from(LINKS_TABLE)
+        .select('parent_id, child_id');
+      if (linkErr) throw linkErr;
+      const map = new Map<number, number>();
+      (links ?? []).forEach((lnk) => map.set(lnk.child_id, lnk.parent_id));
+      return (data ?? []).map((row: any) => {
+        const parent = map.get(row.id);
+        const type = row.receiver ? 'outgoing' : 'incoming';
+        const correspondent = row.receiver || row.sender || '';
+        return {
+          id: String(row.id),
+          type,
+          parent_id: parent != null ? String(parent) : null,
+          responsible_user_id: null,
+          letter_type_id: row.letter_type_id ?? null,
+          project_id: row.project_id ?? null,
+          unit_ids: [],
+          number: row.number,
+          date: row.letter_date,
+          correspondent,
+          subject: row.subject ?? '',
+          content: '',
+          attachments: row.attachments ?? [],
+        } as CorrespondenceLetter;
+      });
+    },
+    staleTime: 5 * 60_000,
   });
 }
 
@@ -75,53 +82,72 @@ export function useAddLetter() {
     mutationFn: async (
       payload: Omit<CorrespondenceLetter, 'id' | 'attachments'> & {
         attachments?: { file: File; type_id: number | null }[];
-      },
-    ) => {
-      const letters = loadLetters();
-      const links = loadLinks();
-      const attachments: CorrespondenceAttachment[] = await Promise.all(
-        (payload.attachments ?? []).map(async ({ file, type_id }) => {
-          if (payload.project_id) {
-            const { path, type, url } = await uploadLetterAttachment(
-              file,
-              payload.project_id!,
-            );
-            return {
-              id: Date.now().toString() + Math.random().toString(16).slice(2),
-              name: file.name,
-              file_type: type,
-              storage_path: path,
-              file_url: url,
-              attachment_type_id: type_id,
-            } as CorrespondenceAttachment;
-          }
-          return {
-            id: Date.now().toString() + Math.random().toString(16).slice(2),
-            name: file.name,
-            file_type: file.type,
-            storage_path: '',
-            file_url: await readFileAsDataURL(file),
-            attachment_type_id: type_id,
-          } as CorrespondenceAttachment;
-        }),
-      );
-      const newLetter: CorrespondenceLetter = {
-        ...(payload as any),
-        id: Date.now().toString(),
-        attachments,
-        parent_id: (payload as any).parent_id ?? null,
-      };
-      letters.push(newLetter);
-      if (newLetter.parent_id) {
-        links.push({ parent_id: newLetter.parent_id, child_id: newLetter.id });
       }
-      saveLetters(letters);
-      saveLinks(links);
-      return newLetter;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: [LS_KEY] });
-      qc.invalidateQueries({ queryKey: [LINK_KEY] });
+    ) => {
+      const { attachments = [], parent_id, ...data } = payload as any;
+      const letterData = {
+        project_id: data.project_id,
+        case_id: 0,
+        number: data.number,
+        letter_type_id: data.letter_type_id,
+        letter_date: data.date,
+        subject: data.subject,
+        sender: data.type === 'incoming' ? data.correspondent : null,
+        receiver: data.type === 'outgoing' ? data.correspondent : null,
+      };
+      const { data: inserted, error } = await supabase
+        .from(LETTERS_TABLE)
+        .insert(letterData)
+        .select('*')
+        .single();
+      if (error) throw error;
+      const letterId = inserted.id as number;
+      const files: CorrespondenceAttachment[] = [];
+      if (attachments.length && payload.project_id) {
+        for (const { file, type_id } of attachments) {
+          const { path, type, url } = await uploadLetterAttachment(
+            file,
+            payload.project_id!
+          );
+          await supabase.from(ATTACH_TABLE).insert({
+            letter_id: letterId,
+            file_type: type,
+            storage_path: path,
+            file_url: url,
+            attachment_type_id: type_id,
+          });
+          files.push({
+            id: '',
+            name: file.name,
+            file_type: type,
+            storage_path: path,
+            file_url: url,
+            attachment_type_id: type_id,
+          });
+        }
+      }
+      if (parent_id) {
+        await supabase
+          .from(LINKS_TABLE)
+          .insert({ parent_id: Number(parent_id), child_id: letterId });
+      }
+      qc.invalidateQueries({ queryKey: [LETTERS_TABLE] });
+      qc.invalidateQueries({ queryKey: [LINKS_TABLE] });
+      return {
+        id: String(letterId),
+        type: data.type,
+        parent_id,
+        responsible_user_id: null,
+        letter_type_id: data.letter_type_id ?? null,
+        project_id: data.project_id ?? null,
+        unit_ids: [],
+        number: data.number,
+        date: data.date,
+        correspondent: data.correspondent,
+        subject: data.subject,
+        content: '',
+        attachments: files,
+      } as CorrespondenceLetter;
     },
   });
 }
@@ -130,32 +156,28 @@ export function useDeleteLetter() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const letters = loadLetters();
-      let links = loadLinks();
-      const letter = letters.find((l) => l.id === id);
-      if (letter && letter.attachments?.length) {
-        const paths = letter.attachments
-          .map((a) => a.storage_path)
-          .filter((p) => !!p);
-        if (paths.length) {
-          await supabase.storage.from(ATTACH_BUCKET).remove(paths);
-        }
+      const letterId = Number(id);
+      const { data: attach } = await supabase
+        .from(ATTACH_TABLE)
+        .select('id, storage_path')
+        .eq('letter_id', letterId);
+      const paths = (attach ?? []).map((a) => a.storage_path).filter(Boolean);
+      if (paths.length) {
+        await supabase.storage.from(ATTACH_BUCKET).remove(paths);
+        await supabase.from(ATTACH_TABLE).delete().eq('letter_id', letterId);
       }
-      const updated = letters
-        .filter((l) => l.id !== id)
-        .map((l) =>
-          l.parent_id === id ? { ...l, parent_id: null } : l,
-        );
-      links = links.filter(
-        (link) => link.parent_id !== id && link.child_id !== id,
-      );
-      saveLetters(updated);
-      saveLinks(links);
+      await supabase
+        .from(LINKS_TABLE)
+        .delete()
+        .or(`parent_id.eq.${letterId},child_id.eq.${letterId}`);
+      const { error } = await supabase
+        .from(LETTERS_TABLE)
+        .delete()
+        .eq('id', letterId);
+      if (error) throw error;
+      qc.invalidateQueries({ queryKey: [LETTERS_TABLE] });
+      qc.invalidateQueries({ queryKey: [LINKS_TABLE] });
       return id;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: [LS_KEY] });
-      qc.invalidateQueries({ queryKey: [LINK_KEY] });
     },
   });
 }
@@ -164,46 +186,28 @@ export function useLinkLetters() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ parentId, childIds }: { parentId: string; childIds: string[] }) => {
-      const letters = loadLetters();
-      let links = loadLinks().filter((lnk) => !childIds.includes(lnk.child_id));
-      const map = new Map(letters.map((l) => [l.id, l]));
-      childIds.forEach((id) => {
-        const l = map.get(id);
-        if (l) {
-          l.parent_id = parentId;
-          links.push({ parent_id: parentId, child_id: id });
-        }
-      });
-      saveLetters(Array.from(map.values()));
-      saveLinks(links);
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: [LS_KEY] });
-      qc.invalidateQueries({ queryKey: [LINK_KEY] });
+      const ids = childIds.map((c) => Number(c));
+      if (ids.length === 0) return;
+      await supabase
+        .from(LINKS_TABLE)
+        .delete()
+        .in('child_id', ids);
+      const rows = ids.map((child_id) => ({ parent_id: Number(parentId), child_id }));
+      await supabase.from(LINKS_TABLE).insert(rows);
+      qc.invalidateQueries({ queryKey: [LINKS_TABLE] });
+      qc.invalidateQueries({ queryKey: [LETTERS_TABLE] });
     },
   });
 }
-
 
 export function useUnlinkLetter() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const letters = loadLetters();
-      let links = loadLinks();
-      const map = new Map(letters.map((l) => [l.id, l]));
-      const letter = map.get(id);
-      if (letter) {
-        letter.parent_id = null;
-        map.set(id, letter);
-      }
-      links = links.filter((lnk) => lnk.child_id !== id);
-      saveLetters(Array.from(map.values()));
-      saveLinks(links);
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: [LS_KEY] });
-      qc.invalidateQueries({ queryKey: [LINK_KEY] });
+      const childId = Number(id);
+      await supabase.from(LINKS_TABLE).delete().eq('child_id', childId);
+      qc.invalidateQueries({ queryKey: [LINKS_TABLE] });
+      qc.invalidateQueries({ queryKey: [LETTERS_TABLE] });
     },
   });
 }
