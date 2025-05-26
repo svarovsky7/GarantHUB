@@ -41,7 +41,9 @@ export function useLetters() {
       const { data, error } = await supabase
         .from(LETTERS_TABLE)
         .select(
+
           `id, project_id, case_id, number, letter_type_id, letter_date, subject, sender, receiver, created_at, attachments(id, storage_path, file_url, file_type, attachment_type_id)`
+
         )
         .order('id');
       if (error) throw error;
@@ -53,6 +55,7 @@ export function useLetters() {
       (links ?? []).forEach((lnk) => map.set(lnk.child_id, lnk.parent_id));
       return (data ?? []).map((row: any) => {
         const parent = map.get(row.id);
+
         const type = row.receiver ? 'outgoing' : 'incoming';
         const correspondent = row.receiver || row.sender || '';
         return {
@@ -68,6 +71,7 @@ export function useLetters() {
           correspondent,
           subject: row.subject ?? '',
           content: '',
+
           attachments: row.attachments ?? [],
         } as CorrespondenceLetter;
       });
@@ -85,6 +89,7 @@ export function useAddLetter() {
       }
     ) => {
       const { attachments = [], parent_id, ...data } = payload as any;
+
       const letterData = {
         project_id: data.project_id,
         case_id: 0,
@@ -98,6 +103,7 @@ export function useAddLetter() {
       const { data: inserted, error } = await supabase
         .from(LETTERS_TABLE)
         .insert(letterData)
+
         .select('*')
         .single();
       if (error) throw error;
@@ -134,6 +140,7 @@ export function useAddLetter() {
       qc.invalidateQueries({ queryKey: [LETTERS_TABLE] });
       qc.invalidateQueries({ queryKey: [LINKS_TABLE] });
       return {
+
         id: String(letterId),
         type: data.type,
         parent_id,
@@ -146,6 +153,7 @@ export function useAddLetter() {
         correspondent: data.correspondent,
         subject: data.subject,
         content: '',
+
         attachments: files,
       } as CorrespondenceLetter;
     },
