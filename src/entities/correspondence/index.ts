@@ -90,8 +90,10 @@ export function useAddLetter() {
     ) => {
       const { attachments = [], parent_id, ...data } = payload as any;
 
-      // В БД поле case_id обязательно, поэтому для
-      // писем общей корреспонденции проставляем 0
+
+      // Письма в разделе «Корреспонденция» не привязаны к судебному делу,
+      // поэтому поле `case_id` сохраняем как `null`
+
       const letterData = {
         project_id: data.project_id,
         case_id: 0,
