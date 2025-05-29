@@ -96,7 +96,6 @@ export function useAddLetter() {
 
       const letterData = {
         project_id: data.project_id,
-        case_id: null,
         number: data.number,
         letter_type_id: data.letter_type_id,
         letter_date: data.date,
