@@ -41,9 +41,7 @@ export function useLetters() {
       const { data, error } = await supabase
         .from(LETTERS_TABLE)
         .select(
-
-          `id, project_id, case_id, number, letter_type_id, letter_date, subject, sender, receiver, created_at, attachments(id, storage_path, file_url, file_type, attachment_type_id)`
-
+          `id, project_id, number, letter_type_id, letter_date, subject, sender, receiver, created_at, attachments(id, storage_path, file_url, file_type, attachment_type_id)`
         )
         .order('id');
       if (error) throw error;
@@ -91,12 +89,8 @@ export function useAddLetter() {
       const { attachments = [], parent_id, ...data } = payload as any;
 
 
-      // Письма в разделе «Корреспонденция» не привязаны к судебному делу,
-      // поэтому поле `case_id` сохраняем как `null`
-
       const letterData = {
         project_id: data.project_id,
-        case_id: null,
         number: data.number,
         letter_type_id: data.letter_type_id,
         letter_date: data.date,
