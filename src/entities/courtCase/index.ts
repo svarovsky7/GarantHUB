@@ -1,11 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/shared/api/supabaseClient';
 import { useProjectId } from '@/shared/hooks/useProjectId';
-import type { CourtCase, Letter, Defect } from '@/shared/types/courtCase';
-import { uploadLetterAttachment } from '../attachment';
+import type { CourtCase, Defect } from '@/shared/types/courtCase';
 
 const CASES_TABLE = 'court_cases';
-const LETTERS_TABLE = 'letters';
 const DEFECTS_TABLE = 'defects';
 const CASE_DEFECTS_TABLE = 'court_case_defects';
 
@@ -55,69 +53,6 @@ export function useDeleteCourtCase() {
   });
 }
 
-export function useCaseLetters(caseId: number) {
-  return useQuery({
-    queryKey: [LETTERS_TABLE, caseId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from(LETTERS_TABLE)
-        .select(`*, attachments(id, storage_path, file_url, file_type, attachment_type_id)`)
-        .eq('case_id', caseId)
-        .order('letter_date');
-      if (error) throw error;
-      return (data ?? []) as Letter[];
-    },
-    enabled: !!caseId,
-    staleTime: 5 * 60_000,
-  });
-}
-
-export function useAddLetter() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ attachments = [], ...payload }: Omit<Letter, 'id' | 'attachments'> & { attachments?: { file: File; type_id: number | null }[] }) => {
-      const { data, error } = await supabase
-        .from(LETTERS_TABLE)
-        .insert(payload)
-        .select('*')
-        .single();
-      if (error) throw error;
-      const letter = data as Letter;
-      if (attachments.length && payload.project_id) {
-        await Promise.all(
-          attachments.map(async ({ file, type_id }) => {
-            const { path, type, url } = await uploadLetterAttachment(file, payload.project_id!);
-            await supabase.from('attachments').insert({
-              letter_id: letter.id,
-              file_type: type,
-              storage_path: path,
-              file_url: url,
-              attachment_type_id: type_id,
-            });
-          })
-        );
-      }
-      return letter;
-    },
-    onSuccess: (_d, vars) => {
-      qc.invalidateQueries({ queryKey: [LETTERS_TABLE, vars.case_id] });
-    },
-  });
-}
-
-export function useDeleteLetter() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ id, case_id }: { id: number; case_id: number }) => {
-      const { error } = await supabase.from(LETTERS_TABLE).delete().eq('id', id);
-      if (error) throw error;
-      return { id, case_id };
-    },
-    onSuccess: (_res, vars) => {
-      qc.invalidateQueries({ queryKey: [LETTERS_TABLE, vars.case_id] });
-    },
-  });
-}
 
 export function useCaseDefects(caseId: number) {
   return useQuery({

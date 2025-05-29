@@ -21,7 +21,7 @@ import {
   message,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import type { CourtCase, Letter, Defect } from '@/shared/types/courtCase';
+import type { CourtCase, Defect } from '@/shared/types/courtCase';
 import { useProjects } from '@/entities/project';
 import { useUnitsByProject, useUnitsByIds } from '@/entities/unit';
 import { useContractors } from '@/entities/contractor';
@@ -33,9 +33,6 @@ import {
   useCourtCases,
   useAddCourtCase,
   useDeleteCourtCase,
-  useCaseLetters,
-  useAddLetter,
-  useDeleteLetter,
   useCaseDefects,
   useAddDefect,
   useDeleteDefect,
@@ -66,7 +63,7 @@ export default function CourtCasesPage() {
 
   const [filters, setFilters] = useState<Filters>({});
   const [dialogCase, setDialogCase] = useState<CourtCase | null>(null);
-  const [tab, setTab] = useState('letters');
+  const [tab, setTab] = useState('defects');
 
   const [form] = Form.useForm();
   const projectId = Form.useWatch('project_id', form);
@@ -235,7 +232,7 @@ export default function CourtCasesPage() {
       key: 'actions',
       render: (_: any, record) => (
         <Space>
-          <Button size="small" onClick={() => { setDialogCase(record); setTab('letters'); }}>
+          <Button size="small" onClick={() => { setDialogCase(record); setTab('defects'); }}>
             Просмотр
           </Button>
           <Button size="small" danger onClick={() => deleteCase(Number(record.id))}>
@@ -464,36 +461,14 @@ interface CaseDialogProps {
 }
 
 function CaseDialog({ open, onClose, caseData, tab, onTabChange }: CaseDialogProps) {
-  const { data: letters = [] } = useCaseLetters(caseData ? Number(caseData.id) : 0);
   const { data: defects = [] } = useCaseDefects(caseData ? Number(caseData.id) : 0);
   const { data: stages = [] } = useLitigationStages();
   const { data: unitInfo = [] } = useUnitsByIds(
     caseData && caseData.unit_id ? [caseData.unit_id] : [],
   );
-  const addLetterMutation = useAddLetter();
-  const deleteLetterMutation = useDeleteLetter();
   const addDefectMutation = useAddDefect();
   const deleteDefectMutation = useDeleteDefect();
 
-  const addLetter = (letter: Omit<Letter, 'id' | 'case_id'>) => {
-    if (!caseData) return;
-    addLetterMutation.mutate(
-      { ...letter, case_id: Number(caseData.id) },
-      {
-        onError: (e: any) => message.error(e.message),
-      },
-    );
-  };
-
-  const deleteLetter = (id: number) => {
-    if (!caseData) return;
-    deleteLetterMutation.mutate(
-      { id, case_id: Number(caseData.id) },
-      {
-        onError: (e: any) => message.error(e.message),
-      },
-    );
-  };
 
   const addDefect = (defect: Omit<Defect, 'id'>) => {
     if (!caseData) return;
@@ -593,9 +568,6 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange }: CaseDialogPro
             </Col>
           </Row>
           <Tabs activeKey={tab} onChange={onTabChange} style={{ marginBottom: 16 }}>
-            <Tabs.TabPane tab="Письма" key="letters">
-              <LettersTab letters={letters} onAdd={addLetter} onDelete={deleteLetter} />
-            </Tabs.TabPane>
             <Tabs.TabPane tab="Недостатки" key="defects">
               <DefectsTab defects={defects} onAdd={addDefect} onDelete={deleteDefect} />
             </Tabs.TabPane>
@@ -609,122 +581,6 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange }: CaseDialogPro
   );
 }
 
-interface LettersProps {
-  letters: Letter[];
-  onAdd: (letter: Omit<Letter, 'id' | 'case_id'>) => void;
-  onDelete: (id: number) => void;
-}
-
-function LettersTab({ letters, onAdd, onDelete }: LettersProps) {
-  const [form] = Form.useForm();
-  const { data: attachmentTypes = [] } = useAttachmentTypes();
-  const [files, setFiles] = useState<{ file: File; type_id: number | null }[]>([]);
-
-  const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const arr = Array.from(e.target.files || []).map((f) => ({ file: f, type_id: null }));
-    setFiles((p) => [...p, ...arr]);
-    e.target.value = '';
-  };
-
-  const setType = (idx: number, val: number | null) =>
-    setFiles((p) => p.map((f, i) => (i === idx ? { ...f, type_id: val } : f)));
-
-  const removeFile = (idx: number) => setFiles((p) => p.filter((_, i) => i !== idx));
-
-  const add = (values: any) => {
-    if (!values.number || !values.date || !values.content) return;
-    onAdd({
-      number: values.number,
-      date: (values.date as Dayjs).format('YYYY-MM-DD'),
-      content: values.content,
-      attachments: files,
-    });
-    form.resetFields();
-    setFiles([]);
-  };
-
-  const columns: ColumnsType<Letter> = [
-    { title: '№ письма', dataIndex: 'number', width: 120 },
-    {
-      title: 'Дата',
-      dataIndex: 'date',
-      width: 120,
-      render: (v: string) => dayjs(v).format('DD.MM.YYYY'),
-    },
-    { title: 'Содержание', dataIndex: 'content', width: '60%' },
-    {
-      title: 'Действия',
-      key: 'actions',
-      render: (_: any, record) => (
-        <Button size="small" danger onClick={() => onDelete(record.id)}>
-          Удалить
-        </Button>
-      ),
-    },
-  ];
-
-  return (
-    <>
-      <Form form={form} layout="vertical" onFinish={add} style={{ marginBottom: 16 }}>
-        <Row gutter={16}>
-          <Col span={8}>
-            <Form.Item name="number" label="Номер письма">
-              <Input />
-            </Form.Item>
-          </Col>
-          <Col span={8}>
-            <Form.Item name="date" label="Дата">
-              <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
-            </Form.Item>
-          </Col>
-          <Col span={8}>
-            <Form.Item>
-              <Button type="primary" htmlType="submit">
-                Добавить
-              </Button>
-            </Form.Item>
-          </Col>
-        <Col span={24}>
-          <Form.Item name="content" label="Содержание">
-            <Input.TextArea rows={2} />
-          </Form.Item>
-        </Col>
-        <Col span={24}>
-          <input type="file" multiple onChange={handleFiles} />
-          {files.map((f, i) => (
-            <Row key={i} gutter={8} align="middle" style={{ marginTop: 4 }}>
-              <Col flex="auto">
-                <span>{f.file.name}</span>
-              </Col>
-              <Col flex="160px">
-                <Select
-                  style={{ width: '100%' }}
-                  placeholder="Тип файла"
-                  value={f.type_id ?? undefined}
-                  onChange={(v) => setType(i, v)}
-                  allowClear
-                >
-                  {attachmentTypes.map((t) => (
-                    <Select.Option key={t.id} value={t.id}>
-                      {t.name}
-                    </Select.Option>
-                  ))}
-                </Select>
-              </Col>
-              <Col>
-                <Button type="text" danger onClick={() => removeFile(i)}>
-                  Удалить
-                </Button>
-              </Col>
-            </Row>
-          ))}
-        </Col>
-      </Row>
-    </Form>
-      <Table rowKey="id" columns={columns} dataSource={letters} pagination={false} size="middle" />
-    </>
-  );
-}
 
 interface DefectsProps {
   defects: Defect[];
