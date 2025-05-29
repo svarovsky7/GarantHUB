@@ -1,19 +1,3 @@
-export interface LetterAttachment {
-  id: number;
-  storage_path: string;
-  file_url: string;
-  file_type: string;
-  attachment_type_id: number | null;
-}
-
-export interface Letter {
-  id: number;
-  case_id: number;
-  number: string;
-  date: string;
-  content: string;
-  attachments: LetterAttachment[];
-}
 
 export interface Defect {
   id: number;
@@ -40,6 +24,5 @@ export interface CourtCase {
   fix_end_date?: string | null;
   description: string;
   claim_amount?: number | null;
-  letters: Letter[];
   defects: Defect[];
 }
