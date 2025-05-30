@@ -15,8 +15,8 @@ export default function StatsPage() {
 
   const totalTickets = tickets.length;
   const byStatus = React.useMemo(() => {
-    const m = {};
-    tickets.forEach((t) => {
+    const m: Record<number, number> = {};
+    (tickets ?? []).forEach((t) => {
       m[t.status_id] = (m[t.status_id] || 0) + 1;
     });
     return m;
