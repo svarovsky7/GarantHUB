@@ -160,8 +160,7 @@ export function useTickets() {
             );
             let filesMap = {};
             if (allIds.length) {
-                const { data: files, error: fErr } = await getAttachmentsByIds(allIds);
-                if (fErr) throw fErr;
+                const files = await getAttachmentsByIds(allIds);
                 files.forEach((f) => {
                     filesMap[f.id] = {
                         id: f.id,
