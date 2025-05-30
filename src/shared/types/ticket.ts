@@ -1,7 +1,8 @@
 export interface Ticket {
   id: number;
   project_id: number;
-  unit_id: number | null;
+  /** массив ID объектов, к которым относится замечание */
+  unit_ids: number[];
   type_id: number | null;
   status_id: number | null;
   title: string;

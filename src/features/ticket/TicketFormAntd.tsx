@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import dayjs from 'dayjs';
 import { Form, Input, Select, DatePicker, Switch, Button, Row, Col } from 'antd';
+import { useEffect, useState } from 'react';
 import { useTicketTypes } from '@/entities/ticketType';
 import { useTicketStatuses } from '@/entities/ticketStatus';
 import { useUnitsByProject } from '@/entities/unit';
 import { useUsers } from '@/entities/user';
+import { useProjects } from '@/entities/project';
 import { useCreateTicket } from '@/entities/ticket';
 import { useAttachmentTypes } from '@/entities/attachmentType';
 import type { Ticket } from '@/shared/types/ticket';
@@ -16,14 +18,34 @@ import { useProjectId } from '@/shared/hooks/useProjectId';
  */
 export default function TicketFormAntd({ onCreated }: { onCreated?: () => void }) {
   const [form] = Form.useForm();
-  const projectId = useProjectId();
+  const globalProjectId = useProjectId();
+  const projectId = Form.useWatch('project_id', form) ?? globalProjectId;
+
   const { data: types = [] } = useTicketTypes();
   const { data: statuses = [] } = useTicketStatuses();
-  const { data: units = [] } = useUnitsByProject(projectId); // requires enabled but hook handles null
+  const { data: projects = [] } = useProjects();
+  const { data: units = [] } = useUnitsByProject(projectId);
   const { data: users = [] } = useUsers();
   const { data: attachmentTypes = [] } = useAttachmentTypes();
   const create = useCreateTicket();
   const [files, setFiles] = useState<{ file: File; type_id: number | null }[]>([]);
+
+  useEffect(() => {
+    if (globalProjectId) {
+      form.setFieldValue('project_id', globalProjectId);
+    }
+    form.setFieldValue('received_at', dayjs());
+  }, [globalProjectId, form]);
+
+  useEffect(() => {
+    form.setFieldValue('unit_ids', []);
+  }, [projectId, form]);
+
+  useEffect(() => {
+    if (statuses.length) {
+      form.setFieldValue('status_id', statuses[0].id);
+    }
+  }, [statuses, form]);
 
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const arr = Array.from(e.target.files || []).map((f) => ({ file: f, type_id: null }));
@@ -38,7 +60,7 @@ export default function TicketFormAntd({ onCreated }: { onCreated?: () => void }
     try {
       await create.mutateAsync({
         ...values,
-        project_id: projectId,
+        project_id: values.project_id ?? globalProjectId,
         attachments: files,
         received_at: values.received_at.format('YYYY-MM-DD'),
         fixed_at: values.fixed_at ? values.fixed_at.format('YYYY-MM-DD') : null,
@@ -59,8 +81,20 @@ export default function TicketFormAntd({ onCreated }: { onCreated?: () => void }
     <Form form={form} layout="vertical" onFinish={onFinish} autoComplete="off">
       <Row gutter={16}>
         <Col span={8}>
-          <Form.Item name="unit_id" label="Объект" rules={[{ required: true }]}> 
-            <Select options={units.map((u) => ({ value: u.id, label: u.name }))} />
+          <Form.Item name="project_id" label="Проект">
+            <Select
+              allowClear
+              options={projects.map((p) => ({ value: p.id, label: p.name }))}
+            />
+          </Form.Item>
+        </Col>
+        <Col span={8}>
+          <Form.Item name="unit_ids" label="Объекты" rules={[{ required: true }]}> 
+            <Select
+              mode="multiple"
+              options={units.map((u) => ({ value: u.id, label: u.name }))}
+              disabled={!projectId}
+            />
           </Form.Item>
         </Col>
         <Col span={8}>
@@ -68,6 +102,8 @@ export default function TicketFormAntd({ onCreated }: { onCreated?: () => void }
             <Select options={types.map((t) => ({ value: t.id, label: t.name }))} />
           </Form.Item>
         </Col>
+      </Row>
+      <Row gutter={16}>
         <Col span={8}>
           <Form.Item name="status_id" label="Статус" rules={[{ required: true }]}> 
             <Select options={statuses.map((s) => ({ value: s.id, label: s.name }))} />
@@ -105,6 +141,23 @@ export default function TicketFormAntd({ onCreated }: { onCreated?: () => void }
             <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
           </Form.Item>
         </Col>
+      </Row>
+      <Row gutter={8} style={{ marginBottom: 8 }}>
+        {[10, 45, 60].map((d) => (
+          <Col key={d}>
+            <Button
+              size="small"
+              onClick={() => {
+                const rec = form.getFieldValue('received_at');
+                if (rec) {
+                  form.setFieldValue('fixed_at', dayjs(rec).add(d, 'day'));
+                }
+              }}
+            >
+              +{d} дней
+            </Button>
+          </Col>
+        ))}
       </Row>
       <Form.Item name="customer_request_no" label="№ заявки">
         <Input />

@@ -9,6 +9,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import { useTickets } from "@/entities/ticket";
 import { useUsers } from "@/entities/user";
+import { useUnitsByIds } from "@/entities/unit";
 import TicketsTable from "@/widgets/TicketsTable";
 import TicketsFilters from "@/widgets/TicketsFilters";
 import TicketFormAntd from "@/features/ticket/TicketFormAntd";
@@ -17,6 +18,11 @@ export default function TicketsPage() {
   const { enqueueSnackbar } = useSnackbar();
   const { data: tickets = [], isLoading, error } = useTickets();
   const { data: users = [] } = useUsers();
+  const unitIds = useMemo(
+    () => Array.from(new Set(tickets.flatMap((t) => t.unitIds))),
+    [tickets],
+  );
+  const { data: units = [] } = useUnitsByIds(unitIds);
   const qc = useQueryClient();
   const [filters, setFilters] = useState({});
 
@@ -33,14 +39,26 @@ export default function TicketsPage() {
     return map;
   }, [users]);
 
+  const unitMap = useMemo(() => {
+    const map = {} as Record<number, string>;
+    units.forEach((u) => {
+      map[u.id] = u.name;
+    });
+    return map;
+  }, [units]);
+
   const ticketsWithNames = useMemo(
     () =>
       tickets.map((t) => ({
         ...t,
+        unitNames: t.unitIds
+          .map((id) => unitMap[id])
+          .filter(Boolean)
+          .join(', '),
         responsibleEngineerName: userMap[t.responsibleEngineerId] ?? null,
         createdByName: userMap[t.createdBy] ?? null,
       })),
-    [tickets, userMap],
+    [tickets, userMap, unitMap],
   );
 
   /* списки для <Select> (уникальные значения) */
@@ -52,7 +70,7 @@ export default function TicketsPage() {
       }));
     return {
       projects: uniq(ticketsWithNames, "projectName"),
-      units: uniq(ticketsWithNames, "unitName"),
+      units: uniq(ticketsWithNames, "unitNames"),
       statuses: uniq(ticketsWithNames, "statusName"),
       types: uniq(ticketsWithNames, "typeName"),
       authors: uniq(ticketsWithNames, "createdByName"),
