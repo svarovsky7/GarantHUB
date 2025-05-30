@@ -41,6 +41,23 @@ export function useAddCourtCase() {
   });
 }
 
+export function useUpdateCourtCase() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, updates }: { id: number; updates: Partial<CourtCase> }) => {
+      const { data, error } = await supabase
+        .from(CASES_TABLE)
+        .update(updates)
+        .eq('id', id)
+        .select('*')
+        .single();
+      if (error) throw error;
+      return data as CourtCase;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: [CASES_TABLE] }),
+  });
+}
+
 export function useDeleteCourtCase() {
   const qc = useQueryClient();
   return useMutation({
