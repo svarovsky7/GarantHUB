@@ -54,7 +54,7 @@ export default function TicketListDialog({
       const { data: t } = await supabase
         .from("tickets")
         .select("id, title, status_id, created_at, project_id")
-        .eq("unit_id", unit.id)
+        .contains("unit_ids", [unit.id])
         .order("created_at", { ascending: false });
       setTickets(t || []);
 

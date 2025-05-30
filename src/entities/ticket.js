@@ -110,11 +110,11 @@ function mapTicket(r) {
     return {
         id: r.id,
         projectId: r.project_id,
-        unitId: r.unit_id,
+        unitIds: r.unit_ids || [],
         typeId: r.type_id,
         statusId: r.status_id,
         projectName: r.projects?.name ?? '—',
-        unitName: r.units?.name ?? '—',
+        unitNames: [],
         typeName: r.ticket_types?.name ?? '—',
         statusName : r.ticket_statuses?.name ?? '—',
         statusColor: r.ticket_statuses?.color ?? null,
@@ -143,11 +143,11 @@ export function useTickets() {
             const { data, error } = await supabase
                 .from('tickets')
                 .select(`
-          id, project_id, unit_id, type_id, status_id, title, description,
+          id, project_id, unit_ids, type_id, status_id, title, description,
           customer_request_no, customer_request_date, responsible_engineer_id,
           created_by, is_warranty, created_at, received_at, fixed_at,
           attachment_ids,
-          projects (id, name), units (id, name),
+          projects (id, name),
           ticket_types (id, name), ticket_statuses (id, name, color)
         `)
                 .eq('project_id', projectId)
@@ -202,7 +202,7 @@ export function useCreateTicket() {
                 .from('tickets')
                 .insert({
                     ...dto,
-                    project_id: projectId,
+                    project_id: dto.project_id ?? projectId,
                     created_by: userId,
                 })
                 .select('id, project_id')
@@ -228,8 +228,9 @@ export function useCreateTicket() {
             }
             return { ...newTicket, attachment_ids: ids };
         },
-        onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ['tickets', projectId] });
+        onSuccess: (_, vars) => {
+            const pid = vars.project_id ?? projectId;
+            qc.invalidateQueries({ queryKey: ['tickets', pid] });
             notify.success('Замечание успешно создано');
         },
         onError: (e) => notify.error(`Ошибка создания замечания: ${e.message}`),
@@ -250,11 +251,11 @@ export function useTicket(ticketId) {
             const { data, error } = await supabase
                 .from('tickets')
                 .select(`
-          id, project_id, unit_id, type_id, status_id, title, description,
+          id, project_id, unit_ids, type_id, status_id, title, description,
           customer_request_no, customer_request_date, responsible_engineer_id,
           created_by, is_warranty, created_at, received_at, fixed_at,
           attachment_ids,
-          projects (id, name), units (id, name),
+          projects (id, name),
           ticket_types (id, name), ticket_statuses (id, name, color)
         `)
                 .eq('id', id)

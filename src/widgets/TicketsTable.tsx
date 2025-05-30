@@ -57,7 +57,7 @@ const applyFilters = (rows, f) =>
     if (f.requestNo && r.customerRequestNo !== f.requestNo) return false;
     if (f.days && days !== Number(f.days)) return false;
     if (f.project && r.projectName !== f.project) return false;
-    if (f.unit && r.unitName !== f.unit) return false;
+    if (f.unit && !r.unitNames.includes(f.unit)) return false;
     if (f.warranty) {
       const want = f.warranty === "yes";
       if (r.isWarranty !== want) return false;
@@ -143,10 +143,10 @@ export default function TicketsTable({ tickets, filters, loading }) {
           (a.createdByName || "").localeCompare(b.createdByName || ""),
       },
       {
-        title: "Объект",
-        dataIndex: "unitName",
+        title: "Объекты",
+        dataIndex: "unitNames",
         width: 160,
-        sorter: (a, b) => a.unitName.localeCompare(b.unitName),
+        sorter: (a, b) => a.unitNames.localeCompare(b.unitNames),
       },
       {
         title: "Статус",

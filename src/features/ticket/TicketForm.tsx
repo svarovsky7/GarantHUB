@@ -37,7 +37,7 @@ import AttachmentPreviewList from "@/shared/ui/AttachmentPreviewList";
 const schema = yup
   .object({
     project_id: yup.number().required(),
-    unit_id: yup.number().nullable(),
+    unit_ids: yup.array().of(yup.number()).min(1, 'Выберите объект'),
     type_id: yup.number().required("Тип обязателен"),
     status_id: yup.number().required("Статус обязателен"),
     title: yup.string().trim().required("Заголовок обязателен").min(3),
@@ -74,7 +74,7 @@ const schema = yup
 
 interface TicketFormValues {
   project_id: number;
-  unit_id: number | null;
+  unit_ids: number[];
   type_id: number | null;
   status_id: number | null;
   title: string;
@@ -123,7 +123,7 @@ export default function TicketForm({
     resolver: yupResolver(schema),
     defaultValues: {
       project_id: projectId,
-      unit_id: initialUnitId ?? null,
+      unit_ids: initialUnitId ? [initialUnitId] : [],
       type_id: null,
       status_id: null,
       title: "",
@@ -162,7 +162,7 @@ export default function TicketForm({
     if (isEditMode && ticket) {
       reset({
         project_id: ticket.projectId,
-        unit_id: ticket.unitId ?? null,
+        unit_ids: ticket.unitIds,
         type_id: ticket.typeId,
         status_id: ticket.statusId,
         title: ticket.title,
@@ -184,13 +184,13 @@ export default function TicketForm({
 
   useEffect(() => {
     if (embedded && initialUnitId) {
-      setValue("unit_id", initialUnitId);
+      setValue("unit_ids", [initialUnitId]);
     }
   }, [embedded, initialUnitId, setValue]);
 
   const serialize = (data: TicketFormValues) => ({
     project_id: data.project_id,
-    unit_id: data.unit_id ?? null,
+    unit_ids: data.unit_ids,
     type_id: data.type_id,
     status_id: data.status_id,
     title: data.title.trim(),
@@ -304,21 +304,22 @@ export default function TicketForm({
           <Stack spacing={3}>
             {/* Unit */}
             <Controller
-              name="unit_id"
+              name="unit_ids"
               control={control}
               render={({ field, fieldState: { error } }) => (
                 <Autocomplete
+                  multiple
                   {...field}
                   options={units}
                   loading={isLoadingUnits}
                   getOptionLabel={(o) => o?.name ?? ""}
                   isOptionEqualToValue={(o, v) => o?.id === v?.id}
-                  onChange={(_, v) => field.onChange(v ? v.id : null)}
-                  value={units.find((u) => u.id === field.value) || null}
+                  onChange={(_, v) => field.onChange(v.map((u) => u.id))}
+                  value={units.filter((u) => (field.value || []).includes(u.id))}
                   renderInput={(params) => (
                     <TextField
                       {...params}
-                      label="Объект"
+                      label="Объекты"
                       error={!!error}
                       helperText={error?.message}
                       InputProps={{
