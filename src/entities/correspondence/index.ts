@@ -102,6 +102,11 @@ export function useLetters() {
   });
 }
 
+/**
+ * Создать письмо вместе с вложениями и опциональной связью.
+ * Возвращает мутацию React Query, которая после успешного
+ * выполнения инвалидаирует кэш писем и связей.
+ */
 export function useAddLetter() {
   const qc = useQueryClient();
   return useMutation({
@@ -121,7 +126,8 @@ export function useAddLetter() {
         subject: data.subject,
         sender: data.sender,
         receiver: data.receiver,
-        responsible_user_id: data.responsible_user_id,
+        // null в случае отсутствия выбранного сотрудника
+        responsible_user_id: data.responsible_user_id ?? null,
         unit_ids: data.unit_ids,
       };
       const { data: inserted, error } = await supabase

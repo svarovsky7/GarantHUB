@@ -107,15 +107,13 @@ export default function CorrespondencePage() {
   const handleAdd = (data: AddLetterFormData) => {
     // 'case_id' удалён из всех списков FK!
     const safeData = fixForeignKeys(
-        {
-          ...data,
-          date: data.date ? data.date.toISOString() : dayjs().toISOString(),
-        },
-        [
-          'responsible_user_id',
-          'letter_type_id',
-          'project_id',
-        ]
+      {
+        ...data,
+        // явное приведение undefined/'' к null для корректного сохранения FK
+        responsible_user_id: data.responsible_user_id || null,
+        date: data.date ? data.date.toISOString() : dayjs().toISOString(),
+      },
+      ['responsible_user_id', 'letter_type_id', 'project_id'],
     );
 
     add.mutate(safeData, {

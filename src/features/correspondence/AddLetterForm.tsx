@@ -144,6 +144,7 @@ export default function AddLetterForm({ onSubmit, parentId = null }: AddLetterFo
           <Col span={8}>
             <Form.Item name="responsible_user_id" label="Ответственный">
               <Select
+                showSearch
                 loading={loadingUsers}
                 options={users.map((u) => ({ value: u.id, label: u.name }))}
                 allowClear
