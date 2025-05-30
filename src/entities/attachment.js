@@ -80,7 +80,8 @@ export function uploadCaseAttachment(file, caseId) {
  * @param {number} ticketId
  */
 export function uploadTicketAttachment(file, projectId, ticketId) {
-    return upload(file, `${projectId}/${ticketId}`);
+    // Файлы замечания храним в каталоге `tickets/<ticketId>` вне зависимости от проекта
+    return upload(file, `tickets/${ticketId}`);
 }
 
 /**

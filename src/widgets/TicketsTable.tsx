@@ -14,12 +14,11 @@ import {
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
-  EditOutlined,
+  EyeOutlined,
   DeleteOutlined,
   CheckCircleTwoTone,
   CloseCircleTwoTone,
 } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
 
 import { useDeleteTicket } from "@/entities/ticket";
 
@@ -76,8 +75,7 @@ const applyFilters = (rows, f) =>
  * @param {Object} filters - активные фильтры
  * @param {boolean} loading - индикатор загрузки
  */
-export default function TicketsTable({ tickets, filters, loading }) {
-  const navigate = useNavigate();
+export default function TicketsTable({ tickets, filters, loading, onView }) {
   const { mutateAsync: remove, isPending } = useDeleteTicket();
 
   const columns: ColumnsType<any> = useMemo(
@@ -200,12 +198,12 @@ export default function TicketsTable({ tickets, filters, loading }) {
         width: 100,
         render: (_, record) => (
           <Space size="middle">
-            <Tooltip title="Редактировать">
+            <Tooltip title="Просмотр">
               <Button
                 size="small"
                 type="text"
-                icon={<EditOutlined />}
-                onClick={() => navigate(`/tickets/${record.id}/edit`)}
+                icon={<EyeOutlined />}
+                onClick={() => onView && onView(record.id)}
               />
             </Tooltip>
             <Popconfirm
@@ -231,7 +229,7 @@ export default function TicketsTable({ tickets, filters, loading }) {
       },
     ],
 
-    [navigate, remove, isPending],
+    [onView, remove, isPending],
   );
 
   const dataSource = useMemo(
