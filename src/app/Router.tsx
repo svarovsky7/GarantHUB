@@ -107,15 +107,6 @@ export default function AppRouter() {
         data-oid="50g:286"
       />
 
-      <Route
-        path="/tickets/new"
-        element={
-          <RequireAuth data-oid="6_l.ukc">
-            <TicketFormPage data-oid="-r80421" />
-          </RequireAuth>
-        }
-        data-oid="c6h.k1h"
-      />
 
       <Route
         path="/tickets/:ticketId/edit"
