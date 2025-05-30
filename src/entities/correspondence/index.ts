@@ -41,7 +41,7 @@ export function useLetters() {
       const { data, error } = await supabase
         .from(LETTERS_TABLE)
         .select(
-          `id, project_id, number, letter_type_id, letter_date, subject, sender, receiver, created_at, attachments(id, storage_path, file_url, file_type, attachment_type_id)`
+          `id, project_id, number, letter_type_id, letter_date, subject, sender, receiver, responsible_user_id, unit_ids, created_at, attachments(id, storage_path, file_url, file_type, attachment_type_id)`
         )
         .order('id');
       if (error) throw error;
@@ -80,10 +80,12 @@ export function useLetters() {
           id: String(row.id),
           type,
           parent_id: parent != null ? String(parent) : null,
-          responsible_user_id: null,
+          responsible_user_id: row.responsible_user_id
+            ? String(row.responsible_user_id)
+            : null,
           letter_type_id: row.letter_type_id ?? null,
           project_id: row.project_id ?? null,
-          unit_ids: [],
+          unit_ids: (row.unit_ids ?? []) as number[],
           number: row.number,
           date: row.letter_date,
           correspondent,
@@ -117,6 +119,8 @@ export function useAddLetter() {
         subject: data.subject,
         sender: data.type === 'incoming' ? data.correspondent : null,
         receiver: data.type === 'outgoing' ? data.correspondent : null,
+        responsible_user_id: data.responsible_user_id,
+        unit_ids: data.unit_ids,
       };
       const { data: inserted, error } = await supabase
         .from(LETTERS_TABLE)
@@ -162,10 +166,10 @@ export function useAddLetter() {
         id: String(letterId),
         type: data.type,
         parent_id,
-        responsible_user_id: null,
+        responsible_user_id: data.responsible_user_id ?? null,
         letter_type_id: data.letter_type_id ?? null,
         project_id: data.project_id ?? null,
-        unit_ids: [],
+        unit_ids: data.unit_ids ?? [],
         number: data.number,
         date: data.date,
         correspondent: data.correspondent,
@@ -288,6 +292,8 @@ export function useUpdateLetter() {
         subject: updates.subject,
         sender: updates.type === 'incoming' ? updates.correspondent : null,
         receiver: updates.type === 'outgoing' ? updates.correspondent : null,
+        responsible_user_id: updates.responsible_user_id,
+        unit_ids: updates.unit_ids,
       };
       const sanitized = Object.fromEntries(
         Object.entries(letterData).filter(([, v]) => v !== undefined),
