@@ -49,6 +49,8 @@ import {
 } from '@/entities/attachment';
 import { supabase } from '@/shared/api/supabaseClient';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useProjectId } from '@/shared/hooks/useProjectId';
+import { useAuthStore } from '@/shared/store/authStore';
 
 const fmtCurrency = (n: number) =>
   new Intl.NumberFormat('ru-RU', {
@@ -77,10 +79,24 @@ export default function CourtCasesPage() {
 
   const [form] = Form.useForm();
   const projectId = Form.useWatch('project_id', form);
+  const globalProjectId = useProjectId();
+  const profileId = useAuthStore((s) => s.profile?.id);
 
   useEffect(() => {
     form.setFieldValue('unit_ids', []);
   }, [projectId, form]);
+
+  useEffect(() => {
+    if (globalProjectId) {
+      form.setFieldValue('project_id', globalProjectId);
+    }
+  }, [globalProjectId, form]);
+
+  useEffect(() => {
+    if (profileId && !form.getFieldValue('responsible_lawyer_id')) {
+      form.setFieldValue('responsible_lawyer_id', profileId);
+    }
+  }, [profileId, form]);
 
   const { data: projects = [] } = useProjects();
   const { data: units = [], isPending: unitsLoading } = useUnitsByProject(projectId);
