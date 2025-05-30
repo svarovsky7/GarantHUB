@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -6,7 +6,7 @@ import {
   DialogActions,
   Button as MuiButton,
 } from '@mui/material';
-import { Form, Input, Select, DatePicker, AutoComplete } from 'antd';
+import { ConfigProvider, Form, Input, Select, DatePicker, AutoComplete } from 'antd';
 import dayjs from 'dayjs';
 import FileDropZone from '@/shared/ui/FileDropZone';
 import AttachmentEditorList from '@/shared/ui/AttachmentEditorList';
@@ -120,11 +120,18 @@ export default function EditLetterDialog({
     onClose();
   };
 
+  const containerRef = useRef<HTMLDivElement>(null);
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Детали письма</DialogTitle>
-      <DialogContent dividers>
-        <Form form={form} layout="vertical">
+      <div ref={containerRef}>
+        <ConfigProvider
+          getPopupContainer={() => containerRef.current || document.body}
+          theme={{ token: { zIndexPopupBase: 1500 } }}
+        >
+          <DialogTitle>Детали письма</DialogTitle>
+          <DialogContent dividers>
+            <Form form={form} layout="vertical">
           <Form.Item name="type" label="Тип письма">
             <Select>
               <Select.Option value="incoming">Входящее</Select.Option>
@@ -199,6 +206,8 @@ export default function EditLetterDialog({
           Сохранить
         </MuiButton>
       </DialogActions>
+        </ConfigProvider>
+      </div>
     </Dialog>
   );
 }
