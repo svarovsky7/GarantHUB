@@ -204,8 +204,8 @@
   },
   {
     "table_name": "court_cases",
-    "column_name": "unit_id",
-    "data_type": "integer",
+    "column_name": "unit_ids",
+    "data_type": "integer[]",
     "is_nullable": "YES",
     "column_default": null
   },
@@ -234,13 +234,6 @@
     "table_name": "court_cases",
     "column_name": "fix_end_date",
     "data_type": "date",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
-    "table_name": "court_cases",
-    "column_name": "comments",
-    "data_type": "text",
     "is_nullable": "YES",
     "column_default": null
   },
@@ -288,15 +281,15 @@
   },
   {
     "table_name": "court_cases",
-    "column_name": "claim_amount",
-    "data_type": "numeric",
+    "column_name": "description",
+    "data_type": "text",
     "is_nullable": "YES",
     "column_default": null
   },
   {
     "table_name": "court_cases",
-    "column_name": "description",
-    "data_type": "text",
+    "column_name": "attachment_ids",
+    "data_type": "integer[]",
     "is_nullable": "YES",
     "column_default": null
   },

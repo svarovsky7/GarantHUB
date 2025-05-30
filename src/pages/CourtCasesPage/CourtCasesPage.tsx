@@ -86,7 +86,7 @@ export default function CourtCasesPage() {
   const [caseFiles, setCaseFiles] = useState<{ file: File; type_id: number | null }[]>([]);
 
   const unitIds = React.useMemo(
-    () => Array.from(new Set(cases.map((c) => c.unit_id).filter(Boolean))),
+    () => Array.from(new Set(cases.flatMap((c) => c.unit_ids).filter(Boolean))),
     [cases],
   );
   const { data: caseUnits = [] } = useUnitsByIds(unitIds);
@@ -119,31 +119,28 @@ export default function CourtCasesPage() {
 
   const handleAddCase = async (values: any) => {
     try {
-      const units: number[] = values.unit_ids || [];
-      for (const unitId of units) {
-        const newCase = await addCaseMutation.mutateAsync({
-          project_id: values.project_id,
-          unit_id: unitId,
-          number: values.number,
-          date: values.date.format('YYYY-MM-DD'),
-          plaintiff_id: values.plaintiff_id,
-          defendant_id: values.defendant_id,
-          responsible_lawyer_id: values.responsible_lawyer_id,
-          status: values.status,
-          fix_start_date: values.fix_start_date
-            ? (values.fix_start_date as Dayjs).format('YYYY-MM-DD')
-            : null,
-          fix_end_date: values.fix_end_date
-            ? (values.fix_end_date as Dayjs).format('YYYY-MM-DD')
-            : null,
-          description: values.description || '',
-        } as any);
+      const newCase = await addCaseMutation.mutateAsync({
+        project_id: values.project_id,
+        unit_ids: values.unit_ids || [],
+        number: values.number,
+        date: values.date.format('YYYY-MM-DD'),
+        plaintiff_id: values.plaintiff_id,
+        defendant_id: values.defendant_id,
+        responsible_lawyer_id: values.responsible_lawyer_id,
+        status: values.status,
+        fix_start_date: values.fix_start_date
+          ? (values.fix_start_date as Dayjs).format('YYYY-MM-DD')
+          : null,
+        fix_end_date: values.fix_end_date
+          ? (values.fix_end_date as Dayjs).format('YYYY-MM-DD')
+          : null,
+        description: values.description || '',
+      } as any);
 
-        if (caseFiles.length) {
-          await Promise.all(
-            caseFiles.map(({ file }) => uploadCaseAttachment(file, newCase.id)),
-          );
-        }
+      if (caseFiles.length) {
+        await Promise.all(
+          caseFiles.map(({ file }) => uploadCaseAttachment(file, newCase.id)),
+        );
       }
 
       form.resetFields();
@@ -164,7 +161,10 @@ export default function CourtCasesPage() {
   const casesData = cases.map((c: any) => ({
     ...c,
     projectName: projects.find((p) => p.id === c.project_id)?.name ?? '',
-    projectObject: caseUnits.find((u) => u.id === c.unit_id)?.name ?? '',
+    projectObject: c.unit_ids
+      .map((id: number) => caseUnits.find((u) => u.id === id)?.name)
+      .filter(Boolean)
+      .join(', '),
     plaintiff:
       personsList.find((p) => p.id === c.plaintiff_id)?.full_name ?? c.plaintiff,
     defendant:
@@ -490,7 +490,7 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange }: CaseDialogPro
   const { data: defects = [] } = useCaseDefects(caseData ? Number(caseData.id) : 0);
   const { data: stages = [] } = useLitigationStages();
   const { data: unitInfo = [] } = useUnitsByIds(
-    caseData && caseData.unit_id ? [caseData.unit_id] : [],
+    caseData?.unit_ids ?? [],
   );
   const addDefectMutation = useAddDefect();
   const deleteDefectMutation = useDeleteDefect();
@@ -503,7 +503,7 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange }: CaseDialogPro
       form.setFieldsValue({
         number: caseData.number,
         date: dayjs(caseData.date),
-        unit_id: caseData.unit_id,
+        unit_ids: caseData.unit_ids,
         plaintiff_id: caseData.plaintiff_id,
         defendant_id: caseData.defendant_id,
         responsible_lawyer_id: caseData.responsible_lawyer_id,
@@ -525,7 +525,7 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange }: CaseDialogPro
         updates: {
           number: values.number,
           date: values.date.format('YYYY-MM-DD'),
-          unit_id: values.unit_id,
+          unit_ids: values.unit_ids,
           plaintiff_id: values.plaintiff_id,
           defendant_id: values.defendant_id,
           responsible_lawyer_id: values.responsible_lawyer_id,
@@ -567,7 +567,8 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange }: CaseDialogPro
     );
   };
 
-  const objectName = unitInfo[0]?.name || (caseData as any)?.projectObject || '';
+  const objectName =
+    unitInfo.map((u) => u.name).join(', ') || (caseData as any)?.projectObject || '';
 
   return (
     <Modal open={open} onCancel={onClose} width="80%" footer={null} title={caseData ? `Дело № ${caseData.number}` : ''}>
@@ -587,8 +588,11 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange }: CaseDialogPro
                   </Form.Item>
                 </Col>
                 <Col span={8}>
-                  <Form.Item name="unit_id" label="Объект" rules={[{ required: true, message: 'Выберите объект' }]}> 
-                    <Select options={unitInfo.map((u) => ({ value: u.id, label: u.name }))} />
+                  <Form.Item name="unit_ids" label="Объекты" rules={[{ required: true, message: 'Выберите объекты' }]}> 
+                    <Select
+                      mode="multiple"
+                      options={unitInfo.map((u) => ({ value: u.id, label: u.name }))}
+                    />
                   </Form.Item>
                 </Col>
                 <Col span={8}>
