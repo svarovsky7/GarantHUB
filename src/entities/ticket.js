@@ -212,8 +212,11 @@ export function useCreateTicket() {
 
             let ids = [];
             if (attachments.length) {
+                const prepared = attachments.map((f) =>
+                    'file' in f ? { file: f.file, type_id: f.type_id ?? null } : { file: f, type_id: null },
+                );
                 const uploaded = await addTicketAttachments(
-                    attachments.map((f) => ({ file: f, type_id: null })),
+                    prepared,
                     projectId,
                     newTicket.id,
                 );

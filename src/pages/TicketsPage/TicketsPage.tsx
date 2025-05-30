@@ -2,7 +2,8 @@
 // Страница «/tickets» – фильтры + таблица
 // -----------------------------------------------------------------------------
 import React, { useState, useMemo } from "react";
-import { Box, Paper, Typography, Alert } from "@mui/material";
+import { ConfigProvider, Typography, Alert, Card } from "antd";
+import ruRU from "antd/locale/ru_RU";
 import { useSnackbar } from "notistack";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -10,7 +11,7 @@ import { useTickets } from "@/entities/ticket";
 import { useUsers } from "@/entities/user";
 import TicketsTable from "@/widgets/TicketsTable";
 import TicketsFilters from "@/widgets/TicketsFilters";
-import TicketForm from "@/features/ticket/TicketForm";
+import TicketFormAntd from "@/features/ticket/TicketFormAntd";
 
 export default function TicketsPage() {
   const { enqueueSnackbar } = useSnackbar();
@@ -60,42 +61,30 @@ export default function TicketsPage() {
   }, [ticketsWithNames]);
 
   return (
-    <Box sx={{ width: "100%", px: 0, py: 3 }}>
-      <Typography variant="h4" sx={{ mb: 3 }}>
-        Замечания
-      </Typography>
+    <ConfigProvider locale={ruRU}>
+      <>
+        <Typography.Title level={4} style={{ marginBottom: 16 }}>Замечания</Typography.Title>
 
-      <Paper elevation={3} sx={{ p: { xs: 2, sm: 3, md: 4 }, mb: 3, borderRadius: 2 }}>
-        <TicketForm onCreated={() => qc.invalidateQueries({ queryKey: ['tickets'] })} />
-      </Paper>
+        <Card style={{ marginBottom: 24 }}>
+          <TicketFormAntd onCreated={() => qc.invalidateQueries({ queryKey: ['tickets'] })} />
+        </Card>
 
-      <Paper
-        elevation={3}
-        sx={{ p: { xs: 2, sm: 3, md: 4 }, mb: 3, borderRadius: 2 }}
-      >
-        <TicketsFilters options={options} onChange={setFilters} />
-      </Paper>
+        <Card style={{ marginBottom: 24 }}>
+          <TicketsFilters options={options} onChange={setFilters} />
+        </Card>
 
-      <Paper
-        elevation={3}
-        sx={{
-          p: { xs: 2, sm: 3, md: 4 },
-          borderRadius: 2,
-          overflow: "visible",
-        }}
-      >
-        {error ? (
-          <Alert severity="error" sx={{ mt: 2 }}>
-            {error.message}
-          </Alert>
-        ) : (
-          <TicketsTable
-            tickets={ticketsWithNames}
-            filters={filters}
-            loading={isLoading}
-          />
-        )}
-      </Paper>
-    </Box>
+        <Card>
+          {error ? (
+            <Alert type="error" message={error.message} />
+          ) : (
+            <TicketsTable
+              tickets={ticketsWithNames}
+              filters={filters}
+              loading={isLoading}
+            />
+          )}
+        </Card>
+      </>
+    </ConfigProvider>
   );
 }
