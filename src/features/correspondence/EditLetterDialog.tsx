@@ -11,6 +11,8 @@ import dayjs from 'dayjs';
 import FileDropZone from '@/shared/ui/FileDropZone';
 import AttachmentEditorList from '@/shared/ui/AttachmentEditorList';
 import { useUpdateLetter, signedLetterUrl } from '@/entities/correspondence';
+import { useUsers } from '@/entities/user';
+import { useUnitsByProject } from '@/entities/unit';
 import { CorrespondenceLetter, CorrespondenceAttachment } from '@/shared/types/correspondence';
 
 interface Option { id: number | string; name: string; }
@@ -38,6 +40,10 @@ export default function EditLetterDialog({
   const [newFiles, setNewFiles] = useState<{ file: File; type_id: number | null }[]>([]);
   const [changedTypes, setChangedTypes] = useState<Record<string, number | null>>({});
 
+  const projectId = Form.useWatch('project_id', form);
+  const { data: users = [], isLoading: loadingUsers } = useUsers();
+  const { data: units = [], isLoading: loadingUnits } = useUnitsByProject(projectId);
+
   useEffect(() => {
     if (letter) {
       form.setFieldsValue({
@@ -48,6 +54,8 @@ export default function EditLetterDialog({
         subject: letter.subject,
         project_id: letter.project_id ?? undefined,
         letter_type_id: letter.letter_type_id ?? undefined,
+        responsible_user_id: letter.responsible_user_id ?? undefined,
+        unit_ids: letter.unit_ids,
       });
       setRemote(letter.attachments);
       setNewFiles([]);
@@ -82,6 +90,8 @@ export default function EditLetterDialog({
         subject: vals.subject,
         project_id: vals.project_id ?? null,
         letter_type_id: vals.letter_type_id ?? null,
+        responsible_user_id: vals.responsible_user_id ?? null,
+        unit_ids: vals.unit_ids ?? [],
       },
       newAttachments: newFiles,
       removedAttachmentIds: removedIds,
@@ -112,6 +122,22 @@ export default function EditLetterDialog({
           </Form.Item>
           <Form.Item name="letter_type_id" label="Категория">
             <Select allowClear options={letterTypes.map((t) => ({ value: t.id, label: t.name }))} />
+          </Form.Item>
+          <Form.Item name="responsible_user_id" label="Ответственный">
+            <Select
+              allowClear
+              loading={loadingUsers}
+              options={users.map((u) => ({ value: u.id, label: u.name }))}
+            />
+          </Form.Item>
+          <Form.Item name="unit_ids" label="Объекты">
+            <Select
+              mode="multiple"
+              allowClear
+              disabled={!projectId}
+              loading={loadingUnits}
+              options={units.map((u) => ({ value: u.id, label: u.name }))}
+            />
           </Form.Item>
           <Form.Item name="correspondent" label="Корреспондент">
             <Input />
