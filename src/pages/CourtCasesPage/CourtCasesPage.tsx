@@ -33,6 +33,7 @@ import {
   useCourtCases,
   useAddCourtCase,
   useDeleteCourtCase,
+  useUpdateCourtCase,
   useCaseDefects,
   useAddDefect,
   useDeleteDefect,
@@ -69,7 +70,7 @@ export default function CourtCasesPage() {
   const projectId = Form.useWatch('project_id', form);
 
   useEffect(() => {
-    form.setFieldValue('unit_id', null);
+    form.setFieldValue('unit_ids', []);
   }, [projectId, form]);
 
   const { data: projects = [] } = useProjects();
@@ -116,30 +117,31 @@ export default function CourtCasesPage() {
 
   const handleAddCase = async (values: any) => {
     try {
-      await addCaseMutation.mutateAsync({
-        project_id: values.project_id,
-        unit_id: values.unit_id || null,
-        number: values.number,
-        date: values.date.format('YYYY-MM-DD'),
-        plaintiff_id: values.plaintiff_id,
-        defendant_id: values.defendant_id,
-        responsible_lawyer_id: values.responsible_lawyer_id,
-        status: values.status,
-        fix_start_date: values.fix_start_date
-          ? (values.fix_start_date as Dayjs).format('YYYY-MM-DD')
-          : null,
-        fix_end_date: values.fix_end_date
-          ? (values.fix_end_date as Dayjs).format('YYYY-MM-DD')
-          : null,
-        description: values.description || '',
-      } as any);
+      const units: number[] = values.unit_ids || [];
+      for (const unitId of units) {
+        const newCase = await addCaseMutation.mutateAsync({
+          project_id: values.project_id,
+          unit_id: unitId,
+          number: values.number,
+          date: values.date.format('YYYY-MM-DD'),
+          plaintiff_id: values.plaintiff_id,
+          defendant_id: values.defendant_id,
+          responsible_lawyer_id: values.responsible_lawyer_id,
+          status: values.status,
+          fix_start_date: values.fix_start_date
+            ? (values.fix_start_date as Dayjs).format('YYYY-MM-DD')
+            : null,
+          fix_end_date: values.fix_end_date
+            ? (values.fix_end_date as Dayjs).format('YYYY-MM-DD')
+            : null,
+          description: values.description || '',
+        } as any);
 
-      if (caseFiles.length && values.project_id && values.unit_id) {
-        await Promise.all(
-          caseFiles.map(({ file }) =>
-            uploadCaseAttachment(file, values.project_id, values.unit_id),
-          ),
-        );
+        if (caseFiles.length) {
+          await Promise.all(
+            caseFiles.map(({ file }) => uploadCaseAttachment(file, newCase.id)),
+          );
+        }
       }
 
       form.resetFields();
@@ -281,8 +283,13 @@ export default function CourtCasesPage() {
         </Row>
         <Row gutter={16}>
           <Col span={8}>
-            <Form.Item name="unit_id" label="Объект" rules={[{ required: true, message: 'Выберите объект' }]}>
+            <Form.Item
+              name="unit_ids"
+              label="Объекты"
+              rules={[{ required: true, message: 'Выберите объекты' }]}
+            >
               <Select
+                mode="multiple"
                 loading={unitsLoading}
                 options={units.map((u) => ({ value: u.id, label: u.name }))}
                 disabled={!projectId}
@@ -341,7 +348,24 @@ export default function CourtCasesPage() {
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item name="fix_end_date" label="Дата завершения устранения">
+            <Form.Item
+              name="fix_end_date"
+              label="Дата завершения устранения"
+              dependencies={["fix_start_date"]}
+              rules={[
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    const start = getFieldValue('fix_start_date');
+                    if (!value || !start || value.isSameOrAfter(start, 'day')) {
+                      return Promise.resolve();
+                    }
+                    return Promise.reject(
+                      new Error('Дата завершения меньше даты начала'),
+                    );
+                  },
+                }),
+              ]}
+            >
               <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
             </Form.Item>
           </Col>
@@ -444,7 +468,7 @@ export default function CourtCasesPage() {
       <AddPersonModal
         open={addPersonOpen}
         onClose={() => setAddPersonOpen(false)}
-        unitId={Form.useWatch('unit_id', form)}
+        unitId={Form.useWatch('unit_ids', form)?.[0] ?? null}
         onSelect={(id) => form.setFieldValue('plaintiff_id', id)}
       />
     </>
@@ -468,6 +492,57 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange }: CaseDialogPro
   );
   const addDefectMutation = useAddDefect();
   const deleteDefectMutation = useDeleteDefect();
+  const updateCaseMutation = useUpdateCourtCase();
+  const [editing, setEditing] = useState(false);
+  const [form] = Form.useForm();
+
+  useEffect(() => {
+    if (caseData) {
+      form.setFieldsValue({
+        number: caseData.number,
+        date: dayjs(caseData.date),
+        unit_id: caseData.unit_id,
+        plaintiff_id: caseData.plaintiff_id,
+        defendant_id: caseData.defendant_id,
+        responsible_lawyer_id: caseData.responsible_lawyer_id,
+        status: caseData.status,
+        fix_start_date: caseData.fix_start_date ? dayjs(caseData.fix_start_date) : null,
+        fix_end_date: caseData.fix_end_date ? dayjs(caseData.fix_end_date) : null,
+        description: caseData.description,
+      });
+    } else {
+      form.resetFields();
+    }
+  }, [caseData, form]);
+
+  const saveChanges = async (values: any) => {
+    if (!caseData) return;
+    try {
+      await updateCaseMutation.mutateAsync({
+        id: Number(caseData.id),
+        updates: {
+          number: values.number,
+          date: values.date.format('YYYY-MM-DD'),
+          unit_id: values.unit_id,
+          plaintiff_id: values.plaintiff_id,
+          defendant_id: values.defendant_id,
+          responsible_lawyer_id: values.responsible_lawyer_id,
+          status: values.status,
+          fix_start_date: values.fix_start_date
+            ? (values.fix_start_date as Dayjs).format('YYYY-MM-DD')
+            : null,
+          fix_end_date: values.fix_end_date
+            ? (values.fix_end_date as Dayjs).format('YYYY-MM-DD')
+            : null,
+          description: values.description || '',
+        },
+      });
+      message.success('Дело обновлено');
+      setEditing(false);
+    } catch (e: any) {
+      message.error(e.message);
+    }
+  };
 
 
   const addDefect = (defect: Omit<Defect, 'id'>) => {
@@ -490,83 +565,161 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange }: CaseDialogPro
     );
   };
 
-  const objectName =
-    (caseData as any)?.projectObject || unitInfo[0]?.name || caseData?.unit_id;
+  const objectName = unitInfo[0]?.name || (caseData as any)?.projectObject || '';
 
   return (
     <Modal open={open} onCancel={onClose} width="80%" footer={null} title={caseData ? `Дело № ${caseData.number}` : ''}>
       {caseData && (
         <>
-          <Row gutter={16} style={{ marginBottom: 16 }}>
-            <Col span={8}>
-              <div>
-                <strong>Номер дела</strong>
-                <div>{caseData.number}</div>
-              </div>
-            </Col>
-            <Col span={8}>
-              <div>
-                <strong>Дата открытия</strong>
-                <div>{dayjs(caseData.date).format('DD.MM.YYYY')}</div>
-              </div>
-            </Col>
-            <Col span={8}>
-              <div>
-                <strong>Объект</strong>
-                <div>{objectName}</div>
-              </div>
-            </Col>
-            <Col span={8}>
-              <div>
-                <strong>Истец</strong>
-                <div>{(caseData as any).plaintiff}</div>
-              </div>
-            </Col>
-            <Col span={8}>
-              <div>
-                <strong>Ответчик</strong>
-                <div>{(caseData as any).defendant}</div>
-              </div>
-            </Col>
-            <Col span={8}>
-              <div>
-                <strong>Ответственный юрист</strong>
-                <div>{(caseData as any).responsibleLawyer}</div>
-              </div>
-            </Col>
-            <Col span={8}>
-              <div>
-                <strong>Статус</strong>
-                <div>{stages.find((s) => s.id === (caseData as any).status)?.name}</div>
-              </div>
-            </Col>
-            <Col span={8}>
-              <div>
-                <strong>Дата начала устранения</strong>
-                <div>
-                  {caseData.fix_start_date
-                    ? dayjs(caseData.fix_start_date).format('DD.MM.YYYY')
-                    : 'Не указано'}
-                </div>
-              </div>
-            </Col>
-            <Col span={8}>
-              <div>
-                <strong>Дата завершения устранения</strong>
-                <div>
-                  {caseData.fix_end_date
-                    ? dayjs(caseData.fix_end_date).format('DD.MM.YYYY')
-                    : 'Не указано'}
-                </div>
-              </div>
-            </Col>
-            <Col span={24}>
-              <div>
-                <strong>Описание</strong>
-                <div>{caseData.description || 'Нет описания'}</div>
-              </div>
-            </Col>
-          </Row>
+          {editing ? (
+            <Form form={form} layout="vertical" onFinish={saveChanges} style={{ marginBottom: 16 }}>
+              <Row gutter={16}>
+                <Col span={8}>
+                  <Form.Item name="number" label="Номер дела" rules={[{ required: true, message: 'Укажите номер' }]}> 
+                    <Input />
+                  </Form.Item>
+                </Col>
+                <Col span={8}>
+                  <Form.Item name="date" label="Дата" rules={[{ required: true, message: 'Укажите дату' }]}> 
+                    <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
+                  </Form.Item>
+                </Col>
+                <Col span={8}>
+                  <Form.Item name="unit_id" label="Объект" rules={[{ required: true, message: 'Выберите объект' }]}> 
+                    <Select options={unitInfo.map((u) => ({ value: u.id, label: u.name }))} />
+                  </Form.Item>
+                </Col>
+                <Col span={8}>
+                  <Form.Item name="plaintiff_id" label="Истец"> 
+                    <Input />
+                  </Form.Item>
+                </Col>
+                <Col span={8}>
+                  <Form.Item name="defendant_id" label="Ответчик"> 
+                    <Input />
+                  </Form.Item>
+                </Col>
+                <Col span={8}>
+                  <Form.Item name="responsible_lawyer_id" label="Ответственный юрист"> 
+                    <Input />
+                  </Form.Item>
+                </Col>
+                <Col span={8}>
+                  <Form.Item name="status" label="Статус"> 
+                    <Select options={stages.map((s) => ({ value: s.id, label: s.name }))} />
+                  </Form.Item>
+                </Col>
+                <Col span={8}>
+                  <Form.Item name="fix_start_date" label="Дата начала устранения"> 
+                    <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
+                  </Form.Item>
+                </Col>
+                <Col span={8}>
+                  <Form.Item
+                    name="fix_end_date"
+                    label="Дата завершения устранения"
+                    dependencies={["fix_start_date"]}
+                    rules={[
+                      ({ getFieldValue }) => ({
+                        validator(_, value) {
+                          const start = getFieldValue('fix_start_date');
+                          if (!value || !start || value.isSameOrAfter(start, 'day')) {
+                            return Promise.resolve();
+                          }
+                          return Promise.reject(new Error('Дата завершения меньше даты начала'));
+                        },
+                      }),
+                    ]}
+                  >
+                    <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
+                  </Form.Item>
+                </Col>
+                <Col span={24}>
+                  <Form.Item name="description" label="Описание"> 
+                    <Input.TextArea rows={2} />
+                  </Form.Item>
+                </Col>
+                <Col span={24} style={{ textAlign: 'right' }}>
+                  <Space>
+                    <Button onClick={() => setEditing(false)}>Отмена</Button>
+                    <Button type="primary" htmlType="submit" loading={updateCaseMutation.isPending}>Сохранить</Button>
+                  </Space>
+                </Col>
+              </Row>
+            </Form>
+          ) : (
+            <>
+              <Row gutter={16} style={{ marginBottom: 16 }}>
+                <Col span={8}>
+                  <div>
+                    <strong>Номер дела</strong>
+                    <div>{caseData.number}</div>
+                  </div>
+                </Col>
+                <Col span={8}>
+                  <div>
+                    <strong>Дата открытия</strong>
+                    <div>{dayjs(caseData.date).format('DD.MM.YYYY')}</div>
+                  </div>
+                </Col>
+                <Col span={8}>
+                  <div>
+                    <strong>Объект</strong>
+                    <div>{objectName}</div>
+                  </div>
+                </Col>
+                <Col span={8}>
+                  <div>
+                    <strong>Истец</strong>
+                    <div>{(caseData as any).plaintiff}</div>
+                  </div>
+                </Col>
+                <Col span={8}>
+                  <div>
+                    <strong>Ответчик</strong>
+                    <div>{(caseData as any).defendant}</div>
+                  </div>
+                </Col>
+                <Col span={8}>
+                  <div>
+                    <strong>Ответственный юрист</strong>
+                    <div>{(caseData as any).responsibleLawyer}</div>
+                  </div>
+                </Col>
+                <Col span={8}>
+                  <div>
+                    <strong>Статус</strong>
+                    <div>{stages.find((s) => s.id === (caseData as any).status)?.name}</div>
+                  </div>
+                </Col>
+                <Col span={8}>
+                  <div>
+                    <strong>Дата начала устранения</strong>
+                    <div>
+                      {caseData.fix_start_date ? dayjs(caseData.fix_start_date).format('DD.MM.YYYY') : 'Не указано'}
+                    </div>
+                  </div>
+                </Col>
+                <Col span={8}>
+                  <div>
+                    <strong>Дата завершения устранения</strong>
+                    <div>
+                      {caseData.fix_end_date ? dayjs(caseData.fix_end_date).format('DD.MM.YYYY') : 'Не указано'}
+                    </div>
+                  </div>
+                </Col>
+                <Col span={24}>
+                  <div>
+                    <strong>Описание</strong>
+                    <div>{caseData.description || 'Нет описания'}</div>
+                  </div>
+                </Col>
+                <Col span={24} style={{ textAlign: 'right' }}>
+                  <Button onClick={() => setEditing(true)}>Редактировать</Button>
+                </Col>
+              </Row>
+            </>
+          )}
           <Tabs activeKey={tab} onChange={onTabChange} style={{ marginBottom: 16 }}>
             <Tabs.TabPane tab="Недостатки" key="defects">
               <DefectsTab defects={defects} onAdd={addDefect} onDelete={deleteDefect} />
@@ -690,7 +843,7 @@ function CaseFilesTab({ caseData }: CaseFilesTabProps) {
   );
 
   const loadFiles = async () => {
-    const prefix = `Case/${caseData.project_id}/${caseData.unit_id}`;
+    const prefix = `case/${caseData.id}`;
     const { data, error } = await supabase.storage.from('attachments').list(prefix);
     if (error) return message.error(error.message);
     const typeMap: Record<string, number> = JSON.parse(
@@ -718,7 +871,7 @@ function CaseFilesTab({ caseData }: CaseFilesTabProps) {
     const fls = Array.from(e.target.files || []);
     try {
       const uploaded = await Promise.all(
-        fls.map((f) => uploadCaseAttachment(f, caseData.project_id, caseData.unit_id)),
+        fls.map((f) => uploadCaseAttachment(f, caseData.id)),
       );
       const typeMap: Record<string, number> = JSON.parse(
         localStorage.getItem(storageKey) || '{}',

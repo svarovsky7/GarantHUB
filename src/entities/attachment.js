@@ -67,8 +67,10 @@ export function uploadLetterAttachment(file, projectId) {
     return upload(file, `letters/${projectId}`);
 }
 
-export function uploadCaseAttachment(file, projectId, unitId) {
-    return upload(file, `Case/${projectId}/${unitId}`);
+// Загрузка вложений дела теперь привязана к идентификатору дела,
+// чтобы все файлы хранились в `attachments/case/<caseId>`
+export function uploadCaseAttachment(file, caseId) {
+    return upload(file, `case/${caseId}`);
 }
 
 export { ATTACH_BUCKET };
