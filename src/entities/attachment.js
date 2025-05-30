@@ -73,4 +73,46 @@ export function uploadCaseAttachment(file, caseId) {
     return upload(file, `case/${caseId}`);
 }
 
+/**
+ * Загружает файлы дела и создаёт записи в таблице attachments
+ * с возвратом созданных строк.
+ * @param {{file: File, type_id: number | null}[]} files
+ * @param {number} caseId
+ */
+export async function addCaseAttachments(files, caseId) {
+    const uploaded = await Promise.all(
+        files.map(({ file }) => uploadCaseAttachment(file, caseId)),
+    );
+
+    const rows = uploaded.map((u, idx) => ({
+        file_url: u.url,
+        file_type: u.type,
+        storage_path: u.path,
+        attachment_type_id: files[idx].type_id ?? null,
+    }));
+
+    const { data, error } = await supabase
+        .from('attachments')
+        .insert(rows)
+        .select('id, storage_path, file_url, file_type, attachment_type_id');
+
+    if (error) throw error;
+    return data ?? [];
+}
+
+/**
+ * Возвращает вложения по указанным id
+ * @param {number[]} ids
+ */
+export async function getAttachmentsByIds(ids) {
+    if (!ids.length) return [];
+    const { data, error } = await supabase
+        .from('attachments')
+        .select('id, storage_path, file_url, file_type, attachment_type_id')
+        .in('id', ids);
+
+    if (error) throw error;
+    return data ?? [];
+}
+
 export { ATTACH_BUCKET };

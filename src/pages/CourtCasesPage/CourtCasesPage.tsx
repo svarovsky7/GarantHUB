@@ -41,9 +41,13 @@ import {
   useDeleteDefect,
 } from '@/entities/courtCase';
 import { useAttachmentTypes } from '@/entities/attachmentType';
-import { uploadCaseAttachment } from '@/entities/attachment';
+import {
+  uploadCaseAttachment,
+  addCaseAttachments,
+  getAttachmentsByIds,
+} from '@/entities/attachment';
 import { supabase } from '@/shared/api/supabaseClient';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 const fmtCurrency = (n: number) =>
   new Intl.NumberFormat('ru-RU', {
@@ -63,6 +67,8 @@ export default function CourtCasesPage() {
   const { data: cases = [], isPending: casesLoading } = useCourtCases();
   const addCaseMutation = useAddCourtCase();
   const deleteCaseMutation = useDeleteCourtCase();
+  const qc = useQueryClient();
+  const updateCaseMutation = useUpdateCourtCase();
 
   const [filters, setFilters] = useState<Filters>({});
   const [dialogCase, setDialogCase] = useState<CourtCase | null>(null);
@@ -137,10 +143,14 @@ export default function CourtCasesPage() {
         description: values.description || '',
       } as any);
 
+      let newAtts: { id: number }[] = [];
       if (caseFiles.length) {
-        await Promise.all(
-          caseFiles.map(({ file }) => uploadCaseAttachment(file, newCase.id)),
-        );
+        newAtts = await addCaseAttachments(caseFiles, newCase.id);
+        await updateCaseMutation.mutateAsync({
+          id: newCase.id,
+          updates: { attachment_ids: newAtts.map((a) => a.id) },
+        });
+        qc.invalidateQueries({ queryKey: ['court_cases'] });
       }
 
       form.resetFields();
@@ -836,63 +846,60 @@ interface CaseFilesTabProps {
 
 function CaseFilesTab({ caseData }: CaseFilesTabProps) {
   const { data: attachmentTypes = [] } = useAttachmentTypes();
+  const updateCaseMutation = useUpdateCourtCase();
   const [files, setFiles] = useState<{
+    id: number;
     name: string;
     path: string;
     url: string;
     type_id: number | null;
   }[]>([]);
 
-  const storageKey = React.useMemo(
-    () => `case_file_types_${caseData.id}`,
-    [caseData.id],
-  );
 
   const loadFiles = async () => {
-    const prefix = `case/${caseData.id}`;
-    const { data, error } = await supabase.storage.from('attachments').list(prefix);
-    if (error) return message.error(error.message);
-    const typeMap: Record<string, number> = JSON.parse(
-      localStorage.getItem(storageKey) || '{}',
-    );
-    const arr = (data || []).map((f) => {
-      const path = `${prefix}/${f.name}`;
-      const { data: pub } = supabase.storage.from('attachments').getPublicUrl(path);
-      return {
-        name: f.name,
-        path,
-        url: pub.publicUrl,
-        type_id: typeMap[path] ?? null,
-      };
-    });
-    setFiles(arr);
+    try {
+      const data = await getAttachmentsByIds(caseData.attachment_ids || []);
+      const arr = data.map((a) => ({
+        id: a.id,
+        name: a.storage_path.split('/').pop() || a.storage_path,
+        path: a.storage_path,
+        url: a.file_url,
+        type_id: a.attachment_type_id,
+      }));
+      setFiles(arr);
+    } catch (err: any) {
+      message.error(err.message);
+    }
   };
 
   useEffect(() => {
     loadFiles();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [caseData.id]);
+  }, [caseData.id, caseData.attachment_ids?.join(',')]);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const fls = Array.from(e.target.files || []);
     try {
-      const uploaded = await Promise.all(
-        fls.map((f) => uploadCaseAttachment(f, caseData.id)),
+      const attachments = await addCaseAttachments(
+        fls.map((f) => ({ file: f, type_id: null })),
+        caseData.id,
       );
-      const typeMap: Record<string, number> = JSON.parse(
-        localStorage.getItem(storageKey) || '{}',
-      );
-      const newFiles = uploaded.map((res, idx) => {
-        const obj = {
-          name: fls[idx].name,
-          path: res.path,
-          url: res.url,
-          type_id: null as number | null,
-        };
-        typeMap[res.path] = obj.type_id as any;
-        return obj;
+      await updateCaseMutation.mutateAsync({
+        id: Number(caseData.id),
+        updates: {
+          attachment_ids: [
+            ...(caseData.attachment_ids || []),
+            ...attachments.map((a) => a.id),
+          ],
+        },
       });
-      localStorage.setItem(storageKey, JSON.stringify(typeMap));
+      const newFiles = attachments.map((a) => ({
+        id: a.id,
+        name: a.storage_path.split('/').pop() || a.storage_path,
+        path: a.storage_path,
+        url: a.file_url,
+        type_id: a.attachment_type_id,
+      }));
       setFiles((p) => [...p, ...newFiles]);
       message.success('Файлы загружены');
     } catch (err: any) {
@@ -901,34 +908,40 @@ function CaseFilesTab({ caseData }: CaseFilesTabProps) {
     e.target.value = '';
   };
 
-  const handleDelete = async (path: string) => {
-    await supabase.storage.from('attachments').remove([path]);
-    const typeMap: Record<string, number> = JSON.parse(
-      localStorage.getItem(storageKey) || '{}',
-    );
-    delete typeMap[path];
-    localStorage.setItem(storageKey, JSON.stringify(typeMap));
-    setFiles((p) => p.filter((f) => f.path !== path));
-    message.success('Файл удалён');
+  const handleDelete = async (id: number, path: string) => {
+    try {
+      await supabase.storage.from('attachments').remove([path]);
+      await supabase.from('attachments').delete().eq('id', id);
+      const updatedIds = (caseData.attachment_ids || []).filter((a) => a !== id);
+      await updateCaseMutation.mutateAsync({
+        id: Number(caseData.id),
+        updates: { attachment_ids: updatedIds },
+      });
+      setFiles((p) => p.filter((f) => f.id !== id));
+      message.success('Файл удалён');
+    } catch (err: any) {
+      message.error(err.message);
+    }
   };
 
-  const setType = (idx: number, val: number | null) => {
-    setFiles((p) => {
-      const updated = p.map((f, i) => (i === idx ? { ...f, type_id: val } : f));
-      const map: Record<string, number> = {};
-      updated.forEach((f) => {
-        if (f.type_id != null) map[f.path] = f.type_id;
-      });
-      localStorage.setItem(storageKey, JSON.stringify(map));
-      return updated;
-    });
+  const setType = async (idx: number, val: number | null) => {
+    const file = files[idx];
+    setFiles((p) => p.map((f, i) => (i === idx ? { ...f, type_id: val } : f)));
+    try {
+      await supabase
+        .from('attachments')
+        .update({ attachment_type_id: val })
+        .eq('id', file.id);
+    } catch (err: any) {
+      message.error(err.message);
+    }
   };
 
   return (
     <div>
       <input type="file" multiple onChange={handleUpload} />
       {files.map((f, i) => (
-        <Row key={f.path} gutter={8} align="middle" style={{ marginTop: 8 }}>
+        <Row key={f.id} gutter={8} align="middle" style={{ marginTop: 8 }}>
           <Col flex="auto">
             <a href={f.url} target="_blank" rel="noopener noreferrer">
               {f.name}
@@ -950,7 +963,7 @@ function CaseFilesTab({ caseData }: CaseFilesTabProps) {
             </Select>
           </Col>
           <Col>
-            <Button type="text" danger size="small" onClick={() => handleDelete(f.path)}>
+            <Button type="text" danger size="small" onClick={() => handleDelete(f.id, f.path)}>
               Удалить
             </Button>
           </Col>
