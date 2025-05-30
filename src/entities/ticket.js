@@ -57,7 +57,8 @@ export const slugify = (str) =>
 
 export async function uploadAttachment(file, projectId, ticketId) {
     const safe = slugify(file.name);
-    const path = `${projectId}/${ticketId}/${Date.now()}_${safe}`;
+    // При загрузке замечаний файлы помещаем в папку tickets/<id>
+    const path = `tickets/${ticketId}/${Date.now()}_${safe}`;
 
     const { error } = await supabase
         .storage.from(ATTACH_BUCKET)

@@ -13,6 +13,7 @@ import { useUnitsByIds } from "@/entities/unit";
 import TicketsTable from "@/widgets/TicketsTable";
 import TicketsFilters from "@/widgets/TicketsFilters";
 import TicketFormAntd from "@/features/ticket/TicketFormAntd";
+import TicketViewModal from "@/features/ticket/TicketViewModal";
 
 export default function TicketsPage() {
   const { enqueueSnackbar } = useSnackbar();
@@ -25,6 +26,7 @@ export default function TicketsPage() {
   const { data: units = [] } = useUnitsByIds(unitIds);
   const qc = useQueryClient();
   const [filters, setFilters] = useState({});
+  const [viewId, setViewId] = useState<number | null>(null);
 
   /* toast api-ошибки */
   React.useEffect(() => {
@@ -99,9 +101,15 @@ export default function TicketsPage() {
               tickets={ticketsWithNames}
               filters={filters}
               loading={isLoading}
+              onView={(id) => setViewId(id)}
             />
           )}
         </Card>
+        <TicketViewModal
+          open={viewId !== null}
+          ticketId={viewId}
+          onClose={() => setViewId(null)}
+        />
       </>
     </ConfigProvider>
   );
