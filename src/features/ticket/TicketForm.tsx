@@ -27,6 +27,7 @@ import { useTicketTypes } from "@/entities/ticketType";
 import { useTicketStatuses } from "@/entities/ticketStatus";
 import { useCreateTicket, useTicket, signedUrl } from "@/entities/ticket";
 import { useUsers } from "@/entities/user";
+import { useProjects } from "@/entities/project";
 
 import { useProjectId } from "@/shared/hooks/useProjectId";
 import { useAuthStore } from "@/shared/store/authStore";
@@ -117,6 +118,7 @@ export default function TicketForm({
     !!projectId,
   );
   const { data: users = [], isLoading: isLoadingUsers } = useUsers();
+  const { data: projects = [], isLoading: isLoadingProjects } = useProjects();
 
   const methods = useForm<TicketFormValues>({
     shouldUnregister: false,
@@ -302,6 +304,40 @@ export default function TicketForm({
       <FormProvider {...methods}>
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <Stack spacing={3}>
+            <Controller
+              name="project_id"
+              control={control}
+              render={({ field, fieldState: { error } }) => (
+                <Autocomplete
+                  {...field}
+                  options={projects}
+                  loading={isLoadingProjects}
+                  getOptionLabel={(o) => o?.name ?? ''}
+                  isOptionEqualToValue={(o, v) => o?.id === v?.id}
+                  onChange={(_, v) => field.onChange(v ? v.id : null)}
+                  value={projects.find((p) => p.id === field.value) || null}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Проект"
+                      required
+                      error={!!error}
+                      helperText={error?.message}
+                      InputProps={{
+                        ...params.InputProps,
+                        endAdornment: (
+                          <>
+                            {isLoadingProjects && <CircularProgress size={20} />}
+                            {params.InputProps.endAdornment}
+                          </>
+                        ),
+                      }}
+                    />
+                  )}
+                />
+              )}
+            />
+
             {/* Unit */}
             <Controller
               name="unit_ids"

@@ -65,7 +65,8 @@ export default function TicketFormAntd({ onCreated }: { onCreated?: () => void }
 
   const onFinish = async (values: any) => {
     try {
-      const { pins, ...rest } = values;
+      const rest = { ...values } as any;
+      delete rest.pins;
       await create.mutateAsync({
         ...rest,
         project_id: values.project_id ?? globalProjectId,
