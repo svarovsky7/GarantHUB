@@ -67,18 +67,10 @@ const NavBar = () => {
           <Button
             color="inherit"
             component={RouterLink}
-            to="/tickets/new"
-            sx={{ whiteSpace: "normal" }}
-          >
-            Добавить замечание
-          </Button>
-          <Button
-            color="inherit"
-            component={RouterLink}
             to="/tickets"
             sx={{ whiteSpace: "normal" }}
           >
-            Таблица замечаний
+            Замечания
           </Button>
           <Button
             color="inherit"

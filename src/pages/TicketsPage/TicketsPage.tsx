@@ -2,20 +2,21 @@
 // Страница «/tickets» – фильтры + таблица
 // -----------------------------------------------------------------------------
 import React, { useState, useMemo } from "react";
-import { Box, Paper, Stack, Typography, Button, Alert } from "@mui/material";
-import { Link as RouterLink } from "react-router-dom";
-import AddIcon from "@mui/icons-material/Add";
+import { Box, Paper, Typography, Alert } from "@mui/material";
 import { useSnackbar } from "notistack";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { useTickets } from "@/entities/ticket";
 import { useUsers } from "@/entities/user";
 import TicketsTable from "@/widgets/TicketsTable";
 import TicketsFilters from "@/widgets/TicketsFilters";
+import TicketForm from "@/features/ticket/TicketForm";
 
 export default function TicketsPage() {
   const { enqueueSnackbar } = useSnackbar();
   const { data: tickets = [], isLoading, error } = useTickets();
   const { data: users = [] } = useUsers();
+  const qc = useQueryClient();
   const [filters, setFilters] = useState({});
 
   /* toast api-ошибки */
@@ -60,24 +61,13 @@ export default function TicketsPage() {
 
   return (
     <Box sx={{ width: "100%", px: 0, py: 3 }}>
-      <Stack
-        direction={{ xs: "column", md: "row" }}
-        justifyContent="space-between"
-        alignItems={{ xs: "flex-start", md: "center" }}
-        spacing={2}
-        sx={{ mb: 3 }}
-      >
-        <Typography variant="h4">Список замечаний</Typography>
+      <Typography variant="h4" sx={{ mb: 3 }}>
+        Замечания
+      </Typography>
 
-        <Button
-          component={RouterLink}
-          to="/tickets/new"
-          variant="contained"
-          startIcon={<AddIcon />}
-        >
-          Новое замечание
-        </Button>
-      </Stack>
+      <Paper elevation={3} sx={{ p: { xs: 2, sm: 3, md: 4 }, mb: 3, borderRadius: 2 }}>
+        <TicketForm onCreated={() => qc.invalidateQueries({ queryKey: ['tickets'] })} />
+      </Paper>
 
       <Paper
         elevation={3}
