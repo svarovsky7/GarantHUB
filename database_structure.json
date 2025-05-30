@@ -417,7 +417,7 @@
     "column_name": "unit_ids",
     "data_type": "ARRAY",
     "is_nullable": "YES",
-  "column_default": "ARRAY[]::integer[]"
+    "column_default": "ARRAY[]::integer[]"
   },
   {
     "table_name": "letters",
