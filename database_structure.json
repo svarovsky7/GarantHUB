@@ -204,13 +204,6 @@
   },
   {
     "table_name": "court_cases",
-    "column_name": "unit_ids",
-    "data_type": "integer[]",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
-    "table_name": "court_cases",
     "column_name": "status",
     "data_type": "integer",
     "is_nullable": "NO",
@@ -288,10 +281,17 @@
   },
   {
     "table_name": "court_cases",
-    "column_name": "attachment_ids",
-    "data_type": "integer[]",
+    "column_name": "unit_ids",
+    "data_type": "ARRAY",
     "is_nullable": "YES",
-    "column_default": null
+    "column_default": "ARRAY[]::integer[]"
+  },
+  {
+    "table_name": "court_cases",
+    "column_name": "attachment_ids",
+    "data_type": "ARRAY",
+    "is_nullable": "YES",
+    "column_default": "ARRAY[]::integer[]"
   },
   {
     "table_name": "defects",
