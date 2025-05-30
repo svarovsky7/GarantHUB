@@ -232,7 +232,7 @@ export default function TicketListDialog({
                             gap: 1,
                           }}
                         >
-                          {(attachments[t.id] || []).map((a, idx) => (
+                          {(attachments[t.id] || []).map((a) => (
                             <Chip
                               key={a.file_url}
                               icon={<AttachFileIcon sx={{ fontSize: 16 }} />}
@@ -240,7 +240,7 @@ export default function TicketListDialog({
                                 downloadingId === a.id ? (
                                   <CircularProgress size={16} />
                                 ) : (
-                                  `Акт ${idx + 1}`
+                                  a.storage_path.split('/').pop() || 'file'
                                 )
                               }
                               size="small"
