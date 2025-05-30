@@ -15,7 +15,6 @@ import {
   DatePicker,
   Select,
   Button,
-  Upload,
   Table,
   Tag,
   Space,
@@ -51,6 +50,7 @@ import { supabase } from '@/shared/api/supabaseClient';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useAuthStore } from '@/shared/store/authStore';
+import FileDropZone from '@/shared/ui/FileDropZone';
 
 const fmtCurrency = (n: number) =>
   new Intl.NumberFormat('ru-RU', {
@@ -128,10 +128,9 @@ export default function CourtCasesPage() {
     enabled: !!projectId,
   });
 
-  const handleCaseFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const arr = Array.from(e.target.files || []).map((f) => ({ file: f, type_id: null }));
+  const handleCaseFiles = (files: File[]) => {
+    const arr = files.map((file) => ({ file, type_id: null }));
     setCaseFiles((p) => [...p, ...arr]);
-    e.target.value = '';
   };
 
   const setCaseFileType = (idx: number, val: number | null) =>
@@ -403,19 +402,7 @@ export default function CourtCasesPage() {
         {/* Row 6: Files drag and drop */}
         <Row gutter={16}>
           <Col span={24}>
-            <Upload.Dragger
-              multiple
-              beforeUpload={(file) => {
-                setCaseFiles((p) => [...p, { file, type_id: null }]);
-                return false;
-              }}
-              showUploadList={false}
-            >
-              <p className="ant-upload-drag-icon">
-                <PlusOutlined />
-              </p>
-              <p className="ant-upload-text">Перетащите файлы или нажмите для выбора</p>
-            </Upload.Dragger>
+            <FileDropZone onFiles={handleCaseFiles} />
             {caseFiles.map((f, i) => (
               <Row key={i} gutter={8} align="middle" style={{ marginTop: 4 }}>
                 <Col flex="auto">
@@ -903,8 +890,8 @@ function CaseFilesTab({ caseData }: CaseFilesTabProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [caseData.id, caseData.attachment_ids?.join(',')]);
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const fls = Array.from(e.target.files || []);
+  const handleUpload = async (files: File[]) => {
+    const fls = files;
     try {
       const attachments = await addCaseAttachments(
         fls.map((f) => ({ file: f, type_id: null })),
@@ -931,7 +918,6 @@ function CaseFilesTab({ caseData }: CaseFilesTabProps) {
     } catch (err: any) {
       message.error(err.message);
     }
-    e.target.value = '';
   };
 
   const handleDelete = async (id: number, path: string) => {
@@ -965,7 +951,7 @@ function CaseFilesTab({ caseData }: CaseFilesTabProps) {
 
   return (
     <div>
-      <input type="file" multiple onChange={handleUpload} />
+      <FileDropZone onFiles={handleUpload} />
       {files.map((f, i) => (
         <Row key={f.id} gutter={8} align="middle" style={{ marginTop: 8 }}>
           <Col flex="auto">
