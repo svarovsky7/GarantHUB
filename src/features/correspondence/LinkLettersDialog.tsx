@@ -50,7 +50,8 @@ export default function LinkLettersDialog({
             !term ||
             l.number.toLowerCase().includes(term) ||
             (l.subject ?? '').toLowerCase().includes(term) ||
-            (l.correspondent ?? '').toLowerCase().includes(term),
+            (l.sender ?? '').toLowerCase().includes(term) ||
+            (l.receiver ?? '').toLowerCase().includes(term),
         );
   }, [letters, parent, search, parents]);
 
@@ -69,11 +70,18 @@ export default function LinkLettersDialog({
       ellipsis: true,
     },
     {
-      title: 'Корреспондент',
-      dataIndex: 'correspondent',
-      key: 'correspondent',
+      title: 'Отправитель',
+      dataIndex: 'sender',
+      key: 'sender',
       ellipsis: true,
-      width: 180,
+      width: 160,
+    },
+    {
+      title: 'Получатель',
+      dataIndex: 'receiver',
+      key: 'receiver',
+      ellipsis: true,
+      width: 160,
     },
   ];
 

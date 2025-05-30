@@ -6,13 +6,15 @@ import {
   DialogActions,
   Button as MuiButton,
 } from '@mui/material';
-import { Form, Input, Select, DatePicker } from 'antd';
+import { Form, Input, Select, DatePicker, AutoComplete } from 'antd';
 import dayjs from 'dayjs';
 import FileDropZone from '@/shared/ui/FileDropZone';
 import AttachmentEditorList from '@/shared/ui/AttachmentEditorList';
 import { useUpdateLetter, signedLetterUrl } from '@/entities/correspondence';
 import { useUsers } from '@/entities/user';
 import { useUnitsByProject } from '@/entities/unit';
+import { usePersons } from '@/entities/person';
+import { useContractors } from '@/entities/contractor';
 import { CorrespondenceLetter, CorrespondenceAttachment } from '@/shared/types/correspondence';
 
 interface Option { id: number | string; name: string; }
@@ -43,6 +45,16 @@ export default function EditLetterDialog({
   const projectId = Form.useWatch('project_id', form);
   const { data: users = [], isLoading: loadingUsers } = useUsers();
   const { data: units = [], isLoading: loadingUnits } = useUnitsByProject(projectId);
+  const { data: contractors = [] } = useContractors();
+  const { data: persons = [] } = usePersons();
+
+  const contactOptions = React.useMemo(
+    () => [
+      ...contractors.map((c) => ({ value: c.name })),
+      ...persons.map((p) => ({ value: p.full_name })),
+    ],
+    [contractors, persons],
+  );
 
   useEffect(() => {
     if (letter) {
@@ -50,7 +62,8 @@ export default function EditLetterDialog({
         type: letter.type,
         number: letter.number,
         date: dayjs(letter.date),
-        correspondent: letter.correspondent,
+        sender: letter.sender,
+        receiver: letter.receiver,
         subject: letter.subject,
         project_id: letter.project_id ?? undefined,
         letter_type_id: letter.letter_type_id ?? undefined,
@@ -86,7 +99,8 @@ export default function EditLetterDialog({
         type: vals.type,
         number: vals.number,
         date: vals.date ? vals.date.toISOString() : dayjs().toISOString(),
-        correspondent: vals.correspondent,
+        sender: vals.sender,
+        receiver: vals.receiver,
         subject: vals.subject,
         project_id: vals.project_id ?? null,
         letter_type_id: vals.letter_type_id ?? null,
@@ -139,8 +153,23 @@ export default function EditLetterDialog({
               options={units.map((u) => ({ value: u.id, label: u.name }))}
             />
           </Form.Item>
-          <Form.Item name="correspondent" label="Корреспондент">
-            <Input />
+          <Form.Item name="sender" label="Отправитель">
+            <AutoComplete
+              options={contactOptions}
+              filterOption={(i, o) =>
+                (o?.value ?? '').toLowerCase().includes(i.toLowerCase())
+              }
+              allowClear
+            />
+          </Form.Item>
+          <Form.Item name="receiver" label="Получатель">
+            <AutoComplete
+              options={contactOptions}
+              filterOption={(i, o) =>
+                (o?.value ?? '').toLowerCase().includes(i.toLowerCase())
+              }
+              allowClear
+            />
           </Form.Item>
           <Form.Item name="subject" label="Тема">
             <Input />
