@@ -4,21 +4,12 @@ import {
   CorrespondenceAttachment,
   LetterLink,
 } from '@/shared/types/correspondence';
-import { uploadLetterAttachment, ATTACH_BUCKET } from '../attachment';
+import { addLetterAttachments, ATTACH_BUCKET } from '../attachment';
 import { supabase } from '@/shared/api/supabaseClient';
 
 const LETTERS_TABLE = 'letters';
 const LINKS_TABLE = 'letter_links';
 const ATTACH_TABLE = 'attachments';
-
-function readFileAsDataURL(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
-  });
-}
 
 export function useLetterLinks() {
   return useQuery({
@@ -41,7 +32,7 @@ export function useLetters() {
       const { data, error } = await supabase
         .from(LETTERS_TABLE)
         .select(
-          `id, project_id, number, letter_type_id, letter_date, subject, sender, receiver, responsible_user_id, unit_ids, created_at, attachments(id, storage_path, file_url, file_type, attachment_type_id)`
+          `id, project_id, number, letter_type_id, letter_date, subject, sender, receiver, responsible_user_id, unit_ids, attachment_ids, created_at`
         )
         .order('id');
       if (error) throw error;
@@ -49,15 +40,17 @@ export function useLetters() {
         .from(LINKS_TABLE)
         .select('parent_id, child_id');
       if (linkErr) throw linkErr;
-      const map = new Map<number, number>();
-      (links ?? []).forEach((lnk) => map.set(lnk.child_id, lnk.parent_id));
-      return (data ?? []).map((row: any) => {
-        const parent = map.get(row.id);
-
-        const type = row.receiver ? 'outgoing' : 'incoming';
-        const sender = row.sender || '';
-        const receiver = row.receiver || '';
-        const attachments = (row.attachments ?? []).map((a: any) => {
+      const allIds = Array.from(
+        new Set((data ?? []).flatMap((r: any) => r.attachment_ids || [])),
+      );
+      let attachmentsMap: Record<number, CorrespondenceAttachment> = {};
+      if (allIds.length) {
+        const { data: files, error: attErr } = await supabase
+          .from(ATTACH_TABLE)
+          .select('id, storage_path, file_url, file_type, attachment_type_id')
+          .in('id', allIds);
+        if (attErr) throw attErr;
+        (files ?? []).forEach((a: any) => {
           let name = a.storage_path;
           try {
             name = decodeURIComponent(
@@ -67,7 +60,7 @@ export function useLetters() {
           } catch {
             /* ignore */
           }
-          return {
+          attachmentsMap[a.id] = {
             id: String(a.id),
             name,
             file_type: a.file_type,
@@ -76,17 +69,28 @@ export function useLetters() {
             attachment_type_id: a.attachment_type_id ?? null,
           } as CorrespondenceAttachment;
         });
+      }
+      const linkMap = new Map<number, number>();
+      (links ?? []).forEach((lnk) => linkMap.set(lnk.child_id, lnk.parent_id));
+      return (data ?? []).map((row: any) => {
+        const type = row.receiver ? 'outgoing' : 'incoming';
+        const sender = row.sender || '';
+        const receiver = row.receiver || '';
+        const attachments = (row.attachment_ids || [])
+          .map((id: number) => attachmentsMap[id])
+          .filter(Boolean);
 
         return {
           id: String(row.id),
           type,
-          parent_id: parent != null ? String(parent) : null,
+          parent_id: linkMap.get(row.id) != null ? String(linkMap.get(row.id)) : null,
           responsible_user_id: row.responsible_user_id
             ? String(row.responsible_user_id)
             : null,
           letter_type_id: row.letter_type_id ?? null,
           project_id: row.project_id ?? null,
           unit_ids: (row.unit_ids ?? []) as number[],
+          attachment_ids: row.attachment_ids ?? [],
           number: row.number,
           date: row.letter_date,
           sender,
@@ -138,29 +142,26 @@ export function useAddLetter() {
         .single();
       if (error) throw error;
       const letterId = inserted.id as number;
-      const files: CorrespondenceAttachment[] = [];
+      let files: CorrespondenceAttachment[] = [];
+      let attachmentIds: number[] = [];
       if (attachments.length && payload.project_id) {
-        for (const { file, type_id } of attachments) {
-          const { path, type, url } = await uploadLetterAttachment(
-            file,
-            payload.project_id!
-          );
-          await supabase.from(ATTACH_TABLE).insert({
-            letter_id: letterId,
-            file_type: type,
-            storage_path: path,
-            file_url: url,
-            attachment_type_id: type_id,
-          });
-          files.push({
-            id: '',
-            name: file.name,
-            file_type: type,
-            storage_path: path,
-            file_url: url,
-            attachment_type_id: type_id,
-          });
-        }
+        const uploaded = await addLetterAttachments(
+          attachments,
+          payload.project_id!
+        );
+        files = uploaded.map((u) => ({
+          id: String(u.id),
+          name: u.storage_path.split('/').pop() || u.storage_path,
+          file_type: u.file_type,
+          storage_path: u.storage_path,
+          file_url: u.file_url,
+          attachment_type_id: u.attachment_type_id ?? null,
+        }));
+        attachmentIds = uploaded.map((u) => u.id);
+        await supabase
+          .from(LETTERS_TABLE)
+          .update({ attachment_ids: attachmentIds })
+          .eq('id', letterId);
       }
       if (parent_id) {
         await supabase
@@ -178,6 +179,7 @@ export function useAddLetter() {
         letter_type_id: data.letter_type_id ?? null,
         project_id: data.project_id ?? null,
         unit_ids: data.unit_ids ?? [],
+        attachment_ids: attachmentIds,
         number: data.number,
         date: data.date,
         sender: data.sender,
@@ -196,14 +198,22 @@ export function useDeleteLetter() {
   return useMutation({
     mutationFn: async (id: string) => {
       const letterId = Number(id);
-      const { data: attach } = await supabase
-        .from(ATTACH_TABLE)
-        .select('id, storage_path')
-        .eq('letter_id', letterId);
+      const { data: letter } = await supabase
+        .from(LETTERS_TABLE)
+        .select('attachment_ids, project_id')
+        .eq('id', letterId)
+        .single();
+      const ids = (letter?.attachment_ids ?? []) as number[];
+      const { data: attach } = ids.length
+        ? await supabase
+            .from(ATTACH_TABLE)
+            .select('id, storage_path')
+            .in('id', ids)
+        : { data: [], error: null };
       const paths = (attach ?? []).map((a) => a.storage_path).filter(Boolean);
       if (paths.length) {
         await supabase.storage.from(ATTACH_BUCKET).remove(paths);
-        await supabase.from(ATTACH_TABLE).delete().eq('letter_id', letterId);
+        await supabase.from(ATTACH_TABLE).delete().in('id', ids);
       }
       await supabase
         .from(LINKS_TABLE)
@@ -276,6 +286,13 @@ export function useUpdateLetter() {
       updatedAttachments?: { id: string; type_id: number | null }[];
     }) => {
       const letterId = Number(id);
+      const { data: current } = await supabase
+        .from(LETTERS_TABLE)
+        .select('attachment_ids, project_id')
+        .eq('id', letterId)
+        .single();
+      let ids = (current?.attachment_ids ?? []) as number[];
+      const projectId = updates.project_id ?? current?.project_id ?? null;
 
       if (removedAttachmentIds.length) {
         const { data: files } = await supabase
@@ -291,6 +308,7 @@ export function useUpdateLetter() {
           .from(ATTACH_TABLE)
           .delete()
           .in('id', removedAttachmentIds.map(Number));
+        ids = ids.filter((a) => !removedAttachmentIds.map(Number).includes(a));
       }
 
       const letterData: Record<string, any> = {
@@ -307,13 +325,6 @@ export function useUpdateLetter() {
       const sanitized = Object.fromEntries(
         Object.entries(letterData).filter(([, v]) => v !== undefined),
       );
-      if (Object.keys(sanitized).length) {
-        const { error } = await supabase
-          .from(LETTERS_TABLE)
-          .update(sanitized)
-          .eq('id', letterId);
-        if (error) throw error;
-      }
 
       if (updatedAttachments.length) {
         for (const a of updatedAttachments) {
@@ -324,21 +335,15 @@ export function useUpdateLetter() {
         }
       }
 
-      if (newAttachments.length && updates.project_id) {
-        for (const { file, type_id } of newAttachments) {
-          const { path, type, url } = await uploadLetterAttachment(
-            file,
-            updates.project_id!,
-          );
-          await supabase.from(ATTACH_TABLE).insert({
-            letter_id: letterId,
-            file_type: type,
-            storage_path: path,
-            file_url: url,
-            attachment_type_id: type_id,
-          });
-        }
+      if (newAttachments.length && projectId) {
+        const uploaded = await addLetterAttachments(newAttachments, projectId);
+        ids = ids.concat(uploaded.map((u) => u.id));
       }
+
+      await supabase
+        .from(LETTERS_TABLE)
+        .update({ ...sanitized, attachment_ids: ids })
+        .eq('id', letterId);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [LETTERS_TABLE] });

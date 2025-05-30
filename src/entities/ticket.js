@@ -9,6 +9,7 @@ import dayjs from 'dayjs';
 import 'dayjs/locale/ru';
 
 import { supabase } from '@/shared/api/supabaseClient';
+import { addTicketAttachments, getAttachmentsByIds } from '@/entities/attachment';
 import { useNotify } from '@/shared/hooks/useNotify';
 import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useAuthStore } from '@/shared/store/authStore';
@@ -145,15 +146,37 @@ export function useTickets() {
           id, project_id, unit_id, type_id, status_id, title, description,
           customer_request_no, customer_request_date, responsible_engineer_id,
           created_by, is_warranty, created_at, received_at, fixed_at,
+          attachment_ids,
           projects (id, name), units (id, name),
-          ticket_types (id, name), ticket_statuses (id, name, color),
-          attachments (id, file_type, storage_path, file_url)
+          ticket_types (id, name), ticket_statuses (id, name, color)
         `)
                 .eq('project_id', projectId)
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
-            return (data ?? []).map(mapTicket);
+
+            const allIds = Array.from(
+                new Set((data ?? []).flatMap((t) => t.attachment_ids || [])),
+            );
+            let filesMap = {};
+            if (allIds.length) {
+                const { data: files, error: fErr } = await getAttachmentsByIds(allIds);
+                if (fErr) throw fErr;
+                files.forEach((f) => {
+                    filesMap[f.id] = {
+                        id: f.id,
+                        path: f.storage_path,
+                        name: f.storage_path.split('/').pop() || f.storage_path,
+                        url: f.file_url,
+                        type: f.file_type,
+                    };
+                });
+            }
+
+            return (data ?? []).map((r) => {
+                const atts = (r.attachment_ids || []).map((i) => filesMap[i]).filter(Boolean);
+                return mapTicket({ ...r, attachments: atts });
+            });
         },
         staleTime: 5 * 60_000,
         gcTime  : 10 * 60_000,
@@ -187,28 +210,20 @@ export function useCreateTicket() {
 
             if (error) throw error;
 
+            let ids = [];
             if (attachments.length) {
-                await Promise.all(
-                    attachments.map(async (file) => {
-                        try {
-                            const { path, type, url } = await uploadAttachment(
-                                file,
-                                projectId,
-                                newTicket.id,
-                            );
-                            await supabase.from('attachments').insert({
-                                ticket_id: newTicket.id,
-                                file_type: type,
-                                storage_path: path,
-                                file_url: url,
-                            });
-                        } catch (e) {
-                            notify.error(`Ошибка загрузки файла ${file.name}: ${e.message}`);
-                        }
-                    }),
+                const uploaded = await addTicketAttachments(
+                    attachments.map((f) => ({ file: f, type_id: null })),
+                    projectId,
+                    newTicket.id,
                 );
+                ids = uploaded.map((u) => u.id);
+                await supabase
+                    .from('tickets')
+                    .update({ attachment_ids: ids })
+                    .eq('id', newTicket.id);
             }
-            return newTicket;
+            return { ...newTicket, attachment_ids: ids };
         },
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ['tickets', projectId] });
@@ -235,15 +250,26 @@ export function useTicket(ticketId) {
           id, project_id, unit_id, type_id, status_id, title, description,
           customer_request_no, customer_request_date, responsible_engineer_id,
           created_by, is_warranty, created_at, received_at, fixed_at,
+          attachment_ids,
           projects (id, name), units (id, name),
-          ticket_types (id, name), ticket_statuses (id, name, color),
-          attachments (id, file_type, storage_path, file_url)
+          ticket_types (id, name), ticket_statuses (id, name, color)
         `)
                 .eq('id', id)
                 .eq('project_id', projectId)
                 .single();
             if (error) throw error;
-            return data ? mapTicket(data) : null;
+            let atts = [];
+            if (data?.attachment_ids?.length) {
+                const files = await getAttachmentsByIds(data.attachment_ids);
+                atts = files.map((f) => ({
+                    id: f.id,
+                    path: f.storage_path,
+                    name: f.storage_path.split('/').pop() || f.storage_path,
+                    url: f.file_url,
+                    type: f.file_type,
+                }));
+            }
+            return data ? mapTicket({ ...data, attachments: atts }) : null;
         },
         staleTime: 5 * 60_000,
         gcTime  : 10 * 60_000,
@@ -259,6 +285,13 @@ export function useTicket(ticketId) {
             if (!updId) throw new Error('ID тикета обязателен');
 
             // удаляем вложения
+            const { data: current } = await supabase
+                .from('tickets')
+                .select('attachment_ids')
+                .eq('id', updId)
+                .single();
+            let ids = (current?.attachment_ids ?? []);
+
             if (removedAttachmentIds.length) {
                 const { data: atts } = await supabase
                     .from('attachments')
@@ -271,6 +304,7 @@ export function useTicket(ticketId) {
                 await supabase.from('attachments')
                     .delete()
                     .in('id', removedAttachmentIds);
+                ids = ids.filter((i) => !removedAttachmentIds.includes(String(i)));
             }
 
             // обновляем тикет
@@ -285,25 +319,21 @@ export function useTicket(ticketId) {
 
             // новые вложения
             if (newAttachments.length) {
-                await Promise.all(
-                    newAttachments.map(async (file) => {
-                        try {
-                            const { path, type, url } = await uploadAttachment(
-                                file,
-                                projectId,
-                                updId,
-                            );
-                            await supabase.from('attachments').insert({
-                                ticket_id: updId,
-                                file_type: type,
-                                storage_path: path,
-                                file_url: url,
-                            });
-                        } catch (e) {
-                            notify.error(`Ошибка загрузки файла ${file.name}: ${e.message}`);
-                        }
-                    }),
+                const uploaded = await addTicketAttachments(
+                    newAttachments.map((f) => ({ file: f, type_id: null })),
+                    projectId,
+                    updId,
                 );
+                ids = ids.concat(uploaded.map((u) => u.id));
+            }
+
+            if (Object.keys(updates).length || removedAttachmentIds.length || newAttachments.length) {
+                const { error } = await supabase
+                    .from('tickets')
+                    .update({ ...updates, attachment_ids: ids })
+                    .eq('id', updId)
+                    .eq('project_id', projectId);
+                if (error) throw error;
             }
         },
         onSuccess: (_, vars) => {
@@ -329,18 +359,23 @@ export function useDeleteTicket() {
 
     return useMutation({
         mutationFn: async (ticketId) => {
-            const { data: files } = await supabase
-                .from('attachments')
-                .select('storage_path')
-                .eq('ticket_id', ticketId);
-
-            if (files?.length) {
-                await supabase.storage.from(ATTACH_BUCKET)
-                    .remove(files.map((f) => f.storage_path));
+            const { data: ticket } = await supabase
+                .from('tickets')
+                .select('attachment_ids')
+                .eq('id', ticketId)
+                .single();
+            const ids = ticket?.attachment_ids || [];
+            if (ids.length) {
+                const files = await getAttachmentsByIds(ids);
+                if (files?.length) {
+                    await supabase.storage
+                        .from(ATTACH_BUCKET)
+                        .remove(files.map((f) => f.storage_path));
+                }
+                await supabase.from('attachments')
+                    .delete()
+                    .in('id', ids);
             }
-            await supabase.from('attachments')
-                .delete()
-                .eq('ticket_id', ticketId);
 
             await supabase.from('tickets')
                 .delete()

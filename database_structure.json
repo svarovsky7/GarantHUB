@@ -22,13 +22,6 @@
   },
   {
     "table_name": "attachments",
-    "column_name": "ticket_id",
-    "data_type": "integer",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
-    "table_name": "attachments",
     "column_name": "file_url",
     "data_type": "text",
     "is_nullable": "NO",
@@ -53,20 +46,6 @@
     "column_name": "storage_path",
     "data_type": "text",
     "is_nullable": "NO",
-    "column_default": null
-  },
-  {
-    "table_name": "attachments",
-    "column_name": "is_fix_act",
-    "data_type": "boolean",
-    "is_nullable": "YES",
-    "column_default": "false"
-  },
-  {
-    "table_name": "attachments",
-    "column_name": "letter_id",
-    "data_type": "bigint",
-    "is_nullable": "YES",
     "column_default": null
   },
   {
@@ -438,6 +417,13 @@
     "column_name": "unit_ids",
     "data_type": "ARRAY",
     "is_nullable": "YES",
+  "column_default": "ARRAY[]::integer[]"
+  },
+  {
+    "table_name": "letters",
+    "column_name": "attachment_ids",
+    "data_type": "ARRAY",
+    "is_nullable": "YES",
     "column_default": "ARRAY[]::integer[]"
   },
   {
@@ -754,6 +740,13 @@
     "data_type": "uuid",
     "is_nullable": "YES",
     "column_default": null
+  },
+  {
+    "table_name": "tickets",
+    "column_name": "attachment_ids",
+    "data_type": "ARRAY",
+    "is_nullable": "YES",
+    "column_default": "ARRAY[]::integer[]"
   },
   {
     "table_name": "unit_persons",
