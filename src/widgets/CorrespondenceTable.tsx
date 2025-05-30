@@ -175,6 +175,7 @@ export default function CorrespondenceTable({
       dataIndex: 'responsibleName',
       sorter: (a, b) =>
           (a.responsibleName || '').localeCompare(b.responsibleName || ''),
+      render: (name: string) => name || '—',
     },
     {
       title: 'Действия',
