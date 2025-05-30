@@ -15,6 +15,7 @@ import {
   DatePicker,
   Select,
   Button,
+  Upload,
   Table,
   Tag,
   Space,
@@ -276,24 +277,13 @@ export default function CourtCasesPage() {
     <ConfigProvider locale={ruRU}>
       <>
         <Form form={form} layout="vertical" onFinish={handleAddCase} autoComplete="off">
+        {/* Row 1: Project, Object, Lawyer */}
         <Row gutter={16}>
-          <Col span={8}>
-            <Form.Item name="number" label="Номер дела" rules={[{ required: true, message: 'Укажите номер' }]}>
-              <Input />
-            </Form.Item>
-          </Col>
-          <Col span={8}>
-            <Form.Item name="date" label="Дата" rules={[{ required: true, message: 'Укажите дату' }]}>
-              <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
-            </Form.Item>
-          </Col>
           <Col span={8}>
             <Form.Item name="project_id" label="Проект" rules={[{ required: true, message: 'Выберите проект' }]}>
               <Select options={projects.map((p) => ({ value: p.id, label: p.name }))} />
             </Form.Item>
           </Col>
-        </Row>
-        <Row gutter={16}>
           <Col span={8}>
             <Form.Item
               name="unit_ids"
@@ -309,6 +299,32 @@ export default function CourtCasesPage() {
             </Form.Item>
           </Col>
           <Col span={8}>
+            <Form.Item name="responsible_lawyer_id" label="Ответственный юрист" rules={[{ required: true, message: 'Выберите юриста' }]}>
+              <Select loading={usersLoading} options={users.map((u) => ({ value: u.id, label: u.name }))} />
+            </Form.Item>
+          </Col>
+        </Row>
+        {/* Row 2: Number, Date, Status */}
+        <Row gutter={16}>
+          <Col span={8}>
+            <Form.Item name="number" label="Номер дела" rules={[{ required: true, message: 'Укажите номер' }]}> 
+              <Input />
+            </Form.Item>
+          </Col>
+          <Col span={8}>
+            <Form.Item name="date" label="Дата" rules={[{ required: true, message: 'Укажите дату' }]}> 
+              <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
+            </Form.Item>
+          </Col>
+          <Col span={8}>
+            <Form.Item name="status" label="Статус" rules={[{ required: true, message: 'Выберите статус' }]}> 
+              <Select loading={stagesLoading} options={stages.map((s) => ({ value: s.id, label: s.name }))} />
+            </Form.Item>
+          </Col>
+        </Row>
+        {/* Row 3: Plaintiff, Defendant */}
+        <Row gutter={16}>
+          <Col span={12}>
             <Form.Item label="Истец" style={{ marginBottom: 0 }}>
               <Space.Compact style={{ width: '100%' }}>
                 <Form.Item
@@ -322,44 +338,24 @@ export default function CourtCasesPage() {
                     disabled={!projectId}
                   />
                 </Form.Item>
-                <Button
-                  icon={<PlusOutlined />}
-                  onClick={() => setAddPersonOpen(true)}
-                />
+                <Button icon={<PlusOutlined />} onClick={() => setAddPersonOpen(true)} />
               </Space.Compact>
             </Form.Item>
           </Col>
-          <Col span={8}>
+          <Col span={12}>
             <Form.Item name="defendant_id" label="Ответчик" rules={[{ required: true, message: 'Выберите ответчика' }]}>
-              <Select
-                loading={contractorsLoading}
-                options={contractors.map((c) => ({ value: c.id, label: c.name }))}
-              />
+              <Select loading={contractorsLoading} options={contractors.map((c) => ({ value: c.id, label: c.name }))} />
             </Form.Item>
           </Col>
         </Row>
+        {/* Row 4: Fix dates */}
         <Row gutter={16}>
-          <Col span={8}>
-            <Form.Item name="responsible_lawyer_id" label="Ответственный юрист" rules={[{ required: true, message: 'Выберите юриста' }]}>
-              <Select
-                loading={usersLoading}
-                options={users.map((u) => ({ value: u.id, label: u.name }))}
-              />
-            </Form.Item>
-          </Col>
-          <Col span={8}>
-            <Form.Item name="status" label="Статус" rules={[{ required: true, message: 'Выберите статус' }]}>
-              <Select loading={stagesLoading} options={stages.map((s) => ({ value: s.id, label: s.name }))} />
-            </Form.Item>
-          </Col>
-        </Row>
-        <Row gutter={16}>
-          <Col span={8}>
+          <Col span={12}>
             <Form.Item name="fix_start_date" label="Дата начала устранения">
               <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
             </Form.Item>
           </Col>
-          <Col span={8}>
+          <Col span={12}>
             <Form.Item
               name="fix_end_date"
               label="Дата завершения устранения"
@@ -371,9 +367,7 @@ export default function CourtCasesPage() {
                     if (!value || !start || value.isSameOrAfter(start, 'day')) {
                       return Promise.resolve();
                     }
-                    return Promise.reject(
-                      new Error('Дата завершения меньше даты начала'),
-                    );
+                    return Promise.reject(new Error('Дата завершения меньше даты начала'));
                   },
                 }),
               ]}
@@ -381,15 +375,31 @@ export default function CourtCasesPage() {
               <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
             </Form.Item>
           </Col>
-          <Col span={8}>
+        </Row>
+        {/* Row 5: Description */}
+        <Row gutter={16}>
+          <Col span={24}>
             <Form.Item name="description" label="Описание">
               <Input.TextArea rows={1} />
             </Form.Item>
           </Col>
         </Row>
+        {/* Row 6: Files drag and drop */}
         <Row gutter={16}>
           <Col span={24}>
-            <input type="file" multiple onChange={handleCaseFiles} />
+            <Upload.Dragger
+              multiple
+              beforeUpload={(file) => {
+                setCaseFiles((p) => [...p, { file, type_id: null }]);
+                return false;
+              }}
+              showUploadList={false}
+            >
+              <p className="ant-upload-drag-icon">
+                <PlusOutlined />
+              </p>
+              <p className="ant-upload-text">Перетащите файлы или нажмите для выбора</p>
+            </Upload.Dragger>
             {caseFiles.map((f, i) => (
               <Row key={i} gutter={8} align="middle" style={{ marginTop: 4 }}>
                 <Col flex="auto">
