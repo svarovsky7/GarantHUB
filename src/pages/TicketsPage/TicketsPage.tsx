@@ -32,8 +32,8 @@ export default function TicketsPage() {
   }, [error, enqueueSnackbar]);
 
   const userMap = useMemo(() => {
-    const map = {};
-    users.forEach((u) => {
+    const map = {} as Record<string, string>;
+    (users ?? []).forEach((u) => {
       map[u.id] = u.name;
     });
     return map;
@@ -41,7 +41,7 @@ export default function TicketsPage() {
 
   const unitMap = useMemo(() => {
     const map = {} as Record<number, string>;
-    units.forEach((u) => {
+    (units ?? []).forEach((u) => {
       map[u.id] = u.name;
     });
     return map;
