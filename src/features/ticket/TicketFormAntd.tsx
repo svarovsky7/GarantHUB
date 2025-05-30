@@ -65,8 +65,9 @@ export default function TicketFormAntd({ onCreated }: { onCreated?: () => void }
 
   const onFinish = async (values: any) => {
     try {
+      const { pins, ...rest } = values;
       await create.mutateAsync({
-        ...values,
+        ...rest,
         project_id: values.project_id ?? globalProjectId,
         attachments: files,
         received_at: values.received_at.format('YYYY-MM-DD'),
@@ -136,11 +137,6 @@ export default function TicketFormAntd({ onCreated }: { onCreated?: () => void }
         <Col span={8}>
           <Form.Item name="received_at" label="Дата получения" rules={[{ required: true }]}>
             <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
-          </Form.Item>
-        </Col>
-        <Col span={8}>
-          <Form.Item name="pins" label="Пины">
-            <Input />
           </Form.Item>
         </Col>
         <Col span={8}>
