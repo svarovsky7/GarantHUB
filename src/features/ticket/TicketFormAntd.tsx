@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import { Form, Input, Select, DatePicker, Switch, Button, Row, Col } from 'antd';
-import { useEffect, useState } from 'react';
 import { useTicketTypes } from '@/entities/ticketType';
 import { useTicketStatuses } from '@/entities/ticketStatus';
 import { useUnitsByProject } from '@/entities/unit';
@@ -112,7 +111,7 @@ export default function TicketFormAntd({ onCreated }: { onCreated?: () => void }
       </Row>
       <Row gutter={16}>
         <Col span={8}>
-          <Form.Item name="responsible_engineer_id" label="Ответственный инженер">
+          <Form.Item name="responsible_engineer_id" label="Ответственный инженер по устранению">
             <Select
               allowClear
               options={users.map((u) => ({ value: u.id, label: u.name }))}
