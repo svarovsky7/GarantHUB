@@ -4,10 +4,6 @@ import {
   Paper,
   Stack,
   Typography,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Snackbar,
   Button as MuiButton,
 } from '@mui/material';
@@ -16,6 +12,7 @@ import dayjs from 'dayjs';
 import { AddLetterFormData } from '@/features/correspondence/AddLetterForm';
 import AddLetterForm from '@/features/correspondence/AddLetterForm';
 import LinkLettersDialog from '@/features/correspondence/LinkLettersDialog';
+import EditLetterDialog from '@/features/correspondence/EditLetterDialog';
 import CorrespondenceTable from '@/widgets/CorrespondenceTable';
 import {
   useLetters,
@@ -268,73 +265,14 @@ export default function CorrespondencePage() {
           </Box>
         </Paper>
 
-        <Dialog open={!!view} onClose={() => setView(null)} maxWidth="sm" fullWidth>
-          <DialogTitle>Детали письма</DialogTitle>
-          {view && (
-              <DialogContent dividers>
-                <Typography variant="subtitle2" gutterBottom>
-                  {view.type === 'incoming' ? 'Входящее' : 'Исходящее'} письмо №{' '}
-                  {view.number}
-                </Typography>
-                <Typography gutterBottom>
-                  Дата: {dayjs(view.date).format('DD.MM.YYYY')}
-                </Typography>
-                {view.project_id && (
-                    <Typography gutterBottom>
-                      Проект: {projects.find((p) => p.id === view.project_id)?.name}
-                    </Typography>
-                )}
-                {view.unit_ids.length > 0 && (
-                    <Typography gutterBottom>
-                      Объекты:{' '}
-                      {view.unit_ids
-                          .map((id) => projectUnits.find((u) => u.id === id)?.name)
-                          .filter(Boolean)
-                          .join(', ')}
-                    </Typography>
-                )}
-                {view.letter_type_id && (
-                    <Typography gutterBottom>
-                      Категория: {letterTypes.find((t) => t.id === view.letter_type_id)?.name}
-                    </Typography>
-                )}
-                {view.responsible_user_id && (
-                    <Typography gutterBottom>
-                      Ответственный: {users.find((u) => u.id === view.responsible_user_id)?.name}
-                    </Typography>
-                )}
-
-                <Typography gutterBottom>Корреспондент: {view.correspondent}</Typography>
-                <Typography gutterBottom>Тема: {view.subject}</Typography>
-                <Typography sx={{ whiteSpace: 'pre-wrap' }}>{view.content}</Typography>
-                {view.attachments.length > 0 && (
-                    <Box sx={{ mt: 1 }}>
-                      <Typography variant="subtitle2" gutterBottom>
-                        Вложения:
-                      </Typography>
-                      {view.attachments.map((a) => (
-                          <div key={a.id} style={{ marginBottom: 4 }}>
-                            <a href={a.file_url} download={a.name} style={{ marginRight: 8 }}>
-                              {a.name}
-                            </a>
-                            {a.attachment_type_id && (
-                                <Typography component="span" variant="body2" color="text.secondary">
-                                  (
-                                  {attachmentTypes.find((t) => t.id === a.attachment_type_id)?.name ||
-                                      'Тип не указан'}
-                                  )
-                                </Typography>
-                            )}
-                          </div>
-                      ))}
-                    </Box>
-                )}
-              </DialogContent>
-          )}
-          <DialogActions>
-            <MuiButton onClick={() => setView(null)}>Закрыть</MuiButton>
-          </DialogActions>
-        </Dialog>
+        <EditLetterDialog
+            open={!!view}
+            letter={view}
+            onClose={() => setView(null)}
+            projects={projects}
+            letterTypes={letterTypes}
+            attachmentTypes={attachmentTypes}
+        />
 
         <Snackbar
             open={!!snackbar}

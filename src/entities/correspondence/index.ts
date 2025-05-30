@@ -56,6 +56,26 @@ export function useLetters() {
 
         const type = row.receiver ? 'outgoing' : 'incoming';
         const correspondent = row.receiver || row.sender || '';
+        const attachments = (row.attachments ?? []).map((a: any) => {
+          let name = a.storage_path;
+          try {
+            name = decodeURIComponent(
+              a.storage_path.split('/').pop()?.replace(/^\d+_/, '') ||
+                a.storage_path,
+            );
+          } catch {
+            /* ignore */
+          }
+          return {
+            id: String(a.id),
+            name,
+            file_type: a.file_type,
+            storage_path: a.storage_path,
+            file_url: a.file_url,
+            attachment_type_id: a.attachment_type_id ?? null,
+          } as CorrespondenceAttachment;
+        });
+
         return {
           id: String(row.id),
           type,
@@ -70,7 +90,7 @@ export function useLetters() {
           subject: row.subject ?? '',
           content: '',
 
-          attachments: row.attachments ?? [],
+          attachments,
         } as CorrespondenceLetter;
       });
     },
@@ -213,6 +233,99 @@ export function useUnlinkLetter() {
       const childId = Number(id);
       await supabase.from(LINKS_TABLE).delete().eq('child_id', childId);
       qc.invalidateQueries({ queryKey: [LINKS_TABLE] });
+      qc.invalidateQueries({ queryKey: [LETTERS_TABLE] });
+    },
+  });
+}
+
+export async function signedLetterUrl(path: string, filename = '') {
+  const { data, error } = await supabase
+    .storage.from(ATTACH_BUCKET)
+    .createSignedUrl(path, 60, { download: filename || undefined });
+  if (error) throw error;
+  return data.signedUrl;
+}
+
+export function useUpdateLetter() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      updates,
+      newAttachments = [],
+      removedAttachmentIds = [],
+      updatedAttachments = [],
+    }: {
+      id: string;
+      updates: Partial<Omit<CorrespondenceLetter, 'id' | 'attachments'>>;
+      newAttachments?: { file: File; type_id: number | null }[];
+      removedAttachmentIds?: string[];
+      updatedAttachments?: { id: string; type_id: number | null }[];
+    }) => {
+      const letterId = Number(id);
+
+      if (removedAttachmentIds.length) {
+        const { data: files } = await supabase
+          .from(ATTACH_TABLE)
+          .select('storage_path')
+          .in('id', removedAttachmentIds.map(Number));
+        if (files?.length) {
+          await supabase.storage
+            .from(ATTACH_BUCKET)
+            .remove(files.map((f) => f.storage_path));
+        }
+        await supabase
+          .from(ATTACH_TABLE)
+          .delete()
+          .in('id', removedAttachmentIds.map(Number));
+      }
+
+      const letterData: Record<string, any> = {
+        project_id: updates.project_id,
+        number: updates.number,
+        letter_type_id: updates.letter_type_id,
+        letter_date: updates.date,
+        subject: updates.subject,
+        sender: updates.type === 'incoming' ? updates.correspondent : null,
+        receiver: updates.type === 'outgoing' ? updates.correspondent : null,
+      };
+      const sanitized = Object.fromEntries(
+        Object.entries(letterData).filter(([, v]) => v !== undefined),
+      );
+      if (Object.keys(sanitized).length) {
+        const { error } = await supabase
+          .from(LETTERS_TABLE)
+          .update(sanitized)
+          .eq('id', letterId);
+        if (error) throw error;
+      }
+
+      if (updatedAttachments.length) {
+        for (const a of updatedAttachments) {
+          await supabase
+            .from(ATTACH_TABLE)
+            .update({ attachment_type_id: a.type_id })
+            .eq('id', Number(a.id));
+        }
+      }
+
+      if (newAttachments.length && updates.project_id) {
+        for (const { file, type_id } of newAttachments) {
+          const { path, type, url } = await uploadLetterAttachment(
+            file,
+            updates.project_id!,
+          );
+          await supabase.from(ATTACH_TABLE).insert({
+            letter_id: letterId,
+            file_type: type,
+            storage_path: path,
+            file_url: url,
+            attachment_type_id: type_id,
+          });
+        }
+      }
+    },
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: [LETTERS_TABLE] });
     },
   });
