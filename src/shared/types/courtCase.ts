@@ -13,7 +13,8 @@ export type CaseStatus = 'active' | 'won' | 'lost' | 'settled';
 export interface CourtCase {
   id: number;
   project_id: number;
-  unit_id: number | null;
+  /** Идентификаторы объектов проекта */
+  unit_ids: number[];
   date: string;
   number: string;
   plaintiff_id: number;
@@ -23,6 +24,7 @@ export interface CourtCase {
   fix_start_date?: string | null;
   fix_end_date?: string | null;
   description: string;
-  claim_amount?: number | null;
+  /** Ссылки на загруженные файлы */
+  attachment_ids?: number[];
   defects: Defect[];
 }
