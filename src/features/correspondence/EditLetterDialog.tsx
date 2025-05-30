@@ -48,6 +48,12 @@ export default function EditLetterDialog({
   const { data: contractors = [] } = useContractors();
   const { data: persons = [] } = usePersons();
 
+  // При смене проекта сбрасываем выбранные объекты,
+  // чтобы пользователь не сохранял несоответствующие unit_ids
+  useEffect(() => {
+    form.setFieldValue('unit_ids', []);
+  }, [projectId, form]);
+
   const contactOptions = React.useMemo(
     () => [
       ...contractors.map((c) => ({ value: c.name })),
