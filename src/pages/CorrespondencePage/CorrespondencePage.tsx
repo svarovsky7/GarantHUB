@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import {
-  Box,
-  Paper,
-  Stack,
+  ConfigProvider,
   Typography,
-  Snackbar,
-  Button as MuiButton,
-} from '@mui/material';
-import { Form, Select, Input, Button } from 'antd';
+  Form,
+  Select,
+  Input,
+  Button,
+  message,
+} from 'antd';
+import ruRU from 'antd/locale/ru_RU';
 import dayjs from 'dayjs';
 import { AddLetterFormData } from '@/features/correspondence/AddLetterForm';
 import AddLetterForm from '@/features/correspondence/AddLetterForm';
@@ -60,7 +61,6 @@ export default function CorrespondencePage() {
   });
   const [form] = Form.useForm();
   const [view, setView] = useState<CorrespondenceLetter | null>(null);
-  const [snackbar, setSnackbar] = useState<string | null>(null);
   const [linkFor, setLinkFor] = useState<CorrespondenceLetter | null>(null);
 
   const { data: users = [] } = useUsers();
@@ -118,7 +118,7 @@ export default function CorrespondencePage() {
 
     add.mutate(safeData, {
       onSuccess: () => {
-        setSnackbar('Письмо добавлено');
+        message.success('Письмо добавлено');
       },
     });
   };
@@ -126,13 +126,13 @@ export default function CorrespondencePage() {
   const handleDelete = (id: string) => {
     if (!window.confirm('Удалить письмо?')) return;
     remove.mutate(id, {
-      onSuccess: () => setSnackbar('Письмо удалено'),
+      onSuccess: () => message.success('Письмо удалено'),
     });
   };
 
   const handleUnlink = (id: string) => {
     unlinkLetter.mutate(id, {
-      onSuccess: () => setSnackbar('Письмо исключено из связи'),
+      onSuccess: () => message.success('Письмо исключено из связи'),
     });
   };
 
@@ -175,42 +175,43 @@ export default function CorrespondencePage() {
   const total = letters.length;
 
   return (
-      <Stack spacing={3} sx={{ mt: 2 }}>
-        <Paper sx={{ p: 3 }}>
-          <Typography variant="h5" gutterBottom>
-            Система учета корреспонденции
-          </Typography>
-          <Typography>Управление входящими и исходящими письмами</Typography>
-        </Paper>
+    <ConfigProvider locale={ruRU}>
+      <>
+        <Typography.Title level={4} style={{ marginTop: 16 }}>
+          Система учета корреспонденции
+        </Typography.Title>
+        <Typography.Paragraph>
+          Управление входящими и исходящими письмами
+        </Typography.Paragraph>
 
-        <Paper sx={{ p: 3 }}>
+        <div style={{ marginTop: 16 }}>
           <AddLetterForm onSubmit={handleAdd} />
-        </Paper>
+        </div>
 
         <LinkLettersDialog
-            open={!!linkFor}
-            parent={linkFor}
-            letters={letters}
-            onClose={() => setLinkFor(null)}
-            onSubmit={(ids) => {
-              if (!linkFor) return;
-              linkLetters.mutate({ parentId: linkFor.id, childIds: ids }, {
-                onSuccess: () => {
-                  setSnackbar('Письма связаны');
-                  setLinkFor(null);
-                },
-              });
-            }}
+          open={!!linkFor}
+          parent={linkFor}
+          letters={letters}
+          onClose={() => setLinkFor(null)}
+          onSubmit={(ids) => {
+            if (!linkFor) return;
+            linkLetters.mutate({ parentId: linkFor.id, childIds: ids }, {
+              onSuccess: () => {
+                message.success('Письма связаны');
+                setLinkFor(null);
+              },
+            });
+          }}
         />
 
-        <Paper sx={{ p: 2 }}>
+        <div style={{ marginTop: 24 }}>
           <Form
-              form={form}
-              layout="vertical"
-              onValuesChange={handleFiltersChange}
-              initialValues={filters}
-              className="filter-grid"
-              style={{ marginBottom: 16 }}
+            form={form}
+            layout="vertical"
+            onValuesChange={handleFiltersChange}
+            initialValues={filters}
+            className="filter-grid"
+            style={{ marginBottom: 16 }}
           >
             <Form.Item name="type" label="Тип письма">
               <Select allowClear placeholder="Все типы">
@@ -256,20 +257,20 @@ export default function CorrespondencePage() {
             </Form.Item>
           </Form>
           <CorrespondenceTable
-              letters={filtered}
-              onView={setView}
-              onDelete={handleDelete}
-              onAddChild={setLinkFor}
-              onUnlink={handleUnlink}
-              users={users}
-              letterTypes={letterTypes}
-              projects={projects}
-              units={allUnits}
+            letters={filtered}
+            onView={setView}
+            onDelete={handleDelete}
+            onAddChild={setLinkFor}
+            onUnlink={handleUnlink}
+            users={users}
+            letterTypes={letterTypes}
+            projects={projects}
+            units={allUnits}
           />
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
-            <Typography variant="body2">Всего писем: {total}</Typography>
-          </Box>
-        </Paper>
+          <Typography.Text style={{ display: 'block', marginTop: 8 }}>
+            Всего писем: {total}
+          </Typography.Text>
+        </div>
 
         <EditLetterDialog
             open={!!view}
@@ -279,13 +280,7 @@ export default function CorrespondencePage() {
             letterTypes={letterTypes}
             attachmentTypes={attachmentTypes}
         />
-
-        <Snackbar
-            open={!!snackbar}
-            autoHideDuration={3000}
-            onClose={() => setSnackbar(null)}
-            message={snackbar}
-        />
-      </Stack>
+      </>
+    </ConfigProvider>
   );
 }
