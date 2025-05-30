@@ -1,18 +1,20 @@
 import React, { useEffect } from 'react';
-import { Form, Input, Select, DatePicker, Row, Col, Button } from 'antd';
+import { Form, Input, Select, DatePicker, Row, Col, Button, AutoComplete } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import { useUsers } from '@/entities/user';
 import { useLetterTypes } from '@/entities/letterType';
 import { useProjects } from '@/entities/project';
 import { useUnitsByProject } from '@/entities/unit';
 import { useContractors } from '@/entities/contractor';
+import { usePersons } from '@/entities/person';
 import { useAttachmentTypes } from '@/entities/attachmentType';
 
 export interface AddLetterFormData {
   type: 'incoming' | 'outgoing';
   number: string;
   date: Dayjs | null;
-  correspondent: string;
+  sender: string;
+  receiver: string;
   subject: string;
   content: string;
   responsible_user_id: string | null;
@@ -40,7 +42,16 @@ export default function AddLetterForm({ onSubmit, parentId = null }: AddLetterFo
   const { data: projects = [], isLoading: loadingProjects } = useProjects();
   const { data: units = [], isLoading: loadingUnits } = useUnitsByProject(projectId);
   const { data: contractors = [], isLoading: loadingContractors } = useContractors();
+  const { data: persons = [], isLoading: loadingPersons } = usePersons();
   const { data: attachmentTypes = [], isLoading: loadingAttachmentTypes } = useAttachmentTypes();
+
+  const contactOptions = React.useMemo(
+    () => [
+      ...contractors.map((c) => ({ value: c.name })),
+      ...persons.map((p) => ({ value: p.full_name })),
+    ],
+    [contractors, persons],
+  );
 
   useEffect(() => {
     form.setFieldValue('unit_ids', []);
@@ -107,41 +118,48 @@ export default function AddLetterForm({ onSubmit, parentId = null }: AddLetterFo
         </Row>
         <Row gutter={16}>
           <Col span={8}>
-            <Form.Item name="correspondent" label="Корреспондент">
-              <Select
-                  showSearch
-                  loading={loadingContractors}
-                  placeholder="Выберите корреспондента"
-                  optionFilterProp="children"
-                  allowClear
-              >
-                <Select.OptGroup label="Компании">
-                  {contractors.map((c) => (
-                      <Select.Option key={`c-${c.id}`} value={c.name}>
-                        {c.name}
-                      </Select.Option>
-                  ))}
-                </Select.OptGroup>
-              </Select>
+            <Form.Item name="sender" label="Отправитель">
+              <AutoComplete
+                options={contactOptions}
+                allowClear
+                placeholder="Укажите отправителя"
+                filterOption={(input, option) =>
+                  (option?.value ?? '').toLowerCase().includes(input.toLowerCase())
+                }
+              />
+            </Form.Item>
+          </Col>
+          <Col span={8}>
+            <Form.Item name="receiver" label="Получатель">
+              <AutoComplete
+                options={contactOptions}
+                allowClear
+                placeholder="Укажите получателя"
+                filterOption={(input, option) =>
+                  (option?.value ?? '').toLowerCase().includes(input.toLowerCase())
+                }
+              />
             </Form.Item>
           </Col>
           <Col span={8}>
             <Form.Item name="responsible_user_id" label="Ответственный">
               <Select
-                  loading={loadingUsers}
-                  options={users.map((u) => ({ value: u.id, label: u.name }))}
-                  allowClear
-                  placeholder="Выберите ответственного"
+                loading={loadingUsers}
+                options={users.map((u) => ({ value: u.id, label: u.name }))}
+                allowClear
+                placeholder="Выберите ответственного"
               />
             </Form.Item>
           </Col>
+        </Row>
+        <Row gutter={16}>
           <Col span={8}>
             <Form.Item name="letter_type_id" label="Категория письма">
               <Select
-                  loading={loadingTypes}
-                  options={letterTypes.map((t) => ({ value: t.id, label: t.name }))}
-                  allowClear
-                  placeholder="Выберите категорию"
+                loading={loadingTypes}
+                options={letterTypes.map((t) => ({ value: t.id, label: t.name }))}
+                allowClear
+                placeholder="Выберите категорию"
               />
             </Form.Item>
           </Col>

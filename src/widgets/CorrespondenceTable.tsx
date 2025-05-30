@@ -132,11 +132,20 @@ export default function CorrespondenceTable({
       render: (v: string) => dayjs(v).format('DD.MM.YYYY'),
     },
     {
-      title: 'Корреспондент',
-      dataIndex: 'correspondent',
-      sorter: (a, b) => a.correspondent.localeCompare(b.correspondent),
-      render: (val: string, record: any) =>
-          <span style={record.parent_id ? { color: '#888' } : {}}>{val}</span>,
+      title: 'Отправитель',
+      dataIndex: 'sender',
+      sorter: (a, b) => (a.sender || '').localeCompare(b.sender || ''),
+      render: (val: string, record: any) => (
+        <span style={record.parent_id ? { color: '#888' } : {}}>{val}</span>
+      ),
+    },
+    {
+      title: 'Получатель',
+      dataIndex: 'receiver',
+      sorter: (a, b) => (a.receiver || '').localeCompare(b.receiver || ''),
+      render: (val: string, record: any) => (
+        <span style={record.parent_id ? { color: '#888' } : {}}>{val}</span>
+      ),
     },
     {
       title: 'Тема',
