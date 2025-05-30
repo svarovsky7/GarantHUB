@@ -74,6 +74,16 @@ export function uploadCaseAttachment(file, caseId) {
 }
 
 /**
+ * Загружает файл замечания в хранилище Supabase.
+ * @param {File} file
+ * @param {number} projectId
+ * @param {number} ticketId
+ */
+export function uploadTicketAttachment(file, projectId, ticketId) {
+    return upload(file, `${projectId}/${ticketId}`);
+}
+
+/**
  * Загружает файлы дела и создаёт записи в таблице attachments
  * с возвратом созданных строк.
  * @param {{file: File, type_id: number | null}[]} files
@@ -136,7 +146,7 @@ export async function addLetterAttachments(files, projectId) {
  */
 export async function addTicketAttachments(files, projectId, ticketId) {
     const uploaded = await Promise.all(
-        files.map(({ file }) => uploadAttachment(file, projectId, ticketId)),
+        files.map(({ file }) => uploadTicketAttachment(file, projectId, ticketId)),
     );
 
     const rows = uploaded.map((u, idx) => ({
