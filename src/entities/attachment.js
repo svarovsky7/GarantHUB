@@ -101,6 +101,61 @@ export async function addCaseAttachments(files, caseId) {
 }
 
 /**
+ * Загружает файлы письма и создаёт записи в таблице attachments
+ * с возвратом созданных строк.
+ * @param {{file: File, type_id: number | null}[]} files
+ * @param {number} projectId
+ */
+export async function addLetterAttachments(files, projectId) {
+    const uploaded = await Promise.all(
+        files.map(({ file }) => uploadLetterAttachment(file, projectId)),
+    );
+
+    const rows = uploaded.map((u, idx) => ({
+        file_url: u.url,
+        file_type: u.type,
+        storage_path: u.path,
+        attachment_type_id: files[idx].type_id ?? null,
+    }));
+
+    const { data, error } = await supabase
+        .from('attachments')
+        .insert(rows)
+        .select('id, storage_path, file_url, file_type, attachment_type_id');
+
+    if (error) throw error;
+    return data ?? [];
+}
+
+/**
+ * Загружает файлы замечания и создаёт записи в таблице attachments
+ * с возвратом созданных строк.
+ * @param {{file: File, type_id: number | null}[]} files
+ * @param {number} projectId
+ * @param {number} ticketId
+ */
+export async function addTicketAttachments(files, projectId, ticketId) {
+    const uploaded = await Promise.all(
+        files.map(({ file }) => uploadAttachment(file, projectId, ticketId)),
+    );
+
+    const rows = uploaded.map((u, idx) => ({
+        file_url: u.url,
+        file_type: u.type,
+        storage_path: u.path,
+        attachment_type_id: files[idx].type_id ?? null,
+    }));
+
+    const { data, error } = await supabase
+        .from('attachments')
+        .insert(rows)
+        .select('id, storage_path, file_url, file_type, attachment_type_id');
+
+    if (error) throw error;
+    return data ?? [];
+}
+
+/**
  * Возвращает вложения по указанным id
  * @param {number[]} ids
  */

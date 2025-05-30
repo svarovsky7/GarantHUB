@@ -15,6 +15,8 @@ export interface CorrespondenceLetter {
   project_id: number | null;
   /** Объекты проекта */
   unit_ids: number[];
+  /** Идентификаторы вложений */
+  attachment_ids?: number[];
 
 
   /** Номер письма */

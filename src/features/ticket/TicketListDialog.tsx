@@ -25,7 +25,8 @@ import { supabase } from "@/shared/api/supabaseClient";
 import { useNotify } from "@/shared/hooks/useNotify";
 import { useQueryClient } from "@tanstack/react-query";
 import TicketForm from "@/features/ticket/TicketForm";
-import { uploadAttachment, signedUrl } from "@/entities/ticket";
+import { signedUrl } from "@/entities/ticket";
+import { addTicketAttachments, getAttachmentsByIds } from "@/entities/attachment";
 
 export default function TicketListDialog({
   open,
@@ -63,20 +64,16 @@ export default function TicketListDialog({
         .order("id", { ascending: true });
       setStatuses(s || []);
 
-      // attachments: все файлы по этим tickets
-      const ids = (t || []).map((tk) => tk.id);
-      if (ids.length > 0) {
-        const { data: files } = await supabase
-          .from("attachments")
-          .select(
-            "id, ticket_id, file_url, file_type, uploaded_at, is_fix_act, storage_path",
-          )
-          .in("ticket_id", ids);
-        // группируем по ticket_id
+      const allIds = (t || [])
+        .flatMap((tk) => tk.attachment_ids || [])
+        .filter(Boolean);
+      if (allIds.length) {
+        const files = await getAttachmentsByIds(allIds);
         const map = {};
-        (files || []).forEach((a) => {
-          if (!map[a.ticket_id]) map[a.ticket_id] = [];
-          map[a.ticket_id].push(a);
+        (t || []).forEach((tk) => {
+          map[tk.id] = (tk.attachment_ids || [])
+            .map((id) => files.find((f) => f.id === id))
+            .filter(Boolean);
         });
         setAttachments(map);
       } else {
@@ -108,7 +105,7 @@ export default function TicketListDialog({
     if (onTicketsChanged) onTicketsChanged();
   };
 
-  // Загрузка файла акта (строго как обычный attachment, только is_fix_act: true)
+  // Загрузка файла акта
   const handleUploadFile = async (ticketId, e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -119,32 +116,19 @@ export default function TicketListDialog({
       return;
     }
     try {
-      const { path, url, type } = await uploadAttachment(
-        file,
+      const uploaded = await addTicketAttachments(
+        [{ file, type_id: null }],
         projectId,
         ticketId,
       );
-      const { error: insErr } = await supabase.from("attachments").insert({
-        ticket_id: ticketId,
-        file_url: url,
-        file_type: type,
-        is_fix_act: true,
-        storage_path: path,
-      });
-      if (insErr) throw insErr;
+      await supabase
+        .from("tickets")
+        .update({ attachment_ids: uploaded.map((u) => u.id) })
+        .eq("id", ticketId);
       notify.success("Файл успешно прикреплён");
       setAttachments((prev) => ({
         ...prev,
-        [ticketId]: [
-          ...(prev[ticketId] || []),
-          {
-            file_url: url,
-            file_type: type,
-            is_fix_act: true,
-            uploaded_at: new Date().toISOString(),
-            storage_path: path,
-          },
-        ],
+        [ticketId]: [...(prev[ticketId] || []), ...uploaded],
       }));
       // можно добавить onTicketsChanged() для upload, если нужно
     } catch (error) {
@@ -248,9 +232,7 @@ export default function TicketListDialog({
                             gap: 1,
                           }}
                         >
-                          {(
-                            attachments[t.id]?.filter((a) => a.is_fix_act) || []
-                          ).map((a, idx) => (
+                          {(attachments[t.id] || []).map((a, idx) => (
                             <Chip
                               key={a.file_url}
                               icon={<AttachFileIcon sx={{ fontSize: 16 }} />}
