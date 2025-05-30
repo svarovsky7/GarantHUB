@@ -177,13 +177,6 @@ export default function CorrespondencePage() {
   return (
     <ConfigProvider locale={ruRU}>
       <>
-        <Typography.Title level={4} style={{ marginTop: 16 }}>
-          Система учета корреспонденции
-        </Typography.Title>
-        <Typography.Paragraph>
-          Управление входящими и исходящими письмами
-        </Typography.Paragraph>
-
         <div style={{ marginTop: 16 }}>
           <AddLetterForm onSubmit={handleAdd} />
         </div>
