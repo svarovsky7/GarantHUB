@@ -434,6 +434,20 @@
     "column_default": "now()"
   },
   {
+    "table_name": "letters",
+    "column_name": "responsible_user_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "letters",
+    "column_name": "unit_ids",
+    "data_type": "ARRAY",
+    "is_nullable": "YES",
+    "column_default": "ARRAY[]::integer[]"
+  },
+  {
     "table_name": "litigation_stages",
     "column_name": "id",
     "data_type": "integer",
