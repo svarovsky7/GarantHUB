@@ -21,8 +21,10 @@ export interface CorrespondenceLetter {
   number: string;
   /** Дата письма ISO */
   date: string;
-  /** Корреспондент */
-  correspondent: string;
+  /** Отправитель письма */
+  sender: string;
+  /** Получатель письма */
+  receiver: string;
   /** Тема письма */
   subject: string;
   /** Содержание письма */

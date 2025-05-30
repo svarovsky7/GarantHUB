@@ -34,7 +34,8 @@ interface Filters {
   type?: 'incoming' | 'outgoing' | '';
   project?: number | '';
   unit?: number | '';
-  correspondent?: string;
+  sender?: string;
+  receiver?: string;
   subject?: string;
   content?: string;
   search?: string;
@@ -51,7 +52,8 @@ export default function CorrespondencePage() {
     type: '',
     project: '',
     unit: '',
-    correspondent: '',
+    sender: '',
+    receiver: '',
     subject: '',
     content: '',
     search: '',
@@ -80,7 +82,8 @@ export default function CorrespondencePage() {
       type: values.type ?? '',
       project: values.project ?? '',
       unit: values.unit ?? '',
-      correspondent: values.correspondent ?? '',
+      sender: values.sender ?? '',
+      receiver: values.receiver ?? '',
       subject: values.subject ?? '',
       content: values.content ?? '',
       search: values.search ?? '',
@@ -93,7 +96,8 @@ export default function CorrespondencePage() {
       type: '',
       project: '',
       unit: '',
-      correspondent: '',
+      sender: '',
+      receiver: '',
       subject: '',
       content: '',
       search: '',
@@ -138,14 +142,14 @@ export default function CorrespondencePage() {
     if (filters.type && l.type !== filters.type) return false;
     if (filters.project && l.project_id !== Number(filters.project)) return false;
     if (filters.unit && !l.unit_ids.includes(Number(filters.unit))) return false;
-    const correspondent = (l.correspondent || '').toLowerCase();
+    const sender = (l.sender || '').toLowerCase();
+    const receiver = (l.receiver || '').toLowerCase();
     const subject = (l.subject || '').toLowerCase();
     const content = (l.content || '').toLowerCase();
 
-    if (
-        filters.correspondent &&
-        !correspondent.includes(filters.correspondent.toLowerCase())
-    )
+    if (filters.sender && !sender.includes(filters.sender.toLowerCase()))
+      return false;
+    if (filters.receiver && !receiver.includes(filters.receiver.toLowerCase()))
       return false;
     if (
         filters.subject &&
@@ -161,7 +165,8 @@ export default function CorrespondencePage() {
         filters.search &&
         !(
             l.number.includes(filters.search) ||
-            correspondent.includes(filters.search.toLowerCase()) ||
+            sender.includes(filters.search.toLowerCase()) ||
+            receiver.includes(filters.search.toLowerCase()) ||
             subject.includes(filters.search.toLowerCase())
         )
     )
@@ -231,7 +236,10 @@ export default function CorrespondencePage() {
                   disabled={!form.getFieldValue('project')}
               />
             </Form.Item>
-            <Form.Item name="correspondent" label="Корреспондент">
+            <Form.Item name="sender" label="Отправитель">
+              <Input allowClear autoComplete="off" />
+            </Form.Item>
+            <Form.Item name="receiver" label="Получатель">
               <Input allowClear autoComplete="off" />
             </Form.Item>
             <Form.Item name="subject" label="В теме">

@@ -55,7 +55,8 @@ export function useLetters() {
         const parent = map.get(row.id);
 
         const type = row.receiver ? 'outgoing' : 'incoming';
-        const correspondent = row.receiver || row.sender || '';
+        const sender = row.sender || '';
+        const receiver = row.receiver || '';
         const attachments = (row.attachments ?? []).map((a: any) => {
           let name = a.storage_path;
           try {
@@ -88,7 +89,8 @@ export function useLetters() {
           unit_ids: (row.unit_ids ?? []) as number[],
           number: row.number,
           date: row.letter_date,
-          correspondent,
+          sender,
+          receiver,
           subject: row.subject ?? '',
           content: '',
 
@@ -117,8 +119,8 @@ export function useAddLetter() {
         letter_type_id: data.letter_type_id,
         letter_date: data.date,
         subject: data.subject,
-        sender: data.type === 'incoming' ? data.correspondent : null,
-        receiver: data.type === 'outgoing' ? data.correspondent : null,
+        sender: data.sender,
+        receiver: data.receiver,
         responsible_user_id: data.responsible_user_id,
         unit_ids: data.unit_ids,
       };
@@ -172,7 +174,8 @@ export function useAddLetter() {
         unit_ids: data.unit_ids ?? [],
         number: data.number,
         date: data.date,
-        correspondent: data.correspondent,
+        sender: data.sender,
+        receiver: data.receiver,
         subject: data.subject,
         content: '',
 
@@ -290,8 +293,8 @@ export function useUpdateLetter() {
         letter_type_id: updates.letter_type_id,
         letter_date: updates.date,
         subject: updates.subject,
-        sender: updates.type === 'incoming' ? updates.correspondent : null,
-        receiver: updates.type === 'outgoing' ? updates.correspondent : null,
+        sender: updates.sender,
+        receiver: updates.receiver,
         responsible_user_id: updates.responsible_user_id,
         unit_ids: updates.unit_ids,
       };
