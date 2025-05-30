@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import dayjs, { Dayjs } from 'dayjs';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import 'dayjs/locale/ru';
 import { ConfigProvider } from 'antd';
 import ruRU from 'antd/locale/ru_RU';
 
 dayjs.locale('ru');
+dayjs.extend(isSameOrAfter);
 import {
   Row,
   Col,
