@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/shared/api/supabaseClient';
 import { useProjectId } from '@/shared/hooks/useProjectId';
 import type { CourtCase, Defect } from '@/shared/types/courtCase';
+import { getAttachmentsByIds, ATTACH_BUCKET } from '../attachment';
 
 const CASES_TABLE = 'court_cases';
 const DEFECTS_TABLE = 'defects';
@@ -59,10 +60,33 @@ export function useUpdateCourtCase() {
 }
 
 export function useDeleteCourtCase() {
+  const projectId = useProjectId();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: number) => {
-      const { error } = await supabase.from(CASES_TABLE).delete().eq('id', id);
+      const { data: courtCase } = await supabase
+        .from(CASES_TABLE)
+        .select('attachment_ids')
+        .eq('id', id)
+        .single();
+
+      const ids = (courtCase?.attachment_ids ?? []) as number[];
+
+      if (ids.length) {
+        const files = await getAttachmentsByIds(ids);
+        if (files?.length) {
+          await supabase.storage
+            .from(ATTACH_BUCKET)
+            .remove(files.map((f) => f.storage_path));
+        }
+        await supabase.from('attachments').delete().in('id', ids);
+      }
+
+      const { error } = await supabase
+        .from(CASES_TABLE)
+        .delete()
+        .eq('id', id)
+        .eq('project_id', projectId);
       if (error) throw error;
       return id;
     },
