@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import React, { useEffect, useState } from "react";
+import { useForm, Controller } from "react-hook-form";
 import {
   Stack,
   TextField,
@@ -15,21 +15,22 @@ import {
   IconButton,
   FormControl,
   InputLabel,
-} from '@mui/material';
-import DeleteIcon from '@mui/icons-material/DeleteOutline';
-import { DatePicker } from '@mui/x-date-pickers';
-import dayjs, { Dayjs } from 'dayjs';
+} from "@mui/material";
+import DeleteIcon from "@mui/icons-material/DeleteOutline";
+import { DatePicker } from "@mui/x-date-pickers";
+import dayjs, { Dayjs } from "dayjs";
 
-import { useTicketTypes } from '@/entities/ticketType';
-import { useTicketStatuses } from '@/entities/ticketStatus';
-import { useUnitsByProject } from '@/entities/unit';
-import { useUsers } from '@/entities/user';
-import { useProjects } from '@/entities/project';
-import { useCreateTicket, useTicket } from '@/entities/ticket';
-import { useProjectId } from '@/shared/hooks/useProjectId';
-import FileDropZone from '@/shared/ui/FileDropZone';
-import AttachmentPreviewList from '@/shared/ui/AttachmentPreviewList';
-import type { Ticket } from '@/shared/types/ticket';
+import { useTicketTypes } from "@/entities/ticketType";
+import { useTicketStatuses } from "@/entities/ticketStatus";
+import { useUnitsByProject } from "@/entities/unit";
+import { useUsers } from "@/entities/user";
+import { useProjects } from "@/entities/project";
+import { useAttachmentTypes } from "@/entities/attachmentType";
+import { useCreateTicket, useTicket } from "@/entities/ticket";
+import { useProjectId } from "@/shared/hooks/useProjectId";
+import FileDropZone from "@/shared/ui/FileDropZone";
+import AttachmentPreviewList from "@/shared/ui/AttachmentPreviewList";
+import type { Ticket } from "@/shared/types/ticket";
 
 interface Attachment {
   id: string;
@@ -37,6 +38,8 @@ interface Attachment {
   path: string;
   url: string;
   type: string;
+  attachment_type_id: number | null;
+  attachment_type_name?: string;
 }
 
 interface TicketFormProps {
@@ -87,12 +90,12 @@ export default function TicketForm({
       status_id: null,
       type_id: null,
       is_warranty: false,
-      customer_request_no: '',
+      customer_request_no: "",
       customer_request_date: null,
       received_at: null,
       fixed_at: null,
-      title: '',
-      description: '',
+      title: "",
+      description: "",
     },
   });
 
@@ -100,7 +103,8 @@ export default function TicketForm({
   const { data: types = [] } = useTicketTypes();
   const { data: statuses = [] } = useTicketStatuses();
   const { data: users = [] } = useUsers();
-  const projectIdWatch = watch('project_id') ?? globalProjectId;
+  const { data: attachmentTypes = [] } = useAttachmentTypes();
+  const projectIdWatch = watch("project_id") ?? globalProjectId;
   const { data: units = [] } = useUnitsByProject(projectIdWatch);
 
   const create = useCreateTicket();
@@ -119,19 +123,27 @@ export default function TicketForm({
         status_id: ticket.statusId,
         type_id: ticket.typeId,
         is_warranty: ticket.isWarranty,
-        customer_request_no: ticket.customerRequestNo || '',
+        customer_request_no: ticket.customerRequestNo || "",
         customer_request_date: ticket.customerRequestDate,
         received_at: ticket.receivedAt,
         fixed_at: ticket.fixedAt,
         title: ticket.title,
-        description: ticket.description || '',
+        description: ticket.description || "",
       });
-      setRemoteFiles(ticket.attachments || []);
+      const attachmentsWithType = (ticket.attachments || []).map((file) => {
+        const typeObj = attachmentTypes.find(
+          (t) => t.id === file.attachment_type_id,
+        );
+        return {
+          ...file,
+          attachment_type_name: typeObj?.name || file.type || "—",
+        };
+      });
+      setRemoteFiles(attachmentsWithType);
     }
-  }, [ticket, reset]);
+  }, [ticket, attachmentTypes, reset]);
 
-  const addFiles = (files: File[]) =>
-    setNewFiles((p) => [...p, ...files]);
+  const addFiles = (files: File[]) => setNewFiles((p) => [...p, ...files]);
   const removeNew = (idx: number) =>
     setNewFiles((p) => p.filter((_, i) => i !== idx));
   const removeRemote = (id: string) => {
@@ -149,14 +161,14 @@ export default function TicketForm({
       description: values.description || null,
       customer_request_no: values.customer_request_no || null,
       customer_request_date: values.customer_request_date
-        ? values.customer_request_date.format('YYYY-MM-DD')
+        ? values.customer_request_date.format("YYYY-MM-DD")
         : null,
       responsible_engineer_id: values.responsible_engineer_id ?? null,
       is_warranty: values.is_warranty,
       received_at: values.received_at
-        ? values.received_at.format('YYYY-MM-DD')
-        : dayjs().format('YYYY-MM-DD'),
-      fixed_at: values.fixed_at ? values.fixed_at.format('YYYY-MM-DD') : null,
+        ? values.received_at.format("YYYY-MM-DD")
+        : dayjs().format("YYYY-MM-DD"),
+      fixed_at: values.fixed_at ? values.fixed_at.format("YYYY-MM-DD") : null,
     };
 
     if (ticketId) {
@@ -182,7 +194,7 @@ export default function TicketForm({
 
   return (
     <form onSubmit={handleSubmit(submit)} noValidate>
-      <Stack spacing={2} sx={{ maxWidth: embedded ? 'none' : 640 }}>
+      <Stack spacing={2} sx={{ maxWidth: embedded ? "none" : 640 }}>
         <Controller
           name="project_id"
           control={control}
@@ -194,10 +206,10 @@ export default function TicketForm({
                 labelId="project-label"
                 label="Проект"
                 displayEmpty
-                value={field.value ?? ''}
+                value={field.value ?? ""}
                 onChange={(e) =>
                   field.onChange(
-                    e.target.value === '' ? null : Number(e.target.value),
+                    e.target.value === "" ? null : Number(e.target.value),
                   )
                 }
               >
@@ -227,8 +239,8 @@ export default function TicketForm({
                 value={field.value}
                 onChange={(e) =>
                   field.onChange(
-                    typeof e.target.value === 'string'
-                      ? e.target.value.split(',').map(Number)
+                    typeof e.target.value === "string"
+                      ? e.target.value.split(",").map(Number)
                       : e.target.value,
                   )
                 }
@@ -253,9 +265,9 @@ export default function TicketForm({
                 labelId="engineer-label"
                 label="Ответственный инженер"
                 displayEmpty
-                value={field.value ?? ''}
+                value={field.value ?? ""}
                 onChange={(e) =>
-                  field.onChange(e.target.value === '' ? null : e.target.value)
+                  field.onChange(e.target.value === "" ? null : e.target.value)
                 }
               >
                 <MenuItem value="">
@@ -282,9 +294,11 @@ export default function TicketForm({
                 labelId="status-label"
                 label="Статус"
                 displayEmpty
-                value={field.value ?? ''}
+                value={field.value ?? ""}
                 onChange={(e) =>
-                  field.onChange(e.target.value === '' ? null : Number(e.target.value))
+                  field.onChange(
+                    e.target.value === "" ? null : Number(e.target.value),
+                  )
                 }
               >
                 <MenuItem value="">
@@ -311,9 +325,11 @@ export default function TicketForm({
                 labelId="type-label"
                 label="Тип"
                 displayEmpty
-                value={field.value ?? ''}
+                value={field.value ?? ""}
                 onChange={(e) =>
-                  field.onChange(e.target.value === '' ? null : Number(e.target.value))
+                  field.onChange(
+                    e.target.value === "" ? null : Number(e.target.value),
+                  )
                 }
               >
                 <MenuItem value="">
@@ -354,7 +370,9 @@ export default function TicketForm({
               format="DD.MM.YYYY"
               value={field.value}
               onChange={(d) => field.onChange(d)}
-              slotProps={{ textField: { fullWidth: true, label: 'Дата заявки' } }}
+              slotProps={{
+                textField: { fullWidth: true, label: "Дата заявки" },
+              }}
             />
           )}
         />
@@ -371,7 +389,7 @@ export default function TicketForm({
               slotProps={{
                 textField: {
                   fullWidth: true,
-                  label: 'Дата получения',
+                  label: "Дата получения",
                   required: true,
                   error: !!fieldState.error,
                 },
@@ -388,7 +406,9 @@ export default function TicketForm({
               format="DD.MM.YYYY"
               value={field.value}
               onChange={(d) => field.onChange(d)}
-              slotProps={{ textField: { fullWidth: true, label: 'Дата устранения' } }}
+              slotProps={{
+                textField: { fullWidth: true, label: "Дата устранения" },
+              }}
             />
           )}
         />
@@ -399,8 +419,8 @@ export default function TicketForm({
               size="small"
               sx={{ mr: 1, mb: 1 }}
               onClick={() => {
-                const rec = control.getValues('received_at');
-                if (rec) setValue('fixed_at', dayjs(rec).add(d, 'day'));
+                const rec = control.getValues("received_at");
+                if (rec) setValue("fixed_at", dayjs(rec).add(d, "day"));
               }}
             >
               +{d} дней
