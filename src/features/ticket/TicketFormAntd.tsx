@@ -124,12 +124,12 @@ export default function TicketFormAntd({ onCreated }: { onCreated?: () => void }
       </Row>
       <Row gutter={16}>
         <Col span={12}>
-          <Form.Item name="customer_request_no" label="№ заявки">
+          <Form.Item name="customer_request_no" label="№ заявки от Заказчика">
             <Input />
           </Form.Item>
         </Col>
         <Col span={12}>
-          <Form.Item name="customer_request_date" label="Дата заявки">
+          <Form.Item name="customer_request_date" label="Дата заявки Заказчика">
             <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
           </Form.Item>
         </Col>

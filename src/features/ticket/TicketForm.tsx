@@ -26,8 +26,7 @@ import { useProjects } from "@/entities/project";
 import { useAttachmentTypes } from "@/entities/attachmentType";
 import { useCreateTicket, useTicket, signedUrl } from "@/entities/ticket";
 import { useProjectId } from "@/shared/hooks/useProjectId";
-import FileDropZone from "@/shared/ui/FileDropZone";
-import AttachmentEditorList from "@/shared/ui/AttachmentEditorList";
+import AttachmentEditorTable from "@/shared/ui/AttachmentEditorTable";
 import type { Ticket } from "@/shared/types/ticket";
 
 interface Attachment {
@@ -84,6 +83,7 @@ export default function TicketForm({
     reset,
     setValue,
     watch,
+    getValues,
     formState: { isSubmitting },
   } = useForm<TicketFormValues>({
     defaultValues: {
@@ -377,7 +377,7 @@ export default function TicketForm({
           name="customer_request_no"
           control={control}
           render={({ field }) => (
-            <TextField {...field} label="№ заявки" fullWidth />
+            <TextField {...field} label="№ заявки от Заказчика" fullWidth />
           )}
         />
         <Controller
@@ -390,7 +390,7 @@ export default function TicketForm({
               value={field.value}
               onChange={(d) => field.onChange(d)}
               slotProps={{
-                textField: { fullWidth: true, label: "Дата заявки" },
+                textField: { fullWidth: true, label: "Дата заявки Заказчика" },
               }}
             />
           )}
@@ -438,7 +438,7 @@ export default function TicketForm({
               size="small"
               sx={{ mr: 1, mb: 1 }}
               onClick={() => {
-                const rec = control.getValues("received_at");
+                const rec = getValues("received_at");
                 if (rec) setValue("fixed_at", dayjs(rec).add(d, "day"));
               }}
             >
@@ -477,7 +477,7 @@ export default function TicketForm({
           <Typography variant="subtitle1" sx={{ mb: 1 }}>
             Файлы
           </Typography>
-          <AttachmentEditorList
+          <AttachmentEditorTable
             remoteFiles={remoteFiles.map((f) => ({
               id: f.id,
               name: f.name,
@@ -492,7 +492,19 @@ export default function TicketForm({
             onChangeNewType={changeNewType}
             getSignedUrl={(path, name) => signedUrl(path, name)}
           />
-          <FileDropZone onFiles={addFiles} />
+          <Button variant="outlined" size="small" component="label" sx={{ mt: 1 }}>
+            Загрузить ещё документы
+            <input
+              type="file"
+              multiple
+              hidden
+              onChange={(e) => {
+                const files = Array.from(e.target.files || []);
+                if (files.length) addFiles(files as File[]);
+                e.target.value = '';
+              }}
+            />
+          </Button>
         </Box>
         <DialogActions sx={{ px: 0 }}>
           <Button variant="text" onClick={onCancel} disabled={isSubmitting}>
