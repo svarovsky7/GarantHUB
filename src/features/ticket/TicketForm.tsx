@@ -112,6 +112,8 @@ export default function TicketForm({
 
   const create = useCreateTicket();
   const { data: ticket, updateAsync } = useTicket(ticketId);
+  /** Форма открыта для редактирования существующего замечания */
+  const isEdit = Boolean(ticketId);
 
   const [remoteFiles, setRemoteFiles] = useState<Attachment[]>([]);
   const [changedTypes, setChangedTypes] = useState<Record<string, number | null>>({});
@@ -232,9 +234,11 @@ export default function TicketForm({
                   )
                 }
               >
-                <MenuItem value="">
-                  <em>Не выбрано</em>
-                </MenuItem>
+                {!isEdit && (
+                  <MenuItem value="">
+                    <em>Не выбрано</em>
+                  </MenuItem>
+                )}
                 {projects.map((p) => (
                   <MenuItem key={p.id} value={p.id}>
                     {p.name}
@@ -289,9 +293,11 @@ export default function TicketForm({
                   field.onChange(e.target.value === "" ? null : e.target.value)
                 }
               >
-                <MenuItem value="">
-                  <em>Не указано</em>
-                </MenuItem>
+                {!isEdit && (
+                  <MenuItem value="">
+                    <em>Не указано</em>
+                  </MenuItem>
+                )}
                 {users.map((u) => (
                   <MenuItem key={u.id} value={u.id}>
                     {u.name}
@@ -320,9 +326,11 @@ export default function TicketForm({
                   )
                 }
               >
-                <MenuItem value="">
-                  <em>Статус не выбран</em>
-                </MenuItem>
+                {!isEdit && (
+                  <MenuItem value="">
+                    <em>Статус не выбран</em>
+                  </MenuItem>
+                )}
                 {statuses.map((s) => (
                   <MenuItem key={s.id} value={s.id}>
                     {s.name}
@@ -351,9 +359,11 @@ export default function TicketForm({
                   )
                 }
               >
-                <MenuItem value="">
-                  <em>Тип не выбран</em>
-                </MenuItem>
+                {!isEdit && (
+                  <MenuItem value="">
+                    <em>Тип не выбран</em>
+                  </MenuItem>
+                )}
                 {types.map((t) => (
                   <MenuItem key={t.id} value={t.id}>
                     {t.name}

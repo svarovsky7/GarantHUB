@@ -54,7 +54,11 @@ const applyFilters = (rows, f) =>
     }
     if (f.requestNo && r.customerRequestNo !== f.requestNo) return false;
     if (f.project && r.projectName !== f.project) return false;
-    if (f.unit && !r.unitNames.includes(f.unit)) return false;
+    if (Array.isArray(f.units) && f.units.length > 0) {
+      const rowUnits = r.unitNames.split(',').map((u) => u.trim());
+      const hasMatch = f.units.some((u) => rowUnits.includes(u));
+      if (!hasMatch) return false;
+    }
     if (f.warranty) {
       const want = f.warranty === "yes";
       if (r.isWarranty !== want) return false;
