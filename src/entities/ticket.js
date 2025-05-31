@@ -208,12 +208,23 @@ export function useTickets() {
         });
       }
 
-      return (data ?? []).map((r) => {
+      const result = [];
+      for (const r of data ?? []) {
         const atts = (r.attachment_ids || [])
           .map((i) => filesMap[i])
           .filter(Boolean);
-        return mapTicket({ ...r, attachments: atts });
-      });
+        if (atts.length !== (r.attachment_ids || []).length) {
+          const existIds = atts.map((a) => a.id);
+          await supabase
+            .from("tickets")
+            .update({ attachment_ids: existIds })
+            .eq("id", r.id)
+            .eq("project_id", projectId);
+          r.attachment_ids = existIds;
+        }
+        result.push(mapTicket({ ...r, attachments: atts }));
+      }
+      return result;
     },
     staleTime: 5 * 60_000,
     gcTime: 10 * 60_000,
@@ -316,6 +327,15 @@ export function useTicket(ticketId) {
           type: f.file_type,
           attachment_type_id: f.attachment_type_id ?? null,
         }));
+        const existIds = files.map((f) => f.id);
+        if (existIds.length !== data.attachment_ids.length) {
+          await supabase
+            .from("tickets")
+            .update({ attachment_ids: existIds })
+            .eq("id", id)
+            .eq("project_id", projectId);
+          data.attachment_ids = existIds;
+        }
       }
       return data ? mapTicket({ ...data, attachments: atts }) : null;
     },
