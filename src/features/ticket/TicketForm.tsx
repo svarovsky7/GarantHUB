@@ -12,11 +12,9 @@ import {
   DialogActions,
   Typography,
   Box,
-  IconButton,
   FormControl,
   InputLabel,
 } from "@mui/material";
-import DeleteIcon from "@mui/icons-material/DeleteOutline";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs, { Dayjs } from "dayjs";
 
@@ -26,10 +24,10 @@ import { useUnitsByProject } from "@/entities/unit";
 import { useUsers } from "@/entities/user";
 import { useProjects } from "@/entities/project";
 import { useAttachmentTypes } from "@/entities/attachmentType";
-import { useCreateTicket, useTicket } from "@/entities/ticket";
+import { useCreateTicket, useTicket, signedUrl } from "@/entities/ticket";
 import { useProjectId } from "@/shared/hooks/useProjectId";
 import FileDropZone from "@/shared/ui/FileDropZone";
-import AttachmentPreviewList from "@/shared/ui/AttachmentPreviewList";
+import AttachmentEditorList from "@/shared/ui/AttachmentEditorList";
 import type { Ticket } from "@/shared/types/ticket";
 
 interface Attachment {
@@ -40,6 +38,11 @@ interface Attachment {
   type: string;
   attachment_type_id: number | null;
   attachment_type_name?: string;
+}
+
+interface NewFile {
+  file: File;
+  type_id: number | null;
 }
 
 interface TicketFormProps {
@@ -111,7 +114,8 @@ export default function TicketForm({
   const { data: ticket, updateAsync } = useTicket(ticketId);
 
   const [remoteFiles, setRemoteFiles] = useState<Attachment[]>([]);
-  const [newFiles, setNewFiles] = useState<File[]>([]);
+  const [changedTypes, setChangedTypes] = useState<Record<string, number | null>>({});
+  const [newFiles, setNewFiles] = useState<NewFile[]>([]);
   const [removedIds, setRemovedIds] = useState<string[]>([]);
 
   useEffect(() => {
@@ -140,16 +144,26 @@ export default function TicketForm({
         };
       });
       setRemoteFiles(attachmentsWithType);
+      const map = {} as Record<string, number | null>;
+      attachmentsWithType.forEach((f) => {
+        map[f.id] = f.attachment_type_id;
+      });
+      setChangedTypes(map);
     }
   }, [ticket, attachmentTypes, reset]);
 
-  const addFiles = (files: File[]) => setNewFiles((p) => [...p, ...files]);
+  const addFiles = (files: File[]) =>
+    setNewFiles((p) => [...p, ...files.map((f) => ({ file: f, type_id: null }))]);
   const removeNew = (idx: number) =>
     setNewFiles((p) => p.filter((_, i) => i !== idx));
   const removeRemote = (id: string) => {
     setRemoteFiles((p) => p.filter((f) => String(f.id) !== String(id)));
     setRemovedIds((p) => [...p, id]);
   };
+  const changeRemoteType = (id: string, type: number | null) =>
+    setChangedTypes((p) => ({ ...p, [id]: type }));
+  const changeNewType = (idx: number, type: number | null) =>
+    setNewFiles((p) => p.map((f, i) => (i === idx ? { ...f, type_id: type } : f)));
 
   const submit = async (values: TicketFormValues) => {
     const payload = {
@@ -177,17 +191,22 @@ export default function TicketForm({
         ...payload,
         newAttachments: newFiles,
         removedAttachmentIds: removedIds,
+        updatedAttachments: Object.entries(changedTypes).map(([id, type]) => ({
+          id,
+          type_id: type,
+        })),
       });
       onCreated?.();
     } else {
       await create.mutateAsync({
         ...(payload as Ticket),
-        attachments: newFiles.map((f) => ({ file: f, type_id: null })),
+        attachments: newFiles.map((f) => ({ file: f.file, type_id: f.type_id })),
       } as any);
       onCreated?.();
       reset();
       setNewFiles([]);
       setRemoteFiles([]);
+      setChangedTypes({});
       setRemovedIds([]);
     }
   };
@@ -458,11 +477,20 @@ export default function TicketForm({
           <Typography variant="subtitle1" sx={{ mb: 1 }}>
             Файлы
           </Typography>
-          <AttachmentPreviewList
-            remoteFiles={remoteFiles}
-            newFiles={newFiles}
+          <AttachmentEditorList
+            remoteFiles={remoteFiles.map((f) => ({
+              id: f.id,
+              name: f.name,
+              path: f.path,
+              typeId: changedTypes[f.id] ?? f.attachment_type_id,
+            }))}
+            newFiles={newFiles.map((f) => ({ file: f.file, typeId: f.type_id }))}
+            attachmentTypes={attachmentTypes}
             onRemoveRemote={(id) => removeRemote(String(id))}
             onRemoveNew={removeNew}
+            onChangeRemoteType={changeRemoteType}
+            onChangeNewType={changeNewType}
+            getSignedUrl={(path, name) => signedUrl(path, name)}
           />
           <FileDropZone onFiles={addFiles} />
         </Box>
