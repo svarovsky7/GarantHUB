@@ -36,13 +36,6 @@
   },
   {
     "table_name": "attachments",
-    "column_name": "original_name",
-    "data_type": "text",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
-    "table_name": "attachments",
     "column_name": "uploaded_at",
     "data_type": "timestamp with time zone",
     "is_nullable": "YES",
@@ -59,6 +52,13 @@
     "table_name": "attachments",
     "column_name": "attachment_type_id",
     "data_type": "bigint",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "attachments",
+    "column_name": "original_name",
+    "data_type": "text",
     "is_nullable": "YES",
     "column_default": null
   },
@@ -659,13 +659,6 @@
   },
   {
     "table_name": "tickets",
-    "column_name": "unit_id",
-    "data_type": "integer",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
-    "table_name": "tickets",
     "column_name": "title",
     "data_type": "text",
     "is_nullable": "NO",
@@ -751,6 +744,13 @@
   {
     "table_name": "tickets",
     "column_name": "attachment_ids",
+    "data_type": "ARRAY",
+    "is_nullable": "YES",
+    "column_default": "ARRAY[]::integer[]"
+  },
+  {
+    "table_name": "tickets",
+    "column_name": "unit_ids",
     "data_type": "ARRAY",
     "is_nullable": "YES",
     "column_default": "ARRAY[]::integer[]"
