@@ -874,7 +874,18 @@ function CaseFilesTab({ caseData }: CaseFilesTabProps) {
       const data = await getAttachmentsByIds(caseData.attachment_ids || []);
       const arr = data.map((a) => ({
         id: a.id,
-        name: a.storage_path.split('/').pop() || a.storage_path,
+        name:
+          a.original_name ||
+          (() => {
+            try {
+              return decodeURIComponent(
+                a.storage_path.split('/').pop()?.replace(/^\d+_/, '') ||
+                  a.storage_path,
+              );
+            } catch {
+              return a.storage_path;
+            }
+          })(),
         path: a.storage_path,
         url: a.file_url,
         type_id: a.attachment_type_id,
@@ -908,7 +919,18 @@ function CaseFilesTab({ caseData }: CaseFilesTabProps) {
       });
       const newFiles = attachments.map((a) => ({
         id: a.id,
-        name: a.storage_path.split('/').pop() || a.storage_path,
+        name:
+          a.original_name ||
+          (() => {
+            try {
+              return decodeURIComponent(
+                a.storage_path.split('/').pop()?.replace(/^\d+_/, '') ||
+                  a.storage_path,
+              );
+            } catch {
+              return a.storage_path;
+            }
+          })(),
         path: a.storage_path,
         url: a.file_url,
         type_id: a.attachment_type_id,

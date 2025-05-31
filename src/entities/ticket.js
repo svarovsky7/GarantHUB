@@ -120,13 +120,15 @@ function mapTicket(r) {
   const atts = Array.isArray(r.attachments) ? r.attachments : [];
 
   const attachments = atts.map((a) => {
-    let name = a.storage_path;
-    try {
-      name = decodeURIComponent(
-        a.storage_path.split("/").pop()?.replace(/^\d+_/, "") || a.storage_path,
-      );
-    } catch {
-      /* ignore */
+    let name = a.original_name;
+    if (!name) {
+      try {
+        name = decodeURIComponent(
+          a.storage_path.split("/").pop()?.replace(/^\d+_/, "") || a.storage_path,
+        );
+      } catch {
+        name = a.storage_path;
+      }
     }
     return {
       id: a.id,
@@ -200,7 +202,18 @@ export function useTickets() {
           filesMap[f.id] = {
             id: f.id,
             path: f.storage_path,
-            name: f.storage_path.split("/").pop() || f.storage_path,
+            name:
+              f.original_name ||
+              (() => {
+                try {
+                  return decodeURIComponent(
+                    f.storage_path.split("/").pop()?.replace(/^\d+_/, "") ||
+                      f.storage_path,
+                  );
+                } catch {
+                  return f.storage_path;
+                }
+              })(),
             url: f.file_url,
             type: f.file_type,
             attachment_type_id: f.attachment_type_id ?? null,
@@ -322,7 +335,18 @@ export function useTicket(ticketId) {
         atts = files.map((f) => ({
           id: f.id,
           path: f.storage_path,
-          name: f.storage_path.split("/").pop() || f.storage_path,
+          name:
+            f.original_name ||
+            (() => {
+              try {
+                return decodeURIComponent(
+                  f.storage_path.split("/").pop()?.replace(/^\d+_/, "") ||
+                    f.storage_path,
+                );
+              } catch {
+                return f.storage_path;
+              }
+            })(),
           url: f.file_url,
           type: f.file_type,
           attachment_type_id: f.attachment_type_id ?? null,

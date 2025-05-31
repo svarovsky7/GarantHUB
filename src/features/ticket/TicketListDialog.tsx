@@ -139,11 +139,11 @@ export default function TicketListDialog({
   const handleDownload = async (a) => {
     try {
       setDownloadingId(a.id);
-      const filename = a.storage_path.split("/").pop() || "attachment";
+      const filename = a.original_name || a.storage_path.split("/").pop() || "attachment";
       const url = await signedUrl(a.storage_path, filename);
       const link = document.createElement("a");
       link.href = url;
-      link.download = filename;
+          link.download = filename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -240,7 +240,7 @@ export default function TicketListDialog({
                                 downloadingId === a.id ? (
                                   <CircularProgress size={16} />
                                 ) : (
-                                  a.storage_path.split('/').pop() || 'file'
+                                  a.original_name || a.storage_path.split('/').pop() || 'file'
                                 )
                               }
                               size="small"
