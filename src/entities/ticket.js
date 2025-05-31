@@ -372,6 +372,7 @@ export function useTicket(ticketId) {
       id: updId,
       newAttachments = [],
       removedAttachmentIds = [],
+      updatedAttachments = [],
       ...updates
     }) => {
       if (!updId) throw new Error("ID тикета обязателен");
@@ -411,10 +412,21 @@ export function useTicket(ticketId) {
         if (error) throw error;
       }
 
+      if (updatedAttachments.length) {
+        for (const a of updatedAttachments) {
+          await supabase
+            .from("attachments")
+            .update({ attachment_type_id: a.type_id })
+            .eq("id", Number(a.id));
+        }
+      }
+
       // новые вложения
       if (newAttachments.length) {
         const uploaded = await addTicketAttachments(
-          newAttachments.map((f) => ({ file: f, type_id: null })),
+          newAttachments.map((f) =>
+            "file" in f ? { file: f.file, type_id: f.type_id ?? null } : { file: f, type_id: null },
+          ),
           projectId,
           updId,
         );
@@ -424,7 +436,8 @@ export function useTicket(ticketId) {
       if (
         Object.keys(updates).length ||
         removedAttachmentIds.length ||
-        newAttachments.length
+        newAttachments.length ||
+        updatedAttachments.length
       ) {
         const { error } = await supabase
           .from("tickets")
