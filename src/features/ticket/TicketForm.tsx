@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import {
   Stack,
@@ -26,6 +26,7 @@ import { useProjects } from "@/entities/project";
 import { useAttachmentTypes } from "@/entities/attachmentType";
 import { useCreateTicket, useTicket, signedUrl } from "@/entities/ticket";
 import { useProjectId } from "@/shared/hooks/useProjectId";
+import { useDebouncedEffect } from "@/shared/hooks/useDebouncedEffect";
 import AttachmentEditorTable from "@/shared/ui/AttachmentEditorTable";
 import type { Ticket } from "@/shared/types/ticket";
 
@@ -166,6 +167,51 @@ export default function TicketForm({
     setChangedTypes((p) => ({ ...p, [id]: type }));
   const changeNewType = (idx: number, type: number | null) =>
     setNewFiles((p) => p.map((f, i) => (i === idx ? { ...f, type_id: type } : f)));
+
+  /** Последние сохранённые значения для предотвращения лишних запросов */
+  const lastPayload = useRef<string>("");
+
+  const watchAll = watch();
+
+  useDebouncedEffect(() => {
+    if (!isEdit || !ticketId) return;
+    const values = getValues();
+    const payload = {
+      project_id: values.project_id ?? globalProjectId,
+      unit_ids: values.unit_ids,
+      type_id: values.type_id,
+      status_id: values.status_id,
+      title: values.title,
+      description: values.description || null,
+      customer_request_no: values.customer_request_no || null,
+      customer_request_date: values.customer_request_date
+        ? values.customer_request_date.format("YYYY-MM-DD")
+        : null,
+      responsible_engineer_id: values.responsible_engineer_id ?? null,
+      is_warranty: values.is_warranty,
+      received_at: values.received_at
+        ? values.received_at.format("YYYY-MM-DD")
+        : dayjs().format("YYYY-MM-DD"),
+      fixed_at: values.fixed_at ? values.fixed_at.format("YYYY-MM-DD") : null,
+    };
+
+    const json = JSON.stringify({ payload, newFiles, removedIds, changedTypes });
+    if (json === lastPayload.current) return;
+    lastPayload.current = json;
+
+    updateAsync({
+      id: Number(ticketId),
+      ...payload,
+      newAttachments: newFiles,
+      removedAttachmentIds: removedIds,
+      updatedAttachments: Object.entries(changedTypes).map(([id, type]) => ({
+        id,
+        type_id: type,
+      })),
+    });
+    setNewFiles([]);
+    setRemovedIds([]);
+  }, [watchAll, newFiles, removedIds, changedTypes]);
 
   const submit = async (values: TicketFormValues) => {
     const payload = {
@@ -526,14 +572,16 @@ export default function TicketForm({
           <Button variant="text" onClick={onCancel} disabled={isSubmitting}>
             Отмена
           </Button>
-          <Button
-            type="submit"
-            variant="contained"
-            disabled={isSubmitting}
-            startIcon={isSubmitting && <CircularProgress size={18} />}
-          >
-            Сохранить
-          </Button>
+          {!isEdit && (
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={isSubmitting}
+              startIcon={isSubmitting && <CircularProgress size={18} />}
+            >
+              Сохранить
+            </Button>
+          )}
         </DialogActions>
       </Stack>
     </form>
