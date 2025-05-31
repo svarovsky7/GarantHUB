@@ -151,7 +151,7 @@ export default function TicketsTable({ tickets, filters, loading, onView }) {
           (a.customerRequestNo || "").localeCompare(b.customerRequestNo || ""),
       },
       {
-        title: "Дата регистрации заявки",
+        title: "Дата заявки Заказчика",
         dataIndex: "customerRequestDate",
         width: 160,
         sorter: (a, b) =>

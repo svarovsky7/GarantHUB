@@ -60,7 +60,7 @@ export default function TicketsFilters({ options, onChange }) {
       <Form.Item name="requestNo" label="№ заявки от Заказчика">
         <Input />
       </Form.Item>
-      <Form.Item name="requestPeriod" label="Дата заявки">
+      <Form.Item name="requestPeriod" label="Дата заявки Заказчика">
         <RangePicker format="DD.MM.YYYY" style={{ width: "100%" }} />
       </Form.Item>
       <Form.Item name="responsible" label="Ответственный инженер">
