@@ -50,6 +50,8 @@ interface TicketFormProps {
   onCreated?: () => void;
   onCancel?: () => void;
   embedded?: boolean;
+  /** Предустановленный ID квартиры */
+  initialUnitId?: number;
 }
 
 interface TicketFormValues {
@@ -76,6 +78,7 @@ export default function TicketForm({
   onCreated,
   onCancel,
   embedded = false,
+  initialUnitId,
 }: TicketFormProps) {
   const globalProjectId = useProjectId();
   const {
@@ -89,7 +92,7 @@ export default function TicketForm({
   } = useForm<TicketFormValues>({
     defaultValues: {
       project_id: globalProjectId ?? null,
-      unit_ids: [],
+      unit_ids: initialUnitId != null ? [initialUnitId] : [],
       responsible_engineer_id: null,
       status_id: null,
       type_id: null,
@@ -173,9 +176,10 @@ export default function TicketForm({
 
   const watchAll = watch();
 
-  useDebouncedEffect(() => {
-    if (!isEdit || !ticketId) return;
-    const values = getValues();
+  useDebouncedEffect(
+    () => {
+      if (!isEdit || !ticketId) return;
+      const values = getValues();
     const payload = {
       project_id: values.project_id ?? globalProjectId,
       unit_ids: values.unit_ids,
@@ -211,7 +215,10 @@ export default function TicketForm({
     });
     setNewFiles([]);
     setRemovedIds([]);
-  }, [watchAll, newFiles, removedIds, changedTypes]);
+  },
+    [watchAll, newFiles, removedIds, changedTypes],
+    1000,
+  );
 
   const submit = async (values: TicketFormValues) => {
     const payload = {
@@ -276,7 +283,9 @@ export default function TicketForm({
                 value={field.value ?? ""}
                 onChange={(e) =>
                   field.onChange(
-                    e.target.value === "" ? null : Number(e.target.value),
+                    (e.target.value as string) === ""
+                      ? null
+                      : Number(e.target.value as string),
                   )
                 }
               >
@@ -336,7 +345,9 @@ export default function TicketForm({
                 displayEmpty
                 value={field.value ?? ""}
                 onChange={(e) =>
-                  field.onChange(e.target.value === "" ? null : e.target.value)
+                  field.onChange(
+                    (e.target.value as string) === "" ? null : (e.target.value as string)
+                  )
                 }
               >
                 {!isEdit && (
@@ -368,7 +379,9 @@ export default function TicketForm({
                 value={field.value ?? ""}
                 onChange={(e) =>
                   field.onChange(
-                    e.target.value === "" ? null : Number(e.target.value),
+                    (e.target.value as string) === ""
+                      ? null
+                      : Number(e.target.value as string),
                   )
                 }
               >
@@ -401,7 +414,9 @@ export default function TicketForm({
                 value={field.value ?? ""}
                 onChange={(e) =>
                   field.onChange(
-                    e.target.value === "" ? null : Number(e.target.value),
+                    (e.target.value as string) === ""
+                      ? null
+                      : Number(e.target.value as string),
                   )
                 }
               >

@@ -222,7 +222,7 @@ export function useDeleteLetter() {
             .from(ATTACH_TABLE)
             .select('id, storage_path')
             .in('id', ids)
-        : { data: [], error: null };
+        : { data: [] };
       const paths = (attach ?? []).map((a) => a.storage_path).filter(Boolean);
       if (paths.length) {
         await supabase.storage.from(ATTACH_BUCKET).remove(paths);

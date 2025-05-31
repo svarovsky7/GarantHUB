@@ -26,8 +26,16 @@ const statusColor: Record<string, 'warning' | 'success' | 'error' | 'info'> = {
   settled: 'info',
 };
 
+interface CourtCaseRow extends CourtCase {
+  project_object?: string;
+  plaintiff?: string;
+  defendant?: string;
+  responsible_lawyer?: string | null;
+  claim_amount?: number | null;
+}
+
 interface Props {
-  cases: CourtCase[];
+  cases: CourtCaseRow[];
   loading: boolean;
   onView: (c: CourtCase) => void;
   onDelete: (c: CourtCase) => void;
@@ -58,10 +66,10 @@ export default function CourtCasesTable({ cases, loading, onView, onDelete }: Pr
           <TableRow key={c.id} hover>
             <TableCell>{c.number}</TableCell>
             <TableCell>{dayjs(c.date).format('DD.MM.YYYY')}</TableCell>
-            <TableCell>{c.project_object}</TableCell>
-            <TableCell>{c.plaintiff}</TableCell>
-            <TableCell>{c.defendant}</TableCell>
-            <TableCell>{c.responsible_lawyer}</TableCell>
+            <TableCell>{c.project_object ?? '-'}</TableCell>
+            <TableCell>{c.plaintiff ?? c.plaintiff_id}</TableCell>
+            <TableCell>{c.defendant ?? c.defendant_id}</TableCell>
+            <TableCell>{c.responsible_lawyer ?? c.responsible_lawyer_id ?? ''}</TableCell>
             <TableCell>
               <Chip size="small" label={statusText[c.status]} color={statusColor[c.status]} />
             </TableCell>
