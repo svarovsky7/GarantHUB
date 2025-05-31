@@ -13,6 +13,8 @@ import {
   Typography,
   Box,
   IconButton,
+  FormControl,
+  InputLabel,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/DeleteOutline';
 import { DatePicker } from '@mui/x-date-pickers';
@@ -26,6 +28,7 @@ import { useProjects } from '@/entities/project';
 import { useCreateTicket, useTicket } from '@/entities/ticket';
 import { useProjectId } from '@/shared/hooks/useProjectId';
 import FileDropZone from '@/shared/ui/FileDropZone';
+import AttachmentPreviewList from '@/shared/ui/AttachmentPreviewList';
 import type { Ticket } from '@/shared/types/ticket';
 
 interface Attachment {
@@ -184,57 +187,77 @@ export default function TicketForm({
           name="project_id"
           control={control}
           render={({ field }) => (
-            <Select {...field} fullWidth displayEmpty>
-              <MenuItem value="">
-                <em>Не выбрано</em>
-              </MenuItem>
-              {projects.map((p) => (
-                <MenuItem key={p.id} value={p.id}>
-                  {p.name}
+            <FormControl fullWidth>
+              <InputLabel id="project-label">Проект</InputLabel>
+              <Select
+                {...field}
+                labelId="project-label"
+                label="Проект"
+                displayEmpty
+              >
+                <MenuItem value="">
+                  <em>Не выбрано</em>
                 </MenuItem>
-              ))}
-            </Select>
+                {projects.map((p) => (
+                  <MenuItem key={p.id} value={p.id}>
+                    {p.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           )}
         />
         <Controller
           name="unit_ids"
           control={control}
           render={({ field }) => (
-            <Select
-              {...field}
-              multiple
-              fullWidth
-              value={field.value}
-              onChange={(e) =>
-                field.onChange(
-                  typeof e.target.value === 'string'
-                    ? e.target.value.split(',').map(Number)
-                    : e.target.value,
-                )
-              }
-            >
-              {units.map((u) => (
-                <MenuItem key={u.id} value={u.id}>
-                  {u.name}
-                </MenuItem>
-              ))}
-            </Select>
+            <FormControl fullWidth>
+              <InputLabel id="units-label">Объекты</InputLabel>
+              <Select
+                {...field}
+                labelId="units-label"
+                label="Объекты"
+                multiple
+                value={field.value}
+                onChange={(e) =>
+                  field.onChange(
+                    typeof e.target.value === 'string'
+                      ? e.target.value.split(',').map(Number)
+                      : e.target.value,
+                  )
+                }
+              >
+                {units.map((u) => (
+                  <MenuItem key={u.id} value={u.id}>
+                    {u.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           )}
         />
         <Controller
           name="responsible_engineer_id"
           control={control}
           render={({ field }) => (
-            <Select {...field} fullWidth displayEmpty>
-              <MenuItem value="">
-                <em>Не указано</em>
-              </MenuItem>
-              {users.map((u) => (
-                <MenuItem key={u.id} value={u.id}>
-                  {u.name}
+            <FormControl fullWidth>
+              <InputLabel id="engineer-label">Ответственный инженер</InputLabel>
+              <Select
+                {...field}
+                labelId="engineer-label"
+                label="Ответственный инженер"
+                displayEmpty
+              >
+                <MenuItem value="">
+                  <em>Не указано</em>
                 </MenuItem>
-              ))}
-            </Select>
+                {users.map((u) => (
+                  <MenuItem key={u.id} value={u.id}>
+                    {u.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           )}
         />
         <Controller
@@ -242,16 +265,24 @@ export default function TicketForm({
           control={control}
           rules={{ required: true }}
           render={({ field, fieldState }) => (
-            <Select {...field} fullWidth error={!!fieldState.error} displayEmpty>
-              <MenuItem value="">
-                <em>Статус не выбран</em>
-              </MenuItem>
-              {statuses.map((s) => (
-                <MenuItem key={s.id} value={s.id}>
-                  {s.name}
+            <FormControl fullWidth error={!!fieldState.error}>
+              <InputLabel id="status-label">Статус</InputLabel>
+              <Select
+                {...field}
+                labelId="status-label"
+                label="Статус"
+                displayEmpty
+              >
+                <MenuItem value="">
+                  <em>Статус не выбран</em>
                 </MenuItem>
-              ))}
-            </Select>
+                {statuses.map((s) => (
+                  <MenuItem key={s.id} value={s.id}>
+                    {s.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           )}
         />
         <Controller
@@ -259,16 +290,24 @@ export default function TicketForm({
           control={control}
           rules={{ required: true }}
           render={({ field, fieldState }) => (
-            <Select {...field} fullWidth error={!!fieldState.error} displayEmpty>
-              <MenuItem value="">
-                <em>Тип не выбран</em>
-              </MenuItem>
-              {types.map((t) => (
-                <MenuItem key={t.id} value={t.id}>
-                  {t.name}
+            <FormControl fullWidth error={!!fieldState.error}>
+              <InputLabel id="type-label">Тип</InputLabel>
+              <Select
+                {...field}
+                labelId="type-label"
+                label="Тип"
+                displayEmpty
+              >
+                <MenuItem value="">
+                  <em>Тип не выбран</em>
                 </MenuItem>
-              ))}
-            </Select>
+                {types.map((t) => (
+                  <MenuItem key={t.id} value={t.id}>
+                    {t.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           )}
         />
         <Controller
@@ -381,22 +420,12 @@ export default function TicketForm({
           <Typography variant="subtitle1" sx={{ mb: 1 }}>
             Файлы
           </Typography>
-          {remoteFiles.map((f) => (
-            <Box key={f.id} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-              <Typography sx={{ flexGrow: 1 }}>{f.name}</Typography>
-              <IconButton onClick={() => removeRemote(String(f.id))}>
-                <DeleteIcon />
-              </IconButton>
-            </Box>
-          ))}
-          {newFiles.map((f, i) => (
-            <Box key={i} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-              <Typography sx={{ flexGrow: 1 }}>{f.name}</Typography>
-              <IconButton onClick={() => removeNew(i)}>
-                <DeleteIcon />
-              </IconButton>
-            </Box>
-          ))}
+          <AttachmentPreviewList
+            remoteFiles={remoteFiles}
+            newFiles={newFiles}
+            onRemoveRemote={(id) => removeRemote(String(id))}
+            onRemoveNew={removeNew}
+          />
           <FileDropZone onFiles={addFiles} />
         </Box>
         <DialogActions sx={{ px: 0 }}>

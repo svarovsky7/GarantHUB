@@ -74,7 +74,7 @@ export default function AttachmentPreviewList({
           <ListItemIcon>
             <FileIcon />
           </ListItemIcon>
-          <ListItemText primary={f.name} />
+          <ListItemText primary={f.name} secondary={f.type} />
         </ListItem>
       ))}
 
@@ -101,7 +101,7 @@ export default function AttachmentPreviewList({
           </ListItemIcon>
           <ListItemText
             primary={f.name}
-            secondary={`${(f.size / 1024).toFixed(1)} KB`}
+            secondary={`${(f.size / 1024).toFixed(1)} KB${f.type ? `, ${f.type}` : ''}`}
           />
         </ListItem>
       ))}
