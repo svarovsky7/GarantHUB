@@ -162,7 +162,7 @@ export default function TicketForm({
     if (ticketId) {
       await updateAsync({
         id: Number(ticketId),
-        updates: payload,
+        ...payload,
         newAttachments: newFiles,
         removedAttachmentIds: removedIds,
       });
