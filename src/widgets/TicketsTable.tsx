@@ -37,7 +37,6 @@ const daysPassed = (receivedAt) =>
 const applyFilters = (rows, f) =>
   rows.filter((r) => {
     const days = daysPassed(r.receivedAt);
-    if (f.ticketId && String(r.id) !== String(f.ticketId)) return false;
     if (f.period && f.period.length === 2) {
       const [from, to] = f.period;
       if (!r.receivedAt) return false;
@@ -54,7 +53,6 @@ const applyFilters = (rows, f) =>
         return false;
     }
     if (f.requestNo && r.customerRequestNo !== f.requestNo) return false;
-    if (f.days && days !== Number(f.days)) return false;
     if (f.project && r.projectName !== f.project) return false;
     if (f.unit && !r.unitNames.includes(f.unit)) return false;
     if (f.warranty) {
@@ -63,7 +61,6 @@ const applyFilters = (rows, f) =>
     }
     if (f.status && r.statusName !== f.status) return false;
     if (f.type && r.typeName !== f.type) return false;
-    if (f.author && r.createdByName !== f.author) return false;
     if (f.responsible && r.responsibleEngineerName !== f.responsible)
       return false;
     return true;

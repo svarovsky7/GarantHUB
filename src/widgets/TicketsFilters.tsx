@@ -36,7 +36,7 @@ export default function TicketsFilters({ options, onChange }) {
         alignItems: "end",
       }}
     >
-      <Form.Item name="period" label="Период">
+      <Form.Item name="period" label="Период получения замечаний">
         <RangePicker format="DD.MM.YYYY" style={{ width: "100%" }} />
       </Form.Item>
       <Form.Item name="project" label="Проект">
@@ -57,20 +57,11 @@ export default function TicketsFilters({ options, onChange }) {
       <Form.Item name="type" label="Тип замечания">
         <Select allowClear options={options.types} />
       </Form.Item>
-      <Form.Item name="author" label="Кем добавлено">
-        <Select allowClear options={options.authors} />
-      </Form.Item>
-      <Form.Item name="ticketId" label="Номер замечания">
-        <Input placeholder="ID" />
-      </Form.Item>
       <Form.Item name="requestNo" label="№ заявки от Заказчика">
         <Input />
       </Form.Item>
-      <Form.Item name="requestPeriod" label="Дата регистрации заявки">
+      <Form.Item name="requestPeriod" label="Дата заявки">
         <RangePicker format="DD.MM.YYYY" style={{ width: "100%" }} />
-      </Form.Item>
-      <Form.Item name="days" label="Прошло дней с Даты получения">
-        <Input />
       </Form.Item>
       <Form.Item name="responsible" label="Ответственный инженер">
         <Select allowClear options={options.responsibleEngineers} />

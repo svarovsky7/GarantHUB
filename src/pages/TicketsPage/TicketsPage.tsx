@@ -75,7 +75,6 @@ export default function TicketsPage() {
       units: uniq(ticketsWithNames, "unitNames"),
       statuses: uniq(ticketsWithNames, "statusName"),
       types: uniq(ticketsWithNames, "typeName"),
-      authors: uniq(ticketsWithNames, "createdByName"),
       responsibleEngineers: uniq(ticketsWithNames, "responsibleEngineerName"),
     };
   }, [ticketsWithNames]);
