@@ -6,6 +6,12 @@ import { Form, DatePicker, Select, Input, Button } from "antd";
 const { RangePicker } = DatePicker;
 const { Option } = Select;
 
+/**
+ * Фильтры таблицы замечаний.
+ * @param options списки для Select
+ * @param onChange callback, возвращающий значения формы
+ */
+
 export default function TicketsFilters({ options, onChange }) {
   const [form] = Form.useForm();
 
@@ -42,8 +48,8 @@ export default function TicketsFilters({ options, onChange }) {
       <Form.Item name="project" label="Проект">
         <Select allowClear options={options.projects} />
       </Form.Item>
-      <Form.Item name="unit" label="Объект">
-        <Select allowClear options={options.units} />
+      <Form.Item name="units" label="Объекты">
+        <Select mode="multiple" allowClear options={options.units} />
       </Form.Item>
       <Form.Item name="warranty" label="Гарантия">
         <Select allowClear>
