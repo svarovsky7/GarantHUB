@@ -81,10 +81,70 @@ export default function TicketsTable({ tickets, filters, loading, onView }) {
   const columns: ColumnsType<any> = useMemo(
     () => [
       {
-        title: "Номер замечания",
-        dataIndex: "id",
-        width: 100,
-        sorter: (a, b) => a.id - b.id,
+        title: "Проект",
+        dataIndex: "projectName",
+        width: 180,
+        sorter: (a, b) => a.projectName.localeCompare(b.projectName),
+      },
+      {
+        title: "Объекты",
+        dataIndex: "unitNames",
+        width: 160,
+        sorter: (a, b) => a.unitNames.localeCompare(b.unitNames),
+      },
+      {
+        title: "Гарантия",
+        dataIndex: "isWarranty",
+        width: 110,
+        sorter: (a, b) => Number(a.isWarranty) - Number(b.isWarranty),
+        render: (v) =>
+          v ? (
+            <Tag icon={<CheckCircleTwoTone twoToneColor="#52c41a" />} color="success">
+              Да
+            </Tag>
+          ) : (
+            <Tag icon={<CloseCircleTwoTone twoToneColor="#eb2f96" />} color="default">
+              Нет
+            </Tag>
+          ),
+      },
+      {
+        title: "Статус",
+        dataIndex: "statusName",
+        width: 140,
+        sorter: (a, b) => a.statusName.localeCompare(b.statusName),
+        render: (_, row) => <Tag color={row.statusColor || "default"}>{row.statusName}</Tag>,
+      },
+      {
+        title: "Тип замечания",
+        dataIndex: "typeName",
+        width: 160,
+        sorter: (a, b) => a.typeName.localeCompare(b.typeName),
+      },
+      {
+        title: "Прошло дней с Даты получения",
+        dataIndex: "days",
+        width: 120,
+        sorter: (a, b) => (a.days ?? -1) - (b.days ?? -1),
+      },
+      {
+        title: "Дата получения",
+        dataIndex: "receivedAt",
+        width: 140,
+        defaultSortOrder: "descend" as const,
+        sorter: (a, b) =>
+          (a.receivedAt ? a.receivedAt.valueOf() : 0) -
+          (b.receivedAt ? b.receivedAt.valueOf() : 0),
+        render: (v) => fmt(v),
+      },
+      {
+        title: "Дата устранения",
+        dataIndex: "fixedAt",
+        width: 140,
+        sorter: (a, b) =>
+          (a.fixedAt ? a.fixedAt.valueOf() : 0) -
+          (b.fixedAt ? b.fixedAt.valueOf() : 0),
+        render: (v) => fmt(v),
       },
       {
         title: "№ заявки от Заказчика",
@@ -103,94 +163,11 @@ export default function TicketsTable({ tickets, filters, loading, onView }) {
         render: (v) => fmt(v),
       },
       {
-        title: "Дата получения",
-        dataIndex: "receivedAt",
-        width: 140,
-        defaultSortOrder: "descend" as const,
-        sorter: (a, b) =>
-          (a.receivedAt ? a.receivedAt.valueOf() : 0) -
-          (b.receivedAt ? b.receivedAt.valueOf() : 0),
-        render: (v) => fmt(v),
-      },
-      {
-        title: "Прошло дней с Даты получения",
-        dataIndex: "days",
-        width: 120,
-        sorter: (a, b) => (a.days ?? -1) - (b.days ?? -1),
-      },
-      {
-        title: "Дата устранения",
-        dataIndex: "fixedAt",
-        width: 140,
-        sorter: (a, b) =>
-          (a.fixedAt ? a.fixedAt.valueOf() : 0) -
-          (b.fixedAt ? b.fixedAt.valueOf() : 0),
-        render: (v) => fmt(v),
-      },
-      {
-        title: "Проект",
-        dataIndex: "projectName",
-        width: 180,
-        sorter: (a, b) => a.projectName.localeCompare(b.projectName),
-      },
-      {
-        title: "Кем добавлено",
-        dataIndex: "createdByName",
-        width: 160,
-        sorter: (a, b) =>
-          (a.createdByName || "").localeCompare(b.createdByName || ""),
-      },
-      {
-        title: "Объекты",
-        dataIndex: "unitNames",
-        width: 160,
-        sorter: (a, b) => a.unitNames.localeCompare(b.unitNames),
-      },
-      {
-        title: "Статус",
-        dataIndex: "statusName",
-        width: 140,
-        sorter: (a, b) => a.statusName.localeCompare(b.statusName),
-        render: (_, row) => (
-          <Tag color={row.statusColor || "default"}>{row.statusName}</Tag>
-        ),
-      },
-      {
-        title: "Гарантия",
-        dataIndex: "isWarranty",
-        width: 110,
-        sorter: (a, b) => Number(a.isWarranty) - Number(b.isWarranty),
-        render: (v) =>
-          v ? (
-            <Tag
-              icon={<CheckCircleTwoTone twoToneColor="#52c41a" />}
-              color="success"
-            >
-              Да
-            </Tag>
-          ) : (
-            <Tag
-              icon={<CloseCircleTwoTone twoToneColor="#eb2f96" />}
-              color="default"
-            >
-              Нет
-            </Tag>
-          ),
-      },
-      {
         title: "Ответственный инженер",
         dataIndex: "responsibleEngineerName",
         width: 180,
         sorter: (a, b) =>
-          (a.responsibleEngineerName || "").localeCompare(
-            b.responsibleEngineerName || "",
-          ),
-      },
-      {
-        title: "Тип замечания",
-        dataIndex: "typeName",
-        width: 160,
-        sorter: (a, b) => a.typeName.localeCompare(b.typeName),
+          (a.responsibleEngineerName || "").localeCompare(b.responsibleEngineerName || ""),
       },
       {
         title: "Действия",
@@ -216,13 +193,7 @@ export default function TicketsTable({ tickets, filters, loading, onView }) {
               }}
               disabled={isPending}
             >
-              <Button
-                size="small"
-                type="text"
-                danger
-                icon={<DeleteOutlined />}
-                loading={isPending}
-              />
+              <Button size="small" type="text" danger icon={<DeleteOutlined />} loading={isPending} />
             </Popconfirm>
           </Space>
         ),
