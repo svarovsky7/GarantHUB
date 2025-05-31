@@ -47,18 +47,20 @@ export function useLetters() {
       if (allIds.length) {
         const { data: files, error: attErr } = await supabase
           .from(ATTACH_TABLE)
-          .select('id, storage_path, file_url, file_type, attachment_type_id')
+          .select('id, storage_path, file_url, file_type, attachment_type_id, original_name')
           .in('id', allIds);
         if (attErr) throw attErr;
         (files ?? []).forEach((a: any) => {
-          let name = a.storage_path;
-          try {
-            name = decodeURIComponent(
-              a.storage_path.split('/').pop()?.replace(/^\d+_/, '') ||
-                a.storage_path,
-            );
-          } catch {
-            /* ignore */
+          let name = a.original_name;
+          if (!name) {
+            try {
+              name = decodeURIComponent(
+                a.storage_path.split('/').pop()?.replace(/^\d+_/, '') ||
+                  a.storage_path,
+              );
+            } catch {
+              name = a.storage_path;
+            }
           }
           attachmentsMap[a.id] = {
             id: String(a.id),
@@ -151,7 +153,18 @@ export function useAddLetter() {
         );
         files = uploaded.map((u) => ({
           id: String(u.id),
-          name: u.storage_path.split('/').pop() || u.storage_path,
+          name:
+            u.original_name ||
+            (() => {
+              try {
+                return decodeURIComponent(
+                  u.storage_path.split('/').pop()?.replace(/^\d+_/, '') ||
+                    u.storage_path,
+                );
+              } catch {
+                return u.storage_path;
+              }
+            })(),
           file_type: u.file_type,
           storage_path: u.storage_path,
           file_url: u.file_url,
