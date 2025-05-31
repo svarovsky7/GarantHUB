@@ -5,11 +5,11 @@
  * Использовать для приведения всех FK перед отправкой в insert/update.
  */
 export function fixForeignKeys<T extends Record<string, any>>(obj: T, keys: string[]): T {
-    const newObj = { ...obj };
+    const newObj = { ...obj } as Record<string, any>;
     keys.forEach((key) => {
         if (newObj[key] === 0 || newObj[key] === '' || newObj[key] === undefined) {
             newObj[key] = null;
         }
     });
-    return newObj;
+    return newObj as T;
 }
