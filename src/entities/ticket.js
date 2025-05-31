@@ -498,3 +498,35 @@ export function useAllTicketsSimple() {
     staleTime: 5 * 60_000,
   });
 }
+
+// -----------------------------------------------------------------------------
+// Обновить статус замечания
+// -----------------------------------------------------------------------------
+export function useUpdateTicketStatus() {
+  const projectId = useProjectId();
+  const qc = useQueryClient();
+  const notify = useNotify();
+
+  return useMutation({
+    mutationFn: async ({ id, statusId }) => {
+      const { data, error } = await supabase
+        .from("tickets")
+        .update({ status_id: statusId })
+        .eq("id", id)
+        .eq("project_id", projectId)
+        .select("id, status_id")
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ["tickets", projectId] });
+      qc.invalidateQueries({
+        queryKey: ["ticket", vars.id, projectId],
+        exact: true,
+      });
+      notify.success("Статус обновлён");
+    },
+    onError: (e) => notify.error(`Ошибка обновления статуса: ${e.message}`),
+  });
+}

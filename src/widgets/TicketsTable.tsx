@@ -21,6 +21,7 @@ import {
 } from "@ant-design/icons";
 
 import { useDeleteTicket } from "@/entities/ticket";
+import TicketStatusSelect from "@/features/ticket/TicketStatusSelect";
 
 /** Форматирование даты */
 const fmt = (d, withTime = false) =>
@@ -111,10 +112,12 @@ export default function TicketsTable({ tickets, filters, loading, onView }) {
       },
       {
         title: "Статус",
-        dataIndex: "statusName",
-        width: 140,
+        dataIndex: "statusId",
+        width: 160,
         sorter: (a, b) => a.statusName.localeCompare(b.statusName),
-        render: (_, row) => <Tag color={row.statusColor || "default"}>{row.statusName}</Tag>,
+        render: (_, row) => (
+          <TicketStatusSelect ticketId={row.id} statusId={row.statusId} />
+        ),
       },
       {
         title: "Тип замечания",
