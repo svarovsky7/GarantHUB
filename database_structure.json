@@ -280,6 +280,34 @@
     "column_default": "ARRAY[]::integer[]"
   },
   {
+    "table_name": "defect_deadlines",
+    "column_name": "id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "defect_deadlines",
+    "column_name": "project_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "defect_deadlines",
+    "column_name": "ticket_type_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "defect_deadlines",
+    "column_name": "fix_days",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
     "table_name": "defects",
     "column_name": "id",
     "data_type": "bigint",
@@ -816,34 +844,6 @@
     "column_name": "person_id",
     "data_type": "uuid",
     "is_nullable": "YES",
-    "column_default": null
-  }
-  {
-    "table_name": "defect_deadlines",
-    "column_name": "id",
-    "data_type": "integer",
-    "is_nullable": "NO",
-    "column_default": "nextval('defect_deadlines_id_seq'::regclass)"
-  },
-  {
-    "table_name": "defect_deadlines",
-    "column_name": "project_id",
-    "data_type": "integer",
-    "is_nullable": "NO",
-    "column_default": null
-  },
-  {
-    "table_name": "defect_deadlines",
-    "column_name": "ticket_type_id",
-    "data_type": "integer",
-    "is_nullable": "NO",
-    "column_default": null
-  },
-  {
-    "table_name": "defect_deadlines",
-    "column_name": "fix_days",
-    "data_type": "integer",
-    "is_nullable": "NO",
     "column_default": null
   }
 ]
