@@ -483,8 +483,14 @@ export default function TicketForm({
               name: f.name,
               path: f.path,
               typeId: changedTypes[f.id] ?? f.attachment_type_id,
+              typeName: f.attachment_type_name,
+              mime: f.type,
             }))}
-            newFiles={newFiles.map((f) => ({ file: f.file, typeId: f.type_id }))}
+            newFiles={newFiles.map((f) => ({
+              file: f.file,
+              typeId: f.type_id,
+              mime: f.file.type,
+            }))}
             attachmentTypes={attachmentTypes}
             onRemoveRemote={(id) => removeRemote(String(id))}
             onRemoveNew={removeNew}
