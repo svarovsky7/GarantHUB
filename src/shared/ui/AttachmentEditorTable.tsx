@@ -121,11 +121,14 @@ export default function AttachmentEditorTable({
                   </MenuItem>
                 ))}
               </Select>
-              {f.typeName && (
-                <span style={{ marginLeft: 8, fontSize: '0.8em' }}>{f.typeName}</span>
-              )}
-              {f.mime && !f.typeName && (
-                <span style={{ marginLeft: 8, fontSize: '0.8em' }}>{f.mime}</span>
+              {!onChangeRemoteType && (
+                f.typeName ? (
+                  <span style={{ marginLeft: 8, fontSize: '0.8em' }}>{f.typeName}</span>
+                ) : (
+                  f.mime && (
+                    <span style={{ marginLeft: 8, fontSize: '0.8em' }}>{f.mime}</span>
+                  )
+                )
               )}
             </TableCell>
             <TableCell align="right">
@@ -170,9 +173,10 @@ export default function AttachmentEditorTable({
                   </MenuItem>
                 ))}
               </Select>
-              {f.mime && (
-                <span style={{ marginLeft: 8, fontSize: '0.8em' }}>{f.mime}</span>
-              )}
+              {!onChangeNewType &&
+                f.mime && (
+                  <span style={{ marginLeft: 8, fontSize: '0.8em' }}>{f.mime}</span>
+                )}
             </TableCell>
             <TableCell align="right">
               <Tooltip title="Скачать">
