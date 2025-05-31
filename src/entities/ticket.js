@@ -201,21 +201,10 @@ export function useTickets() {
         files.forEach((f) => {
           filesMap[f.id] = {
             id: f.id,
-            path: f.storage_path,
-            name:
-              f.original_name ||
-              (() => {
-                try {
-                  return decodeURIComponent(
-                    f.storage_path.split("/").pop()?.replace(/^\d+_/, "") ||
-                      f.storage_path,
-                  );
-                } catch {
-                  return f.storage_path;
-                }
-              })(),
-            url: f.file_url,
-            type: f.file_type,
+            storage_path: f.storage_path,
+            original_name: f.original_name,
+            file_url: f.file_url,
+            file_type: f.file_type,
             attachment_type_id: f.attachment_type_id ?? null,
           };
         });
@@ -334,21 +323,10 @@ export function useTicket(ticketId) {
         const files = await getAttachmentsByIds(data.attachment_ids);
         atts = files.map((f) => ({
           id: f.id,
-          path: f.storage_path,
-          name:
-            f.original_name ||
-            (() => {
-              try {
-                return decodeURIComponent(
-                  f.storage_path.split("/").pop()?.replace(/^\d+_/, "") ||
-                    f.storage_path,
-                );
-              } catch {
-                return f.storage_path;
-              }
-            })(),
-          url: f.file_url,
-          type: f.file_type,
+          storage_path: f.storage_path,
+          original_name: f.original_name,
+          file_url: f.file_url,
+          file_type: f.file_type,
           attachment_type_id: f.attachment_type_id ?? null,
         }));
         const existIds = files.map((f) => f.id);
