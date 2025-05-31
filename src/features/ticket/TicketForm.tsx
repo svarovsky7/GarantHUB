@@ -194,6 +194,12 @@ export default function TicketForm({
                 labelId="project-label"
                 label="Проект"
                 displayEmpty
+                value={field.value ?? ''}
+                onChange={(e) =>
+                  field.onChange(
+                    e.target.value === '' ? null : Number(e.target.value),
+                  )
+                }
               >
                 <MenuItem value="">
                   <em>Не выбрано</em>
@@ -247,6 +253,10 @@ export default function TicketForm({
                 labelId="engineer-label"
                 label="Ответственный инженер"
                 displayEmpty
+                value={field.value ?? ''}
+                onChange={(e) =>
+                  field.onChange(e.target.value === '' ? null : e.target.value)
+                }
               >
                 <MenuItem value="">
                   <em>Не указано</em>
@@ -272,6 +282,10 @@ export default function TicketForm({
                 labelId="status-label"
                 label="Статус"
                 displayEmpty
+                value={field.value ?? ''}
+                onChange={(e) =>
+                  field.onChange(e.target.value === '' ? null : Number(e.target.value))
+                }
               >
                 <MenuItem value="">
                   <em>Статус не выбран</em>
@@ -297,6 +311,10 @@ export default function TicketForm({
                 labelId="type-label"
                 label="Тип"
                 displayEmpty
+                value={field.value ?? ''}
+                onChange={(e) =>
+                  field.onChange(e.target.value === '' ? null : Number(e.target.value))
+                }
               >
                 <MenuItem value="">
                   <em>Тип не выбран</em>
