@@ -21,11 +21,16 @@ interface RemoteFile {
   name: string;
   path: string;
   typeId: number | null;
+  /** Имя типа из attachments_types */
+  typeName?: string;
+  /** MIME-тип файла */
+  mime?: string;
 }
 
 interface NewFile {
   file: File;
   typeId: number | null;
+  mime?: string;
 }
 
 interface Props {
@@ -116,6 +121,12 @@ export default function AttachmentEditorTable({
                   </MenuItem>
                 ))}
               </Select>
+              {f.typeName && (
+                <span style={{ marginLeft: 8, fontSize: '0.8em' }}>{f.typeName}</span>
+              )}
+              {f.mime && !f.typeName && (
+                <span style={{ marginLeft: 8, fontSize: '0.8em' }}>{f.mime}</span>
+              )}
             </TableCell>
             <TableCell align="right">
               <Tooltip title="Скачать">
@@ -159,6 +170,9 @@ export default function AttachmentEditorTable({
                   </MenuItem>
                 ))}
               </Select>
+              {f.mime && (
+                <span style={{ marginLeft: 8, fontSize: '0.8em' }}>{f.mime}</span>
+              )}
             </TableCell>
             <TableCell align="right">
               <Tooltip title="Скачать">
