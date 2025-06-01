@@ -111,21 +111,21 @@ export default function DefectDeadlinesAdmin({
             <DefectDeadlineForm
               initialData={modal.mode === 'edit' ? modal.data : undefined}
               onSubmit={(d) => {
-                if (modal.mode === 'add') {
-                  // Проверяем наличие записи с такой комбинацией
-                  const exists = data.some(
-                    (r) =>
-                      r.project_id === d.project_id &&
-                      r.ticket_type_id === d.ticket_type_id,
+                const exists = data.some(
+                  (r) =>
+                    r.project_id === d.project_id &&
+                    r.ticket_type_id === d.ticket_type_id &&
+                    (modal.mode !== 'edit' || r.id !== modal.data.id),
+                );
+
+                if (exists) {
+                  notify.error(
+                    'Запись с таким проектом и типом дефекта уже существует',
                   );
+                  return;
+                }
 
-                  if (exists) {
-                    notify.error(
-                      'Это дублирование: запись с таким проектом и типом дефекта уже существует',
-                    );
-                    return;
-                  }
-
+                if (modal.mode === 'add') {
                   add.mutate(d, {
                     onSuccess: () => ok('Запись создана'),
                     onError: (e) => notify.error(e.message),
