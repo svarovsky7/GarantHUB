@@ -27,7 +27,12 @@ import type { ColumnsType } from 'antd/es/table';
 import type { CourtCase, Defect } from '@/shared/types/courtCase';
 import { useProjects } from '@/entities/project';
 import { useUnitsByProject, useUnitsByIds } from '@/entities/unit';
-import { useContractors, useAddContractor, useUpdateContractor } from '@/entities/contractor';
+import {
+  useContractors,
+  useAddContractor,
+  useUpdateContractor,
+  useDeleteContractor,
+} from '@/entities/contractor';
 import { useUsers } from '@/entities/user';
 import { useLitigationStages } from '@/entities/litigationStage';
 import { usePersons, useAddPerson, useUpdatePerson, useDeletePerson } from '@/entities/person';
@@ -107,10 +112,14 @@ export default function CourtCasesPage() {
   const { data: stages = [], isPending: stagesLoading } = useLitigationStages();
   const { data: personsList = [] } = usePersons();
   const deletePersonMutation = useDeletePerson();
+  const deleteContractorMutation = useDeleteContractor();
   const [personModal, setPersonModal] = useState<any | null>(null);
   const [contractorModal, setContractorModal] = useState<any | null>(null);
   const { data: attachmentTypes = [] } = useAttachmentTypes();
   const [caseFiles, setCaseFiles] = useState<{ file: File; type_id: number | null }[]>([]);
+
+  const plaintiffId = Form.useWatch('plaintiff_id', form);
+  const defendantId = Form.useWatch('defendant_id', form);
 
   const unitIds = React.useMemo(
     () => Array.from(new Set(cases.flatMap((c) => c.unit_ids).filter(Boolean))),
@@ -361,7 +370,7 @@ export default function CourtCasesPage() {
                 />
                 <Button
                   icon={<EditOutlined />}
-                  disabled={!form.getFieldValue('plaintiff_id')}
+                  disabled={!plaintiffId}
                   onClick={() => {
                     const id = form.getFieldValue('plaintiff_id');
                     const data = personsList.find((p) => p.id === id) || null;
@@ -383,11 +392,11 @@ export default function CourtCasesPage() {
                       onError: (e: any) => message.error(e.message),
                     });
                   }}
-                  disabled={!form.getFieldValue('plaintiff_id')}
+                  disabled={!plaintiffId}
                 >
                   <Button
                     icon={<DeleteOutlined />}
-                    disabled={!form.getFieldValue('plaintiff_id')}
+                    disabled={!plaintiffId}
                   />
                 </Popconfirm>
               </Space.Compact>
@@ -409,13 +418,32 @@ export default function CourtCasesPage() {
                 <Button icon={<PlusOutlined />} onClick={() => setContractorModal({})} />
                 <Button
                   icon={<EditOutlined />}
-                  disabled={!form.getFieldValue('defendant_id')}
+                  disabled={!defendantId}
                   onClick={() => {
                     const id = form.getFieldValue('defendant_id');
                     const data = contractors.find((c) => c.id === id) || null;
                     setContractorModal(data);
                   }}
                 />
+                <Popconfirm
+                  title="Удалить контрагента?"
+                  okText="Да"
+                  cancelText="Нет"
+                  onConfirm={() => {
+                    const id = form.getFieldValue('defendant_id');
+                    if (!id) return;
+                    deleteContractorMutation.mutate(id, {
+                      onSuccess: () => {
+                        message.success('Контрагент удалён');
+                        form.setFieldValue('defendant_id', null);
+                      },
+                      onError: (e: any) => message.error(e.message),
+                    });
+                  }}
+                  disabled={!defendantId}
+                >
+                  <Button icon={<DeleteOutlined />} disabled={!defendantId} />
+                </Popconfirm>
               </Space.Compact>
             </Form.Item>
           </Col>
@@ -1083,6 +1111,7 @@ function AddPersonModal({ open, onClose, unitId, onSelect, initialData = null }:
   const [form] = Form.useForm();
   const addPersonMutation = useAddPerson();
   const updatePersonMutation = useUpdatePerson();
+  const qc = useQueryClient();
   const isEdit = !!initialData?.id;
 
   useEffect(() => {
@@ -1103,6 +1132,7 @@ function AddPersonModal({ open, onClose, unitId, onSelect, initialData = null }:
           await supabase.from('unit_persons').insert({ unit_id: unitId, person_id: person.id });
         }
         message.success(isEdit ? 'Физлицо обновлено' : 'Физлицо добавлено');
+        qc.invalidateQueries({ queryKey: ['projectPersons'] });
         onSelect(person.id);
         form.resetFields();
         onClose();
