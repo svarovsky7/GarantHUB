@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { GridActionsCellItem } from '@mui/x-data-grid';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -24,6 +24,9 @@ interface Props {
 /**
  * Таблица управления сроками устранения дефектов.
  * Показывает название проекта и тип замечания, используя кэшированные списки.
+ *
+ * @param {Props} props Параметры таблицы
+ * @returns {JSX.Element}
  */
 export default function DefectDeadlinesAdmin({
   pageSize = 25,
@@ -33,6 +36,19 @@ export default function DefectDeadlinesAdmin({
   const { data = [], isPending } = useDefectDeadlines();
   const { data: projects = [] } = useProjects();
   const { data: ticketTypes = [] } = useTicketTypes();
+
+  const rows = useMemo(
+    () =>
+      data.map((row) => ({
+        ...row,
+        project_name:
+          row.project?.name || projects.find((p) => p.id === row.project_id)?.name || '',
+        ticket_type_name:
+          row.ticket_type?.name ||
+          ticketTypes.find((t) => t.id === row.ticket_type_id)?.name || '',
+      })),
+    [data, projects, ticketTypes]
+  );
   const add = useAddDefectDeadline();
   const update = useUpdateDefectDeadline();
   const remove = useDeleteDefectDeadline();
@@ -41,21 +57,13 @@ export default function DefectDeadlinesAdmin({
   const columns = [
     { field: 'id', headerName: 'ID', width: 70 },
     {
-      field: 'project',
+      field: 'project_name',
       headerName: 'Проект',
-      valueGetter: ({ row }: any) =>
-        row?.project?.name ??
-        projects.find((p) => p.id === row?.project_id)?.name ??
-        '',
       flex: 1,
     },
     {
-      field: 'ticket_type',
+      field: 'ticket_type_name',
       headerName: 'Тип дефекта',
-      valueGetter: ({ row }: any) =>
-        row?.ticket_type?.name ??
-        ticketTypes.find((t) => t.id === row?.ticket_type_id)?.name ??
-        '',
       flex: 1,
     },
     { field: 'fix_days', headerName: 'Срок (дн.)', width: 120 },
@@ -123,7 +131,7 @@ export default function DefectDeadlinesAdmin({
       )}
       <AdminDataGrid
         title="Сроки устранения дефектов"
-        rows={data}
+        rows={rows}
         columns={columns}
         loading={isPending}
         onAdd={() => setModal({ mode: 'add' })}
