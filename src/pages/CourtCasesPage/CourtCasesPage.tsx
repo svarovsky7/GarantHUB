@@ -21,6 +21,7 @@ import {
   Modal,
   Tabs,
   message,
+  Popconfirm,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import type { CourtCase, Defect } from '@/shared/types/courtCase';
@@ -29,8 +30,8 @@ import { useUnitsByProject, useUnitsByIds } from '@/entities/unit';
 import { useContractors, useAddContractor, useUpdateContractor } from '@/entities/contractor';
 import { useUsers } from '@/entities/user';
 import { useLitigationStages } from '@/entities/litigationStage';
-import { usePersons, useAddPerson, useUpdatePerson } from '@/entities/person';
-import { PlusOutlined, EditOutlined } from '@ant-design/icons';
+import { usePersons, useAddPerson, useUpdatePerson, useDeletePerson } from '@/entities/person';
+import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import {
   useCourtCases,
   useAddCourtCase,
@@ -104,6 +105,7 @@ export default function CourtCasesPage() {
   const { data: users = [], isPending: usersLoading } = useUsers();
   const { data: stages = [], isPending: stagesLoading } = useLitigationStages();
   const { data: personsList = [] } = usePersons();
+  const deletePersonMutation = useDeletePerson();
   const [personModal, setPersonModal] = useState<any | null>(null);
   const [contractorModal, setContractorModal] = useState<any | null>(null);
   const { data: attachmentTypes = [] } = useAttachmentTypes();
@@ -116,7 +118,7 @@ export default function CourtCasesPage() {
   const { data: caseUnits = [] } = useUnitsByIds(unitIds);
 
   const { data: projectPersons = [], isPending: personsLoading } = useQuery({
-    queryKey: ['persons'],
+    queryKey: ['projectPersons'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('persons')
@@ -365,6 +367,28 @@ export default function CourtCasesPage() {
                     setPersonModal(data);
                   }}
                 />
+                <Popconfirm
+                  title="Удалить физлицо?"
+                  okText="Да"
+                  cancelText="Нет"
+                  onConfirm={() => {
+                    const id = form.getFieldValue('plaintiff_id');
+                    if (!id) return;
+                    deletePersonMutation.mutate(id, {
+                      onSuccess: () => {
+                        message.success('Физлицо удалено');
+                        form.setFieldValue('plaintiff_id', null);
+                      },
+                      onError: (e: any) => message.error(e.message),
+                    });
+                  }}
+                  disabled={!form.getFieldValue('plaintiff_id')}
+                >
+                  <Button
+                    icon={<DeleteOutlined />}
+                    disabled={!form.getFieldValue('plaintiff_id')}
+                  />
+                </Popconfirm>
               </Space.Compact>
             </Form.Item>
           </Col>
