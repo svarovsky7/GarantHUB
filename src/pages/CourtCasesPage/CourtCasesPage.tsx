@@ -53,6 +53,7 @@ import {
   useCaseDefects,
   useAddDefect,
   useDeleteDefect,
+  useUpdateDefect,
 } from '@/entities/courtCase';
 import { useAttachmentTypes } from '@/entities/attachmentType';
 import {
@@ -759,6 +760,7 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange }: CaseDialogPro
   });
   const addDefectMutation = useAddDefect();
   const deleteDefectMutation = useDeleteDefect();
+  const updateDefectMutation = useUpdateDefect();
   const updateCaseMutation = useUpdateCourtCase();
   const [editing, setEditing] = useState(false);
   const [plaintiffType, setPlaintiffType] = useState<'person' | 'contractor'>('person');
@@ -768,6 +770,7 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange }: CaseDialogPro
   useEffect(() => {
     if (caseData) {
       form.setFieldsValue({
+        project_id: caseData.project_id,
         number: caseData.number,
         date: dayjs(caseData.date),
         unit_ids: caseData.unit_ids,
@@ -800,6 +803,7 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange }: CaseDialogPro
       await updateCaseMutation.mutateAsync({
         id: Number(caseData.id),
         updates: {
+          project_id: values.project_id,
           number: values.number,
           date: values.date.format('YYYY-MM-DD'),
           unit_ids: values.unit_ids,
@@ -844,8 +848,19 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange }: CaseDialogPro
     );
   };
 
+  const updateDefect = (defect: Defect) => {
+    if (!caseData) return;
+    updateDefectMutation.mutate(
+      { id: defect.id, case_id: Number(caseData.id), updates: defect },
+      {
+        onError: (e: any) => message.error(e.message),
+      },
+    );
+  };
+
   const objectName =
     unitInfo.map((u) => u.name).join(', ') || (caseData as any)?.projectObject || '';
+  const projectName = projects.find((p) => p.id === caseData.project_id)?.name || '';
 
   return (
     <Modal open={open} onCancel={onClose} width="80%" footer={null} title={caseData ? `Дело № ${caseData.number}` : ''}>
@@ -855,7 +870,14 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange }: CaseDialogPro
             <Form form={form} layout="vertical" onFinish={saveChanges} style={{ marginBottom: 16 }}>
               <Row gutter={16}>
                 <Col span={8}>
-                  <Form.Item name="number" label="Номер дела" rules={[{ required: true, message: 'Укажите номер' }]}> 
+                  <Form.Item name="project_id" label="Проект" rules={[{ required: true, message: 'Выберите проект' }]}>
+                    <Select options={projects.map((p) => ({ value: p.id, label: p.name }))} />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col span={8}>
+                  <Form.Item name="number" label="Номер дела" rules={[{ required: true, message: 'Укажите номер' }]}>
                     <Input />
                   </Form.Item>
                 </Col>
@@ -997,6 +1019,14 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange }: CaseDialogPro
                 </Col>
                 <Col span={8}>
                   <div>
+                    <strong>Проект</strong>
+                    <div>{projectName}</div>
+                  </div>
+                </Col>
+              </Row>
+              <Row gutter={16} style={{ marginBottom: 16 }}>
+                <Col span={8}>
+                  <div>
                     <strong>Объект</strong>
                     <div>{objectName}</div>
                   </div>
@@ -1055,7 +1085,12 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange }: CaseDialogPro
           )}
           <Tabs activeKey={tab} onChange={onTabChange} style={{ marginBottom: 16 }}>
             <Tabs.TabPane tab="Недостатки" key="defects">
-              <DefectsTab defects={defects} onAdd={addDefect} onDelete={deleteDefect} />
+              <DefectsTab
+                defects={defects}
+                onAdd={addDefect}
+                onDelete={deleteDefect}
+                onUpdate={updateDefect}
+              />
             </Tabs.TabPane>
             <Tabs.TabPane tab="Файлы" key="files">
               <CaseFilesTab caseData={caseData} />
@@ -1072,39 +1107,52 @@ interface DefectsProps {
   defects: Defect[];
   onAdd: (defect: Omit<Defect, 'id'>) => void;
   onDelete: (id: number) => void;
+  onUpdate: (defect: Defect) => void;
 }
 
-function DefectsTab({ defects, onAdd, onDelete }: DefectsProps) {
+function DefectsTab({ defects, onAdd, onDelete, onUpdate }: DefectsProps) {
   const [form] = Form.useForm();
+  const [editing, setEditing] = useState<Defect | null>(null);
 
-  const add = (values: any) => {
-    if (!values.name || !values.cost) return;
-    onAdd({
-      name: values.name,
-      location: values.location,
-      description: values.description,
-      cost: Number(values.cost),
-      duration: values.duration ? Number(values.duration) : null,
-    });
+  useEffect(() => {
+    if (editing) {
+      form.setFieldsValue({
+        description: editing.description,
+        cost: editing.cost,
+      });
+    } else {
+      form.resetFields();
+    }
+  }, [editing, form]);
+
+  const submit = (values: any) => {
+    if (!values.description || !values.cost) return;
+    if (editing) {
+      onUpdate({ id: editing.id, description: values.description, cost: Number(values.cost) });
+      setEditing(null);
+    } else {
+      onAdd({ description: values.description, cost: Number(values.cost) });
+    }
     form.resetFields();
   };
 
   const columns: ColumnsType<Defect> = [
-    { title: 'Недостаток', dataIndex: 'name' },
-    { title: 'Местоположение', dataIndex: 'location' },
+    { title: 'Наименование', dataIndex: 'description' },
     {
       title: 'Стоимость',
       dataIndex: 'cost',
       render: (v: number) => fmtCurrency(v),
     },
-    { title: 'Срок', dataIndex: 'duration' },
     {
       title: 'Действия',
       key: 'actions',
       render: (_: any, record) => (
-        <Button size="small" danger onClick={() => onDelete(record.id)}>
-          Удалить
-        </Button>
+        <Space>
+          <Button size="small" onClick={() => setEditing(record)}>Редактировать</Button>
+          <Button size="small" danger onClick={() => onDelete(record.id)}>
+            Удалить
+          </Button>
+        </Space>
       ),
     },
   ];
@@ -1113,37 +1161,25 @@ function DefectsTab({ defects, onAdd, onDelete }: DefectsProps) {
 
   return (
     <>
-      <Form form={form} layout="vertical" onFinish={add} style={{ marginBottom: 16 }}>
+      <Form form={form} layout="vertical" onFinish={submit} style={{ marginBottom: 16 }}>
         <Row gutter={16}>
-          <Col span={8}>
-            <Form.Item name="name" label="Наименование">
+          <Col span={12}>
+            <Form.Item name="description" label="Наименование недостатка" rules={[{ required: true, message: 'Укажите название' }]}>
               <Input />
             </Form.Item>
           </Col>
-          <Col span={8}>
-            <Form.Item name="location" label="Местоположение">
-              <Input />
-            </Form.Item>
-          </Col>
-          <Col span={8}>
-            <Form.Item name="cost" label="Стоимость">
+          <Col span={12}>
+            <Form.Item name="cost" label="Стоимость устранения" rules={[{ required: true, message: 'Укажите стоимость' }]}>
               <Input type="number" />
-            </Form.Item>
-          </Col>
-          <Col span={8}>
-            <Form.Item name="duration" label="Срок (дней)">
-              <Input type="number" />
-            </Form.Item>
-          </Col>
-          <Col span={24}>
-            <Form.Item name="description" label="Описание">
-              <Input.TextArea rows={2} />
             </Form.Item>
           </Col>
           <Col span={24} style={{ textAlign: 'right' }}>
-            <Button type="primary" htmlType="submit">
-              Добавить
-            </Button>
+            <Space>
+              {editing && <Button onClick={() => setEditing(null)}>Отмена</Button>}
+              <Button type="primary" htmlType="submit">
+                {editing ? 'Сохранить' : 'Добавить'}
+              </Button>
+            </Space>
           </Col>
         </Row>
       </Form>

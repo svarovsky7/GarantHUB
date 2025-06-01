@@ -101,11 +101,16 @@ export function useCaseDefects(caseId: number) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from(CASE_DEFECTS_TABLE)
-        .select(`defect_id, defects(*)`)
+        .select('defect_id, defects(id, description, fix_cost)')
         .eq('case_id', caseId);
       if (error) throw error;
       const rows = data ?? [];
-      return rows.map((r) => ({ ...r.defects, case_id: caseId })) as Defect[];
+      return rows.map((r) => ({
+        id: r.defects.id,
+        description: r.defects.description,
+        cost: r.defects.fix_cost ?? 0,
+        case_id: caseId,
+      })) as Defect[];
     },
     enabled: !!caseId,
     staleTime: 5 * 60_000,
@@ -149,6 +154,34 @@ export function useDeleteDefect() {
       return { id, case_id };
     },
     onSuccess: (_res, vars) => {
+      qc.invalidateQueries({ queryKey: [CASE_DEFECTS_TABLE, vars.case_id] });
+    },
+  });
+}
+
+export function useUpdateDefect() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      case_id,
+      updates,
+    }: {
+      id: number;
+      case_id: number;
+      updates: Pick<Defect, 'description' | 'cost'>;
+    }) => {
+      const { error } = await supabase
+        .from(DEFECTS_TABLE)
+        .update({
+          description: updates.description,
+          fix_cost: updates.cost,
+        })
+        .eq('id', id);
+      if (error) throw error;
+      return { id, case_id, ...updates };
+    },
+    onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: [CASE_DEFECTS_TABLE, vars.case_id] });
     },
   });
