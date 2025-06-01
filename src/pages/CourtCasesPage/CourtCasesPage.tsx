@@ -32,6 +32,7 @@ import { useUsers } from '@/entities/user';
 import { useLitigationStages } from '@/entities/litigationStage';
 import { usePersons, useAddPerson, useUpdatePerson, useDeletePerson } from '@/entities/person';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { formatPhone } from '@/shared/utils/formatPhone';
 import {
   useCourtCases,
   useAddCourtCase,
@@ -1078,18 +1079,6 @@ interface AddPersonModalProps {
   initialData?: any | null;
 }
 
-function formatPhone(value: string) {
-  const digits = value.replace(/\D/g, '').replace(/^7/, '');
-  const parts = [digits.slice(0, 3), digits.slice(3, 6), digits.slice(6, 8), digits.slice(8, 10)];
-  let res = '+7';
-  if (parts[0]) res += ` (${parts[0]}`;
-  if (digits.length >= 3) res += ')';
-  if (parts[1]) res += ` ${parts[1]}`;
-  if (parts[2]) res += `-${parts[2]}`;
-  if (parts[3]) res += `-${parts[3]}`;
-  return res;
-}
-
 function AddPersonModal({ open, onClose, unitId, onSelect, initialData = null }: AddPersonModalProps) {
   const [form] = Form.useForm();
   const addPersonMutation = useAddPerson();
@@ -1189,11 +1178,22 @@ function ContractorModal({ open, onClose, onSelect, initialData = null }: Contra
         <Form.Item name="name" label="Название" rules={[{ required: true, message: 'Укажите название' }]}> 
           <Input />
         </Form.Item>
-        <Form.Item name="inn" label="ИНН" rules={[{ required: true, message: 'Укажите ИНН' }]}> 
+        <Form.Item
+          name="inn"
+          label="ИНН"
+          rules={[
+            { required: true, message: 'Укажите ИНН' },
+            { pattern: /^\d{10}$|^\d{12}$/, message: 'ИНН должен содержать 10 или 12 цифр' },
+          ]}
+        >
           <Input />
         </Form.Item>
-        <Form.Item name="phone" label="Телефон"> 
-          <Input />
+        <Form.Item
+          name="phone"
+          label="Телефон"
+          getValueFromEvent={(e) => formatPhone(e.target.value)}
+        >
+          <Input placeholder="+7 (9xx) xxx-xx-xx" />
         </Form.Item>
         <Form.Item name="email" label="Email"> 
           <Input />
