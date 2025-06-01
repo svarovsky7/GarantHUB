@@ -34,13 +34,13 @@ export default function DefectDeadlinesAdmin({
     {
       field: 'project',
       headerName: 'Проект',
-      valueGetter: ({ row }: any) => row.project?.name,
+      valueGetter: ({ row }: any) => row?.project?.name ?? '',
       flex: 1,
     },
     {
       field: 'ticket_type',
       headerName: 'Тип дефекта',
-      valueGetter: ({ row }: any) => row.ticket_type?.name,
+      valueGetter: ({ row }: any) => row?.ticket_type?.name ?? '',
       flex: 1,
     },
     { field: 'fix_days', headerName: 'Срок (дн.)', width: 120 },
