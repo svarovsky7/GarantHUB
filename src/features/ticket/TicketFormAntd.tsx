@@ -7,6 +7,7 @@ import { useUnitsByProject } from '@/entities/unit';
 import { useUsers } from '@/entities/user';
 import { useProjects } from '@/entities/project';
 import { useCreateTicket } from '@/entities/ticket';
+import { useDefectDeadlines } from '@/entities/defectDeadline';
 import { useAttachmentTypes } from '@/entities/attachmentType';
 import type { Ticket } from '@/shared/types/ticket';
 import { useProjectId } from '@/shared/hooks/useProjectId';
@@ -28,9 +29,18 @@ export default function TicketFormAntd({ onCreated }: { onCreated?: () => void }
   const { data: units = [] } = useUnitsByProject(projectId);
   const { data: users = [] } = useUsers();
   const { data: attachmentTypes = [] } = useAttachmentTypes();
+  const { data: deadlines = [] } = useDefectDeadlines();
   const create = useCreateTicket();
   const [files, setFiles] = useState<{ file: File; type_id: number | null }[]>([]);
   const profileId = useAuthStore((s) => s.profile?.id);
+  const typeId = Form.useWatch('type_id', form);
+  const deadlineDays = React.useMemo(() => {
+    if (!projectId || !typeId) return null;
+    const rec = deadlines.find(
+      (d) => d.project_id === projectId && d.ticket_type_id === typeId,
+    );
+    return rec?.fix_days ?? null;
+  }, [projectId, typeId, deadlines]);
 
   useEffect(() => {
     if (globalProjectId) {
@@ -112,7 +122,11 @@ export default function TicketFormAntd({ onCreated }: { onCreated?: () => void }
           </Form.Item>
         </Col>
         <Col span={8}>
-          <Form.Item name="type_id" label="Тип" rules={[{ required: true }]}>
+          <Form.Item
+            name="type_id"
+            label={`Тип${deadlineDays ? ` (${deadlineDays} дн.)` : ''}`}
+            rules={[{ required: true }]}
+          >
             <Select options={types.map((t) => ({ value: t.id, label: t.name }))} />
           </Form.Item>
         </Col>
@@ -162,6 +176,22 @@ export default function TicketFormAntd({ onCreated }: { onCreated?: () => void }
             </Button>
           </Col>
         ))}
+        {deadlineDays && (
+          <Col>
+            <Button
+              size="small"
+              style={{ background: '#2e7d32', color: '#fff' }}
+              onClick={() => {
+                const rec = form.getFieldValue('received_at');
+                if (rec) {
+                  form.setFieldValue('fixed_at', dayjs(rec).add(deadlineDays, 'day'));
+                }
+              }}
+            >
+              +{deadlineDays} дней
+            </Button>
+          </Col>
+        )}
       </Row>
       <Form.Item name="title" label="Краткое описание" rules={[{ required: true }]}> 
         <Input />
