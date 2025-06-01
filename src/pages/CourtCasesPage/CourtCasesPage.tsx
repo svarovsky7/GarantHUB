@@ -608,6 +608,19 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange }: CaseDialogPro
   const { data: unitInfo = [] } = useUnitsByIds(
     caseData?.unit_ids ?? [],
   );
+  const { data: contractors = [], isPending: contractorsLoading } = useContractors();
+  const { data: users = [], isPending: usersLoading } = useUsers();
+  const { data: projectPersons = [], isPending: personsLoading } = useQuery({
+    queryKey: ['projectPersons'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('persons')
+        .select('id, full_name')
+        .order('full_name');
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
   const addDefectMutation = useAddDefect();
   const deleteDefectMutation = useDeleteDefect();
   const updateCaseMutation = useUpdateCourtCase();
@@ -712,18 +725,30 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange }: CaseDialogPro
                   </Form.Item>
                 </Col>
                 <Col span={8}>
-                  <Form.Item name="plaintiff_id" label="Истец"> 
-                    <Input />
+                  <Form.Item name="plaintiff_id" label="Истец">
+                    <Select
+                      loading={personsLoading}
+                      options={projectPersons.map((p) => ({ value: p.id, label: p.full_name }))}
+                      allowClear
+                    />
                   </Form.Item>
                 </Col>
                 <Col span={8}>
-                  <Form.Item name="defendant_id" label="Ответчик"> 
-                    <Input />
+                  <Form.Item name="defendant_id" label="Ответчик">
+                    <Select
+                      loading={contractorsLoading}
+                      options={contractors.map((c) => ({ value: c.id, label: c.name }))}
+                      allowClear
+                    />
                   </Form.Item>
                 </Col>
                 <Col span={8}>
-                  <Form.Item name="responsible_lawyer_id" label="Ответственный юрист"> 
-                    <Input />
+                  <Form.Item name="responsible_lawyer_id" label="Ответственный юрист">
+                    <Select
+                      loading={usersLoading}
+                      options={users.map((u) => ({ value: u.id, label: u.name }))}
+                      allowClear
+                    />
                   </Form.Item>
                 </Col>
                 <Col span={8}>
