@@ -110,20 +110,36 @@ export default function DefectDeadlinesAdmin({
           <DialogContent dividers>
             <DefectDeadlineForm
               initialData={modal.mode === 'edit' ? modal.data : undefined}
-              onSubmit={(d) =>
-                modal.mode === 'add'
-                  ? add.mutate(d, {
-                      onSuccess: () => ok('Запись создана'),
+              onSubmit={(d) => {
+                if (modal.mode === 'add') {
+                  // Проверяем наличие записи с такой комбинацией
+                  const exists = data.some(
+                    (r) =>
+                      r.project_id === d.project_id &&
+                      r.ticket_type_id === d.ticket_type_id,
+                  );
+
+                  if (exists) {
+                    notify.error(
+                      'Запись для выбранного проекта и типа дефекта уже существует',
+                    );
+                    return;
+                  }
+
+                  add.mutate(d, {
+                    onSuccess: () => ok('Запись создана'),
+                    onError: (e) => notify.error(e.message),
+                  });
+                } else {
+                  update.mutate(
+                    { id: modal.data.id, updates: d },
+                    {
+                      onSuccess: () => ok('Запись обновлена'),
                       onError: (e) => notify.error(e.message),
-                    })
-                  : update.mutate(
-                      { id: modal.data.id, updates: d },
-                      {
-                        onSuccess: () => ok('Запись обновлена'),
-                        onError: (e) => notify.error(e.message),
-                      },
-                    )
-              }
+                    },
+                  );
+                }
+              }}
               onCancel={close}
             />
           </DialogContent>
