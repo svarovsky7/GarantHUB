@@ -7,7 +7,8 @@ import {
 
 const FIELDS = `
   id, full_name, phone, email,
-  passport_series, passport_number
+  passport_series, passport_number,
+  description
 `;
 
 const sanitize = (obj) =>

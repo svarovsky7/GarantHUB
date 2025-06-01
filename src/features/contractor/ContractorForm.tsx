@@ -20,7 +20,7 @@ const schema = z.object({
     .regex(/^(\d{10}|\d{12})$/, "ИНН должен содержать 10 или 12 цифр"),
   phone: z.string().trim().optional(),
   email: z.union([z.literal(""), z.string().email("Неверный e-mail")]),
-  comment: z.string().trim().optional(),
+  description: z.string().trim().optional(),
 });
 
 export default function ContractorForm({
@@ -46,7 +46,7 @@ export default function ContractorForm({
       inn: initialData?.inn ?? "",
       phone: initialData?.phone ?? "",
       email: initialData?.email ?? "",
-      comment: initialData?.comment ?? "",
+      description: initialData?.description ?? "",
     },
   });
 
@@ -72,7 +72,7 @@ export default function ContractorForm({
     }
   };
 
-  const fields = ["name", "inn", "phone", "email", "comment"] as const;
+  const fields = ["name", "inn", "phone", "email", "description"] as const;
 
   return (
     <form onSubmit={handleSubmit(submit)} noValidate data-oid="5.e52j6">
@@ -96,7 +96,7 @@ export default function ContractorForm({
                     inn: "ИНН *",
                     phone: "Телефон",
                     email: "E-mail",
-                    comment: "Комментарий",
+                    description: "Комментарий",
                   }[f]
                 }
                 required={["name", "inn"].includes(f)}

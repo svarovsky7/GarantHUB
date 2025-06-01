@@ -10,18 +10,18 @@ import {
 
 const TABLE  = 'contractors';
 const FIELDS = `
-  id, name, inn, phone, email, comment:description, created_at
+  id, name, description, inn, phone, email, created_at
 `;
 
-/** trim + ''→null; comment→description */
+/** trim + ''→null */
 const sanitize = (o) =>
     Object.fromEntries(
         Object.entries(o)
             .filter(([k]) =>
-                ['name', 'inn', 'phone', 'email', 'comment'].includes(k),
+                ['name', 'inn', 'phone', 'email', 'description'].includes(k),
             )
             .map(([k, v]) => [
-                k === 'comment' ? 'description' : k,
+                k,
                 typeof v === 'string' ? v.trim() || null : v,
             ]),
     );

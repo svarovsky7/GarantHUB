@@ -1368,6 +1368,9 @@ function AddPersonModal({ open, onClose, unitId, onSelect, initialData = null }:
         <Form.Item name="email" label="Email">
           <Input />
         </Form.Item>
+        <Form.Item name="description" label="Описание">
+          <Input.TextArea rows={2} />
+        </Form.Item>
       </Form>
     </Modal>
   );
@@ -1431,8 +1434,11 @@ function ContractorModal({ open, onClose, onSelect, initialData = null }: Contra
         >
           <Input placeholder="+7 (9xx) xxx-xx-xx" />
         </Form.Item>
-        <Form.Item name="email" label="Email"> 
+        <Form.Item name="email" label="Email">
           <Input />
+        </Form.Item>
+        <Form.Item name="description" label="Описание">
+          <Input.TextArea rows={2} />
         </Form.Item>
       </Form>
     </Modal>

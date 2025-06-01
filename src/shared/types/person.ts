@@ -5,4 +5,5 @@ export interface Person {
   email?: string | null;
   passport_series?: string | null;
   passport_number?: string | null;
+  description?: string | null;
 }
