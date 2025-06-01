@@ -23,6 +23,7 @@ import { useTicketStatuses } from "@/entities/ticketStatus";
 import { useUnitsByProject } from "@/entities/unit";
 import { useUsers } from "@/entities/user";
 import { useProjects } from "@/entities/project";
+import { useDefectDeadlines } from "@/entities/defectDeadline";
 import { useAttachmentTypes } from "@/entities/attachmentType";
 import { useCreateTicket, useTicket, signedUrl } from "@/entities/ticket";
 import { useProjectId } from "@/shared/hooks/useProjectId";
@@ -111,8 +112,19 @@ export default function TicketForm({
   const { data: statuses = [] } = useTicketStatuses();
   const { data: users = [] } = useUsers();
   const { data: attachmentTypes = [] } = useAttachmentTypes();
+  const { data: deadlines = [] } = useDefectDeadlines();
   const projectIdWatch = watch("project_id") ?? globalProjectId;
   const { data: units = [] } = useUnitsByProject(projectIdWatch);
+  const typeIdWatch = watch("type_id");
+  const deadlineDays = React.useMemo(() => {
+    if (!projectIdWatch || !typeIdWatch) return null;
+    const rec = deadlines.find(
+      (d) =>
+        d.project_id === projectIdWatch &&
+        d.ticket_type_id === typeIdWatch,
+    );
+    return rec?.fix_days ?? null;
+  }, [deadlines, projectIdWatch, typeIdWatch]);
 
   const create = useCreateTicket();
   const { data: ticket, updateAsync } = useTicket(ticketId);
@@ -405,11 +417,13 @@ export default function TicketForm({
           rules={{ required: true }}
           render={({ field, fieldState }) => (
             <FormControl fullWidth error={!!fieldState.error}>
-              <InputLabel id="type-label">Тип</InputLabel>
+              <InputLabel id="type-label">
+                {`Тип${deadlineDays ? ` (${deadlineDays} дн.)` : ""}`}
+              </InputLabel>
               <Select
                 {...field}
                 labelId="type-label"
-                label="Тип"
+                label={`Тип${deadlineDays ? ` (${deadlineDays} дн.)` : ""}`}
                 displayEmpty
                 value={field.value ?? ""}
                 onChange={(e) =>
@@ -516,6 +530,18 @@ export default function TicketForm({
               +{d} дней
             </Button>
           ))}
+          {deadlineDays && (
+            <Button
+              size="small"
+              sx={{ mr: 1, mb: 1, bgcolor: "success.main", color: "#fff", '&:hover': { bgcolor: 'success.dark' } }}
+              onClick={() => {
+                const rec = getValues("received_at");
+                if (rec) setValue("fixed_at", dayjs(rec).add(deadlineDays, "day"));
+              }}
+            >
+              +{deadlineDays} дней
+            </Button>
+          )}
         </Box>
         <Controller
           name="title"
