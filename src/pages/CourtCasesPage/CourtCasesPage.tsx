@@ -26,11 +26,11 @@ import type { ColumnsType } from 'antd/es/table';
 import type { CourtCase, Defect } from '@/shared/types/courtCase';
 import { useProjects } from '@/entities/project';
 import { useUnitsByProject, useUnitsByIds } from '@/entities/unit';
-import { useContractors } from '@/entities/contractor';
+import { useContractors, useAddContractor, useUpdateContractor } from '@/entities/contractor';
 import { useUsers } from '@/entities/user';
 import { useLitigationStages } from '@/entities/litigationStage';
-import { usePersons, useAddPerson } from '@/entities/person';
-import { PlusOutlined } from '@ant-design/icons';
+import { usePersons, useAddPerson, useUpdatePerson } from '@/entities/person';
+import { PlusOutlined, EditOutlined } from '@ant-design/icons';
 import {
   useCourtCases,
   useAddCourtCase,
@@ -104,7 +104,8 @@ export default function CourtCasesPage() {
   const { data: users = [], isPending: usersLoading } = useUsers();
   const { data: stages = [], isPending: stagesLoading } = useLitigationStages();
   const { data: personsList = [] } = usePersons();
-  const [addPersonOpen, setAddPersonOpen] = useState(false);
+  const [personModal, setPersonModal] = useState<any | null>(null);
+  const [contractorModal, setContractorModal] = useState<any | null>(null);
   const { data: attachmentTypes = [] } = useAttachmentTypes();
   const [caseFiles, setCaseFiles] = useState<{ file: File; type_id: number | null }[]>([]);
 
@@ -115,17 +116,15 @@ export default function CourtCasesPage() {
   const { data: caseUnits = [] } = useUnitsByIds(unitIds);
 
   const { data: projectPersons = [], isPending: personsLoading } = useQuery({
-    queryKey: ['persons', projectId],
+    queryKey: ['persons'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('persons')
         .select('id, full_name')
-        .eq('project_id', projectId)
         .order('full_name');
       if (error) throw error;
       return data ?? [];
     },
-    enabled: !!projectId,
   });
 
   const handleCaseFiles = (files: File[]) => {
@@ -353,13 +352,42 @@ export default function CourtCasesPage() {
                     disabled={!projectId}
                   />
                 </Form.Item>
-                <Button icon={<PlusOutlined />} onClick={() => setAddPersonOpen(true)} />
+                <Button
+                  icon={<EditOutlined />}
+                  disabled={!form.getFieldValue('plaintiff_id')}
+                  onClick={() => {
+                    const id = form.getFieldValue('plaintiff_id');
+                    const data = personsList.find((p) => p.id === id) || null;
+                    setPersonModal(data);
+                  }}
+                />
               </Space.Compact>
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item name="defendant_id" label="Ответчик" rules={[{ required: true, message: 'Выберите ответчика' }]}>
-              <Select loading={contractorsLoading} options={contractors.map((c) => ({ value: c.id, label: c.name }))} />
+            <Form.Item label="Ответчик" style={{ marginBottom: 0 }}>
+              <Space.Compact style={{ width: '100%' }}>
+                <Form.Item
+                  name="defendant_id"
+                  noStyle
+                  rules={[{ required: true, message: 'Выберите ответчика' }]}
+                >
+                  <Select
+                    loading={contractorsLoading}
+                    options={contractors.map((c) => ({ value: c.id, label: c.name }))}
+                  />
+                </Form.Item>
+                <Button icon={<PlusOutlined />} onClick={() => setContractorModal({})} />
+                <Button
+                  icon={<EditOutlined />}
+                  disabled={!form.getFieldValue('defendant_id')}
+                  onClick={() => {
+                    const id = form.getFieldValue('defendant_id');
+                    const data = contractors.find((c) => c.id === id) || null;
+                    setContractorModal(data);
+                  }}
+                />
+              </Space.Compact>
             </Form.Item>
           </Col>
         </Row>
@@ -491,10 +519,17 @@ export default function CourtCasesPage() {
         onTabChange={setTab}
       />
       <AddPersonModal
-        open={addPersonOpen}
-        onClose={() => setAddPersonOpen(false)}
+        open={!!personModal}
+        onClose={() => setPersonModal(null)}
         unitId={Form.useWatch('unit_ids', form)?.[0] ?? null}
         onSelect={(id) => form.setFieldValue('plaintiff_id', id)}
+        initialData={personModal}
+      />
+      <ContractorModal
+        open={!!contractorModal}
+        onClose={() => setContractorModal(null)}
+        onSelect={(id) => form.setFieldValue('defendant_id', id)}
+        initialData={contractorModal}
       />
     </>
     </ConfigProvider>
@@ -1012,36 +1047,74 @@ interface AddPersonModalProps {
   onClose: () => void;
   unitId: number | null;
   onSelect: (id: number) => void;
+  initialData?: any | null;
 }
 
-function AddPersonModal({ open, onClose, unitId, onSelect }: AddPersonModalProps) {
+function formatPhone(value: string) {
+  const digits = value.replace(/\D/g, '').replace(/^7/, '');
+  const parts = [digits.slice(0, 3), digits.slice(3, 6), digits.slice(6, 8), digits.slice(8, 10)];
+  let res = '+7';
+  if (parts[0]) res += ` (${parts[0]}`;
+  if (digits.length >= 3) res += ')';
+  if (parts[1]) res += ` ${parts[1]}`;
+  if (parts[2]) res += `-${parts[2]}`;
+  if (parts[3]) res += `-${parts[3]}`;
+  return res;
+}
+
+function AddPersonModal({ open, onClose, unitId, onSelect, initialData = null }: AddPersonModalProps) {
   const [form] = Form.useForm();
   const addPersonMutation = useAddPerson();
+  const updatePersonMutation = useUpdatePerson();
+  const isEdit = !!initialData;
+
+  useEffect(() => {
+    if (isEdit) {
+      form.setFieldsValue(initialData);
+    } else {
+      form.resetFields();
+    }
+  }, [isEdit, initialData, form]);
+
   const handleFinish = (values: any) => {
-    addPersonMutation.mutate(values, {
-      onSuccess: async (person: any) => {
-        if (unitId) {
-          await supabase.from('unit_persons').insert({
-            unit_id: unitId,
-            person_id: person.id,
-          });
+    const action = isEdit
+      ? updatePersonMutation.mutateAsync({ id: initialData.id, updates: values })
+      : addPersonMutation.mutateAsync(values);
+    action
+      .then(async (person: any) => {
+        if (unitId && !isEdit) {
+          await supabase.from('unit_persons').insert({ unit_id: unitId, person_id: person.id });
         }
-        message.success('Физлицо добавлено');
+        message.success(isEdit ? 'Физлицо обновлено' : 'Физлицо добавлено');
         onSelect(person.id);
         form.resetFields();
         onClose();
-      },
-      onError: (e: any) => message.error(e.message),
-    });
+      })
+      .catch((e: any) => message.error(e.message));
   };
+
   return (
-    <Modal open={open} onCancel={onClose} onOk={() => form.submit()} title="Новое физлицо">
+    <Modal open={open} onCancel={onClose} onOk={() => form.submit()} title={isEdit ? 'Редактировать физлицо' : 'Новое физлицо'}>
       <Form form={form} layout="vertical" onFinish={handleFinish}>
-        <Form.Item name="full_name" label="ФИО" rules={[{ required: true, message: 'Укажите ФИО' }]}> 
+        <Form.Item name="full_name" label="ФИО" rules={[{ required: true, message: 'Укажите ФИО' }]}>
           <Input />
         </Form.Item>
+        <Form.Item name="passport_series" label="Серия паспорта">
+          <Input maxLength={4} />
+        </Form.Item>
+        <Form.Item name="passport_number" label="Номер паспорта">
+          <Input maxLength={6} />
+        </Form.Item>
         <Form.Item name="phone" label="Телефон">
-          <Input />
+          <Form.Item noStyle name="phone" shouldUpdate={(prev, cur) => prev.phone !== cur.phone}>
+            {({ getFieldValue, setFieldsValue }) => (
+              <Input
+                value={getFieldValue('phone')}
+                onChange={(e) => setFieldsValue({ phone: formatPhone(e.target.value) })}
+                placeholder="+7 (9xx) xxx-xx-xx"
+              />
+            )}
+          </Form.Item>
         </Form.Item>
         <Form.Item name="email" label="Email">
           <Input />
@@ -1051,3 +1124,57 @@ function AddPersonModal({ open, onClose, unitId, onSelect }: AddPersonModalProps
   );
 }
 
+
+interface ContractorModalProps {
+  open: boolean;
+  onClose: () => void;
+  onSelect: (id: number) => void;
+  initialData?: any | null;
+}
+
+function ContractorModal({ open, onClose, onSelect, initialData = null }: ContractorModalProps) {
+  const [form] = Form.useForm();
+  const addMutation = useAddContractor();
+  const updateMutation = useUpdateContractor();
+  const isEdit = !!initialData;
+
+  useEffect(() => {
+    if (isEdit) {
+      form.setFieldsValue(initialData);
+    } else {
+      form.resetFields();
+    }
+  }, [isEdit, initialData, form]);
+
+  const finish = (values: any) => {
+    const action = isEdit
+      ? updateMutation.mutateAsync({ id: initialData.id, updates: values })
+      : addMutation.mutateAsync(values);
+    action
+      .then((res: any) => {
+        message.success(isEdit ? 'Контрагент обновлён' : 'Контрагент создан');
+        onSelect(res.id);
+        onClose();
+      })
+      .catch((e: any) => message.error(e.message));
+  };
+
+  return (
+    <Modal open={open} onCancel={onClose} onOk={() => form.submit()} title={isEdit ? 'Редактировать контрагента' : 'Новый контрагент'}>
+      <Form form={form} layout="vertical" onFinish={finish}>
+        <Form.Item name="name" label="Название" rules={[{ required: true, message: 'Укажите название' }]}> 
+          <Input />
+        </Form.Item>
+        <Form.Item name="inn" label="ИНН" rules={[{ required: true, message: 'Укажите ИНН' }]}> 
+          <Input />
+        </Form.Item>
+        <Form.Item name="phone" label="Телефон"> 
+          <Input />
+        </Form.Item>
+        <Form.Item name="email" label="Email"> 
+          <Input />
+        </Form.Item>
+      </Form>
+    </Modal>
+  );
+}
