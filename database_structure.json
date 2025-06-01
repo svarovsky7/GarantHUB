@@ -532,6 +532,13 @@
     "column_default": null
   },
   {
+    "table_name": "persons",
+    "column_name": "description",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
     "table_name": "profiles",
     "column_name": "id",
     "data_type": "uuid",
