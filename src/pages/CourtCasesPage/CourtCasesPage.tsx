@@ -27,6 +27,7 @@ import {
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import type { CourtCase, Defect } from '@/shared/types/courtCase';
+import type { Project } from '@/shared/types/project';
 import { useProjects } from '@/entities/project';
 import { useUnitsByProject, useUnitsByIds } from '@/entities/unit';
 import {
@@ -665,6 +666,7 @@ export default function CourtCasesPage() {
         caseData={dialogCase}
         tab={tab}
         onTabChange={setTab}
+        projects={projects}
       />
       <Modal
         open={!!partySelect}
@@ -737,9 +739,10 @@ interface CaseDialogProps {
   caseData: CourtCase | null;
   tab: string;
   onTabChange: (k: string) => void;
+  projects: Project[];
 }
 
-function CaseDialog({ open, onClose, caseData, tab, onTabChange }: CaseDialogProps) {
+function CaseDialog({ open, onClose, caseData, tab, onTabChange, projects }: CaseDialogProps) {
   const { data: defects = [] } = useCaseDefects(caseData ? Number(caseData.id) : 0);
   const { data: stages = [] } = useLitigationStages();
   const { data: unitInfo = [] } = useUnitsByIds(
