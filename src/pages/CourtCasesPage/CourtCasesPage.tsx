@@ -388,6 +388,7 @@ export default function CourtCasesPage() {
                       onSuccess: () => {
                         message.success('Физлицо удалено');
                         form.setFieldValue('plaintiff_id', null);
+                        qc.invalidateQueries({ queryKey: ['projectPersons'] });
                       },
                       onError: (e: any) => message.error(e.message),
                     });
