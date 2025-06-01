@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import {
   Stack,
@@ -27,7 +27,7 @@ import { useDefectDeadlines } from "@/entities/defectDeadline";
 import { useAttachmentTypes } from "@/entities/attachmentType";
 import { useCreateTicket, useTicket, signedUrl } from "@/entities/ticket";
 import { useProjectId } from "@/shared/hooks/useProjectId";
-import { useDebouncedEffect } from "@/shared/hooks/useDebouncedEffect";
+import { useUnsavedChangesWarning } from "@/shared/hooks/useUnsavedChangesWarning";
 import AttachmentEditorTable from "@/shared/ui/AttachmentEditorTable";
 import type { Ticket } from "@/shared/types/ticket";
 
@@ -89,7 +89,7 @@ export default function TicketForm({
     setValue,
     watch,
     getValues,
-    formState: { isSubmitting },
+    formState: { isSubmitting, isDirty },
   } = useForm<TicketFormValues>({
     defaultValues: {
       project_id: globalProjectId ?? null,
@@ -133,6 +133,7 @@ export default function TicketForm({
 
   const [remoteFiles, setRemoteFiles] = useState<Attachment[]>([]);
   const [changedTypes, setChangedTypes] = useState<Record<string, number | null>>({});
+  const [initialTypes, setInitialTypes] = useState<Record<string, number | null>>({});
   const [newFiles, setNewFiles] = useState<NewFile[]>([]);
   const [removedIds, setRemovedIds] = useState<string[]>([]);
 
@@ -167,6 +168,7 @@ export default function TicketForm({
         map[f.id] = f.attachment_type_id;
       });
       setChangedTypes(map);
+      setInitialTypes(map);
     }
   }, [ticket, attachmentTypes, reset]);
 
@@ -183,78 +185,21 @@ export default function TicketForm({
   const changeNewType = (idx: number, type: number | null) =>
     setNewFiles((p) => p.map((f, i) => (i === idx ? { ...f, type_id: type } : f)));
 
-  /** Последние сохранённые значения для предотвращения лишних запросов */
-  const lastPayload = useRef<string>("");
+  const attachmentsChanged =
+    newFiles.length > 0 ||
+    removedIds.length > 0 ||
+    Object.keys(changedTypes).some((id) => changedTypes[id] !== initialTypes[id]);
+  const hasChanges = isDirty || attachmentsChanged;
 
-  const watchAll = watch();
+  useUnsavedChangesWarning(hasChanges);
 
-  useDebouncedEffect(
-    () => {
-      if (!isEdit || !ticketId) return;
-      const values = getValues();
-    const payload = {
-      project_id: values.project_id ?? globalProjectId,
-      unit_ids: values.unit_ids,
-      type_id: values.type_id,
-      status_id: values.status_id,
-      title: values.title,
-      description: values.description || null,
-      customer_request_no: values.customer_request_no || null,
-      customer_request_date: values.customer_request_date
-        ? values.customer_request_date.format("YYYY-MM-DD")
-        : null,
-      responsible_engineer_id: values.responsible_engineer_id ?? null,
-      is_warranty: values.is_warranty,
-      received_at: values.received_at
-        ? values.received_at.format("YYYY-MM-DD")
-        : dayjs().format("YYYY-MM-DD"),
-      fixed_at: values.fixed_at ? values.fixed_at.format("YYYY-MM-DD") : null,
-    };
+  const handleCancel = () => {
+    if (hasChanges && !window.confirm('Изменения будут потеряны. Покинуть форму?')) {
+      return;
+    }
+    onCancel?.();
+  };
 
-    const json = JSON.stringify({ payload, newFiles, removedIds, changedTypes });
-    if (json === lastPayload.current) return;
-    lastPayload.current = json;
-
-    updateAsync({
-      id: Number(ticketId),
-      ...payload,
-      newAttachments: newFiles,
-      removedAttachmentIds: removedIds,
-      updatedAttachments: Object.entries(changedTypes).map(([id, type]) => ({
-        id,
-        type_id: type,
-      })),
-    }).then((uploaded) => {
-      if (uploaded?.length) {
-        setRemoteFiles((p) => [
-          ...p,
-          ...uploaded.map((u) => ({
-            id: u.id,
-            name:
-              u.original_name ||
-              u.storage_path.split("/").pop() ||
-              "file",
-            path: u.storage_path,
-            url: u.file_url,
-            type: u.file_type,
-            attachment_type_id: u.attachment_type_id ?? null,
-          })),
-        ]);
-        setChangedTypes((prev) => {
-          const copy = { ...prev };
-          uploaded.forEach((u) => {
-            copy[u.id] = u.attachment_type_id ?? null;
-          });
-          return copy;
-        });
-      }
-      setNewFiles([]);
-      setRemovedIds([]);
-    });
-  },
-    [watchAll, newFiles, removedIds, changedTypes],
-    1000,
-  );
 
   const submit = async (values: TicketFormValues) => {
     const payload = {
@@ -309,9 +254,17 @@ export default function TicketForm({
           });
           return copy;
         });
+        setInitialTypes((prev) => {
+          const copy = { ...prev };
+          uploaded.forEach((u) => {
+            copy[u.id] = u.attachment_type_id ?? null;
+          });
+          return copy;
+        });
       }
       setNewFiles([]);
       setRemovedIds([]);
+      setInitialTypes((prev) => ({ ...prev, ...changedTypes }));
       onCreated?.();
     } else {
       await create.mutateAsync({
@@ -323,6 +276,7 @@ export default function TicketForm({
       setNewFiles([]);
       setRemoteFiles([]);
       setChangedTypes({});
+      setInitialTypes({});
       setRemovedIds([]);
     }
   };
@@ -659,19 +613,17 @@ export default function TicketForm({
           </Button>
         </Box>
         <DialogActions sx={{ px: 0 }}>
-          <Button variant="text" onClick={onCancel} disabled={isSubmitting}>
+          <Button variant="text" onClick={handleCancel} disabled={isSubmitting}>
             Отмена
           </Button>
-          {!isEdit && (
-            <Button
-              type="submit"
-              variant="contained"
-              disabled={isSubmitting}
-              startIcon={isSubmitting && <CircularProgress size={18} />}
-            >
-              Сохранить
-            </Button>
-          )}
+          <Button
+            type="submit"
+            variant="contained"
+            disabled={isSubmitting || (isEdit && !hasChanges)}
+            startIcon={isSubmitting && <CircularProgress size={18} />}
+          >
+            Сохранить
+          </Button>
         </DialogActions>
       </Stack>
     </form>
