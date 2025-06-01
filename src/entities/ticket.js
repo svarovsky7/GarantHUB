@@ -400,8 +400,9 @@ export function useTicket(ticketId) {
       }
 
       // новые вложения
+      let uploaded = [];
       if (newAttachments.length) {
-        const uploaded = await addTicketAttachments(
+        uploaded = await addTicketAttachments(
           newAttachments.map((f) =>
             "file" in f ? { file: f.file, type_id: f.type_id ?? null } : { file: f, type_id: null },
           ),
@@ -424,6 +425,7 @@ export function useTicket(ticketId) {
           .eq("project_id", projectId);
         if (error) throw error;
       }
+      return uploaded;
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ["tickets", projectId] });
