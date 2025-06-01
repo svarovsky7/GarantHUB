@@ -115,6 +115,18 @@ export default function CourtCasesPage() {
   const deleteContractorMutation = useDeleteContractor();
   const [personModal, setPersonModal] = useState<any | null>(null);
   const [contractorModal, setContractorModal] = useState<any | null>(null);
+  const [partySelect, setPartySelect] = useState<{
+    role: 'plaintiff' | 'defendant';
+  } | null>(null);
+  const [plaintiffType, setPlaintiffType] = useState<'person' | 'contractor'>(
+    'person',
+  );
+  const [defendantType, setDefendantType] = useState<'person' | 'contractor'>(
+    'contractor',
+  );
+  const [partyRole, setPartyRole] = useState<'plaintiff' | 'defendant' | null>(
+    null,
+  );
   const { data: attachmentTypes = [] } = useAttachmentTypes();
   const [caseFiles, setCaseFiles] = useState<{ file: File; type_id: number | null }[]>([]);
 
@@ -203,9 +215,13 @@ export default function CourtCasesPage() {
       .filter(Boolean)
       .join(', '),
     plaintiff:
-      personsList.find((p) => p.id === c.plaintiff_id)?.full_name ?? c.plaintiff,
+      personsList.find((p) => p.id === c.plaintiff_id)?.full_name ||
+      contractors.find((d) => d.id === c.plaintiff_id)?.name ||
+      c.plaintiff,
     defendant:
-      contractors.find((d) => d.id === c.defendant_id)?.name ?? c.defendant,
+      contractors.find((d) => d.id === c.defendant_id)?.name ||
+      personsList.find((p) => p.id === c.defendant_id)?.full_name ||
+      c.defendant,
     responsibleLawyer:
       users.find((u) => u.id === c.responsible_lawyer_id)?.name ?? c.responsibleLawyer,
     daysSinceFixStart: c.fix_start_date
@@ -352,100 +368,166 @@ export default function CourtCasesPage() {
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item label="Истец" style={{ marginBottom: 0 }}>
-              <Space.Compact style={{ width: '100%' }}>
-                <Form.Item
-                  name="plaintiff_id"
-                  noStyle
-                  rules={[{ required: true, message: 'Выберите истца' }]}
+              <Space direction="vertical" style={{ width: '100%' }}>
+                <Radio.Group
+                  value={plaintiffType}
+                  onChange={(e) => setPlaintiffType(e.target.value)}
                 >
-                  <Select
-                    loading={personsLoading}
-                    options={projectPersons.map((p) => ({ value: p.id, label: p.full_name }))}
-                    disabled={!projectId}
-                  />
-                </Form.Item>
-                <Button
-                  icon={<PlusOutlined />}
-                  onClick={() => setPersonModal({})}
-                />
-                <Button
-                  icon={<EditOutlined />}
-                  disabled={!plaintiffId}
-                  onClick={() => {
-                    const id = form.getFieldValue('plaintiff_id');
-                    const data = personsList.find((p) => p.id === id) || null;
-                    setPersonModal(data);
-                  }}
-                />
-                <Popconfirm
-                  title="Удалить физлицо?"
-                  okText="Да"
-                  cancelText="Нет"
-                  onConfirm={() => {
-                    const id = form.getFieldValue('plaintiff_id');
-                    if (!id) return;
-                    deletePersonMutation.mutate(id, {
-                      onSuccess: () => {
-                        message.success('Физлицо удалено');
-                        form.setFieldValue('plaintiff_id', null);
-                        qc.invalidateQueries({ queryKey: ['projectPersons'] });
-                      },
-                      onError: (e: any) => message.error(e.message),
-                    });
-                  }}
-                  disabled={!plaintiffId}
-                >
+                  <Radio.Button value="person">Физлицо</Radio.Button>
+                  <Radio.Button value="contractor">Контрагент</Radio.Button>
+                </Radio.Group>
+                <Space.Compact style={{ width: '100%' }}>
+                  <Form.Item
+                    name="plaintiff_id"
+                    noStyle
+                    rules={[{ required: true, message: 'Выберите истца' }]}
+                  >
+                    {plaintiffType === 'person' ? (
+                      <Select
+                        loading={personsLoading}
+                        options={projectPersons.map((p) => ({ value: p.id, label: p.full_name }))}
+                        disabled={!projectId}
+                      />
+                    ) : (
+                      <Select
+                        loading={contractorsLoading}
+                        options={contractors.map((c) => ({ value: c.id, label: c.name }))}
+                      />
+                    )}
+                  </Form.Item>
                   <Button
-                    icon={<DeleteOutlined />}
-                    disabled={!plaintiffId}
+                    icon={<PlusOutlined />}
+                    onClick={() => setPartySelect({ role: 'plaintiff' })}
                   />
-                </Popconfirm>
-              </Space.Compact>
+                  <Button
+                    icon={<EditOutlined />}
+                    disabled={!plaintiffId}
+                    onClick={() => {
+                      const id = form.getFieldValue('plaintiff_id');
+                      const data =
+                        plaintiffType === 'person'
+                          ? personsList.find((p) => p.id === id) || null
+                          : contractors.find((c) => c.id === id) || null;
+                      plaintiffType === 'person'
+                        ? setPersonModal(data)
+                        : setContractorModal(data);
+                    }}
+                  />
+                  <Popconfirm
+                    title={plaintiffType === 'person' ? 'Удалить физлицо?' : 'Удалить контрагента?'}
+                    okText="Да"
+                    cancelText="Нет"
+                    onConfirm={() => {
+                      const id = form.getFieldValue('plaintiff_id');
+                      if (!id) return;
+                      if (plaintiffType === 'person') {
+                        deletePersonMutation.mutate(id, {
+                          onSuccess: () => {
+                            message.success('Физлицо удалено');
+                            form.setFieldValue('plaintiff_id', null);
+                            qc.invalidateQueries({ queryKey: ['projectPersons'] });
+                          },
+                          onError: (e: any) => message.error(e.message),
+                        });
+                      } else {
+                        deleteContractorMutation.mutate(id, {
+                          onSuccess: () => {
+                            message.success('Контрагент удалён');
+                            form.setFieldValue('plaintiff_id', null);
+                          },
+                          onError: (e: any) => message.error(e.message),
+                        });
+                      }
+                    }}
+                    disabled={!plaintiffId}
+                  >
+                    <Button
+                      icon={<DeleteOutlined />}
+                      disabled={!plaintiffId}
+                    />
+                  </Popconfirm>
+                </Space.Compact>
+              </Space>
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item label="Ответчик" style={{ marginBottom: 0 }}>
-              <Space.Compact style={{ width: '100%' }}>
-                <Form.Item
-                  name="defendant_id"
-                  noStyle
-                  rules={[{ required: true, message: 'Выберите ответчика' }]}
+              <Space direction="vertical" style={{ width: '100%' }}>
+                <Radio.Group
+                  value={defendantType}
+                  onChange={(e) => setDefendantType(e.target.value)}
                 >
-                  <Select
-                    loading={contractorsLoading}
-                    options={contractors.map((c) => ({ value: c.id, label: c.name }))}
+                  <Radio.Button value="person">Физлицо</Radio.Button>
+                  <Radio.Button value="contractor">Контрагент</Radio.Button>
+                </Radio.Group>
+                <Space.Compact style={{ width: '100%' }}>
+                  <Form.Item
+                    name="defendant_id"
+                    noStyle
+                    rules={[{ required: true, message: 'Выберите ответчика' }]}
+                  >
+                    {defendantType === 'person' ? (
+                      <Select
+                        loading={personsLoading}
+                        options={projectPersons.map((p) => ({ value: p.id, label: p.full_name }))}
+                      />
+                    ) : (
+                      <Select
+                        loading={contractorsLoading}
+                        options={contractors.map((c) => ({ value: c.id, label: c.name }))}
+                      />
+                    )}
+                  </Form.Item>
+                  <Button
+                    icon={<PlusOutlined />}
+                    onClick={() => setPartySelect({ role: 'defendant' })}
                   />
-                </Form.Item>
-                <Button icon={<PlusOutlined />} onClick={() => setContractorModal({})} />
-                <Button
-                  icon={<EditOutlined />}
-                  disabled={!defendantId}
-                  onClick={() => {
-                    const id = form.getFieldValue('defendant_id');
-                    const data = contractors.find((c) => c.id === id) || null;
-                    setContractorModal(data);
-                  }}
-                />
-                <Popconfirm
-                  title="Удалить контрагента?"
-                  okText="Да"
-                  cancelText="Нет"
-                  onConfirm={() => {
-                    const id = form.getFieldValue('defendant_id');
-                    if (!id) return;
-                    deleteContractorMutation.mutate(id, {
-                      onSuccess: () => {
-                        message.success('Контрагент удалён');
-                        form.setFieldValue('defendant_id', null);
-                      },
-                      onError: (e: any) => message.error(e.message),
-                    });
-                  }}
-                  disabled={!defendantId}
-                >
-                  <Button icon={<DeleteOutlined />} disabled={!defendantId} />
-                </Popconfirm>
-              </Space.Compact>
+                  <Button
+                    icon={<EditOutlined />}
+                    disabled={!defendantId}
+                    onClick={() => {
+                      const id = form.getFieldValue('defendant_id');
+                      const data =
+                        defendantType === 'person'
+                          ? personsList.find((p) => p.id === id) || null
+                          : contractors.find((c) => c.id === id) || null;
+                      defendantType === 'person'
+                        ? setPersonModal(data)
+                        : setContractorModal(data);
+                    }}
+                  />
+                  <Popconfirm
+                    title={defendantType === 'person' ? 'Удалить физлицо?' : 'Удалить контрагента?'}
+                    okText="Да"
+                    cancelText="Нет"
+                    onConfirm={() => {
+                      const id = form.getFieldValue('defendant_id');
+                      if (!id) return;
+                      if (defendantType === 'person') {
+                        deletePersonMutation.mutate(id, {
+                          onSuccess: () => {
+                            message.success('Физлицо удалено');
+                            form.setFieldValue('defendant_id', null);
+                            qc.invalidateQueries({ queryKey: ['projectPersons'] });
+                          },
+                          onError: (e: any) => message.error(e.message),
+                        });
+                      } else {
+                        deleteContractorMutation.mutate(id, {
+                          onSuccess: () => {
+                            message.success('Контрагент удалён');
+                            form.setFieldValue('defendant_id', null);
+                          },
+                          onError: (e: any) => message.error(e.message),
+                        });
+                      }
+                    }}
+                    disabled={!defendantId}
+                  >
+                    <Button icon={<DeleteOutlined />} disabled={!defendantId} />
+                  </Popconfirm>
+                </Space.Compact>
+              </Space>
             </Form.Item>
           </Col>
         </Row>
@@ -576,17 +658,64 @@ export default function CourtCasesPage() {
         tab={tab}
         onTabChange={setTab}
       />
+      <Modal
+        open={!!partySelect}
+        onCancel={() => setPartySelect(null)}
+        footer={null}
+        title="Кого добавить?"
+      >
+        <Space>
+          <Button
+            onClick={() => {
+              setPartyRole(partySelect!.role);
+              setPersonModal({});
+              setPartySelect(null);
+            }}
+          >
+            Физлицо
+          </Button>
+          <Button
+            onClick={() => {
+              setPartyRole(partySelect!.role);
+              setContractorModal({});
+              setPartySelect(null);
+            }}
+          >
+            Контрагент
+          </Button>
+        </Space>
+      </Modal>
       <AddPersonModal
         open={!!personModal}
-        onClose={() => setPersonModal(null)}
+        onClose={() => {
+          setPersonModal(null);
+          setPartyRole(null);
+        }}
         unitId={Form.useWatch('unit_ids', form)?.[0] ?? null}
-        onSelect={(id) => form.setFieldValue('plaintiff_id', id)}
+        onSelect={(id) => {
+          if (partyRole === 'defendant') {
+            form.setFieldValue('defendant_id', id);
+          } else {
+            form.setFieldValue('plaintiff_id', id);
+          }
+          setPartyRole(null);
+        }}
         initialData={personModal}
       />
       <ContractorModal
         open={!!contractorModal}
-        onClose={() => setContractorModal(null)}
-        onSelect={(id) => form.setFieldValue('defendant_id', id)}
+        onClose={() => {
+          setContractorModal(null);
+          setPartyRole(null);
+        }}
+        onSelect={(id) => {
+          if (partyRole === 'plaintiff') {
+            form.setFieldValue('plaintiff_id', id);
+          } else {
+            form.setFieldValue('defendant_id', id);
+          }
+          setPartyRole(null);
+        }}
         initialData={contractorModal}
       />
     </>
@@ -625,6 +754,8 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange }: CaseDialogPro
   const deleteDefectMutation = useDeleteDefect();
   const updateCaseMutation = useUpdateCourtCase();
   const [editing, setEditing] = useState(false);
+  const [plaintiffType, setPlaintiffType] = useState<'person' | 'contractor'>('person');
+  const [defendantType, setDefendantType] = useState<'person' | 'contractor'>('contractor');
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -641,10 +772,20 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange }: CaseDialogPro
         fix_end_date: caseData.fix_end_date ? dayjs(caseData.fix_end_date) : null,
         description: caseData.description,
       });
+      setPlaintiffType(
+        projectPersons.some((p) => p.id === caseData.plaintiff_id)
+          ? 'person'
+          : 'contractor',
+      );
+      setDefendantType(
+        projectPersons.some((p) => p.id === caseData.defendant_id)
+          ? 'person'
+          : 'contractor',
+      );
     } else {
       form.resetFields();
     }
-  }, [caseData, form]);
+  }, [caseData, form, projectPersons]);
 
   const saveChanges = async (values: any) => {
     if (!caseData) return;
@@ -725,21 +866,59 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange }: CaseDialogPro
                   </Form.Item>
                 </Col>
                 <Col span={8}>
-                  <Form.Item name="plaintiff_id" label="Истец">
-                    <Select
-                      loading={personsLoading}
-                      options={projectPersons.map((p) => ({ value: p.id, label: p.full_name }))}
-                      allowClear
-                    />
+                  <Form.Item label="Истец" style={{ marginBottom: 0 }}>
+                    <Space direction="vertical" style={{ width: '100%' }}>
+                      <Radio.Group
+                        value={plaintiffType}
+                        onChange={(e) => setPlaintiffType(e.target.value)}
+                      >
+                        <Radio.Button value="person">Физлицо</Radio.Button>
+                        <Radio.Button value="contractor">Контрагент</Radio.Button>
+                      </Radio.Group>
+                      <Form.Item name="plaintiff_id" noStyle>
+                        {plaintiffType === 'person' ? (
+                          <Select
+                            loading={personsLoading}
+                            options={projectPersons.map((p) => ({ value: p.id, label: p.full_name }))}
+                            allowClear
+                          />
+                        ) : (
+                          <Select
+                            loading={contractorsLoading}
+                            options={contractors.map((c) => ({ value: c.id, label: c.name }))}
+                            allowClear
+                          />
+                        )}
+                      </Form.Item>
+                    </Space>
                   </Form.Item>
                 </Col>
                 <Col span={8}>
-                  <Form.Item name="defendant_id" label="Ответчик">
-                    <Select
-                      loading={contractorsLoading}
-                      options={contractors.map((c) => ({ value: c.id, label: c.name }))}
-                      allowClear
-                    />
+                  <Form.Item label="Ответчик" style={{ marginBottom: 0 }}>
+                    <Space direction="vertical" style={{ width: '100%' }}>
+                      <Radio.Group
+                        value={defendantType}
+                        onChange={(e) => setDefendantType(e.target.value)}
+                      >
+                        <Radio.Button value="person">Физлицо</Radio.Button>
+                        <Radio.Button value="contractor">Контрагент</Radio.Button>
+                      </Radio.Group>
+                      <Form.Item name="defendant_id" noStyle>
+                        {defendantType === 'person' ? (
+                          <Select
+                            loading={personsLoading}
+                            options={projectPersons.map((p) => ({ value: p.id, label: p.full_name }))}
+                            allowClear
+                          />
+                        ) : (
+                          <Select
+                            loading={contractorsLoading}
+                            options={contractors.map((c) => ({ value: c.id, label: c.name }))}
+                            allowClear
+                          />
+                        )}
+                      </Form.Item>
+                    </Space>
                   </Form.Item>
                 </Col>
                 <Col span={8}>
