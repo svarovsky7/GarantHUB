@@ -22,6 +22,7 @@ import {
   Tabs,
   message,
   Popconfirm,
+  Tooltip,
   Radio,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
@@ -37,7 +38,12 @@ import {
 import { useUsers } from '@/entities/user';
 import { useLitigationStages } from '@/entities/litigationStage';
 import { usePersons, useAddPerson, useUpdatePerson, useDeletePerson } from '@/entities/person';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  DownloadOutlined,
+} from '@ant-design/icons';
 import { formatPhone } from '@/shared/utils/formatPhone';
 import {
   useCourtCases,
@@ -1256,6 +1262,20 @@ function CaseFilesTab({ caseData }: CaseFilesTabProps) {
     }
   };
 
+  /**
+   * Скачивает файл по прямой ссылке.
+   * @param url Ссылка на файл
+   * @param name Имя для сохранения
+   */
+  const handleDownload = (url: string, name: string) => {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  };
+
   const setType = async (idx: number, val: number | null) => {
     const file = files[idx];
     setFiles((p) => p.map((f, i) => (i === idx ? { ...f, type_id: val } : f)));
@@ -1278,6 +1298,16 @@ function CaseFilesTab({ caseData }: CaseFilesTabProps) {
             <a href={f.url} target="_blank" rel="noopener noreferrer">
               {f.name}
             </a>
+          </Col>
+          <Col>
+            <Tooltip title="Скачать">
+              <Button
+                type="text"
+                size="small"
+                icon={<DownloadOutlined />}
+                onClick={() => handleDownload(f.url, f.name)}
+              />
+            </Tooltip>
           </Col>
           <Col flex="160px">
             <Select
