@@ -18,25 +18,28 @@ const sanitize = (obj) =>
         ]),
     );
 
-// Проверка дубля по паспортным данным или телефону
-const isDuplicate = async (
-    { passport_series, passport_number, phone },
+/**
+ * Проверяем, существует ли физлицо с такими паспортными данными.
+ * Возвращает найденную запись или `null`.
+ */
+const findDuplicate = async (
+    { passport_series, passport_number },
     excludeId = null,
 ) => {
-    let q = supabase.from('persons').select('id', { head: true });
-    if (passport_series && passport_number) {
-        q = q
-            .eq('passport_series', passport_series)
-            .eq('passport_number', passport_number);
-    } else if (phone) {
-        q = q.eq('phone', phone);
-    } else {
-        return false;
-    }
+    if (!passport_series || !passport_number) return null;
+
+    let q = supabase
+        .from('persons')
+        .select('id, full_name')
+        .eq('passport_series', passport_series)
+        .eq('passport_number', passport_number)
+        .limit(1)
+        .maybeSingle();
+
     if (excludeId != null) q = q.neq('id', excludeId);
     const { data, error } = await q;
-    if (error && error.code !== '406') throw error;
-    return !!data;
+    if (error && error.code !== 'PGRST116') throw error;
+    return data ?? null;
 };
 
 /** Список людей текущего проекта — ФИЛЬТРАЦИЯ ПО PROJECT_ID */
@@ -60,8 +63,9 @@ export const usePersonsByProject = usePersons;
 // --- CRUD ---
 const insert = async (payload) => {
     const row = sanitize(payload);
-    if (await isDuplicate(row))
-        throw new Error('Такое лицо уже существует');
+    const dup = await findDuplicate(row);
+    if (dup)
+        throw new Error(`Такой человек уже есть в БД: ${dup.full_name}`);
     const { data, error } = await supabase
         .from('persons')
         .insert(row)
@@ -82,11 +86,11 @@ const updateRow = async ({ id, updates }) => {
     const dupCheck = {
         passport_series: updates.passport_series ?? current.passport_series,
         passport_number: updates.passport_number ?? current.passport_number,
-        phone          : updates.phone ?? current.phone,
     };
 
-    if (await isDuplicate(dupCheck, id))
-        throw new Error('Такое лицо уже существует');
+    const dup = await findDuplicate(dupCheck, id);
+    if (dup)
+        throw new Error(`Такой человек уже есть в БД: ${dup.full_name}`);
 
     const { data, error } = await supabase
         .from('persons')
