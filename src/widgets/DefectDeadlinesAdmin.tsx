@@ -121,7 +121,7 @@ export default function DefectDeadlinesAdmin({
 
                   if (exists) {
                     notify.error(
-                      'Запись для выбранного проекта и типа дефекта уже существует',
+                      'Это дублирование: запись с таким проектом и типом дефекта уже существует',
                     );
                     return;
                   }
