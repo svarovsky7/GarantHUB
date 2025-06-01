@@ -24,6 +24,7 @@ import {
   Popconfirm,
   Tooltip,
   Radio,
+  Switch,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import type { CourtCase, Defect } from '@/shared/types/courtCase';
@@ -67,6 +68,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useAuthStore } from '@/shared/store/authStore';
 import FileDropZone from '@/shared/ui/FileDropZone';
+import CourtCaseStatusSelect from '@/features/courtCase/CourtCaseStatusSelect';
+import CourtCaseClosedSelect from '@/features/courtCase/CourtCaseClosedSelect';
 
 const fmtCurrency = (n: number) =>
   new Intl.NumberFormat('ru-RU', {
@@ -75,11 +78,14 @@ const fmtCurrency = (n: number) =>
     maximumFractionDigits: 0,
   }).format(n);
 
+const LS_KEY = 'courtCasesHideClosed';
+
 type Filters = {
   status?: string;
   object?: string;
   lawyer?: string;
   search?: string;
+  hideClosed?: boolean;
 };
 
 export default function CourtCasesPage() {
@@ -89,7 +95,14 @@ export default function CourtCasesPage() {
   const qc = useQueryClient();
   const updateCaseMutation = useUpdateCourtCase();
 
-  const [filters, setFilters] = useState<Filters>({});
+  const [filters, setFilters] = useState<Filters>(() => {
+    try {
+      const saved = localStorage.getItem(LS_KEY);
+      return { hideClosed: saved ? JSON.parse(saved) : false };
+    } catch {
+      return {} as Filters;
+    }
+  });
   const [dialogCase, setDialogCase] = useState<CourtCase | null>(null);
   const [tab, setTab] = useState('defects');
 
@@ -97,6 +110,18 @@ export default function CourtCasesPage() {
   const projectId = Form.useWatch('project_id', form);
   const globalProjectId = useProjectId();
   const profileId = useAuthStore((s) => s.profile?.id);
+
+  useEffect(() => {
+    const handler = (e: StorageEvent) => {
+      if (e.key === LS_KEY) {
+        try {
+          setFilters((f) => ({ ...f, hideClosed: JSON.parse(e.newValue || 'false') }));
+        } catch {}
+      }
+    };
+    window.addEventListener('storage', handler);
+    return () => window.removeEventListener('storage', handler);
+  }, []);
 
   useEffect(() => {
     form.setFieldValue('unit_ids', []);
@@ -182,6 +207,7 @@ export default function CourtCasesPage() {
         defendant_id: values.defendant_id,
         responsible_lawyer_id: values.responsible_lawyer_id,
         status: values.status,
+        is_closed: false,
         fix_start_date: values.fix_start_date
           ? (values.fix_start_date as Dayjs).format('YYYY-MM-DD')
           : null,
@@ -240,25 +266,36 @@ export default function CourtCasesPage() {
 
   const columns: ColumnsType<CourtCase & any> = [
     {
-      title: '№ дела',
-      dataIndex: 'number',
-      width: 120,
-      sorter: (a, b) => a.number.localeCompare(b.number),
-    },
-    {
-      title: 'Дата',
-      dataIndex: 'date',
-      width: 120,
-      sorter: (a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf(),
-      render: (v: string) => dayjs(v).format('DD.MM.YYYY'),
-    },
-    {
       title: 'Проект',
       dataIndex: 'projectName',
     },
     {
       title: 'Объект',
       dataIndex: 'projectObject',
+    },
+    {
+      title: '№ дела',
+      dataIndex: 'number',
+      width: 120,
+      sorter: (a, b) => a.number.localeCompare(b.number),
+    },
+    {
+      title: 'Дата дела',
+      dataIndex: 'date',
+      width: 120,
+      sorter: (a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf(),
+      render: (v: string) => dayjs(v).format('DD.MM.YYYY'),
+    },
+    {
+      title: 'Статус',
+      dataIndex: 'status',
+      render: (_: number, row) => (
+        <CourtCaseStatusSelect caseId={row.id} status={row.status} />
+      ),
+    },
+    {
+      title: 'Прошло дней с начала устранения',
+      dataIndex: 'daysSinceFixStart',
     },
     {
       title: 'Истец',
@@ -269,29 +306,25 @@ export default function CourtCasesPage() {
       dataIndex: 'defendant',
     },
     {
-      title: 'Юрист',
-      dataIndex: 'responsibleLawyer',
-    },
-    {
       title: 'Дата начала устранения',
       dataIndex: 'fix_start_date',
-      render: (v: string | null) =>
-        v ? dayjs(v).format('DD.MM.YYYY') : '',
+      render: (v: string | null) => (v ? dayjs(v).format('DD.MM.YYYY') : ''),
     },
     {
       title: 'Дата завершения устранения',
       dataIndex: 'fix_end_date',
-      render: (v: string | null) =>
-        v ? dayjs(v).format('DD.MM.YYYY') : '',
+      render: (v: string | null) => (v ? dayjs(v).format('DD.MM.YYYY') : ''),
     },
     {
-      title: 'Дней с начала устранения',
-      dataIndex: 'daysSinceFixStart',
+      title: 'Юрист',
+      dataIndex: 'responsibleLawyer',
     },
     {
-      title: 'Статус',
-      dataIndex: 'status',
-      render: (s: number) => <Tag color="blue">{stages.find((st) => st.id === s)?.name}</Tag>,
+      title: 'Дело закрыто',
+      dataIndex: 'is_closed',
+      render: (_: boolean, row) => (
+        <CourtCaseClosedSelect caseId={row.id} isClosed={row.is_closed} />
+      ),
     },
     {
       title: 'Действия',
@@ -321,7 +354,8 @@ export default function CourtCasesPage() {
       !filters.object || c.projectObject.toLowerCase().includes(filters.object.toLowerCase());
     const matchesLawyer =
       !filters.lawyer || c.responsibleLawyer.toLowerCase().includes(filters.lawyer.toLowerCase());
-    return matchesSearch && matchesStatus && matchesObject && matchesLawyer;
+    const matchesClosed = !filters.hideClosed || !c.is_closed;
+    return matchesSearch && matchesStatus && matchesObject && matchesLawyer && matchesClosed;
   });
 
   return (
@@ -642,6 +676,18 @@ export default function CourtCasesPage() {
             placeholder="Юрист"
             onChange={(e) => setFilters((f) => ({ ...f, lawyer: e.target.value }))}
           />
+        </Col>
+        <Col>
+          <Switch
+            checked={!!filters.hideClosed}
+            onChange={(checked) => {
+              setFilters((f) => ({ ...f, hideClosed: checked }));
+              try {
+                localStorage.setItem(LS_KEY, JSON.stringify(checked));
+              } catch {}
+            }}
+          />{' '}
+          Скрыть закрытые
         </Col>
         <Col flex="auto">
           <Input
