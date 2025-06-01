@@ -1,11 +1,10 @@
 
 export interface Defect {
   id: number;
-  name: string;
-  location: string;
+  /** Наименование недостатка */
   description: string;
+  /** Стоимость устранения */
   cost: number;
-  duration?: number | null;
 }
 
 export type CaseStatus = 'active' | 'won' | 'lost' | 'settled';
