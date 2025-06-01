@@ -45,7 +45,7 @@ export default function DefectDeadlinesAdmin({
       headerName: 'Проект',
       valueGetter: ({ row }: any) =>
         row?.project?.name ??
-        projects.find((p) => p.id === row.project_id)?.name ??
+        projects.find((p) => p.id === row?.project_id)?.name ??
         '',
       flex: 1,
     },
@@ -54,7 +54,7 @@ export default function DefectDeadlinesAdmin({
       headerName: 'Тип дефекта',
       valueGetter: ({ row }: any) =>
         row?.ticket_type?.name ??
-        ticketTypes.find((t) => t.id === row.ticket_type_id)?.name ??
+        ticketTypes.find((t) => t.id === row?.ticket_type_id)?.name ??
         '',
       flex: 1,
     },
