@@ -863,7 +863,8 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange, projects }: Cas
 
   const objectName =
     unitInfo.map((u) => u.name).join(', ') || (caseData as any)?.projectObject || '';
-  const projectName = projects.find((p) => p.id === caseData.project_id)?.name || '';
+  const projectName =
+    caseData ? projects.find((p) => p.id === caseData.project_id)?.name || '' : '';
 
   return (
     <Modal open={open} onCancel={onClose} width="80%" footer={null} title={caseData ? `Дело № ${caseData.number}` : ''}>
