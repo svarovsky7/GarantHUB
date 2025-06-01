@@ -224,9 +224,33 @@ export default function TicketForm({
         id,
         type_id: type,
       })),
+    }).then((uploaded) => {
+      if (uploaded?.length) {
+        setRemoteFiles((p) => [
+          ...p,
+          ...uploaded.map((u) => ({
+            id: u.id,
+            name:
+              u.original_name ||
+              u.storage_path.split("/").pop() ||
+              "file",
+            path: u.storage_path,
+            url: u.file_url,
+            type: u.file_type,
+            attachment_type_id: u.attachment_type_id ?? null,
+          })),
+        ]);
+        setChangedTypes((prev) => {
+          const copy = { ...prev };
+          uploaded.forEach((u) => {
+            copy[u.id] = u.attachment_type_id ?? null;
+          });
+          return copy;
+        });
+      }
+      setNewFiles([]);
+      setRemovedIds([]);
     });
-    setNewFiles([]);
-    setRemovedIds([]);
   },
     [watchAll, newFiles, removedIds, changedTypes],
     1000,
@@ -253,7 +277,7 @@ export default function TicketForm({
     };
 
     if (ticketId) {
-      await updateAsync({
+      const uploaded = await updateAsync({
         id: Number(ticketId),
         ...payload,
         newAttachments: newFiles,
@@ -263,6 +287,31 @@ export default function TicketForm({
           type_id: type,
         })),
       });
+      if (uploaded?.length) {
+        setRemoteFiles((p) => [
+          ...p,
+          ...uploaded.map((u) => ({
+            id: u.id,
+            name:
+              u.original_name ||
+              u.storage_path.split("/").pop() ||
+              "file",
+            path: u.storage_path,
+            url: u.file_url,
+            type: u.file_type,
+            attachment_type_id: u.attachment_type_id ?? null,
+          })),
+        ]);
+        setChangedTypes((prev) => {
+          const copy = { ...prev };
+          uploaded.forEach((u) => {
+            copy[u.id] = u.attachment_type_id ?? null;
+          });
+          return copy;
+        });
+      }
+      setNewFiles([]);
+      setRemovedIds([]);
       onCreated?.();
     } else {
       await create.mutateAsync({
