@@ -353,6 +353,10 @@ export default function CourtCasesPage() {
                   />
                 </Form.Item>
                 <Button
+                  icon={<PlusOutlined />}
+                  onClick={() => setPersonModal({})}
+                />
+                <Button
                   icon={<EditOutlined />}
                   disabled={!form.getFieldValue('plaintiff_id')}
                   onClick={() => {
@@ -1066,7 +1070,7 @@ function AddPersonModal({ open, onClose, unitId, onSelect, initialData = null }:
   const [form] = Form.useForm();
   const addPersonMutation = useAddPerson();
   const updatePersonMutation = useUpdatePerson();
-  const isEdit = !!initialData;
+  const isEdit = !!initialData?.id;
 
   useEffect(() => {
     if (isEdit) {
@@ -1105,16 +1109,12 @@ function AddPersonModal({ open, onClose, unitId, onSelect, initialData = null }:
         <Form.Item name="passport_number" label="Номер паспорта">
           <Input maxLength={6} />
         </Form.Item>
-        <Form.Item name="phone" label="Телефон">
-          <Form.Item noStyle name="phone" shouldUpdate={(prev, cur) => prev.phone !== cur.phone}>
-            {({ getFieldValue, setFieldsValue }) => (
-              <Input
-                value={getFieldValue('phone')}
-                onChange={(e) => setFieldsValue({ phone: formatPhone(e.target.value) })}
-                placeholder="+7 (9xx) xxx-xx-xx"
-              />
-            )}
-          </Form.Item>
+        <Form.Item
+          name="phone"
+          label="Телефон"
+          getValueFromEvent={(e) => formatPhone(e.target.value)}
+        >
+          <Input placeholder="+7 (9xx) xxx-xx-xx" />
         </Form.Item>
         <Form.Item name="email" label="Email">
           <Input />
@@ -1136,7 +1136,7 @@ function ContractorModal({ open, onClose, onSelect, initialData = null }: Contra
   const [form] = Form.useForm();
   const addMutation = useAddContractor();
   const updateMutation = useUpdateContractor();
-  const isEdit = !!initialData;
+  const isEdit = !!initialData?.id;
 
   useEffect(() => {
     if (isEdit) {
