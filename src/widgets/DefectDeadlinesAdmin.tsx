@@ -12,18 +12,27 @@ import DefectDeadlineForm from '@/features/defectDeadline/DefectDeadlineForm';
 import AdminDataGrid from '@/shared/ui/AdminDataGrid';
 import { Dialog, DialogTitle, DialogContent } from '@mui/material';
 import { useNotify } from '@/shared/hooks/useNotify';
+import { useProjects } from '@/entities/project';
+import { useTicketTypes } from '@/entities/ticketType';
 
+/** Props for {@link DefectDeadlinesAdmin} */
 interface Props {
   pageSize?: number;
   rowsPerPageOptions?: number[];
 }
 
+/**
+ * Таблица управления сроками устранения дефектов.
+ * Показывает название проекта и тип замечания, используя кэшированные списки.
+ */
 export default function DefectDeadlinesAdmin({
   pageSize = 25,
   rowsPerPageOptions = [10, 25, 50, 100],
 }: Props) {
   const notify = useNotify();
   const { data = [], isPending } = useDefectDeadlines();
+  const { data: projects = [] } = useProjects();
+  const { data: ticketTypes = [] } = useTicketTypes();
   const add = useAddDefectDeadline();
   const update = useUpdateDefectDeadline();
   const remove = useDeleteDefectDeadline();
@@ -34,13 +43,19 @@ export default function DefectDeadlinesAdmin({
     {
       field: 'project',
       headerName: 'Проект',
-      valueGetter: ({ row }: any) => row?.project?.name ?? '',
+      valueGetter: ({ row }: any) =>
+        row?.project?.name ??
+        projects.find((p) => p.id === row.project_id)?.name ??
+        '',
       flex: 1,
     },
     {
       field: 'ticket_type',
       headerName: 'Тип дефекта',
-      valueGetter: ({ row }: any) => row?.ticket_type?.name ?? '',
+      valueGetter: ({ row }: any) =>
+        row?.ticket_type?.name ??
+        ticketTypes.find((t) => t.id === row.ticket_type_id)?.name ??
+        '',
       flex: 1,
     },
     { field: 'fix_days', headerName: 'Срок (дн.)', width: 120 },
