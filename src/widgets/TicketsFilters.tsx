@@ -1,10 +1,11 @@
 // src/widgets/TicketsFilters.js
 
 import React, { useEffect } from "react";
-import { Form, DatePicker, Select, Input, Button } from "antd";
+import { Form, DatePicker, Select, Input, Button, Switch } from "antd";
 
 const { RangePicker } = DatePicker;
 const { Option } = Select;
+const LS_KEY = "ticketsHideClosed";
 
 /**
  * Фильтры таблицы замечаний.
@@ -16,12 +17,34 @@ export default function TicketsFilters({ options, onChange }) {
   const [form] = Form.useForm();
 
   useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(LS_KEY) || "false");
+      form.setFieldValue("hideClosed", saved);
+    } catch {}
     onChange(form.getFieldsValue());
     // eslint-disable-next-line
   }, []);
 
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === LS_KEY) {
+        try {
+          form.setFieldValue("hideClosed", JSON.parse(e.newValue || "false"));
+          onChange(form.getFieldsValue());
+        } catch {}
+      }
+    };
+    window.addEventListener("storage", handler);
+    return () => window.removeEventListener("storage", handler);
+  }, [form, onChange]);
+
   const handleValuesChange = (_, values) => {
     onChange(values);
+    if (Object.prototype.hasOwnProperty.call(values, "hideClosed")) {
+      try {
+        localStorage.setItem(LS_KEY, JSON.stringify(values.hideClosed));
+      } catch {}
+    }
   };
 
   const reset = () => {
@@ -71,6 +94,9 @@ export default function TicketsFilters({ options, onChange }) {
       </Form.Item>
       <Form.Item name="responsible" label="Ответственный инженер">
         <Select allowClear options={options.responsibleEngineers} />
+      </Form.Item>
+      <Form.Item name="hideClosed" label="Скрыть закрытые" valuePropName="checked">
+        <Switch />
       </Form.Item>
       <Form.Item>
         <Button onClick={reset} block>

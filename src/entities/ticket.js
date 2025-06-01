@@ -160,6 +160,7 @@ function mapTicket(r) {
     responsibleEngineerId: r.responsible_engineer_id,
     createdBy: r.created_by,
     isWarranty: r.is_warranty,
+    isClosed: r.is_closed,
     hasAttachments: attachments.length > 0,
     attachments,
     createdAt: toDayjs(r.created_at),
@@ -181,7 +182,7 @@ export function useTickets() {
           `
           id, project_id, unit_ids, type_id, status_id, title, description,
           customer_request_no, customer_request_date, responsible_engineer_id,
-          created_by, is_warranty, created_at, received_at, fixed_at,
+          created_by, is_warranty, is_closed, created_at, received_at, fixed_at,
           attachment_ids,
           projects (id, name),
           ticket_types (id, name), ticket_statuses (id, name, color)
@@ -308,7 +309,7 @@ export function useTicket(ticketId) {
           `
           id, project_id, unit_ids, type_id, status_id, title, description,
           customer_request_no, customer_request_date, responsible_engineer_id,
-          created_by, is_warranty, created_at, received_at, fixed_at,
+          created_by, is_warranty, is_closed, created_at, received_at, fixed_at,
           attachment_ids,
           projects (id, name),
           ticket_types (id, name), ticket_statuses (id, name, color)
@@ -530,5 +531,37 @@ export function useUpdateTicketStatus() {
       notify.success("Статус обновлён");
     },
     onError: (e) => notify.error(`Ошибка обновления статуса: ${e.message}`),
+  });
+}
+
+// -----------------------------------------------------------------------------
+// Обновить признак закрытого замечания
+// -----------------------------------------------------------------------------
+export function useUpdateTicketClosed() {
+  const projectId = useProjectId();
+  const qc = useQueryClient();
+  const notify = useNotify();
+
+  return useMutation({
+    mutationFn: async ({ id, isClosed }) => {
+      const { data, error } = await supabase
+        .from("tickets")
+        .update({ is_closed: isClosed })
+        .eq("id", id)
+        .eq("project_id", projectId)
+        .select("id, is_closed")
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ["tickets", projectId] });
+      qc.invalidateQueries({
+        queryKey: ["ticket", vars.id, projectId],
+        exact: true,
+      });
+      notify.success("Статус закрытия обновлён");
+    },
+    onError: (e) => notify.error(`Ошибка обновления: ${e.message}`),
   });
 }

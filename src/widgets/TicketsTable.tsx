@@ -22,6 +22,7 @@ import {
 
 import { useDeleteTicket } from "@/entities/ticket";
 import TicketStatusSelect from "@/features/ticket/TicketStatusSelect";
+import TicketClosedSelect from "@/features/ticket/TicketClosedSelect";
 
 /** Форматирование даты */
 const fmt = (d, withTime = false) =>
@@ -37,6 +38,7 @@ const daysPassed = (receivedAt) =>
 /** Фильтрация по фильтрам */
 const applyFilters = (rows, f) =>
   rows.filter((r) => {
+    if (f.hideClosed && r.isClosed) return false;
     const days = daysPassed(r.receivedAt);
     if (f.period && f.period.length === 2) {
       const [from, to] = f.period;
@@ -117,6 +119,15 @@ export default function TicketsTable({ tickets, filters, loading, onView }) {
         sorter: (a, b) => a.statusName.localeCompare(b.statusName),
         render: (_, row) => (
           <TicketStatusSelect ticketId={row.id} statusId={row.statusId} />
+        ),
+      },
+      {
+        title: "Замечание закрыто",
+        dataIndex: "isClosed",
+        width: 160,
+        sorter: (a, b) => Number(a.isClosed) - Number(b.isClosed),
+        render: (_, row) => (
+          <TicketClosedSelect ticketId={row.id} isClosed={row.isClosed} />
         ),
       },
       {
