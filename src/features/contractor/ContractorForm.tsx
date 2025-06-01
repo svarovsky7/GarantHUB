@@ -10,10 +10,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import { useAddContractor, useUpdateContractor } from "@/entities/contractor";
 import { useNotify } from "@/shared/hooks/useNotify";
+import { formatPhone } from "@/shared/utils/formatPhone";
 
 const schema = z.object({
   name: z.string().trim().min(1, "Обязательно"),
-  inn: z.string().trim().min(10, "Мин. 10 символов"),
+  inn: z
+    .string()
+    .trim()
+    .regex(/^(\d{10}|\d{12})$/, "ИНН должен содержать 10 или 12 цифр"),
   phone: z.string().trim().optional(),
   email: z.union([z.literal(""), z.string().email("Неверный e-mail")]),
   comment: z.string().trim().optional(),
@@ -81,6 +85,11 @@ export default function ContractorForm({
             render={({ field }) => (
               <TextField
                 {...field}
+                onChange={(e) =>
+                  field.onChange(
+                    f === "phone" ? formatPhone(e.target.value) : e.target.value,
+                  )
+                }
                 label={
                   {
                     name: "Название компании *",
@@ -95,6 +104,7 @@ export default function ContractorForm({
                 autoComplete="off"
                 error={!!errors[f]}
                 helperText={errors[f]?.message}
+                placeholder={f === "phone" ? "+7 (9xx) xxx-xx-xx" : undefined}
                 data-oid="8azvuoq"
               />
             )}
