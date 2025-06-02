@@ -53,8 +53,9 @@ export default function EditLetterDialog({
   // При смене проекта сбрасываем выбранные объекты,
   // чтобы пользователь не сохранял несоответствующие unit_ids
   useEffect(() => {
+    if (letter && projectId === letter.project_id) return;
     form.setFieldValue('unit_ids', []);
-  }, [projectId, form]);
+  }, [projectId, form, letter]);
 
   const contactOptions = React.useMemo(
     () => [
