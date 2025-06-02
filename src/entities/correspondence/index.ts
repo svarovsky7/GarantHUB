@@ -32,7 +32,7 @@ export function useLetters() {
       const { data, error } = await supabase
         .from(LETTERS_TABLE)
         .select(
-          `id, project_id, number, letter_type_id, letter_date, subject, sender, receiver, responsible_user_id, unit_ids, attachment_ids, created_at`
+          `id, project_id, number, letter_type_id, letter_date, subject, content, sender, receiver, responsible_user_id, unit_ids, attachment_ids, created_at`
         )
         .order('id');
       if (error) throw error;
@@ -98,7 +98,7 @@ export function useLetters() {
           sender,
           receiver,
           subject: row.subject ?? '',
-          content: '',
+          content: row.content ?? '',
 
           attachments,
         } as CorrespondenceLetter;
@@ -130,6 +130,7 @@ export function useAddLetter() {
         letter_type_id: data.letter_type_id,
         letter_date: data.date,
         subject: data.subject,
+        content: data.content,
         sender: data.sender,
         receiver: data.receiver,
         // null в случае отсутствия выбранного сотрудника
@@ -198,7 +199,7 @@ export function useAddLetter() {
         sender: data.sender,
         receiver: data.receiver,
         subject: data.subject,
-        content: '',
+        content: data.content,
 
         attachments: files,
       } as CorrespondenceLetter;
@@ -330,6 +331,7 @@ export function useUpdateLetter() {
         letter_type_id: updates.letter_type_id,
         letter_date: updates.date,
         subject: updates.subject,
+        content: updates.content,
         sender: updates.sender,
         receiver: updates.receiver,
         responsible_user_id: updates.responsible_user_id,

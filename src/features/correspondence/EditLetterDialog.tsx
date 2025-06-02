@@ -12,7 +12,7 @@ import FileDropZone from '@/shared/ui/FileDropZone';
 import AttachmentEditorList from '@/shared/ui/AttachmentEditorList';
 import { useUpdateLetter, signedLetterUrl } from '@/entities/correspondence';
 import { useUsers } from '@/entities/user';
-import { useUnitsByProject } from '@/entities/unit';
+import { useUnitsByProject, useUnitsByIds } from '@/entities/unit';
 import { usePersons } from '@/entities/person';
 import { useContractors } from '@/entities/contractor';
 import { CorrespondenceLetter, CorrespondenceAttachment } from '@/shared/types/correspondence';
@@ -44,7 +44,9 @@ export default function EditLetterDialog({
 
   const projectId = Form.useWatch('project_id', form);
   const { data: users = [], isLoading: loadingUsers } = useUsers();
-  const { data: units = [], isLoading: loadingUnits } = useUnitsByProject(projectId);
+  const { data: projectUnits = [], isLoading: loadingUnits } = useUnitsByProject(projectId);
+  const { data: idUnits = [] } = useUnitsByIds(!projectId && letter ? letter.unit_ids : []);
+  const units = projectId ? projectUnits : idUnits;
   const { data: contractors = [] } = useContractors();
   const { data: persons = [] } = usePersons();
 
@@ -71,6 +73,7 @@ export default function EditLetterDialog({
         sender: letter.sender,
         receiver: letter.receiver,
         subject: letter.subject,
+        content: letter.content,
         project_id: letter.project_id ?? undefined,
         letter_type_id: letter.letter_type_id ?? undefined,
         responsible_user_id: letter.responsible_user_id ?? undefined,
@@ -108,6 +111,7 @@ export default function EditLetterDialog({
         sender: vals.sender,
         receiver: vals.receiver,
         subject: vals.subject,
+        content: vals.content,
         project_id: vals.project_id ?? null,
         letter_type_id: vals.letter_type_id ?? null,
         responsible_user_id: vals.responsible_user_id ?? null,
@@ -161,7 +165,7 @@ export default function EditLetterDialog({
             <Select
               mode="multiple"
               allowClear
-              disabled={!projectId}
+              disabled={units.length === 0}
               loading={loadingUnits}
               options={units.map((u) => ({ value: u.id, label: u.name }))}
             />
@@ -186,6 +190,9 @@ export default function EditLetterDialog({
           </Form.Item>
           <Form.Item name="subject" label="Тема">
             <Input />
+          </Form.Item>
+          <Form.Item name="content" label="Содержание">
+            <Input.TextArea rows={3} />
           </Form.Item>
         </Form>
         <FileDropZone onFiles={addFiles} />
