@@ -147,11 +147,8 @@ export function useAddLetter() {
       const letterId = inserted.id as number;
       let files: CorrespondenceAttachment[] = [];
       let attachmentIds: number[] = [];
-      if (attachments.length && payload.project_id) {
-        const uploaded = await addLetterAttachments(
-          attachments,
-          payload.project_id!
-        );
+      if (attachments.length) {
+        const uploaded = await addLetterAttachments(attachments, letterId);
         files = uploaded.map((u) => ({
           id: String(u.id),
           name:
@@ -302,11 +299,10 @@ export function useUpdateLetter() {
       const letterId = Number(id);
       const { data: current } = await supabase
         .from(LETTERS_TABLE)
-        .select('attachment_ids, project_id')
+        .select('attachment_ids')
         .eq('id', letterId)
         .single();
       let ids = (current?.attachment_ids ?? []) as number[];
-      const projectId = updates.project_id ?? current?.project_id ?? null;
 
       if (removedAttachmentIds.length) {
         const { data: files } = await supabase
@@ -350,8 +346,8 @@ export function useUpdateLetter() {
         }
       }
 
-      if (newAttachments.length && projectId) {
-        const uploaded = await addLetterAttachments(newAttachments, projectId);
+      if (newAttachments.length) {
+        const uploaded = await addLetterAttachments(newAttachments, letterId);
         ids = ids.concat(uploaded.map((u) => u.id));
       }
 
