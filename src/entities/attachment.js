@@ -63,8 +63,13 @@ async function upload(file, pathPrefix) {
     return { path, type: file.type, url: publicUrl };
 }
 
-export function uploadLetterAttachment(file, projectId) {
-    return upload(file, `letters/${projectId}`);
+/**
+ * Загружает файл письма в хранилище Supabase.
+ * @param {File} file
+ * @param {number} letterId
+ */
+export function uploadLetterAttachment(file, letterId) {
+    return upload(file, `letters/${letterId}`);
 }
 
 // Загрузка вложений дела теперь привязана к идентификатору дела,
@@ -113,14 +118,13 @@ export async function addCaseAttachments(files, caseId) {
 }
 
 /**
- * Загружает файлы письма и создаёт записи в таблице attachments
- * с возвратом созданных строк.
+ * Загружает файлы письма и создаёт записи в таблице attachments.
  * @param {{file: File, type_id: number | null}[]} files
- * @param {number} projectId
+ * @param {number} letterId
  */
-export async function addLetterAttachments(files, projectId) {
+export async function addLetterAttachments(files, letterId) {
     const uploaded = await Promise.all(
-        files.map(({ file }) => uploadLetterAttachment(file, projectId)),
+        files.map(({ file }) => uploadLetterAttachment(file, letterId)),
     );
 
     const rows = uploaded.map((u, idx) => ({
