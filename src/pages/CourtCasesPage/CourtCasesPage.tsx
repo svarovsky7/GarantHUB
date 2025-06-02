@@ -1214,8 +1214,8 @@ function DefectsTab({ defects, onAdd, onDelete, onUpdate }: DefectsProps) {
       <Form form={form} layout="vertical" onFinish={submit} style={{ marginBottom: 16 }}>
         <Row gutter={16}>
           <Col span={12}>
-            <Form.Item name="description" label="Наименование недостатка" rules={[{ required: true, message: 'Укажите название' }]}>
-              <Input />
+            <Form.Item name="description" label="Наименование недостатка" rules={[{ required: true, message: 'Укажите название' }]}> 
+              <Input autoComplete="off" />
             </Form.Item>
           </Col>
           <Col span={12}>
