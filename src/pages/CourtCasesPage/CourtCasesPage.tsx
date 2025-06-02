@@ -880,7 +880,7 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange, projects }: Cas
   const addDefect = (defect: Omit<Defect, 'id'>) => {
     if (!caseData) return;
     addDefectMutation.mutate(
-      { case_id: Number(caseData.id), ...defect },
+      { case_id: Number(caseData.id), project_id: caseData.project_id, ...defect },
       {
         onError: (e: any) => message.error(e.message),
       },
