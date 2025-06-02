@@ -120,10 +120,17 @@ export function useCaseDefects(caseId: number) {
 export function useAddDefect() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: { case_id: number } & Omit<Defect, 'id' | 'case_id'>) => {
+    /**
+     * Creates a defect record and links it to a court case.
+     * `project_id` is required by DB constraints, so it must be provided.
+     */
+    mutationFn: async (
+      payload: { case_id: number; project_id: number } & Omit<Defect, 'id' | 'case_id'>,
+    ) => {
       const { data, error } = await supabase
         .from(DEFECTS_TABLE)
         .insert({
+          project_id: payload.project_id,
           description: payload.description,
           fix_cost: payload.cost,
         })
@@ -136,7 +143,7 @@ export function useAddDefect() {
         .insert({ case_id: payload.case_id, defect_id: defId });
       if (linkErr) throw linkErr;
       qc.invalidateQueries({ queryKey: [CASE_DEFECTS_TABLE, payload.case_id] });
-      return { ...payload, id: defId } as Defect;
+      return { id: defId, description: payload.description, cost: payload.cost } as Defect;
     },
   });
 }
