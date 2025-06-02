@@ -155,14 +155,6 @@ export default function CorrespondenceTable({
           <span style={record.parent_id ? { color: '#888' } : {}}>{val}</span>,
     },
     {
-      title: 'Содержание',
-      dataIndex: 'content',
-      sorter: (a, b) => (a.content || '').localeCompare(b.content || ''),
-      render: (val: string, record: any) => (
-        <span style={record.parent_id ? { color: '#888' } : {}}>{val}</span>
-      ),
-    },
-    {
       title: 'Проект',
       dataIndex: 'projectName',
       sorter: (a, b) => (a.projectName || '').localeCompare(b.projectName || ''),

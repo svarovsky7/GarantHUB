@@ -49,6 +49,8 @@ interface AddLetterFormProps {
 export default function AddLetterForm({ onSubmit, parentId = null }: AddLetterFormProps) {
   const [form] = Form.useForm<Omit<AddLetterFormData, 'attachments'>>();
   const projectId = Form.useWatch('project_id', form);
+  const senderValue = Form.useWatch('sender', form);
+  const receiverValue = Form.useWatch('receiver', form);
 
   const [files, setFiles] = React.useState<{ file: File; type_id: number | null }[]>([]);
   const [senderType, setSenderType] = React.useState<'person' | 'contractor'>('person');
@@ -166,7 +168,7 @@ export default function AddLetterForm({ onSubmit, parentId = null }: AddLetterFo
                   <Button icon={<PlusOutlined />} onClick={() => setContractorModal({ target: 'sender' })} style={{ display: senderType === 'contractor' ? 'inline-block' : 'none' }} />
                   <Button
                     icon={<EditOutlined />}
-                    disabled={!form.getFieldValue('sender')}
+                    disabled={!senderValue}
                     onClick={() => {
                       const val = form.getFieldValue('sender');
                       const data = senderType === 'person'
@@ -199,7 +201,7 @@ export default function AddLetterForm({ onSubmit, parentId = null }: AddLetterFo
                       }
                     }}
                   >
-                    <Button danger icon={<DeleteOutlined />} disabled={!form.getFieldValue('sender')} />
+                    <Button danger icon={<DeleteOutlined />} disabled={!senderValue} />
                   </Popconfirm>
                 </Space.Compact>
               </Space>
@@ -227,7 +229,7 @@ export default function AddLetterForm({ onSubmit, parentId = null }: AddLetterFo
                   <Button icon={<PlusOutlined />} onClick={() => setContractorModal({ target: 'receiver' })} style={{ display: receiverType === 'contractor' ? 'inline-block' : 'none' }} />
                   <Button
                     icon={<EditOutlined />}
-                    disabled={!form.getFieldValue('receiver')}
+                    disabled={!receiverValue}
                     onClick={() => {
                       const val = form.getFieldValue('receiver');
                       const data = receiverType === 'person'
@@ -260,7 +262,7 @@ export default function AddLetterForm({ onSubmit, parentId = null }: AddLetterFo
                       }
                     }}
                   >
-                    <Button danger icon={<DeleteOutlined />} disabled={!form.getFieldValue('receiver')} />
+                    <Button danger icon={<DeleteOutlined />} disabled={!receiverValue} />
                   </Popconfirm>
                 </Space.Compact>
               </Space>
