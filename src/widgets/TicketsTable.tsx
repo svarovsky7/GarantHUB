@@ -118,7 +118,12 @@ export default function TicketsTable({ tickets, filters, loading, onView }) {
         width: 160,
         sorter: (a, b) => a.statusName.localeCompare(b.statusName),
         render: (_, row) => (
-          <TicketStatusSelect ticketId={row.id} statusId={row.statusId} />
+          <TicketStatusSelect
+            ticketId={row.id}
+            statusId={row.statusId}
+            statusColor={row.statusColor}
+            statusName={row.statusName}
+          />
         ),
       },
       {
