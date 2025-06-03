@@ -2,6 +2,7 @@
 // Страница «/tickets» – фильтры + таблица
 // -----------------------------------------------------------------------------
 import React, { useState, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { ConfigProvider, Typography, Alert, Card } from "antd";
 import ruRU from "antd/locale/ru_RU";
 import { useSnackbar } from "notistack";
@@ -25,8 +26,18 @@ export default function TicketsPage() {
   );
   const { data: units = [] } = useUnitsByIds(unitIds);
   const qc = useQueryClient();
+  const [searchParams] = useSearchParams();
   const [filters, setFilters] = useState({});
   const [viewId, setViewId] = useState<number | null>(null);
+  const initialValues = {
+    project_id: searchParams.get('project_id')
+      ? Number(searchParams.get('project_id')!)
+      : undefined,
+    unit_ids: searchParams.get('unit_id')
+      ? [Number(searchParams.get('unit_id')!)]
+      : undefined,
+    responsible_engineer_id: searchParams.get('responsible_engineer_id') || undefined,
+  };
 
   /* toast api-ошибки */
   React.useEffect(() => {
@@ -85,7 +96,10 @@ export default function TicketsPage() {
         <Typography.Title level={4} style={{ marginBottom: 16 }}>Замечания</Typography.Title>
 
         <Card style={{ marginBottom: 24 }}>
-          <TicketFormAntd onCreated={() => qc.invalidateQueries({ queryKey: ['tickets'] })} />
+          <TicketFormAntd
+            onCreated={() => qc.invalidateQueries({ queryKey: ['tickets'] })}
+            initialValues={initialValues}
+          />
         </Card>
 
         <Card style={{ marginBottom: 24 }}>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   ConfigProvider,
   Typography,
@@ -59,7 +60,17 @@ export default function CorrespondencePage() {
     content: '',
     search: '',
   });
+  const [searchParams] = useSearchParams();
   const [form] = Form.useForm();
+  const initialValues = {
+    project_id: searchParams.get('project_id')
+      ? Number(searchParams.get('project_id')!)
+      : undefined,
+    unit_ids: searchParams.get('unit_id')
+      ? [Number(searchParams.get('unit_id')!)]
+      : [],
+    responsible_user_id: searchParams.get('responsible_user_id') || undefined,
+  };
   const [view, setView] = useState<CorrespondenceLetter | null>(null);
   const [linkFor, setLinkFor] = useState<CorrespondenceLetter | null>(null);
 
@@ -178,7 +189,7 @@ export default function CorrespondencePage() {
     <ConfigProvider locale={ruRU}>
       <>
         <div style={{ marginTop: 16 }}>
-          <AddLetterForm onSubmit={handleAdd} />
+          <AddLetterForm onSubmit={handleAdd} initialValues={initialValues} />
         </div>
 
         <LinkLettersDialog

@@ -18,7 +18,17 @@ import FileDropZone from '@/shared/ui/FileDropZone';
  * Форма создания замечания на основе Ant Design.
  * @param onCreated callback после успешного создания
  */
-export default function TicketFormAntd({ onCreated }: { onCreated?: () => void }) {
+export interface TicketFormAntdProps {
+  onCreated?: () => void;
+  /** Начальные значения формы */
+  initialValues?: Partial<{
+    project_id: number;
+    unit_ids: number[];
+    responsible_engineer_id: string;
+  }>;
+}
+
+export default function TicketFormAntd({ onCreated, initialValues = {} }: TicketFormAntdProps) {
   const [form] = Form.useForm();
   const globalProjectId = useProjectId();
   const projectId = Form.useWatch('project_id', form) ?? globalProjectId;
@@ -43,15 +53,25 @@ export default function TicketFormAntd({ onCreated }: { onCreated?: () => void }
   }, [projectId, typeId, deadlines]);
 
   useEffect(() => {
-    if (globalProjectId) {
+    if (initialValues.project_id != null) {
+      form.setFieldValue('project_id', initialValues.project_id);
+    } else if (globalProjectId) {
       form.setFieldValue('project_id', globalProjectId);
     }
+    if (initialValues.unit_ids) {
+      form.setFieldValue('unit_ids', initialValues.unit_ids);
+    }
+    if (initialValues.responsible_engineer_id) {
+      form.setFieldValue('responsible_engineer_id', initialValues.responsible_engineer_id);
+    }
     form.setFieldValue('received_at', dayjs());
-  }, [globalProjectId, form]);
+  }, [globalProjectId, form, initialValues]);
 
   useEffect(() => {
-    form.setFieldValue('unit_ids', []);
-  }, [projectId, form]);
+    if (!initialValues.unit_ids) {
+      form.setFieldValue('unit_ids', []);
+    }
+  }, [projectId, form, initialValues.unit_ids]);
 
   useEffect(() => {
     if (statuses.length) {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import dayjs, { Dayjs } from 'dayjs';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import 'dayjs/locale/ru';
@@ -109,10 +110,21 @@ export default function CourtCasesPage() {
   const [dialogCase, setDialogCase] = useState<CourtCase | null>(null);
   const [tab, setTab] = useState('defects');
 
+  const [searchParams] = useSearchParams();
+
   const [form] = Form.useForm();
   const projectId = Form.useWatch('project_id', form);
   const globalProjectId = useProjectId();
   const profileId = useAuthStore((s) => s.profile?.id);
+
+  useEffect(() => {
+    const p = searchParams.get('project_id');
+    const u = searchParams.get('unit_id');
+    const r = searchParams.get('responsible_lawyer_id');
+    if (p) form.setFieldValue('project_id', Number(p));
+    if (u) form.setFieldValue('unit_ids', [Number(u)]);
+    if (r) form.setFieldValue('responsible_lawyer_id', r);
+  }, [searchParams, form]);
 
   useEffect(() => {
     const handler = (e: StorageEvent) => {
