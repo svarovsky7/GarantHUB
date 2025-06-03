@@ -9,13 +9,14 @@ import {
   Button,
   TextField,
   Typography,
+  Tooltip,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import FloorCell from "@/entities/floor/FloorCell";
 import useUnitsMatrix from "@/shared/hooks/useUnitsMatrix";
 import { supabase } from "@/shared/api/supabaseClient";
 import TicketListDialog from "@/features/ticket/TicketListDialog";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, createSearchParams } from 'react-router-dom';
 import { useAuthStore } from '@/shared/store/authStore';
 
 /**
@@ -334,20 +335,25 @@ export default function UnitsMatrix({
             >
               Добавить замечание
             </Button>
-            <Button
-              variant="outlined"
-              color="secondary"
-              fullWidth
-              onClick={() => {
-                const id = actionDialog.unit?.id;
-                navigate(
-                  `/court-cases?project_id=${projectId}&unit_id=${id}&responsible_lawyer_id=${profileId ?? ''}`,
-                );
-                setActionDialog({ open: false, unit: null, action: '' });
-              }}
-            >
-              Добавить судебное дело
-            </Button>
+            <Tooltip title="Добавить судебное дело" arrow>
+              <Button
+                variant="outlined"
+                color="secondary"
+                fullWidth
+                onClick={() => {
+                  const id = actionDialog.unit?.id;
+                  const search = createSearchParams({
+                    project_id: String(projectId),
+                    unit_id: String(id ?? ''),
+                    responsible_lawyer_id: String(profileId ?? ''),
+                  }).toString();
+                  navigate(`/court-cases?${search}`);
+                  setActionDialog({ open: false, unit: null, action: '' });
+                }}
+              >
+                Добавить судебное дело
+              </Button>
+            </Tooltip>
             <Button
               variant="outlined"
               color="inherit"
