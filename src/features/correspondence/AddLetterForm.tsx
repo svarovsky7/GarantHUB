@@ -43,10 +43,12 @@ export interface AddLetterFormData {
 interface AddLetterFormProps {
   onSubmit: (data: AddLetterFormData) => void;
   parentId?: string | null;
+  /** Начальные значения формы */
+  initialValues?: Partial<AddLetterFormData>;
 }
 
 /** Форма добавления нового письма на Ant Design */
-export default function AddLetterForm({ onSubmit, parentId = null }: AddLetterFormProps) {
+export default function AddLetterForm({ onSubmit, parentId = null, initialValues: defaults = {} }: AddLetterFormProps) {
   const [form] = Form.useForm<Omit<AddLetterFormData, 'attachments'>>();
   const projectId = Form.useWatch('project_id', form);
   const senderValue = Form.useWatch('sender', form);
@@ -111,11 +113,11 @@ export default function AddLetterForm({ onSubmit, parentId = null }: AddLetterFo
   return (
     <>
       <Form
-          form={form}
-          layout="vertical"
-          onFinish={submit}
-          initialValues={{ type: 'incoming', date: dayjs(), unit_ids: [] }}
-          autoComplete="off"
+        form={form}
+        layout="vertical"
+        onFinish={submit}
+        initialValues={{ type: 'incoming', date: dayjs(), unit_ids: [], ...defaults }}
+        autoComplete="off"
       >
         <Row gutter={16}>
           <Col span={8}>
