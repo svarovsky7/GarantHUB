@@ -14,11 +14,9 @@ import AddIcon from "@mui/icons-material/Add";
 import FloorCell from "@/entities/floor/FloorCell";
 import useUnitsMatrix from "@/shared/hooks/useUnitsMatrix";
 import { supabase } from "@/shared/api/supabaseClient";
-import TicketForm from "@/features/ticket/TicketForm";
 import TicketListDialog from "@/features/ticket/TicketListDialog";
-import AddCourtCaseForm from "@/features/courtCase/AddCourtCaseForm";
-import AddLetterForm from "@/features/correspondence/AddLetterForm";
-import { ConfigProvider } from 'antd';
+import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '@/shared/store/authStore';
 
 /**
  * Шахматка квартир/этажей для заданного проекта/корпуса/секции.
@@ -38,6 +36,8 @@ export default function UnitsMatrix({
     ticketsByUnit,
     units,
   } = useUnitsMatrix(projectId, building, section);
+  const navigate = useNavigate();
+  const profileId = useAuthStore((s) => s.profile?.id);
 
   // Диалоги редактирования/удаления
   const [editDialog, setEditDialog] = useState({
@@ -324,9 +324,13 @@ export default function UnitsMatrix({
               variant="contained"
               color="primary"
               fullWidth
-              onClick={() =>
-                setActionDialog((ad) => ({ ...ad, action: "ticket" }))
-              }
+              onClick={() => {
+                const id = actionDialog.unit?.id;
+                navigate(
+                  `/tickets?project_id=${projectId}&unit_id=${id}&responsible_engineer_id=${profileId ?? ''}`,
+                );
+                setActionDialog({ open: false, unit: null, action: '' });
+              }}
             >
               Добавить замечание
             </Button>
@@ -334,9 +338,13 @@ export default function UnitsMatrix({
               variant="outlined"
               color="secondary"
               fullWidth
-              onClick={() =>
-                setActionDialog((ad) => ({ ...ad, action: 'court' }))
-              }
+              onClick={() => {
+                const id = actionDialog.unit?.id;
+                navigate(
+                  `/court-cases?project_id=${projectId}&unit_id=${id}&responsible_lawyer_id=${profileId ?? ''}`,
+                );
+                setActionDialog({ open: false, unit: null, action: '' });
+              }}
             >
               Добавить судебное дело
             </Button>
@@ -344,9 +352,13 @@ export default function UnitsMatrix({
               variant="outlined"
               color="inherit"
               fullWidth
-              onClick={() =>
-                setActionDialog((ad) => ({ ...ad, action: 'letter' }))
-              }
+              onClick={() => {
+                const id = actionDialog.unit?.id;
+                navigate(
+                  `/correspondence?project_id=${projectId}&unit_id=${id}&responsible_user_id=${profileId ?? ''}`,
+                );
+                setActionDialog({ open: false, unit: null, action: '' });
+              }}
             >
               Добавить письмо
             </Button>
@@ -363,60 +375,6 @@ export default function UnitsMatrix({
             <Button variant="text" color="info" fullWidth disabled>
               Показать историю
             </Button>
-          </DialogContent>
-        )}
-        {actionDialog.action === "ticket" && (
-          <DialogContent sx={{ p: 0, pt: 2 }}>
-            <Typography sx={{ fontWeight: 500, textAlign: "center", mb: 2 }}>
-              Добавление замечания для квартиры {actionDialog.unit?.name}
-            </Typography>
-            <Box sx={{ px: 2, pb: 2 }}>
-              <TicketForm
-                embedded
-                initialUnitId={actionDialog.unit?.id}
-                onCreated={() => {
-                  setActionDialog({ open: false, unit: null, action: "" });
-                  fetchUnits();
-                }}
-                onCancel={() =>
-                  setActionDialog({ open: false, unit: null, action: "" })
-                }
-                ticketId={undefined}
-              />
-            </Box>
-          </DialogContent>
-        )}
-        {actionDialog.action === 'court' && (
-          <DialogContent sx={{ p: 0, pt: 2 }}>
-            <Typography sx={{ fontWeight: 500, textAlign: 'center', mb: 2 }}>
-              Добавление судебного дела для квартиры {actionDialog.unit?.name}
-            </Typography>
-            <Box sx={{ px: 2, pb: 2 }}>
-              <AddCourtCaseForm
-                initialProjectId={projectId}
-                initialUnitId={actionDialog.unit?.id}
-                onSuccess={() => setActionDialog({ open: false, unit: null, action: '' })}
-                onCancel={() => setActionDialog({ open: false, unit: null, action: '' })}
-              />
-            </Box>
-          </DialogContent>
-        )}
-        {actionDialog.action === 'letter' && (
-          <DialogContent sx={{ p: 0, pt: 2 }}>
-            <Typography sx={{ fontWeight: 500, textAlign: 'center', mb: 2 }}>
-              Добавление письма для квартиры {actionDialog.unit?.name}
-            </Typography>
-            <Box sx={{ px: 2, pb: 2 }}>
-              <ConfigProvider>
-                <AddLetterForm
-                  onSubmit={() => setActionDialog({ open: false, unit: null, action: '' })}
-                  initialValues={{
-                    project_id: projectId,
-                    unit_ids: actionDialog.unit ? [actionDialog.unit.id] : [],
-                  }}
-                />
-              </ConfigProvider>
-            </Box>
           </DialogContent>
         )}
       </Dialog>
