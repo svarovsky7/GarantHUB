@@ -82,7 +82,10 @@ const LS_KEY = 'courtCasesHideClosed';
 
 type Filters = {
   status?: string;
+  project?: string;
   object?: string;
+  plaintiff?: string;
+  defendant?: string;
   lawyer?: string;
   search?: string;
   hideClosed?: boolean;
@@ -354,12 +357,27 @@ export default function CourtCasesPage() {
       c.defendant.toLowerCase().includes(search) ||
       (c.description || '').toLowerCase().includes(search);
     const matchesStatus = !filters.status || c.status === filters.status;
+    const matchesProject =
+      !filters.project || c.projectName.toLowerCase().includes(filters.project.toLowerCase());
     const matchesObject =
       !filters.object || c.projectObject.toLowerCase().includes(filters.object.toLowerCase());
+    const matchesPlaintiff =
+      !filters.plaintiff || c.plaintiff.toLowerCase().includes(filters.plaintiff.toLowerCase());
+    const matchesDefendant =
+      !filters.defendant || c.defendant.toLowerCase().includes(filters.defendant.toLowerCase());
     const matchesLawyer =
       !filters.lawyer || c.responsibleLawyer.toLowerCase().includes(filters.lawyer.toLowerCase());
     const matchesClosed = !filters.hideClosed || !c.is_closed;
-    return matchesSearch && matchesStatus && matchesObject && matchesLawyer && matchesClosed;
+    return (
+      matchesSearch &&
+      matchesStatus &&
+      matchesProject &&
+      matchesObject &&
+      matchesPlaintiff &&
+      matchesDefendant &&
+      matchesLawyer &&
+      matchesClosed
+    );
   });
 
   return (
@@ -675,8 +693,26 @@ export default function CourtCasesPage() {
         </Col>
         <Col>
           <Input
+            placeholder="Проект"
+            onChange={(e) => setFilters((f) => ({ ...f, project: e.target.value }))}
+          />
+        </Col>
+        <Col>
+          <Input
             placeholder="Фильтр по объекту"
             onChange={(e) => setFilters((f) => ({ ...f, object: e.target.value }))}
+          />
+        </Col>
+        <Col>
+          <Input
+            placeholder="Истец"
+            onChange={(e) => setFilters((f) => ({ ...f, plaintiff: e.target.value }))}
+          />
+        </Col>
+        <Col>
+          <Input
+            placeholder="Ответчик"
+            onChange={(e) => setFilters((f) => ({ ...f, defendant: e.target.value }))}
           />
         </Col>
         <Col>
