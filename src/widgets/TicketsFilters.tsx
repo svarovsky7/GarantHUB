@@ -5,7 +5,10 @@ import { Form, DatePicker, Select, Input, Button, Switch } from "antd";
 
 const { RangePicker } = DatePicker;
 const { Option } = Select;
-const LS_KEY = "ticketsHideClosed";
+/** Ключ в localStorage для флага скрытия закрытых замечаний */
+const LS_HIDE_CLOSED_KEY = "ticketsHideClosed";
+/** Ключ в localStorage для выбранного проекта */
+const LS_PROJECT_KEY = "ticketsProject";
 
 /**
  * Фильтры таблицы замечаний.
@@ -18,8 +21,10 @@ export default function TicketsFilters({ options, onChange }) {
 
   useEffect(() => {
     try {
-      const saved = JSON.parse(localStorage.getItem(LS_KEY) || "false");
-      form.setFieldValue("hideClosed", saved);
+      const hideClosed = JSON.parse(localStorage.getItem(LS_HIDE_CLOSED_KEY) || "false");
+      form.setFieldValue("hideClosed", hideClosed);
+      const project = JSON.parse(localStorage.getItem(LS_PROJECT_KEY) || 'null');
+      if (project) form.setFieldValue("project", project);
     } catch {}
     onChange(form.getFieldsValue());
     // eslint-disable-next-line
@@ -27,9 +32,16 @@ export default function TicketsFilters({ options, onChange }) {
 
   useEffect(() => {
     const handler = (e) => {
-      if (e.key === LS_KEY) {
+      if (e.key === LS_HIDE_CLOSED_KEY) {
         try {
           form.setFieldValue("hideClosed", JSON.parse(e.newValue || "false"));
+          onChange(form.getFieldsValue());
+        } catch {}
+      }
+      if (e.key === LS_PROJECT_KEY) {
+        try {
+          const val = JSON.parse(e.newValue || 'null');
+          form.setFieldValue("project", val);
           onChange(form.getFieldsValue());
         } catch {}
       }
@@ -42,7 +54,16 @@ export default function TicketsFilters({ options, onChange }) {
     onChange(values);
     if (Object.prototype.hasOwnProperty.call(values, "hideClosed")) {
       try {
-        localStorage.setItem(LS_KEY, JSON.stringify(values.hideClosed));
+        localStorage.setItem(LS_HIDE_CLOSED_KEY, JSON.stringify(values.hideClosed));
+      } catch {}
+    }
+    if (Object.prototype.hasOwnProperty.call(values, "project")) {
+      try {
+        if (values.project) {
+          localStorage.setItem(LS_PROJECT_KEY, JSON.stringify(values.project));
+        } else {
+          localStorage.removeItem(LS_PROJECT_KEY);
+        }
       } catch {}
     }
   };
@@ -50,6 +71,9 @@ export default function TicketsFilters({ options, onChange }) {
   const reset = () => {
     form.resetFields();
     onChange({});
+    try {
+      localStorage.removeItem(LS_PROJECT_KEY);
+    } catch {}
   };
 
   return (
