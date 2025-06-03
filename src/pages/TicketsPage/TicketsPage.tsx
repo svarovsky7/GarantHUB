@@ -36,6 +36,9 @@ export default function TicketsPage() {
     unit_ids: searchParams.get('unit_id')
       ? [Number(searchParams.get('unit_id')!)]
       : undefined,
+    unit_id: searchParams.get('unit_id')
+      ? Number(searchParams.get('unit_id')!)
+      : undefined,
     responsible_engineer_id: searchParams.get('responsible_engineer_id') || undefined,
   };
 
