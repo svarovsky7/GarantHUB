@@ -141,13 +141,6 @@
   },
   {
     "table_name": "court_case_parties",
-    "column_name": "party_type",
-    "data_type": "integer",
-    "is_nullable": "NO",
-    "column_default": null
-  },
-  {
-    "table_name": "court_case_parties",
     "column_name": "contractor_id",
     "data_type": "integer",
     "is_nullable": "YES",
@@ -278,6 +271,13 @@
     "data_type": "ARRAY",
     "is_nullable": "YES",
     "column_default": "ARRAY[]::integer[]"
+  },
+  {
+    "table_name": "court_cases",
+    "column_name": "is_closed",
+    "data_type": "boolean",
+    "is_nullable": "NO",
+    "column_default": "false"
   },
   {
     "table_name": "defect_deadlines",
@@ -435,13 +435,6 @@
   },
   {
     "table_name": "letters",
-    "column_name": "content",
-    "data_type": "text",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
-    "table_name": "letters",
     "column_name": "created_at",
     "data_type": "timestamp with time zone",
     "is_nullable": "YES",
@@ -467,6 +460,13 @@
     "data_type": "ARRAY",
     "is_nullable": "YES",
     "column_default": "ARRAY[]::integer[]"
+  },
+  {
+    "table_name": "letters",
+    "column_name": "content",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
   },
   {
     "table_name": "litigation_stages",
@@ -792,17 +792,17 @@
   },
   {
     "table_name": "tickets",
-    "column_name": "unit_id",
-    "data_type": "integer",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
-    "table_name": "tickets",
     "column_name": "is_closed",
     "data_type": "boolean",
     "is_nullable": "NO",
     "column_default": "false"
+  },
+  {
+    "table_name": "tickets",
+    "column_name": "unit_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
   },
   {
     "table_name": "unit_persons",

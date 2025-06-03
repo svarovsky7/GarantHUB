@@ -220,20 +220,16 @@ export default function CourtCasesPage() {
   const removeCaseFile = (idx: number) =>
     setCaseFiles((p) => p.filter((_, i) => i !== idx));
 
-  /**
-   * Creates a new court case and uploads linked attachments.
-   * Date fields may be empty, so values are checked before formatting.
-   */
   const handleAddCase = async (values: any) => {
     try {
-        const newCase = await addCaseMutation.mutateAsync({
-          project_id: values.project_id,
-          unit_ids: values.unit_ids || [],
-          number: values.number,
-          date: values.date ? values.date.format('YYYY-MM-DD') : null,
-          plaintiff_id: values.plaintiff_id,
-          defendant_id: values.defendant_id,
-          responsible_lawyer_id: values.responsible_lawyer_id,
+      const newCase = await addCaseMutation.mutateAsync({
+        project_id: values.project_id,
+        unit_ids: values.unit_ids || [],
+        number: values.number,
+        date: values.date.format('YYYY-MM-DD'),
+        plaintiff_id: values.plaintiff_id,
+        defendant_id: values.defendant_id,
+        responsible_lawyer_id: values.responsible_lawyer_id,
         status: values.status,
         is_closed: false,
         fix_start_date: values.fix_start_date
@@ -279,7 +275,6 @@ export default function CourtCasesPage() {
       .join(', '),
     plaintiff:
       personsList.find((p) => p.id === c.plaintiff_id)?.full_name ||
-      contractors.find((d) => d.id === c.plaintiff_id)?.name ||
       c.plaintiff,
     defendant:
       contractors.find((d) => d.id === c.defendant_id)?.name ||
@@ -440,11 +435,7 @@ export default function CourtCasesPage() {
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item
-              name="date"
-              label="Дата"
-              rules={[{ required: true, message: 'Укажите дату', type: 'object' }]}
-            >
+            <Form.Item name="date" label="Дата" rules={[{ required: true, message: 'Укажите дату' }]}> 
               <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
             </Form.Item>
           </Col>
@@ -911,10 +902,6 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange, projects }: Cas
     }
   }, [caseData, form, projectPersons]);
 
-  /**
-   * Updates selected court case with new values.
-   * Optional dates are converted to strings only when provided.
-   */
   const saveChanges = async (values: any) => {
     if (!caseData) return;
     try {
@@ -923,7 +910,7 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange, projects }: Cas
         updates: {
           project_id: values.project_id,
           number: values.number,
-          date: values.date ? values.date.format('YYYY-MM-DD') : null,
+          date: values.date.format('YYYY-MM-DD'),
           unit_ids: values.unit_ids,
           plaintiff_id: values.plaintiff_id,
           defendant_id: values.defendant_id,
@@ -1001,11 +988,7 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange, projects }: Cas
                   </Form.Item>
                 </Col>
                 <Col span={8}>
-                  <Form.Item
-                    name="date"
-                    label="Дата"
-                    rules={[{ required: true, message: 'Укажите дату', type: 'object' }]}
-                  >
+                  <Form.Item name="date" label="Дата" rules={[{ required: true, message: 'Укажите дату' }]}> 
                     <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
                   </Form.Item>
                 </Col>
