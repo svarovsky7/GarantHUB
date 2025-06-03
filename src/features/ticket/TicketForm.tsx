@@ -58,6 +58,7 @@ interface TicketFormProps {
 interface TicketFormValues {
   project_id: number | null;
   unit_ids: number[];
+  unit_id: number | null;
   responsible_engineer_id: string | null;
   status_id: number | null;
   type_id: number | null;
@@ -94,6 +95,7 @@ export default function TicketForm({
     defaultValues: {
       project_id: globalProjectId ?? null,
       unit_ids: initialUnitId != null ? [initialUnitId] : [],
+      unit_id: initialUnitId ?? null,
       responsible_engineer_id: null,
       status_id: null,
       type_id: null,
@@ -142,6 +144,7 @@ export default function TicketForm({
       reset({
         project_id: ticket.projectId,
         unit_ids: ticket.unitIds,
+        unit_id: ticket.unitId,
         responsible_engineer_id: ticket.responsibleEngineerId,
         status_id: ticket.statusId,
         type_id: ticket.typeId,
@@ -205,6 +208,7 @@ export default function TicketForm({
     const payload = {
       project_id: values.project_id ?? globalProjectId,
       unit_ids: values.unit_ids,
+      unit_id: values.unit_id ?? values.unit_ids[0] ?? null,
       type_id: values.type_id,
       status_id: values.status_id,
       title: values.title,
