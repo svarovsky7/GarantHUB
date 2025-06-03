@@ -40,18 +40,20 @@ export default function useUnitsMatrix(projectId, building, section) {
                 .from('tickets')
                 .select(`
                     id,
-                    unit_id,
+                    unit_ids,
                     status_id,
                     ticket_statuses(color)
                 `)
-                .in('unit_id', unitIds);
+                .overlaps('unit_ids', unitIds);
             const byUnit = {};
             (ticketsData || []).forEach(t => {
-                if (!byUnit[t.unit_id]) byUnit[t.unit_id] = [];
-                byUnit[t.unit_id].push({
-                    id: t.id,
-                    status_id: t.status_id,
-                    color: t.ticket_statuses?.color || null,
+                (t.unit_ids || []).forEach(uid => {
+                    if (!byUnit[uid]) byUnit[uid] = [];
+                    byUnit[uid].push({
+                        id: t.id,
+                        status_id: t.status_id,
+                        color: t.ticket_statuses?.color || null,
+                    });
                 });
             });
             setTicketsByUnit(byUnit);
