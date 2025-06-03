@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import dayjs, { Dayjs } from 'dayjs';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
@@ -116,12 +116,17 @@ export default function CourtCasesPage() {
   const projectId = Form.useWatch('project_id', form);
   const globalProjectId = useProjectId();
   const profileId = useAuthStore((s) => s.profile?.id);
+  const prevProjectIdRef = useRef<number | null>(null);
 
   useEffect(() => {
     const p = searchParams.get('project_id');
     const u = searchParams.get('unit_id');
     const r = searchParams.get('responsible_lawyer_id');
-    if (p) form.setFieldValue('project_id', Number(p));
+    if (p) {
+      const num = Number(p);
+      form.setFieldValue('project_id', num);
+      prevProjectIdRef.current = num;
+    }
     if (u) form.setFieldValue('unit_ids', [Number(u)]);
     if (r) form.setFieldValue('responsible_lawyer_id', r);
   }, [searchParams, form]);
@@ -139,11 +144,15 @@ export default function CourtCasesPage() {
   }, []);
 
   useEffect(() => {
-    form.setFieldValue('unit_ids', []);
+    const prev = prevProjectIdRef.current;
+    if (prev !== null && prev !== projectId) {
+      form.setFieldValue('unit_ids', []);
+    }
+    prevProjectIdRef.current = projectId;
   }, [projectId, form]);
 
   useEffect(() => {
-    if (globalProjectId) {
+    if (globalProjectId && !form.getFieldValue('project_id')) {
       form.setFieldValue('project_id', globalProjectId);
     }
   }, [globalProjectId, form]);
