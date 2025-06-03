@@ -8,7 +8,6 @@ import TicketTypesAdmin from "../../widgets/TicketTypesAdmin";
 import DefectDeadlinesAdmin from "../../widgets/DefectDeadlinesAdmin";
 import UsersTable from "../../widgets/UsersTable";
 import LitigationStagesAdmin from "../../widgets/LitigationStagesAdmin";
-import PartyTypesAdmin from "../../widgets/PartyTypesAdmin";
 import LetterTypesAdmin from "../../widgets/LetterTypesAdmin";
 import AttachmentTypesAdmin from "../../widgets/AttachmentTypesAdmin";
 
@@ -40,7 +39,6 @@ export default function AdminPage() {
           rowsPerPageOptions={[10, 25, 50, 100]}
         />
 
-        <PartyTypesAdmin pageSize={25} rowsPerPageOptions={[10, 25, 50, 100]} />
 
         <LetterTypesAdmin
           pageSize={25}
