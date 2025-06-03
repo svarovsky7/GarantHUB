@@ -146,7 +146,6 @@ function mapTicket(r) {
     id: r.id,
     projectId: r.project_id,
     unitIds: r.unit_ids || [],
-    unitId: r.unit_id ?? null,
     typeId: r.type_id,
     statusId: r.status_id,
     projectName: r.projects?.name ?? "—",
@@ -181,7 +180,7 @@ export function useTickets() {
         .from("tickets")
         .select(
           `
-          id, project_id, unit_ids, unit_id, type_id, status_id, title, description,
+          id, project_id, unit_ids, type_id, status_id, title, description,
           customer_request_no, customer_request_date, responsible_engineer_id,
           created_by, is_warranty, is_closed, created_at, received_at, fixed_at,
           attachment_ids,
@@ -308,7 +307,7 @@ export function useTicket(ticketId) {
         .from("tickets")
         .select(
           `
-          id, project_id, unit_ids, unit_id, type_id, status_id, title, description,
+          id, project_id, unit_ids, type_id, status_id, title, description,
           customer_request_no, customer_request_date, responsible_engineer_id,
           created_by, is_warranty, is_closed, created_at, received_at, fixed_at,
           attachment_ids,

@@ -24,7 +24,6 @@ export interface TicketFormAntdProps {
   initialValues?: Partial<{
     project_id: number;
     unit_ids: number[];
-    unit_id: number;
     responsible_engineer_id: string;
   }>;
 }
@@ -62,9 +61,6 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
     if (initialValues.unit_ids) {
       form.setFieldValue('unit_ids', initialValues.unit_ids);
     }
-    if (initialValues.unit_id != null) {
-      form.setFieldValue('unit_id', initialValues.unit_id);
-    }
     if (initialValues.responsible_engineer_id) {
       form.setFieldValue('responsible_engineer_id', initialValues.responsible_engineer_id);
     }
@@ -74,7 +70,6 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
   useEffect(() => {
     if (!initialValues.unit_ids) {
       form.setFieldValue('unit_ids', []);
-      form.setFieldValue('unit_id', null);
     }
   }, [projectId, form, initialValues.unit_ids]);
 
@@ -105,7 +100,6 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
       await create.mutateAsync({
         ...rest,
         project_id: values.project_id ?? globalProjectId,
-        unit_id: values.unit_id ?? values.unit_ids?.[0] ?? null,
         attachments: files,
         received_at: values.received_at.format('YYYY-MM-DD'),
         fixed_at: values.fixed_at ? values.fixed_at.format('YYYY-MM-DD') : null,
@@ -124,7 +118,6 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
 
   return (
     <Form form={form} layout="vertical" onFinish={onFinish} autoComplete="off">
-      <Form.Item name="unit_id" hidden />
       <Row gutter={16}>
         <Col span={8}>
           <Form.Item name="project_id" label="Проект">
@@ -139,7 +132,6 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
               disabled={!projectId}
               onChange={(vals) => {
                 form.setFieldValue('unit_ids', vals);
-                form.setFieldValue('unit_id', vals?.[0] ?? null);
               }}
             />
           </Form.Item>
