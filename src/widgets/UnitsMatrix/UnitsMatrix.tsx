@@ -16,6 +16,9 @@ import useUnitsMatrix from "@/shared/hooks/useUnitsMatrix";
 import { supabase } from "@/shared/api/supabaseClient";
 import TicketForm from "@/features/ticket/TicketForm";
 import TicketListDialog from "@/features/ticket/TicketListDialog";
+import AddCourtCaseForm from "@/features/courtCase/AddCourtCaseForm";
+import AddLetterForm from "@/features/correspondence/AddLetterForm";
+import { ConfigProvider } from 'antd';
 
 /**
  * Шахматка квартир/этажей для заданного проекта/корпуса/секции.
@@ -327,8 +330,25 @@ export default function UnitsMatrix({
             >
               Добавить замечание
             </Button>
-            <Button variant="outlined" color="secondary" fullWidth disabled>
+            <Button
+              variant="outlined"
+              color="secondary"
+              fullWidth
+              onClick={() =>
+                setActionDialog((ad) => ({ ...ad, action: 'court' }))
+              }
+            >
               Добавить судебное дело
+            </Button>
+            <Button
+              variant="outlined"
+              color="inherit"
+              fullWidth
+              onClick={() =>
+                setActionDialog((ad) => ({ ...ad, action: 'letter' }))
+              }
+            >
+              Добавить письмо
             </Button>
             <Button
               variant="text"
@@ -363,6 +383,39 @@ export default function UnitsMatrix({
                 }
                 ticketId={undefined}
               />
+            </Box>
+          </DialogContent>
+        )}
+        {actionDialog.action === 'court' && (
+          <DialogContent sx={{ p: 0, pt: 2 }}>
+            <Typography sx={{ fontWeight: 500, textAlign: 'center', mb: 2 }}>
+              Добавление судебного дела для квартиры {actionDialog.unit?.name}
+            </Typography>
+            <Box sx={{ px: 2, pb: 2 }}>
+              <AddCourtCaseForm
+                initialProjectId={projectId}
+                initialUnitId={actionDialog.unit?.id}
+                onSuccess={() => setActionDialog({ open: false, unit: null, action: '' })}
+                onCancel={() => setActionDialog({ open: false, unit: null, action: '' })}
+              />
+            </Box>
+          </DialogContent>
+        )}
+        {actionDialog.action === 'letter' && (
+          <DialogContent sx={{ p: 0, pt: 2 }}>
+            <Typography sx={{ fontWeight: 500, textAlign: 'center', mb: 2 }}>
+              Добавление письма для квартиры {actionDialog.unit?.name}
+            </Typography>
+            <Box sx={{ px: 2, pb: 2 }}>
+              <ConfigProvider>
+                <AddLetterForm
+                  onSubmit={() => setActionDialog({ open: false, unit: null, action: '' })}
+                  initialValues={{
+                    project_id: projectId,
+                    unit_ids: actionDialog.unit ? [actionDialog.unit.id] : [],
+                  }}
+                />
+              </ConfigProvider>
             </Box>
           </DialogContent>
         )}
