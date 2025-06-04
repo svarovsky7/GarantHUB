@@ -83,7 +83,13 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
     [contractorOptions, personOptions],
   );
 
+  const isFirstProject = React.useRef(true);
+
   useEffect(() => {
+    if (isFirstProject.current) {
+      isFirstProject.current = false;
+      return;
+    }
     form.setFieldValue('unit_ids', []);
   }, [projectId, form]);
 
