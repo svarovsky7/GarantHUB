@@ -1,48 +1,70 @@
-import eslintPluginReact from 'eslint-plugin-react';
-import eslintPluginImport from 'eslint-plugin-import';
-import { FlatCompat } from '@eslint/eslintrc';
+export default (async () => {
+  let compat;
+  try {
+    const { FlatCompat } = await import('@eslint/eslintrc');
+    compat = new FlatCompat({
+      baseDirectory: __dirname,
+    });
+  } catch {
+    console.warn('@eslint/eslintrc not found, using minimal config');
+    compat = { extends: () => [] };
+  }
 
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
+  let reactPlugin;
+  let reactExtends = [];
+  let importPlugin;
+  try {
+    const pkg = await import('eslint-plugin-react');
+    reactPlugin = pkg.default ?? pkg;
+    reactExtends = compat.extends('plugin:react/recommended');
+  } catch {
+    console.warn('eslint-plugin-react not found, skipping related rules');
+  }
+  try {
+    const importPkg = await import('eslint-plugin-import');
+    importPlugin = importPkg.default ?? importPkg;
+  } catch {
+    console.warn('eslint-plugin-import not found, skipping related rules');
+  }
 
-export default [
-  ...compat.extends('eslint:recommended'),
-  ...compat.extends('plugin:react/recommended'),
-  {
-    files: ['**/*.{ts,tsx,js,jsx}'],
-    plugins: {
-      react: eslintPluginReact,
-      import: eslintPluginImport,
-    },
-    languageOptions: {
-      parserOptions: {
-        ecmaVersion: 'latest',
-        sourceType: 'module',
-        ecmaFeatures: {
-          jsx: true,
+  return [
+    ...compat.extends('eslint:recommended'),
+    ...reactExtends,
+    {
+      files: ['**/*.{ts,tsx,js,jsx}'],
+      plugins: {
+        ...(reactPlugin ? { react: reactPlugin } : {}),
+        ...(importPlugin ? { import: importPlugin } : {}),
+      },
+      languageOptions: {
+        parserOptions: {
+          ecmaVersion: 'latest',
+          sourceType: 'module',
+          ecmaFeatures: {
+            jsx: true,
+          },
         },
       },
-    },
-    settings: {
-      react: { version: 'detect' },
-      'import/resolver': {
-        alias: {
-          map: [
-            ['@', './src'],
-            ['@app', './src/app'],
-            ['@pages', './src/pages'],
-            ['@widgets', './src/widgets'],
-            ['@features', './src/features'],
-            ['@entities', './src/entities'],
-            ['@shared', './src/shared'],
-          ],
-          extensions: ['.js', '.jsx', '.ts', '.tsx'],
+      settings: {
+        react: { version: 'detect' },
+        'import/resolver': {
+          alias: {
+            map: [
+              ['@', './src'],
+              ['@app', './src/app'],
+              ['@pages', './src/pages'],
+              ['@widgets', './src/widgets'],
+              ['@features', './src/features'],
+              ['@entities', './src/entities'],
+              ['@shared', './src/shared'],
+            ],
+            extensions: ['.js', '.jsx', '.ts', '.tsx'],
+          },
         },
       },
+      rules: {
+        'react/react-in-jsx-scope': 'off',
+      },
     },
-    rules: {
-      'react/react-in-jsx-scope': 'off',
-    },
-  },
-];
+  ];
+})();
