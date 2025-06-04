@@ -8,10 +8,14 @@ import AddIcon from "@mui/icons-material/Add";
 const CELL_SIZE = 54;
 const FLOOR_COLOR = "#1976d2";
 
+/**
+ * Отображает один этаж в шахматке.
+ */
 export default function FloorCell({
   floor,
   units,
-  ticketsByUnit, // Новый проп!
+  ticketsByUnit,
+  casesByUnit,
   onAddUnit,
   onEditFloor,
   onDeleteFloor,
@@ -101,7 +105,8 @@ export default function FloorCell({
         <UnitCell
           key={unit.id}
           unit={unit}
-          tickets={ticketsByUnit ? ticketsByUnit[unit.id] : []} // <-- Вот тут!
+          tickets={ticketsByUnit ? ticketsByUnit[unit.id] : []}
+          cases={casesByUnit ? casesByUnit[unit.id] : []}
           onEditUnit={() => onEditUnit?.(unit)}
           onDeleteUnit={() => onDeleteUnit?.(unit)}
           onAction={() => onUnitClick?.(unit)}
