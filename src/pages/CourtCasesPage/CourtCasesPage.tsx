@@ -144,8 +144,11 @@ export default function CourtCasesPage() {
   }, []);
 
   useEffect(() => {
+    // Сброс выбранных объектов при смене проекта.
+    // SearchParams могут проставить project_id и unit_id асинхронно,
+    // поэтому проверяем, что оба значения уже заданы.
     const prev = prevProjectIdRef.current;
-    if (prev !== null && prev !== projectId) {
+    if (prev != null && projectId != null && prev !== projectId) {
       form.setFieldValue('unit_ids', []);
     }
     prevProjectIdRef.current = projectId;
