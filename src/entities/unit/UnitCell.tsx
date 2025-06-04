@@ -17,9 +17,14 @@ function getSemiTransparent(color, alpha = 0.3) {
   return color;
 }
 
+/**
+ * Ячейка объекта на шахматке.
+ * Подсвечивает наличие тикетов и судебных дел.
+ */
 export default function UnitCell({
   unit,
   tickets = [],
+  cases = [],
   onEditUnit,
   onDeleteUnit,
   onAction,
@@ -29,6 +34,7 @@ export default function UnitCell({
     Array.isArray(tickets) && tickets.length > 0 ? tickets[0] : null;
   const bgColor =
     ticket && ticket.color ? getSemiTransparent(ticket.color) : "#fff";
+  const hasCases = Array.isArray(cases) && cases.length > 0;
 
   return (
     <Paper
@@ -40,18 +46,20 @@ export default function UnitCell({
         flexDirection: "column",
         alignItems: "stretch",
         justifyContent: "flex-start",
-        border: "1.5px solid #dde2ee",
+        border: `1.5px solid ${hasCases ? "#e53935" : "#dde2ee"}`,
         background: bgColor,
         borderRadius: "12px",
-        boxShadow: "0 1px 6px 0 #E3ECFB",
+        boxShadow: hasCases ? "0 0 0 2px rgba(229,57,53,0.25)" : "0 1px 6px 0 #E3ECFB",
         px: 0,
         py: 0,
         overflow: "hidden",
         cursor: "pointer",
         transition: "box-shadow .15s, border-color .15s, background .15s",
         "&:hover": {
-          boxShadow: "0 4px 16px 0 #b5d2fa",
-          borderColor: "#1976d2",
+          boxShadow: hasCases
+            ? "0 0 0 2px rgba(211,47,47,0.4)"
+            : "0 4px 16px 0 #b5d2fa",
+          borderColor: hasCases ? "#d32f2f" : "#1976d2",
           background:
             ticket && ticket.color
               ? getSemiTransparent(ticket.color, 0.55)

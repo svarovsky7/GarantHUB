@@ -2,12 +2,16 @@ import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/shared/api/supabaseClient';
 import { useAuthStore } from '@/shared/store/authStore';
 
-// Универсальный хук для матрицы квартир
+/**
+ * Универсальный хук для шахматки квартир.
+ * Загружает объекты проекта, связанные тикеты и активные судебные дела.
+ */
 export default function useUnitsMatrix(projectId, building, section) {
     const [units, setUnits] = useState([]); // <-- ВСЕ объекты проекта
     const [floors, setFloors] = useState([]);
     const [unitsByFloor, setUnitsByFloor] = useState({});
     const [ticketsByUnit, setTicketsByUnit] = useState({});
+    const [casesByUnit, setCasesByUnit] = useState({});
     const [filteredUnits, setFilteredUnits] = useState([]);
 
     const fetchUnits = useCallback(async () => {
@@ -33,9 +37,10 @@ export default function useUnitsMatrix(projectId, building, section) {
         if (section) filtered = filtered.filter(u => String(u.section) === String(section));
         setFilteredUnits(filtered);
 
-        // Грузим замечания с цветом статуса только для отображаемых юнитов
+        // Грузим замечания и судебные дела только для отображаемых юнитов
         if (filtered.length > 0) {
             const unitIds = filtered.map(u => u.id);
+            // Tickets
             const { data: ticketsData } = await supabase
                 .from('tickets')
                 .select(`
@@ -57,8 +62,26 @@ export default function useUnitsMatrix(projectId, building, section) {
                 });
             });
             setTicketsByUnit(byUnit);
+
+            // Court cases (не закрытые)
+            const { data: casesData } = await supabase
+                .from('court_cases')
+                .select('id, unit_ids, is_closed')
+                .eq('project_id', projectId)
+                .overlaps('unit_ids', unitIds);
+            const casesMap = {};
+            (casesData || [])
+                .filter(c => !c.is_closed)
+                .forEach(c => {
+                    (c.unit_ids || []).forEach(uid => {
+                        if (!casesMap[uid]) casesMap[uid] = [];
+                        casesMap[uid].push({ id: c.id });
+                    });
+                });
+            setCasesByUnit(casesMap);
         } else {
             setTicketsByUnit({});
+            setCasesByUnit({});
         }
     }, [projectId, building, section]);
 
@@ -147,5 +170,6 @@ export default function useUnitsMatrix(projectId, building, section) {
         setUnits,
         fetchUnits,
         ticketsByUnit,
+        casesByUnit,
     };
 }
