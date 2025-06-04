@@ -17,6 +17,7 @@ import AddIcon from "@mui/icons-material/Add";
 import DeleteOutline from "@mui/icons-material/DeleteOutline";
 import AddBuildingOrSectionDialog from "@/features/addBuildingOrSection/AddBuildingOrSectionDialog";
 import UnitsMatrix from "@/widgets/UnitsMatrix/UnitsMatrix";
+import StatusLegend from "@/widgets/StatusLegend";
 import useProjectStructure from "@/shared/hooks/useProjectStructure";
 
 // Функция получения профиля пользователя
@@ -454,6 +455,7 @@ export default function ProjectStructurePage() {
           onUnitsChanged={setUnits}
         />
       )}
+      <StatusLegend />
     </Stack>
   );
 }
