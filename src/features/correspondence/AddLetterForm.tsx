@@ -23,6 +23,7 @@ import { usePersons, useDeletePerson } from '@/entities/person';
 import { useAttachmentTypes } from '@/entities/attachmentType';
 import PersonModal from '@/features/person/PersonModal';
 import ContractorModal from '@/features/contractor/ContractorModal';
+import { useAuthStore } from '@/shared/store/authStore';
 
 export interface AddLetterFormData {
   type: 'incoming' | 'outgoing';
@@ -83,15 +84,31 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
     [contractorOptions, personOptions],
   );
 
-  const isFirstProject = React.useRef(true);
+  /** ID текущего пользователя для заполнения "Ответственного" */
+  const profileId = useAuthStore((s) => s.profile?.id);
+
+  /** Предыдущий выбранный проект, чтобы очищать объекты при его смене */
+  const prevProjectId = React.useRef<number | null>(null);
 
   useEffect(() => {
-    if (isFirstProject.current) {
-      isFirstProject.current = false;
+    // На инициализации просто запоминаем проект без очистки
+    if (prevProjectId.current === null) {
+      prevProjectId.current = projectId ?? null;
       return;
     }
-    form.setFieldValue('unit_ids', []);
+    // Если проект изменился после инициализации — сбрасываем выбранные объекты
+    if (prevProjectId.current !== projectId) {
+      form.setFieldValue('unit_ids', []);
+      prevProjectId.current = projectId ?? null;
+    }
   }, [projectId, form]);
+
+  // Подставляем текущего пользователя, если ответственный не выбран
+  useEffect(() => {
+    if (profileId && !form.getFieldValue('responsible_user_id')) {
+      form.setFieldValue('responsible_user_id', profileId);
+    }
+  }, [profileId, form]);
 
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const arr = Array.from(e.target.files || []).map((f) => ({ file: f, type_id: null }));
