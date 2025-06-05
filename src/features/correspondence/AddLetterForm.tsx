@@ -185,7 +185,7 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
                       allowClear
                       placeholder="Укажите отправителя"
                       filterOption={(input, option) =>
-                        String(option?.value ?? '').toLowerCase().includes(input.toLowerCase())
+                        (option?.value ?? '').toLowerCase().includes(input.toLowerCase())
                       }
                     />
                   </Form.Item>
@@ -246,7 +246,7 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
                       allowClear
                       placeholder="Укажите получателя"
                       filterOption={(input, option) =>
-                        String(option?.value ?? '').toLowerCase().includes(input.toLowerCase())
+                        (option?.value ?? '').toLowerCase().includes(input.toLowerCase())
                       }
                     />
                   </Form.Item>
