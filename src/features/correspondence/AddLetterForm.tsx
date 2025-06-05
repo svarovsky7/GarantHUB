@@ -24,6 +24,9 @@ import { useAttachmentTypes } from '@/entities/attachmentType';
 import PersonModal from '@/features/person/PersonModal';
 import ContractorModal from '@/features/contractor/ContractorModal';
 import { useAuthStore } from '@/shared/store/authStore';
+import type { Person } from '@/shared/types/person';
+import type { Contractor } from '@/shared/types/contractor';
+import type { Project } from '@/shared/types/project';
 
 export interface AddLetterFormData {
   type: 'incoming' | 'outgoing';
@@ -39,6 +42,16 @@ export interface AddLetterFormData {
   unit_ids: number[];
   attachments: { file: File; type_id: number | null }[];
   parent_id: string | null;
+}
+
+// Минимальные типы для используемых сущностей
+interface UserOption {
+  id: string;
+  name: string;
+}
+interface NamedEntity {
+  id: number;
+  name: string;
 }
 
 interface AddLetterFormProps {
@@ -65,23 +78,19 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
   const { data: letterTypes = [], isLoading: loadingTypes } = useLetterTypes();
   const { data: projects = [], isLoading: loadingProjects } = useProjects();
   const { data: units = [], isLoading: loadingUnits } = useUnitsByProject(projectId);
-  const { data: contractors = [], isLoading: loadingContractors } = useContractors();
-  const { data: persons = [], isLoading: loadingPersons } = usePersons();
+  const { data: contractors = [] } = useContractors();
+  const { data: persons = [] } = usePersons();
   const { data: attachmentTypes = [], isLoading: loadingAttachmentTypes } = useAttachmentTypes();
   const deletePerson = useDeletePerson();
   const deleteContractor = useDeleteContractor();
 
   const personOptions = React.useMemo(
-    () => persons.map((p) => ({ value: p.full_name })),
+    () => persons.map((p: Person) => ({ value: p.full_name })),
     [persons],
   );
   const contractorOptions = React.useMemo(
-    () => contractors.map((c) => ({ value: c.name })),
+    () => contractors.map((c: Contractor) => ({ value: c.name })),
     [contractors],
-  );
-  const contactOptions = React.useMemo(
-    () => [...contractorOptions, ...personOptions],
-    [contractorOptions, personOptions],
   );
 
   /** ID текущего пользователя для заполнения "Ответственного" */
@@ -111,16 +120,16 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
   }, [profileId, form]);
 
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const arr = Array.from(e.target.files || []).map((f) => ({ file: f, type_id: null }));
-    setFiles((p) => [...p, ...arr]);
+    const arr = Array.from(e.target.files || []).map((f: File) => ({ file: f, type_id: null }));
+    setFiles((prev) => [...prev, ...arr]);
     e.target.value = '';
   };
 
   const setType = (idx: number, val: number | null) =>
-      setFiles((p) => p.map((f, i) => (i === idx ? { ...f, type_id: val } : f)));
+      setFiles((prev) => prev.map((f, i) => (i === idx ? { ...f, type_id: val } : f)));
 
   const removeFile = (idx: number) =>
-      setFiles((p) => p.filter((_, i) => i !== idx));
+      setFiles((prev) => prev.filter((_, i) => i !== idx));
 
   const submit = (values: Omit<AddLetterFormData, 'attachments'>) => {
     onSubmit({
@@ -197,8 +206,8 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
                     onClick={() => {
                       const val = form.getFieldValue('sender');
                       const data = senderType === 'person'
-                        ? persons.find((p) => p.full_name === val)
-                        : contractors.find((c) => c.name === val);
+                        ? persons.find((p: Person) => p.full_name === val)
+                        : contractors.find((c: Contractor) => c.name === val);
                       senderType === 'person'
                         ? setPersonModal({ target: 'sender', data })
                         : setContractorModal({ target: 'sender', data });
@@ -212,13 +221,13 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
                       const val = form.getFieldValue('sender');
                       if (!val) return;
                       if (senderType === 'person') {
-                        const p = persons.find((pr) => pr.full_name === val);
+                        const p = persons.find((pr: Person) => pr.full_name === val);
                         if (p) {
                           deletePerson.mutate(p.id);
                           form.setFieldValue('sender', '');
                         }
                       } else {
-                        const c = contractors.find((co) => co.name === val);
+                        const c = contractors.find((co: Contractor) => co.name === val);
                         if (c) {
                           deleteContractor.mutate(c.id);
                           form.setFieldValue('sender', '');
@@ -258,8 +267,8 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
                     onClick={() => {
                       const val = form.getFieldValue('receiver');
                       const data = receiverType === 'person'
-                        ? persons.find((p) => p.full_name === val)
-                        : contractors.find((c) => c.name === val);
+                        ? persons.find((p: Person) => p.full_name === val)
+                        : contractors.find((c: Contractor) => c.name === val);
                       receiverType === 'person'
                         ? setPersonModal({ target: 'receiver', data })
                         : setContractorModal({ target: 'receiver', data });
@@ -273,13 +282,13 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
                       const val = form.getFieldValue('receiver');
                       if (!val) return;
                       if (receiverType === 'person') {
-                        const p = persons.find((pr) => pr.full_name === val);
+                        const p = persons.find((pr: Person) => pr.full_name === val);
                         if (p) {
                           deletePerson.mutate(p.id);
                           form.setFieldValue('receiver', '');
                         }
                       } else {
-                        const c = contractors.find((co) => co.name === val);
+                        const c = contractors.find((co: Contractor) => co.name === val);
                         if (c) {
                           deleteContractor.mutate(c.id);
                           form.setFieldValue('receiver', '');
@@ -298,7 +307,7 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
               <Select
                 showSearch
                 loading={loadingUsers}
-                options={users.map((u) => ({ value: u.id, label: u.name }))}
+                options={users.map((u: UserOption) => ({ value: u.id, label: u.name }))}
                 allowClear
                 placeholder="Выберите ответственного"
               />
@@ -310,7 +319,7 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
             <Form.Item name="letter_type_id" label="Категория письма">
               <Select
                 loading={loadingTypes}
-                options={letterTypes.map((t) => ({ value: t.id, label: t.name }))}
+                options={letterTypes.map((t: NamedEntity) => ({ value: t.id, label: t.name }))}
                 allowClear
                 placeholder="Выберите категорию"
               />
@@ -322,7 +331,7 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
             <Form.Item name="project_id" label="Проект">
               <Select
                   loading={loadingProjects}
-                  options={projects.map((p) => ({ value: p.id, label: p.name }))}
+                  options={projects.map((p: Project) => ({ value: p.id, label: p.name }))}
                   allowClear
                   placeholder="Выберите проект"
               />
@@ -333,7 +342,7 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
               <Select
                   mode="multiple"
                   loading={loadingUnits}
-                  options={units.map((u) => ({ value: u.id, label: u.name }))}
+                  options={units.map((u: NamedEntity) => ({ value: u.id, label: u.name }))}
                   placeholder="Выберите объекты"
                   disabled={!projectId}
               />
@@ -353,18 +362,18 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
         </Form.Item>
         <Form.Item label="Вложения">
           <input type="file" multiple onChange={handleFiles} />
-          {files.map((f, i) => (
+          {files.map((f: { file: File; type_id: number | null }, i: number) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', marginTop: 4 }}>
                 <span style={{ marginRight: 8 }}>{f.file.name}</span>
                 <Select
                     style={{ width: 160 }}
                     placeholder="Тип файла"
                     value={f.type_id ?? undefined}
-                    onChange={(v) => setType(i, v)}
+                    onChange={(v: number | null) => setType(i, v)}
                     allowClear
                     loading={loadingAttachmentTypes}
                 >
-                  {attachmentTypes.map((t) => (
+                  {attachmentTypes.map((t: NamedEntity) => (
                       <Select.Option key={t.id} value={t.id}>
                         {t.name}
                       </Select.Option>
@@ -387,7 +396,7 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
           open
           onClose={() => setPersonModal(null)}
           unitId={null}
-          onSelect={(name) => form.setFieldValue(personModal.target, name)}
+          onSelect={(name: string) => form.setFieldValue(personModal.target, name)}
           initialData={personModal.data}
         />
       )}
@@ -395,7 +404,7 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
         <ContractorModal
           open
           onClose={() => setContractorModal(null)}
-          onSelect={(name) => form.setFieldValue(contractorModal.target, name)}
+          onSelect={(name: string) => form.setFieldValue(contractorModal.target, name)}
           initialData={contractorModal.data}
         />
       )}
