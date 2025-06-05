@@ -503,6 +503,23 @@ export function useAllTicketsSimple() {
 }
 
 // -----------------------------------------------------------------------------
+// Полный список замечаний для статистики
+// -----------------------------------------------------------------------------
+export function useTicketsStats() {
+  return useQuery({
+    queryKey: ["tickets-stats"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tickets")
+        .select("id, project_id, type_id, is_warranty, fixed_at");
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
+// -----------------------------------------------------------------------------
 // Обновить статус замечания
 // -----------------------------------------------------------------------------
 export function useUpdateTicketStatus() {
