@@ -296,13 +296,10 @@ export default function TicketForm({
                 label="Проект"
                 displayEmpty
                 value={field.value ?? ""}
-                onChange={(e) =>
-                  field.onChange(
-                    (e.target.value as string) === ""
-                      ? null
-                      : Number(e.target.value as string),
-                  )
-                }
+                onChange={(e) => {
+                  const val = e.target.value;
+                  field.onChange(val === "" ? null : Number(val));
+                }}
               >
                 {!isEdit && (
                   <MenuItem value="">
@@ -359,11 +356,10 @@ export default function TicketForm({
                 label="Ответственный инженер"
                 displayEmpty
                 value={field.value ?? ""}
-                onChange={(e) =>
-                  field.onChange(
-                    (e.target.value as string) === "" ? null : (e.target.value as string)
-                  )
-                }
+                onChange={(e) => {
+                  const val = e.target.value;
+                  field.onChange(val === "" ? null : val);
+                }}
               >
                 {!isEdit && (
                   <MenuItem value="">
@@ -392,13 +388,10 @@ export default function TicketForm({
                 label="Статус"
                 displayEmpty
                 value={field.value ?? ""}
-                onChange={(e) =>
-                  field.onChange(
-                    (e.target.value as string) === ""
-                      ? null
-                      : Number(e.target.value as string),
-                  )
-                }
+                onChange={(e) => {
+                  const val = e.target.value;
+                  field.onChange(val === "" ? null : Number(val));
+                }}
               >
                 {!isEdit && (
                   <MenuItem value="">
@@ -429,13 +422,10 @@ export default function TicketForm({
                 label={`Тип${deadlineDays ? ` (${deadlineDays} дн.)` : ""}`}
                 displayEmpty
                 value={field.value ?? ""}
-                onChange={(e) =>
-                  field.onChange(
-                    (e.target.value as string) === ""
-                      ? null
-                      : Number(e.target.value as string),
-                  )
-                }
+                onChange={(e) => {
+                  const val = e.target.value;
+                  field.onChange(val === "" ? null : Number(val));
+                }}
               >
                 {!isEdit && (
                   <MenuItem value="">
