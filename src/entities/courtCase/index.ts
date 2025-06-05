@@ -26,6 +26,20 @@ export function useCourtCases() {
   });
 }
 
+export function useAllCourtCases() {
+  return useQuery({
+    queryKey: [CASES_TABLE, 'all'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from(CASES_TABLE)
+        .select('id, project_id, status, defendant_id');
+      if (error) throw error;
+      return (data ?? []) as CourtCase[];
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
 export function useAddCourtCase() {
   const qc = useQueryClient();
   return useMutation({
