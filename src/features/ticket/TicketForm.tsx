@@ -297,7 +297,7 @@ export default function TicketForm({
                 displayEmpty
                 value={field.value ?? ""}
                 onChange={(e) => {
-                  const val = e.target.value as string;
+                  const val = e.target.value; // CHANGE: avoid incorrect string cast
                   field.onChange(val === "" ? null : Number(val));
                 }}
               >
@@ -389,7 +389,7 @@ export default function TicketForm({
                 displayEmpty
                 value={field.value ?? ""}
                 onChange={(e) => {
-                  const val = e.target.value as string;
+                  const val = e.target.value; // CHANGE: avoid incorrect string cast
                   field.onChange(val === "" ? null : Number(val));
                 }}
               >
@@ -423,7 +423,7 @@ export default function TicketForm({
                 displayEmpty
                 value={field.value ?? ""}
                 onChange={(e) => {
-                  const val = e.target.value as string;
+                  const val = e.target.value; // CHANGE: avoid incorrect string cast
                   field.onChange(val === "" ? null : Number(val));
                 }}
               >
