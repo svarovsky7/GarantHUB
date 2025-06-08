@@ -14,7 +14,10 @@ import type { Project } from '@/shared/types/project';
 const normalize = (s: string) => s.trim();
 const sanitize = (obj: Partial<Project>) => ({ name: normalize(obj.name ?? '') });
 
-/* ===================== READ ===================== */
+/**
+ * Загружает список проектов из Supabase.
+ * Возвращает React Query хук с кэшированными данными.
+ */
 export const useProjects = () =>
     useQuery({
         queryKey: ['projects'],
@@ -29,7 +32,10 @@ export const useProjects = () =>
         staleTime: 5 * 60_000,
     });
 
-/* === generic invalidate helper === */
+/**
+ * Фабрика мутаций с автоматическим инвалидированием
+ * кэша проектов после выполнения.
+ */
 const withInvalidate =
     <TArgs extends any[], TResult>(fn: (...args: TArgs) => Promise<TResult>) =>
         () => {
@@ -41,6 +47,10 @@ const withInvalidate =
         };
 
 /* ==================== CREATE ==================== */
+/**
+ * Создаёт новый проект с указанным названием.
+ * @param name Название проекта
+ */
 const createProject = async ({ name }: { name: string }): Promise<Project> => {
     const n = normalize(name);
     if (!n) throw new Error('Название проекта обязательно');
@@ -64,6 +74,11 @@ const createProject = async ({ name }: { name: string }): Promise<Project> => {
 export const useAddProject = withInvalidate(createProject);
 
 /* ==================== UPDATE ==================== */
+/**
+ * Обновляет данные проекта.
+ * @param id       Идентификатор проекта
+ * @param updates  Поля для обновления
+ */
 const updateProject = async ({ id, updates }: { id: number; updates: Partial<Project> }): Promise<Project> => {
     const fields = sanitize(updates);
     if (fields.name) {
@@ -89,6 +104,10 @@ const updateProject = async ({ id, updates }: { id: number; updates: Partial<Pro
 export const useUpdateProject = withInvalidate(updateProject);
 
 /* ==================== DELETE ==================== */
+/**
+ * Удаляет проект по его идентификатору.
+ * @param id ID проекта
+ */
 const deleteProject = async (id: number): Promise<void> => {
     const { error } = await supabase.from('projects').delete().eq('id', id);
     if (error) throw error;

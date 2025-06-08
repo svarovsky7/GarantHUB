@@ -5,6 +5,10 @@ import { useAuthStore } from '@/shared/store/authStore';
 /**
  * Универсальный хук для шахматки квартир.
  * Загружает объекты проекта, связанные тикеты и активные судебные дела.
+ *
+ * @param {number} projectId ID проекта
+ * @param {string} building  Корпус
+ * @param {string} section   Секция
  */
 export default function useUnitsMatrix(projectId, building, section) {
     const [units, setUnits] = useState([]); // <-- ВСЕ объекты проекта
