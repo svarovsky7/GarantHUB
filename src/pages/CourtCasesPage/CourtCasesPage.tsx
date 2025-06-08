@@ -781,12 +781,12 @@ export default function CourtCasesPage() {
         <CaseDialog
           open
           onClose={() => {
-            setDialogCase(null);
             setSearchParams((prev) => {
               const params = new URLSearchParams(prev);
               params.delete('case_id');
               return params;
             });
+            setDialogCase(null);
           }}
           caseData={dialogCase}
           tab={tab}
@@ -997,13 +997,13 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange, projects }: Cas
     caseData ? projects.find((p) => p.id === caseData.project_id)?.name || '' : '';
 
   return (
-    <Modal
-      open={open}
-      onCancel={onClose}
-      width="80%"
-      footer={null}
-      destroyOnClose
-      title={caseData ? `Дело № ${caseData.number}` : ''}
+      <Modal
+        open={open}
+        onCancel={onClose}
+        width="80%"
+        footer={null}
+        destroyOnHidden
+        title={caseData ? `Дело № ${caseData.number}` : ''}
     >
       {caseData && (
         <>
