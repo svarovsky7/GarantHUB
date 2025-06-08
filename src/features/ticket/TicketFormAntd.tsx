@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import { Form, Input, Select, DatePicker, Switch, Button, Row, Col } from 'antd';
 import { useTicketTypes } from '@/entities/ticketType';
 import { useTicketStatuses } from '@/entities/ticketStatus';
@@ -29,8 +29,25 @@ export interface TicketFormAntdProps {
   }>;
 }
 
+export interface TicketFormAntdValues {
+  project_id: number | null;
+  unit_ids: number[];
+  type_id: number | null;
+  status_id: number | null;
+  title: string;
+  description: string | null;
+  customer_request_no: string | null;
+  customer_request_date: Dayjs | null;
+  responsible_engineer_id: string | null;
+  is_warranty: boolean;
+  received_at: Dayjs;
+  fixed_at: Dayjs | null;
+  /** Дополнительные данные разметки, не отправляются на сервер */
+  pins?: unknown;
+}
+
 export default function TicketFormAntd({ onCreated, initialValues = {} }: TicketFormAntdProps) {
-  const [form] = Form.useForm();
+  const [form] = Form.useForm<TicketFormAntdValues>();
   const globalProjectId = useProjectId();
   const projectId = Form.useWatch('project_id', form) ?? globalProjectId;
 
@@ -95,16 +112,15 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
     setFiles((p) => p.map((f, i) => (i === idx ? { ...f, type_id: val } : f)));
   const removeFile = (idx: number) => setFiles((p) => p.filter((_, i) => i !== idx));
 
-  const onFinish = async (values: any) => {
+  const onFinish = async (values: TicketFormAntdValues) => {
     if (files.some((f) => f.type_id == null)) {
       notify.error('Выберите тип файла для всех документов');
       return;
     }
     try {
-      const rest = { ...values } as any;
-      delete rest.pins;
+      const { pins, ...rest } = values;
       await create.mutateAsync({
-        ...rest,
+        ...(rest as Ticket),
         project_id: values.project_id ?? globalProjectId,
         attachments: files,
         received_at: values.received_at.format('YYYY-MM-DD'),
@@ -112,11 +128,11 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
         customer_request_date: values.customer_request_date
           ? values.customer_request_date.format('YYYY-MM-DD')
           : null,
-      } as Ticket & { attachments: any[] });
+      } as Ticket & { attachments: { file: File; type_id: number | null }[] });
       form.resetFields();
       setFiles([]);
       onCreated?.();
-    } catch (e: any) {
+    } catch (e: unknown) {
       // antd message already handled in mutation
       console.error(e);
     }
