@@ -867,6 +867,7 @@ interface CaseDialogProps {
 }
 
 function CaseDialog({ open, onClose, caseData, tab, onTabChange, projects }: CaseDialogProps) {
+  const notify = useNotify();
   const { data: defects = [] } = useCaseDefects(caseData ? Number(caseData.id) : 0);
   const { data: stages = [] } = useLitigationStages();
   const { data: unitInfo = [] } = useUnitsByIds(
