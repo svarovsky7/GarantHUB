@@ -4,7 +4,7 @@ import { Modal, Table, Tag, ConfigProvider } from 'antd';
 import ruRU from 'antd/locale/ru_RU';
 import type { ColumnsType } from 'antd/es/table';
 import { useUnitHistory } from '@/entities/history';
-import type { HistoryEvent } from '@/shared/types/history';
+import type { HistoryEventWithUser } from '@/shared/types/history';
 
 interface HistoryDialogProps {
   open: boolean;
@@ -16,7 +16,19 @@ interface HistoryDialogProps {
 export default function HistoryDialog({ open, unit, onClose }: HistoryDialogProps) {
   const { data = [], isLoading } = useUnitHistory(unit?.id);
 
-  const columns: ColumnsType<HistoryEvent> = [
+  const actionLabels: Record<string, string> = {
+    created: 'Создан',
+    updated: 'Обновлен',
+    deleted: 'Удален',
+  };
+
+  const typeLabels: Record<string, string> = {
+    ticket: 'Замечание',
+    letter: 'Письмо',
+    court_case: 'Судебное дело',
+  };
+
+  const columns: ColumnsType<HistoryEventWithUser> = [
     {
       title: 'Дата',
       dataIndex: 'changed_at',
@@ -25,11 +37,12 @@ export default function HistoryDialog({ open, unit, onClose }: HistoryDialogProp
     {
       title: 'Действие',
       dataIndex: 'action',
-      render: (a: string) => <Tag>{a}</Tag>,
+      render: (a: string) => <Tag>{actionLabels[a] ?? a}</Tag>,
     },
     {
       title: 'Тип',
       dataIndex: 'entity_type',
+      render: (t: string) => typeLabels[t] ?? t,
     },
     {
       title: 'ID',
@@ -37,7 +50,8 @@ export default function HistoryDialog({ open, unit, onClose }: HistoryDialogProp
     },
     {
       title: 'Пользователь',
-      dataIndex: 'changed_by',
+      dataIndex: 'user_name',
+      render: (n: string | null) => n || '—',
     },
   ];
 
@@ -49,6 +63,7 @@ export default function HistoryDialog({ open, unit, onClose }: HistoryDialogProp
         footer={null}
         title={unit ? `История объекта ${unit.name}` : 'История'}
         width={700}
+        zIndex={1400}
       >
         <Table
           rowKey="id"
