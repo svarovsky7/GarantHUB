@@ -777,21 +777,23 @@ export default function CourtCasesPage() {
         size="middle"
       />
 
-      <CaseDialog
-        open={!!dialogCase}
-        onClose={() => {
-          setDialogCase(null);
-          setSearchParams((prev) => {
-            const params = new URLSearchParams(prev);
-            params.delete('case_id');
-            return params;
-          });
-        }}
-        caseData={dialogCase}
-        tab={tab}
-        onTabChange={setTab}
-        projects={projects}
-      />
+      {dialogCase && (
+        <CaseDialog
+          open
+          onClose={() => {
+            setDialogCase(null);
+            setSearchParams((prev) => {
+              const params = new URLSearchParams(prev);
+              params.delete('case_id');
+              return params;
+            });
+          }}
+          caseData={dialogCase}
+          tab={tab}
+          onTabChange={setTab}
+          projects={projects}
+        />
+      )}
       <Modal
         open={!!partySelect}
         onCancel={() => setPartySelect(null)}
@@ -920,10 +922,13 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange, projects }: Cas
           ? 'person'
           : 'contractor',
       );
-    } else {
-      form.resetFields();
     }
   }, [caseData, form, projectPersons]);
+
+  useEffect(() => {
+    setEditing(false);
+    form.resetFields();
+  }, [caseData, form]);
 
   const saveChanges = async (values: any) => {
     if (!caseData) return;
@@ -992,7 +997,14 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange, projects }: Cas
     caseData ? projects.find((p) => p.id === caseData.project_id)?.name || '' : '';
 
   return (
-    <Modal open={open} onCancel={onClose} width="80%" footer={null} title={caseData ? `Дело № ${caseData.number}` : ''}>
+    <Modal
+      open={open}
+      onCancel={onClose}
+      width="80%"
+      footer={null}
+      destroyOnClose
+      title={caseData ? `Дело № ${caseData.number}` : ''}
+    >
       {caseData && (
         <>
           {editing ? (
