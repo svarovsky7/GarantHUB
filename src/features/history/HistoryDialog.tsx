@@ -1,6 +1,6 @@
 import React from 'react';
 import dayjs from 'dayjs';
-import { Modal, Table, Tag, ConfigProvider, Button } from 'antd';
+import { Modal, Table, Tag, ConfigProvider, Button, Switch, Space } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import ruRU from 'antd/locale/ru_RU';
 import type { ColumnsType } from 'antd/es/table';
@@ -17,6 +17,19 @@ interface HistoryDialogProps {
 export default function HistoryDialog({ open, unit, onClose }: HistoryDialogProps) {
   const { data = [], isLoading } = useUnitHistory(unit?.id);
   const navigate = useNavigate();
+  const [primaryOnly, setPrimaryOnly] = React.useState(false);
+
+  const displayedData = React.useMemo(() => {
+    if (!primaryOnly) return data;
+    const latest = new Map<string, HistoryEventWithUser>();
+    for (const ev of data) {
+      const key = `${ev.entity_type}:${ev.entity_id}`;
+      if (!latest.has(key)) {
+        latest.set(key, ev);
+      }
+    }
+    return Array.from(latest.values()).filter((ev) => ev.action !== 'deleted');
+  }, [data, primaryOnly]);
 
   const actionLabels: Record<string, string> = {
     created: 'Создан',
@@ -88,10 +101,14 @@ export default function HistoryDialog({ open, unit, onClose }: HistoryDialogProp
         width={700}
         zIndex={1400}
       >
+        <Space style={{ marginBottom: 12 }}>
+          <Switch checked={primaryOnly} onChange={setPrimaryOnly} />
+          Показать основные документы
+        </Space>
         <Table
           rowKey="id"
           columns={columns}
-          dataSource={data}
+          dataSource={displayedData}
           loading={isLoading}
           pagination={{ pageSize: 10 }}
           size="small"
