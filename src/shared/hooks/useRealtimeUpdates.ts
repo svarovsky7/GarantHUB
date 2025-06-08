@@ -108,6 +108,16 @@ export function useRealtimeUpdates() {
         },
         () => qc.invalidateQueries({ queryKey: ['letters'] }),
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'unit_history',
+          filter: `project_id=eq.${projectId}`,
+        },
+        () => qc.invalidateQueries({ queryKey: ['unit_history'] }),
+      )
       .subscribe();
 
     return () => {

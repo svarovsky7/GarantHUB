@@ -16,6 +16,7 @@ import FloorCell from "@/entities/floor/FloorCell";
 import useUnitsMatrix from "@/shared/hooks/useUnitsMatrix";
 import { supabase } from "@/shared/api/supabaseClient";
 import TicketListDialog from "@/features/ticket/TicketListDialog";
+import HistoryDialog from "@/features/history/HistoryDialog";
 import { useNavigate, createSearchParams } from 'react-router-dom';
 import { useAuthStore } from '@/shared/store/authStore';
 
@@ -375,12 +376,9 @@ export default function UnitsMatrix({
               color="info"
               fullWidth
               onClick={() =>
-                setActionDialog((ad) => ({ ...ad, action: "tickets" }))
+                setActionDialog((ad) => ({ ...ad, action: "history" }))
               }
             >
-              Посмотреть все замечания
-            </Button>
-            <Button variant="text" color="info" fullWidth disabled>
               Показать историю
             </Button>
           </DialogContent>
@@ -392,6 +390,11 @@ export default function UnitsMatrix({
         unit={actionDialog.unit}
         onClose={() => setActionDialog({ open: false, unit: null, action: "" })}
         onTicketsChanged={fetchUnits}
+      />
+      <HistoryDialog
+        open={actionDialog.action === "history"}
+        unit={actionDialog.unit}
+        onClose={() => setActionDialog({ open: false, unit: null, action: "" })}
       />
     </>
   );
