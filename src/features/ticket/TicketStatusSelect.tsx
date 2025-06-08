@@ -25,7 +25,7 @@ export default function TicketStatusSelect({
   const update = useUpdateTicketStatus();
 
   const handleChange = (value: number) => {
-    update.mutate({ id: ticketId, statusId: value });
+    (update as any).mutate({ id: ticketId, statusId: value });
   };
 
   const options = statuses.map((s) => ({

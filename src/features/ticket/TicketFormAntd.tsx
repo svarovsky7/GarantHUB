@@ -119,8 +119,8 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
     }
     try {
       const { pins, ...rest } = values;
-      await create.mutateAsync({
-        ...(rest as Ticket),
+      const payload = {
+        ...rest,
         project_id: values.project_id ?? globalProjectId,
         attachments: files,
         received_at: values.received_at.format('YYYY-MM-DD'),
@@ -128,7 +128,8 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
         customer_request_date: values.customer_request_date
           ? values.customer_request_date.format('YYYY-MM-DD')
           : null,
-      } as Ticket & { attachments: { file: File; type_id: number | null }[] });
+      };
+      await create.mutateAsync(payload as any);
       form.resetFields();
       setFiles([]);
       onCreated?.();

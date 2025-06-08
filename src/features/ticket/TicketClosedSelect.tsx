@@ -13,7 +13,7 @@ interface Props {
 export default function TicketClosedSelect({ ticketId, isClosed }: Props) {
   const update = useUpdateTicketClosed();
   const handleChange = (value: string) => {
-    update.mutate({ id: ticketId, isClosed: value === "closed" });
+    (update as any).mutate({ id: ticketId, isClosed: value === "closed" });
   };
 
   return (
