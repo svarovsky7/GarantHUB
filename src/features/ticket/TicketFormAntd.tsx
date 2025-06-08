@@ -97,7 +97,7 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
 
   const onFinish = async (values: any) => {
     if (files.some((f) => f.type_id == null)) {
-      notify.warn('Выберите тип файла для всех документов');
+      notify.error('Выберите тип файла для всех документов');
       return;
     }
     try {

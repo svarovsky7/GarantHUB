@@ -18,6 +18,7 @@ import { useUsers } from '@/entities/user';
 import { useLitigationStages } from '@/entities/litigationStage';
 import { useAddCourtCase } from '@/entities/courtCase';
 import { useAuthStore } from '@/shared/store/authStore';
+import { useNotify } from '@/shared/hooks/useNotify';
 
 export interface AddCourtCaseFormValues {
   project_id: number | null;
@@ -70,24 +71,30 @@ export default function AddCourtCaseForm({
   }, [initialUnitId, setValue]);
 
   const addCase = useAddCourtCase();
+  const notify = useNotify();
 
   const submit = async (values: AddCourtCaseFormValues) => {
-    await addCase.mutateAsync({
-      project_id: values.project_id!,
-      unit_ids: values.unit_ids,
-      number: values.number,
-      date: values.date ? values.date.format('YYYY-MM-DD') : null,
-      plaintiff_id: null,
-      defendant_id: null,
-      responsible_lawyer_id: values.responsible_lawyer_id,
-      status: values.status ?? 1,
-      is_closed: false,
-      fix_start_date: null,
-      fix_end_date: null,
-      description: values.description || '',
-      attachment_ids: [],
-    } as any);
-    onSuccess?.();
+    try {
+      await addCase.mutateAsync({
+        project_id: values.project_id!,
+        unit_ids: values.unit_ids,
+        number: values.number,
+        date: values.date ? values.date.format('YYYY-MM-DD') : null,
+        plaintiff_id: null,
+        defendant_id: null,
+        responsible_lawyer_id: values.responsible_lawyer_id,
+        status: values.status ?? 1,
+        is_closed: false,
+        fix_start_date: null,
+        fix_end_date: null,
+        description: values.description || '',
+        attachment_ids: [],
+      } as any);
+      notify.success('Дело успешно добавлено!');
+      onSuccess?.();
+    } catch (e: any) {
+      notify.error(e.message);
+    }
   };
 
   return (

@@ -21,7 +21,6 @@ import {
   Space,
   Modal,
   Tabs,
-  message,
   Popconfirm,
   Tooltip,
   Radio,
@@ -68,6 +67,7 @@ import { supabase } from '@/shared/api/supabaseClient';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useAuthStore } from '@/shared/store/authStore';
+import { useNotify } from '@/shared/hooks/useNotify';
 import FileDropZone from '@/shared/ui/FileDropZone';
 import CourtCaseStatusSelect from '@/features/courtCase/CourtCaseStatusSelect';
 import CourtCaseClosedSelect from '@/features/courtCase/CourtCaseClosedSelect';
@@ -98,6 +98,7 @@ export default function CourtCasesPage() {
   const deleteCaseMutation = useDeleteCourtCase();
   const qc = useQueryClient();
   const updateCaseMutation = useUpdateCourtCase();
+  const notify = useNotify();
 
   const [filters, setFilters] = useState<Filters>(() => {
     try {
@@ -256,16 +257,16 @@ export default function CourtCasesPage() {
 
       form.resetFields();
       setCaseFiles([]);
-      message.success('Дело успешно добавлено!');
+      notify.success('Дело успешно добавлено!');
     } catch (e: any) {
-      message.error(e.message);
+      notify.error(e.message);
     }
   };
 
   const deleteCase = (id: number) => {
     deleteCaseMutation.mutate(id, {
-      onSuccess: () => message.success('Дело удалено!'),
-      onError: (e: any) => message.error(e.message),
+      onSuccess: () => notify.success('Дело удалено!'),
+      onError: (e: any) => notify.error(e.message),
     });
   };
 
@@ -507,19 +508,19 @@ export default function CourtCasesPage() {
                       if (plaintiffType === 'person') {
                         deletePersonMutation.mutate(id, {
                           onSuccess: () => {
-                            message.success('Физлицо удалено');
+                            notify.success('Физлицо удалено');
                             form.setFieldValue('plaintiff_id', null);
                             qc.invalidateQueries({ queryKey: ['projectPersons'] });
                           },
-                          onError: (e: any) => message.error(e.message),
+                          onError: (e: any) => notify.error(e.message),
                         });
                       } else {
                         deleteContractorMutation.mutate(id, {
                           onSuccess: () => {
-                            message.success('Контрагент удалён');
+                            notify.success('Контрагент удалён');
                             form.setFieldValue('plaintiff_id', null);
                           },
-                          onError: (e: any) => message.error(e.message),
+                          onError: (e: any) => notify.error(e.message),
                         });
                       }
                     }}
@@ -590,19 +591,19 @@ export default function CourtCasesPage() {
                       if (defendantType === 'person') {
                         deletePersonMutation.mutate(id, {
                           onSuccess: () => {
-                            message.success('Физлицо удалено');
+                            notify.success('Физлицо удалено');
                             form.setFieldValue('defendant_id', null);
                             qc.invalidateQueries({ queryKey: ['projectPersons'] });
                           },
-                          onError: (e: any) => message.error(e.message),
+                          onError: (e: any) => notify.error(e.message),
                         });
                       } else {
                         deleteContractorMutation.mutate(id, {
                           onSuccess: () => {
-                            message.success('Контрагент удалён');
+                            notify.success('Контрагент удалён');
                             form.setFieldValue('defendant_id', null);
                           },
-                          onError: (e: any) => message.error(e.message),
+                          onError: (e: any) => notify.error(e.message),
                         });
                       }
                     }}
@@ -928,10 +929,10 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange, projects }: Cas
           description: values.description || '',
         },
       });
-      message.success('Дело обновлено');
+      notify.success('Дело обновлено');
       setEditing(false);
     } catch (e: any) {
-      message.error(e.message);
+      notify.error(e.message);
     }
   };
 
@@ -941,7 +942,7 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange, projects }: Cas
     addDefectMutation.mutate(
       { case_id: Number(caseData.id), project_id: caseData.project_id, ...defect },
       {
-        onError: (e: any) => message.error(e.message),
+        onError: (e: any) => notify.error(e.message),
       },
     );
   };
@@ -951,7 +952,7 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange, projects }: Cas
     deleteDefectMutation.mutate(
       { id, case_id: Number(caseData.id) },
       {
-        onError: (e: any) => message.error(e.message),
+        onError: (e: any) => notify.error(e.message),
       },
     );
   };
@@ -961,7 +962,7 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange, projects }: Cas
     updateDefectMutation.mutate(
       { id: defect.id, case_id: Number(caseData.id), updates: defect },
       {
-        onError: (e: any) => message.error(e.message),
+        onError: (e: any) => notify.error(e.message),
       },
     );
   };
@@ -1341,7 +1342,7 @@ function CaseFilesTab({ caseData }: CaseFilesTabProps) {
       }));
       setFiles(arr);
     } catch (err: any) {
-      message.error(err.message);
+      notify.error(err.message);
     }
   };
 
@@ -1385,9 +1386,9 @@ function CaseFilesTab({ caseData }: CaseFilesTabProps) {
         type_id: a.attachment_type_id,
       }));
       setFiles((p) => [...p, ...newFiles]);
-      message.success('Файлы загружены');
+      notify.success('Файлы загружены');
     } catch (err: any) {
-      message.error(err.message);
+      notify.error(err.message);
     }
   };
 
@@ -1401,9 +1402,9 @@ function CaseFilesTab({ caseData }: CaseFilesTabProps) {
         updates: { attachment_ids: updatedIds },
       });
       setFiles((p) => p.filter((f) => f.id !== id));
-      message.success('Файл удалён');
+      notify.success('Файл удалён');
     } catch (err: any) {
-      message.error(err.message);
+      notify.error(err.message);
     }
   };
 
@@ -1430,7 +1431,7 @@ function CaseFilesTab({ caseData }: CaseFilesTabProps) {
         .update({ attachment_type_id: val })
         .eq('id', file.id);
     } catch (err: any) {
-      message.error(err.message);
+      notify.error(err.message);
     }
   };
 
@@ -1512,13 +1513,13 @@ function AddPersonModal({ open, onClose, unitId, onSelect, initialData = null }:
         if (unitId && !isEdit) {
           await supabase.from('unit_persons').insert({ unit_id: unitId, person_id: person.id });
         }
-        message.success(isEdit ? 'Физлицо обновлено' : 'Физлицо добавлено');
+        notify.success(isEdit ? 'Физлицо обновлено' : 'Физлицо добавлено');
         qc.invalidateQueries({ queryKey: ['projectPersons'] });
         onSelect(person.id);
         form.resetFields();
         onClose();
       })
-      .catch((e: any) => message.error(e.message));
+      .catch((e: any) => notify.error(e.message));
   };
 
   return (
@@ -1579,11 +1580,11 @@ function ContractorModal({ open, onClose, onSelect, initialData = null }: Contra
       : addMutation.mutateAsync(values);
     action
       .then((res: any) => {
-        message.success(isEdit ? 'Контрагент обновлён' : 'Контрагент создан');
+        notify.success(isEdit ? 'Контрагент обновлён' : 'Контрагент создан');
         onSelect(res.id);
         onClose();
       })
-      .catch((e: any) => message.error(e.message));
+      .catch((e: any) => notify.error(e.message));
   };
 
   return (
