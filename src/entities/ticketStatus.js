@@ -9,6 +9,7 @@ import {
 const TABLE = 'ticket_statuses';
 
 // ---------------- select all ----------------
+/** Получить все статусы замечаний */
 export const useTicketStatuses = () => {
     return useQuery({
         queryKey: [TABLE],
@@ -25,6 +26,7 @@ export const useTicketStatuses = () => {
 };
 
 // ---------------- add ----------------
+/** Создать новый статус замечания */
 export const useAddTicketStatus = () => {
     const qc = useQueryClient();
     return useMutation({
@@ -43,6 +45,7 @@ export const useAddTicketStatus = () => {
 };
 
 // ---------------- update ----------------
+/** Обновить статус замечания */
 export const useUpdateTicketStatus = () => {
     const qc = useQueryClient();
     return useMutation({
@@ -61,6 +64,7 @@ export const useUpdateTicketStatus = () => {
 };
 
 // ---------------- delete ----------------
+/** Удалить статус замечания */
 export const useDeleteTicketStatus = () => {
     const qc = useQueryClient();
     return useMutation({
@@ -75,3 +79,4 @@ export const useDeleteTicketStatus = () => {
         onSuccess: () => qc.invalidateQueries({ queryKey: [TABLE] }),
     });
 };
+

@@ -11,6 +11,7 @@ const LETTERS_TABLE = 'letters';
 const LINKS_TABLE = 'letter_links';
 const ATTACH_TABLE = 'attachments';
 
+/** Получить связи писем */
 export function useLetterLinks() {
   return useQuery({
     queryKey: [LINKS_TABLE],
@@ -25,6 +26,7 @@ export function useLetterLinks() {
   });
 }
 
+/** Получить список писем */
 export function useLetters() {
   return useQuery({
     queryKey: [LETTERS_TABLE],
@@ -113,6 +115,7 @@ export function useLetters() {
  * Возвращает мутацию React Query, которая после успешного
  * выполнения инвалидаирует кэш писем и связей.
  */
+/** Создать письмо с вложениями */
 export function useAddLetter() {
   const qc = useQueryClient();
   return useMutation({
@@ -204,6 +207,7 @@ export function useAddLetter() {
   });
 }
 
+/** Удалить письмо и вложения */
 export function useDeleteLetter() {
   const qc = useQueryClient();
   return useMutation({
@@ -242,6 +246,7 @@ export function useDeleteLetter() {
   });
 }
 
+/** Связать письма отношением parent-child */
 export function useLinkLetters() {
   const qc = useQueryClient();
   return useMutation({
@@ -260,6 +265,7 @@ export function useLinkLetters() {
   });
 }
 
+/** Удалить связь письма с родителем */
 export function useUnlinkLetter() {
   const qc = useQueryClient();
   return useMutation({
@@ -272,6 +278,7 @@ export function useUnlinkLetter() {
   });
 }
 
+/** Получить подписанную ссылку на файл письма */
 export async function signedLetterUrl(path: string, filename = '') {
   const { data, error } = await supabase
     .storage.from(ATTACH_BUCKET)
@@ -280,6 +287,7 @@ export async function signedLetterUrl(path: string, filename = '') {
   return data.signedUrl;
 }
 
+/** Обновить письмо и вложения */
 export function useUpdateLetter() {
   const qc = useQueryClient();
   return useMutation({
@@ -361,3 +369,4 @@ export function useUpdateLetter() {
     },
   });
 }
+

@@ -9,6 +9,7 @@ const FIELDS = 'id, name, email, role, project_id';
 
 /* ─────────── SELECT ─────────── */
 /** Получить всех пользователей БД без фильтрации */
+/** Получить всех пользователей БД */
 export const useUsers = () => {
     return useQuery({
         queryKey: ['users', 'all'],
@@ -25,6 +26,7 @@ export const useUsers = () => {
 };
 
 /* ─────────── UPDATE (role) ─────────── */
+/** Изменить роль пользователя */
 export const useUpdateUserRole = () => {
     const qc = useQueryClient();
     return useMutation({
@@ -43,6 +45,7 @@ export const useUpdateUserRole = () => {
 };
 
 /* ─────────── DELETE ─────────── */
+/** Удалить пользователя */
 export const useDeleteUser = () => {
     const qc = useQueryClient();
     return useMutation({
@@ -56,3 +59,4 @@ export const useDeleteUser = () => {
         onSuccess: () => qc.invalidateQueries(['users', 'all']),
     });
 };
+

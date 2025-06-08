@@ -4,6 +4,7 @@ import { supabase } from '@/shared/api/supabaseClient';
 const TABLE = 'letter_types';
 const KEY = [TABLE];
 
+/** Получить список типов корреспонденции */
 export const useLetterTypes = () =>
     useQuery({
         queryKey: KEY,
@@ -20,6 +21,7 @@ export const useLetterTypes = () =>
 
 const invalidate = (qc) => qc.invalidateQueries({ queryKey: KEY });
 
+/** Создать тип корреспонденции */
 export const useAddLetterType = () => {
     const qc = useQueryClient();
     return useMutation({
@@ -36,6 +38,7 @@ export const useAddLetterType = () => {
     });
 };
 
+/** Обновить тип корреспонденции */
 export const useUpdateLetterType = () => {
     const qc = useQueryClient();
     return useMutation({
@@ -53,6 +56,7 @@ export const useUpdateLetterType = () => {
     });
 };
 
+/** Удалить тип корреспонденции */
 export const useDeleteLetterType = () => {
     const qc = useQueryClient();
     return useMutation({
@@ -63,3 +67,4 @@ export const useDeleteLetterType = () => {
         onSuccess: () => invalidate(qc),
     });
 };
+

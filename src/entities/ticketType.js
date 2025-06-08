@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/shared/api/supabaseClient';
 
 // ---------------- select ----------------
+/** Получить список типов замечаний */
 export const useTicketTypes = () => {
     return useQuery({
         queryKey: ['ticket_types'],
@@ -19,6 +20,7 @@ export const useTicketTypes = () => {
 };
 
 // ---------------- insert ----------------
+/** Создать тип замечания */
 export const useAddTicketType = () => {
     const qc = useQueryClient();
     return useMutation({
@@ -36,6 +38,7 @@ export const useAddTicketType = () => {
 };
 
 // ---------------- update ----------------
+/** Обновить тип замечания */
 export const useUpdateTicketType = () => {
     const qc = useQueryClient();
     return useMutation({
@@ -54,6 +57,7 @@ export const useUpdateTicketType = () => {
 };
 
 // ---------------- delete ----------------
+/** Удалить тип замечания */
 export const useDeleteTicketType = () => {
     const qc = useQueryClient();
     return useMutation({
@@ -67,3 +71,4 @@ export const useDeleteTicketType = () => {
         onSuccess: () => qc.invalidateQueries({ queryKey: ['ticket_types'] }),
     });
 };
+

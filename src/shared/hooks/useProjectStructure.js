@@ -3,6 +3,11 @@ import { supabase } from '@/shared/api/supabaseClient';
 
 const LS_KEY = 'structurePageSelection';
 
+/**
+ * Управляет списком проектов и доступными корпусами/секциями.
+ * Сохраняет выбор в localStorage и синхронизирует его между вкладками.
+ * @returns {object} Объект со списком проектов и функциями выбора
+ */
 export default function useProjectStructure() {
     const [projects, setProjects] = useState([]);
     const [projectId, setProjectIdState] = useState('');

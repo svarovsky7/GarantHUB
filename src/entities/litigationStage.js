@@ -74,3 +74,4 @@ export const useDeleteLitigationStage = () => {
         onSuccess: () => invalidate(qc),
     });
 };
+

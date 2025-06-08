@@ -170,6 +170,7 @@ function mapTicket(r) {
 }
 
 // ──────────────────────────── queries ─────────────────────────────
+/** Получить список замечаний текущего проекта */
 export function useTickets() {
   const projectId = useProjectId();
   return useQuery({
@@ -235,6 +236,7 @@ export function useTickets() {
 }
 
 // ──────────────────────────── create ──────────────────────────────
+/** Создать новое замечание */
 export function useCreateTicket() {
   const projectId = useProjectId();
   const userId = useAuthStore((s) => s.profile?.id ?? null);
@@ -293,6 +295,7 @@ export function useCreateTicket() {
 }
 
 // ───────────────────────── one ticket / update ───────────────────
+/** Получить одно замечание по идентификатору */
 export function useTicket(ticketId) {
   const projectId = useProjectId();
   const qc = useQueryClient();
@@ -444,6 +447,7 @@ export function useTicket(ticketId) {
 }
 
 // ──────────────────────────── delete ──────────────────────────────
+/** Удалить замечание и связанные файлы */
 export function useDeleteTicket() {
   const projectId = useProjectId();
   const qc = useQueryClient();
@@ -488,6 +492,7 @@ export function useDeleteTicket() {
 // -----------------------------------------------------------------------------
 // Получить все замечания без фильтрации по проекту (для статистики)
 // -----------------------------------------------------------------------------
+/** Получить все замечания без фильтрации по проекту */
 export function useAllTicketsSimple() {
   return useQuery({
     queryKey: ["tickets-all"],
@@ -505,6 +510,7 @@ export function useAllTicketsSimple() {
 // -----------------------------------------------------------------------------
 // Полный список замечаний для статистики
 // -----------------------------------------------------------------------------
+/** Получить статистику по всем замечаниям */
 export function useTicketsStats() {
   return useQuery({
     queryKey: ["tickets-stats"],
@@ -522,6 +528,7 @@ export function useTicketsStats() {
 // -----------------------------------------------------------------------------
 // Обновить статус замечания
 // -----------------------------------------------------------------------------
+/** Изменить статус замечания */
 export function useUpdateTicketStatus() {
   const projectId = useProjectId();
   const qc = useQueryClient();
@@ -554,6 +561,7 @@ export function useUpdateTicketStatus() {
 // -----------------------------------------------------------------------------
 // Обновить признак закрытого замечания
 // -----------------------------------------------------------------------------
+/** Изменить признак закрытого замечания */
 export function useUpdateTicketClosed() {
   const projectId = useProjectId();
   const qc = useQueryClient();
@@ -582,3 +590,4 @@ export function useUpdateTicketClosed() {
     onError: (e) => notify.error(`Ошибка обновления: ${e.message}`),
   });
 }
+

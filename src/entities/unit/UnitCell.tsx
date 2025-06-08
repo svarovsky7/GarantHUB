@@ -20,6 +20,9 @@ function getSemiTransparent(color, alpha = 0.3) {
 /**
  * Ячейка объекта на шахматке.
  * Подсвечивает наличие тикетов и судебных дел.
+ *
+ * @param props.unit      Данные квартиры
+ * @param props.onAction  Клик по ячейке
  */
 export default function UnitCell({
   unit,
@@ -159,3 +162,4 @@ export default function UnitCell({
     </Paper>
   );
 }
+

@@ -25,6 +25,7 @@ if (ATTACH_BUCKET.toLowerCase() === 's3') {
     ATTACH_BUCKET = 'attachments';
 }
 
+/** Преобразует строку в безопасный вид для пути */
 export const slugify = (str) =>
     str
         .normalize('NFKD')
@@ -189,3 +190,4 @@ export async function getAttachmentsByIds(ids) {
 }
 
 export { ATTACH_BUCKET };
+

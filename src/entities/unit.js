@@ -31,6 +31,7 @@ const sanitize = (obj) => {
 };
 
 /* ====================== READ ====================== */
+/** Список объектов текущего проекта */
 export const useUnits = () => {
     const projectId = useProjectId();
     return useQuery({
@@ -54,6 +55,7 @@ export const useUnits = () => {
     });
 };
 
+/** Список объектов выбранного проекта */
 export const useUnitsByProject = (projectId) =>
     useQuery({
         queryKey: ['units', projectId ?? 'all'],
@@ -75,6 +77,7 @@ export const useUnitsByProject = (projectId) =>
         staleTime: 5 * 60_000,
     });
 
+/** Список всех объектов без фильтрации */
 export const useAllUnits = () =>
     useQuery({
         queryKey: ['units-all'],
@@ -88,6 +91,7 @@ export const useAllUnits = () =>
         staleTime: 5 * 60_000,
     });
 
+/** Получить объекты по идентификаторам */
 export const useUnitsByIds = (ids) =>
     useQuery({
         queryKey: ['units-by-ids', ids?.join(',')],
@@ -103,6 +107,7 @@ export const useUnitsByIds = (ids) =>
         staleTime: 5 * 60_000,
     });
 
+/** Получить один объект по id */
 export const useUnit = (unitId) => {
     const projectId = useProjectId();
     return useQuery({
@@ -152,6 +157,7 @@ const createUnit = async (payload) => {
     return { ...data, persons: [] };
 };
 
+/** Создать новый объект */
 export const useAddUnit = () => {
     const qc = useQueryClient();
     const userId = useAuthStore((s) => s.profile?.id ?? null);
@@ -197,6 +203,7 @@ const updateUnit = async ({ id, updates }) => {
     };
 };
 
+/** Обновить данные объекта */
 export const useUpdateUnit = () => {
     const qc = useQueryClient();
     return useMutation({
@@ -206,6 +213,7 @@ export const useUpdateUnit = () => {
 };
 
 /* ====================== DELETE ====================== */
+/** Удалить объект */
 export const useDeleteUnit = () => {
     const qc = useQueryClient();
     return useMutation({
@@ -219,3 +227,4 @@ export const useDeleteUnit = () => {
         onSuccess: () => qc.invalidateQueries({ queryKey: ['units'] }),
     });
 };
+

@@ -14,6 +14,7 @@ const normalize = (s) => s.trim();
 const sanitize  = (obj) => ({ name: normalize(obj.name ?? '') });
 
 /* ===================== READ ===================== */
+/** Получить список проектов */
 export const useProjects = () =>
     useQuery({
         queryKey: ['projects'],
@@ -60,6 +61,7 @@ const createProject = async ({ name }) => {
     if (error) throw error;
     return data;
 };
+/** Добавить проект */
 export const useAddProject = withInvalidate(createProject);
 
 /* ==================== UPDATE ==================== */
@@ -85,6 +87,7 @@ const updateProject = async ({ id, updates }) => {
     if (error) throw error;
     return data;
 };
+/** Обновить проект */
 export const useUpdateProject = withInvalidate(updateProject);
 
 /* ==================== DELETE ==================== */
@@ -92,4 +95,6 @@ const deleteProject = async (id) => {
     const { error } = await supabase.from('projects').delete().eq('id', id);
     if (error) throw error;
 };
+/** Удалить проект */
 export const useDeleteProject = withInvalidate(deleteProject);
+

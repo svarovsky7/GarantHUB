@@ -91,6 +91,7 @@ const remove = async (id) => {
 };
 
 /* ---------------- hooks ---------------- */
+/** Получить список контрагентов */
 export const useContractors = () => {
     return useQuery({
         queryKey: [TABLE],
@@ -114,6 +115,10 @@ const mutation = (fn) => () => {
     });
 };
 
+/** Добавить контрагента */
 export const useAddContractor    = mutation(insert);
+/** Обновить контрагента */
 export const useUpdateContractor = mutation(patch);
+/** Удалить контрагента */
 export const useDeleteContractor = mutation(remove);
+

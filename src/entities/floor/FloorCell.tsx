@@ -10,6 +10,10 @@ const FLOOR_COLOR = "#1976d2";
 
 /**
  * Отображает один этаж в шахматке.
+ *
+ * @param props.floor    Номер этажа
+ * @param props.units    Квартиры этажа
+ * @param props.onAddUnit   Обработчик добавления квартиры
  */
 export default function FloorCell({
   floor,
@@ -140,3 +144,4 @@ export default function FloorCell({
     </Box>
   );
 }
+

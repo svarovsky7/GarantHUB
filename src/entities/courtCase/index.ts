@@ -8,6 +8,7 @@ const CASES_TABLE = 'court_cases';
 const DEFECTS_TABLE = 'defects';
 const CASE_DEFECTS_TABLE = 'court_case_defects';
 
+/** Список судебных дел текущего проекта */
 export function useCourtCases() {
   const projectId = useProjectId();
   return useQuery({
@@ -26,6 +27,7 @@ export function useCourtCases() {
   });
 }
 
+/** Список всех судебных дел */
 export function useAllCourtCases() {
   return useQuery({
     queryKey: [CASES_TABLE, 'all'],
@@ -40,6 +42,7 @@ export function useAllCourtCases() {
   });
 }
 
+/** Создать судебное дело */
 export function useAddCourtCase() {
   const qc = useQueryClient();
   return useMutation({
@@ -56,6 +59,7 @@ export function useAddCourtCase() {
   });
 }
 
+/** Обновить судебное дело */
 export function useUpdateCourtCase() {
   const qc = useQueryClient();
   return useMutation({
@@ -73,6 +77,7 @@ export function useUpdateCourtCase() {
   });
 }
 
+/** Удалить судебное дело вместе с вложениями */
 export function useDeleteCourtCase() {
   const projectId = useProjectId();
   const qc = useQueryClient();
@@ -109,6 +114,7 @@ export function useDeleteCourtCase() {
 }
 
 
+/** Получить недостатки, связанные с делом */
 export function useCaseDefects(caseId: number) {
   return useQuery({
     queryKey: [CASE_DEFECTS_TABLE, caseId],
@@ -131,6 +137,7 @@ export function useCaseDefects(caseId: number) {
   });
 }
 
+/** Добавить недостаток к делу */
 export function useAddDefect() {
   const qc = useQueryClient();
   return useMutation({
@@ -162,6 +169,7 @@ export function useAddDefect() {
   });
 }
 
+/** Удалить недостаток из дела */
 export function useDeleteDefect() {
   const qc = useQueryClient();
   return useMutation({
@@ -180,6 +188,7 @@ export function useDeleteDefect() {
   });
 }
 
+/** Обновить информацию о недостатке */
 export function useUpdateDefect() {
   const qc = useQueryClient();
   return useMutation({
@@ -207,3 +216,4 @@ export function useUpdateDefect() {
     },
   });
 }
+

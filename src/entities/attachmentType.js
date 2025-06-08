@@ -4,6 +4,7 @@ import { supabase } from '@/shared/api/supabaseClient';
 const TABLE = 'attachment_types';
 const KEY = [TABLE];
 
+/** Получить список типов вложений */
 export const useAttachmentTypes = () =>
     useQuery({
         queryKey: KEY,
@@ -20,6 +21,7 @@ export const useAttachmentTypes = () =>
 
 const invalidate = (qc) => qc.invalidateQueries({ queryKey: KEY });
 
+/** Создать новый тип вложения */
 export const useAddAttachmentType = () => {
     const qc = useQueryClient();
     return useMutation({
@@ -36,6 +38,7 @@ export const useAddAttachmentType = () => {
     });
 };
 
+/** Обновить существующий тип вложения */
 export const useUpdateAttachmentType = () => {
     const qc = useQueryClient();
     return useMutation({
@@ -53,6 +56,7 @@ export const useUpdateAttachmentType = () => {
     });
 };
 
+/** Удалить тип вложения */
 export const useDeleteAttachmentType = () => {
     const qc = useQueryClient();
     return useMutation({
@@ -63,3 +67,4 @@ export const useDeleteAttachmentType = () => {
         onSuccess: () => invalidate(qc),
     });
 };
+

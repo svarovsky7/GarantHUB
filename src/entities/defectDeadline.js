@@ -8,6 +8,7 @@ const SELECT = `
   ticket_type:ticket_types ( id, name )
 `;
 
+/** Получить сроки устранения дефектов */
 export const useDefectDeadlines = () =>
   useQuery({
     queryKey: [TABLE],
@@ -22,6 +23,7 @@ export const useDefectDeadlines = () =>
     staleTime: 5 * 60_000,
   });
 
+/** Добавить срок устранения */
 export const useAddDefectDeadline = () => {
   const qc = useQueryClient();
   return useMutation({
@@ -38,6 +40,7 @@ export const useAddDefectDeadline = () => {
   });
 };
 
+/** Обновить срок устранения */
 export const useUpdateDefectDeadline = () => {
   const qc = useQueryClient();
   return useMutation({
@@ -55,6 +58,7 @@ export const useUpdateDefectDeadline = () => {
   });
 };
 
+/** Удалить срок устранения */
 export const useDeleteDefectDeadline = () => {
   const qc = useQueryClient();
   return useMutation({
@@ -66,3 +70,4 @@ export const useDeleteDefectDeadline = () => {
     onSuccess: () => qc.invalidateQueries({ queryKey: [TABLE] }),
   });
 };
+
