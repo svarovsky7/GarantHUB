@@ -46,9 +46,9 @@ export default function TicketTypesAdmin({
 
     const handleSubmit = async (values) => {
         if (editRow) {
-            await updateMutation.mutateAsync({ id: editRow.id, name: values.name });
+            await (updateMutation.mutateAsync as any)({ id: editRow.id, name: values.name });
         } else {
-            await addMutation.mutateAsync(values.name);
+            await (addMutation.mutateAsync as any)(values.name);
         }
         setOpen(false);
     };

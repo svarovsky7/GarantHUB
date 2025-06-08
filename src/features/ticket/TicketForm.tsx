@@ -231,7 +231,7 @@ export default function TicketForm({
     };
 
     if (ticketId) {
-      const uploaded = await updateAsync({
+      const uploaded = await (updateAsync as any)({
         id: Number(ticketId),
         ...payload,
         newAttachments: newFiles,
@@ -276,10 +276,10 @@ export default function TicketForm({
       setInitialTypes((prev) => ({ ...prev, ...changedTypes }));
       onCreated?.();
     } else {
-      await create.mutateAsync({
-        ...(payload as Ticket),
+      await (create.mutateAsync as any)({
+        ...payload,
         attachments: newFiles.map((f) => ({ file: f.file, type_id: f.type_id })),
-      } as any);
+      });
       onCreated?.();
       reset();
       setNewFiles([]);

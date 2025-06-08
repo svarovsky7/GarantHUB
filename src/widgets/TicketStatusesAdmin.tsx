@@ -28,9 +28,9 @@ export default function TicketStatusesAdmin({
     const handleDelete = (id) => { if (window.confirm('Удалить статус?')) deleteMutation.mutate(id); };
     const handleSubmit = async (values) => {
         if (editRow) {
-            await updateMutation.mutateAsync({ id: editRow.id, updates: values });
+            await (updateMutation.mutateAsync as any)({ id: editRow.id, updates: values });
         } else {
-            await addMutation.mutateAsync(values);
+            await (addMutation.mutateAsync as any)(values);
         }
         setOpen(false);
     };
