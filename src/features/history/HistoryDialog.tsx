@@ -1,6 +1,7 @@
 import React from 'react';
 import dayjs from 'dayjs';
-import { Modal, Table, Tag, ConfigProvider } from 'antd';
+import { Modal, Table, Tag, ConfigProvider, Button } from 'antd';
+import { useNavigate } from 'react-router-dom';
 import ruRU from 'antd/locale/ru_RU';
 import type { ColumnsType } from 'antd/es/table';
 import { useUnitHistory } from '@/entities/history';
@@ -15,6 +16,7 @@ interface HistoryDialogProps {
 /** Диалог отображения истории объекта */
 export default function HistoryDialog({ open, unit, onClose }: HistoryDialogProps) {
   const { data = [], isLoading } = useUnitHistory(unit?.id);
+  const navigate = useNavigate();
 
   const actionLabels: Record<string, string> = {
     created: 'Создан',
@@ -52,6 +54,27 @@ export default function HistoryDialog({ open, unit, onClose }: HistoryDialogProp
       title: 'Пользователь',
       dataIndex: 'user_name',
       render: (n: string | null) => n || '—',
+    },
+    {
+      title: 'Действие',
+      key: 'open',
+      render: (_: any, record) => (
+        <Button
+          type="link"
+          onClick={() => {
+            if (record.entity_type === 'ticket') {
+              navigate(`/tickets?ticket_id=${record.entity_id}`);
+            } else if (record.entity_type === 'letter') {
+              navigate(`/correspondence?letter_id=${record.entity_id}`);
+            } else if (record.entity_type === 'court_case') {
+              navigate(`/court-cases?case_id=${record.entity_id}`);
+            }
+            onClose();
+          }}
+        >
+          Открыть
+        </Button>
+      ),
     },
   ];
 
