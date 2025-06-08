@@ -4,13 +4,14 @@
 // -----------------------------------------------------------------------------
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/shared/api/supabaseClient';
+import type { User } from '@/shared/types/user';
 
 const FIELDS = 'id, name, email, role, project_id';
 
 /* ─────────── SELECT ─────────── */
 /** Получить всех пользователей БД без фильтрации */
 export const useUsers = () => {
-    return useQuery({
+    return useQuery<User[]>({
         queryKey: ['users', 'all'],
         queryFn : async () => {
             const { data, error } = await supabase
@@ -27,8 +28,8 @@ export const useUsers = () => {
 /* ─────────── UPDATE (role) ─────────── */
 export const useUpdateUserRole = () => {
     const qc = useQueryClient();
-    return useMutation({
-        mutationFn: async ({ id, newRole }) => {
+    return useMutation<User, Error, { id: string; newRole: string }>({
+        mutationFn: async ({ id, newRole }): Promise<User> => {
             const { data, error } = await supabase
                 .from('profiles')
                 .update({ role: newRole })
@@ -38,21 +39,21 @@ export const useUpdateUserRole = () => {
             if (error) throw error;
             return data;
         },
-        onSuccess: () => qc.invalidateQueries(['users', 'all']),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ['users', 'all'] }),
     });
 };
 
 /* ─────────── DELETE ─────────── */
 export const useDeleteUser = () => {
     const qc = useQueryClient();
-    return useMutation({
-        mutationFn: async (id) => {
+    return useMutation<void, Error, string>({
+        mutationFn: async (id: string): Promise<void> => {
             const { error } = await supabase
                 .from('profiles')
                 .delete()
                 .eq('id', id);
             if (error) throw error;
         },
-        onSuccess: () => qc.invalidateQueries(['users', 'all']),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ['users', 'all'] }),
     });
 };

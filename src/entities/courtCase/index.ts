@@ -119,7 +119,7 @@ export function useCaseDefects(caseId: number) {
         .eq('case_id', caseId);
       if (error) throw error;
       const rows = data ?? [];
-      return rows.map((r) => ({
+      return rows.map((r: any) => ({
         id: r.defects.id,
         description: r.defects.description,
         cost: r.defects.fix_cost ?? 0,
