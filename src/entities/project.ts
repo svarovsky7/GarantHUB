@@ -37,12 +37,12 @@ export const useProjects = () =>
  * кэша проектов после выполнения.
  */
 const withInvalidate =
-    <TArgs extends any[], TResult>(fn: (...args: TArgs) => Promise<TResult>) =>
+    <TVariables, TResult>(fn: (vars: TVariables) => Promise<TResult>) =>
         () => {
             const qc = useQueryClient();
-            return useMutation({
+            return useMutation<TResult, Error, TVariables>({
                 mutationFn: fn,
-                onSuccess : () => qc.invalidateQueries({ queryKey: ['projects'] }),
+                onSuccess: () => qc.invalidateQueries({ queryKey: ['projects'] }),
             });
         };
 

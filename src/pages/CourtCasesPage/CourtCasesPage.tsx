@@ -1341,6 +1341,7 @@ interface CaseFilesTabProps {
 function CaseFilesTab({ caseData }: CaseFilesTabProps) {
   const { data: attachmentTypes = [] } = useAttachmentTypes();
   const updateCaseMutation = useUpdateCourtCase();
+  const notify = useNotify();
   const [files, setFiles] = useState<{
     id: number;
     name: string;
@@ -1525,6 +1526,7 @@ function AddPersonModal({ open, onClose, unitId, onSelect, initialData = null }:
   const addPersonMutation = useAddPerson();
   const updatePersonMutation = useUpdatePerson();
   const qc = useQueryClient();
+  const notify = useNotify();
   const isEdit = !!initialData?.id;
 
   useEffect(() => {
@@ -1595,6 +1597,7 @@ function ContractorModal({ open, onClose, onSelect, initialData = null }: Contra
   const [form] = Form.useForm();
   const addMutation = useAddContractor();
   const updateMutation = useUpdateContractor();
+  const notify = useNotify();
   const isEdit = !!initialData?.id;
 
   useEffect(() => {
