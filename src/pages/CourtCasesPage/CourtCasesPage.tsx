@@ -1530,12 +1530,13 @@ function AddPersonModal({ open, onClose, unitId, onSelect, initialData = null }:
   const isEdit = !!initialData?.id;
 
   useEffect(() => {
+    if (!open) return;
     if (isEdit) {
       form.setFieldsValue(initialData);
     } else {
       form.resetFields();
     }
-  }, [isEdit, initialData, form]);
+  }, [open, isEdit, initialData, form]);
 
   const handleFinish = (values: any) => {
     const action = isEdit
@@ -1601,12 +1602,13 @@ function ContractorModal({ open, onClose, onSelect, initialData = null }: Contra
   const isEdit = !!initialData?.id;
 
   useEffect(() => {
+    if (!open) return;
     if (isEdit) {
       form.setFieldsValue(initialData);
     } else {
       form.resetFields();
     }
-  }, [isEdit, initialData, form]);
+  }, [open, isEdit, initialData, form]);
 
   const finish = (values: any) => {
     const action = isEdit
