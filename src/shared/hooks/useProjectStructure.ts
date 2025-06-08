@@ -4,6 +4,10 @@ import type { Project } from '@/shared/types/project';
 
 const LS_KEY = 'structurePageSelection';
 
+/**
+ * Хук для выбора проекта, корпуса и секции.
+ * Сохраняет состояние в localStorage и синхронизирует его между вкладками.
+ */
 export default function useProjectStructure() {
     const [projects, setProjects] = useState<Project[]>([]);
     const [projectId, setProjectIdState] = useState<string>('');
