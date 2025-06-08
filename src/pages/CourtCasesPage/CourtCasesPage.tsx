@@ -291,6 +291,17 @@ export default function CourtCasesPage() {
       : null,
   }));
 
+  useEffect(() => {
+    const id = searchParams.get('case_id');
+    if (id && casesData.length) {
+      const c = casesData.find((cs: any) => String(cs.id) === id);
+      if (c) {
+        setDialogCase(c);
+        setTab('defects');
+      }
+    }
+  }, [searchParams, casesData]);
+
   const columns: ColumnsType<CourtCase & any> = [
     {
       title: 'Проект',

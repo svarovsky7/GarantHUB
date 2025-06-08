@@ -75,6 +75,14 @@ export default function CorrespondencePage() {
   const [view, setView] = useState<CorrespondenceLetter | null>(null);
   const [linkFor, setLinkFor] = useState<CorrespondenceLetter | null>(null);
 
+  React.useEffect(() => {
+    const id = searchParams.get('letter_id');
+    if (id && letters.length) {
+      const letter = letters.find((l) => String(l.id) === id);
+      if (letter) setView(letter);
+    }
+  }, [searchParams, letters]);
+
   const { data: users = [] } = useUsers();
   const { data: letterTypes = [] } = useLetterTypes();
   const { data: projects = [] } = useProjects();

@@ -29,6 +29,13 @@ export default function TicketsPage() {
   const [searchParams] = useSearchParams();
   const [filters, setFilters] = useState({});
   const [viewId, setViewId] = useState<number | null>(null);
+
+  React.useEffect(() => {
+    const id = searchParams.get('ticket_id');
+    if (id) {
+      setViewId(Number(id));
+    }
+  }, [searchParams]);
   const initialValues = {
     project_id: searchParams.get('project_id')
       ? Number(searchParams.get('project_id')!)
