@@ -126,7 +126,11 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
     <Form form={form} layout="vertical" onFinish={onFinish} autoComplete="off">
       <Row gutter={16}>
         <Col span={8}>
-          <Form.Item name="project_id" label="Проект">
+          <Form.Item
+            name="project_id"
+            label="Проект"
+            rules={[{ required: true }]}
+          >
             <Select allowClear options={projects.map((p) => ({ value: p.id, label: p.name }))} />
           </Form.Item>
         </Col>
@@ -143,7 +147,11 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
           </Form.Item>
         </Col>
         <Col span={8}>
-          <Form.Item name="responsible_engineer_id" label="Ответственный инженер">
+          <Form.Item
+            name="responsible_engineer_id"
+            label="Ответственный инженер"
+            rules={[{ required: true }]}
+          >
             <Select allowClear options={users.map((u) => ({ value: u.id, label: u.name }))} />
           </Form.Item>
         </Col>
@@ -188,7 +196,7 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
           </Form.Item>
         </Col>
         <Col span={8}>
-          <Form.Item name="fixed_at" label="Дата устранения">
+          <Form.Item name="fixed_at" label="Дата устранения" rules={[{ required: true }]}>
             <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
           </Form.Item>
         </Col>
