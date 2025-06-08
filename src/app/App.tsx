@@ -10,8 +10,6 @@ import { useRealtimeUpdates } from "@/shared/hooks/useRealtimeUpdates";
 import NavBar from "@/widgets/NavBar";
 import AppRouter from "./Router";
 
-const log = (...a) => console.log("%c[App]", "color:teal", ...a);
-
 export default function App() {
   const setProfile = useAuthStore((s) => s.setProfile);
   const location = useLocation();
@@ -24,8 +22,6 @@ export default function App() {
         .select("id, email, name, role, project_id")
         .eq("id", user.id)
         .single();
-
-      log(`loadProfile[${tag}]`, { data, error });
 
       setProfile(
         data ?? {
