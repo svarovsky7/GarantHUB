@@ -13,6 +13,7 @@ import type { Ticket } from '@/shared/types/ticket';
 import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useAuthStore } from '@/shared/store/authStore';
 import FileDropZone from '@/shared/ui/FileDropZone';
+import { useNotify } from '@/shared/hooks/useNotify';
 
 /**
  * Форма создания замечания на основе Ant Design.
@@ -41,6 +42,7 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
   const { data: attachmentTypes = [] } = useAttachmentTypes();
   const { data: deadlines = [] } = useDefectDeadlines();
   const create = useCreateTicket();
+  const notify = useNotify();
   const [files, setFiles] = useState<{ file: File; type_id: number | null }[]>([]);
   const profileId = useAuthStore((s) => s.profile?.id);
   const typeId = Form.useWatch('type_id', form);
@@ -94,6 +96,10 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
   const removeFile = (idx: number) => setFiles((p) => p.filter((_, i) => i !== idx));
 
   const onFinish = async (values: any) => {
+    if (files.some((f) => f.type_id == null)) {
+      notify.warn('Выберите тип файла для всех документов');
+      return;
+    }
     try {
       const rest = { ...values } as any;
       delete rest.pins;
