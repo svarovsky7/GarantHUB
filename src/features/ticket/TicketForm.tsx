@@ -208,7 +208,7 @@ export default function TicketForm({
       newFiles.some((f) => f.type_id == null) ||
       remoteFiles.some((f) => (changedTypes[f.id] ?? null) == null)
     ) {
-      notify.warn('Выберите тип файла для всех документов');
+      notify.error('Выберите тип файла для всех документов');
       return;
     }
     const payload = {

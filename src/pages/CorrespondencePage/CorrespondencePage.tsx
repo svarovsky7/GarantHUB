@@ -7,7 +7,6 @@ import {
   Select,
   Input,
   Button,
-  message,
 } from 'antd';
 import ruRU from 'antd/locale/ru_RU';
 import dayjs from 'dayjs';
@@ -31,6 +30,7 @@ import { useLetterTypes } from '@/entities/letterType';
 import { useProjects } from '@/entities/project';
 import { useUnitsByProject, useUnitsByIds } from '@/entities/unit';
 import { useAttachmentTypes } from '@/entities/attachmentType';
+import { useNotify } from '@/shared/hooks/useNotify';
 
 interface Filters {
   type?: 'incoming' | 'outgoing' | '';
@@ -50,6 +50,7 @@ export default function CorrespondencePage() {
   const remove = useDeleteLetter();
   const linkLetters = useLinkLetters();
   const unlinkLetter = useUnlinkLetter();
+  const notify = useNotify();
   const [filters, setFilters] = useState<Filters>({
     type: '',
     project: '',
@@ -129,7 +130,7 @@ export default function CorrespondencePage() {
 
     add.mutate(safeData, {
       onSuccess: () => {
-        message.success('Письмо добавлено');
+        notify.success('Письмо добавлено');
       },
     });
   };
@@ -137,13 +138,13 @@ export default function CorrespondencePage() {
   const handleDelete = (id: string) => {
     if (!window.confirm('Удалить письмо?')) return;
     remove.mutate(id, {
-      onSuccess: () => message.success('Письмо удалено'),
+      onSuccess: () => notify.success('Письмо удалено'),
     });
   };
 
   const handleUnlink = (id: string) => {
     unlinkLetter.mutate(id, {
-      onSuccess: () => message.success('Письмо исключено из связи'),
+      onSuccess: () => notify.success('Письмо исключено из связи'),
     });
   };
 
@@ -201,7 +202,7 @@ export default function CorrespondencePage() {
             if (!linkFor) return;
             linkLetters.mutate({ parentId: linkFor.id, childIds: ids }, {
               onSuccess: () => {
-                message.success('Письма связаны');
+                notify.success('Письма связаны');
                 setLinkFor(null);
               },
             });
