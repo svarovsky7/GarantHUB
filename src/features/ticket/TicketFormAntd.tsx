@@ -9,7 +9,6 @@ import { useProjects } from '@/entities/project';
 import { useCreateTicket } from '@/entities/ticket';
 import { useDefectDeadlines } from '@/entities/defectDeadline';
 import { useAttachmentTypes } from '@/entities/attachmentType';
-import type { Ticket } from '@/shared/types/ticket';
 import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useAuthStore } from '@/shared/store/authStore';
 import FileDropZone from '@/shared/ui/FileDropZone';

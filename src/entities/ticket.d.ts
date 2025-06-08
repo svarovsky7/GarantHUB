@@ -1,5 +1,47 @@
 import type { UseMutationResult, UseQueryResult } from '@tanstack/react-query';
-import type { Ticket } from '@/shared/types/ticket';
+import type { Dayjs } from 'dayjs';
+
+export interface TicketAttachment {
+  id: number | string;
+  /** Путь к файлу в Supabase Storage */
+  path: string;
+  /** Отображаемое имя файла */
+  name: string;
+  /** Публичный URL */
+  url: string;
+  /** MIME‑тип */
+  type: string;
+  /** Тип вложения */
+  attachment_type_id: number | null;
+  /** Название типа вложения */
+  attachment_type_name?: string;
+}
+
+export interface Ticket {
+  id: number;
+  projectId: number;
+  unitIds: number[];
+  typeId: number | null;
+  statusId: number | null;
+  projectName: string;
+  unitNames: string;
+  typeName: string;
+  statusName: string;
+  statusColor: string | null;
+  title: string;
+  description: string | null;
+  customerRequestNo: string | null;
+  customerRequestDate: Dayjs | null;
+  responsibleEngineerId: string | null;
+  createdBy: string | null;
+  isWarranty: boolean;
+  isClosed: boolean;
+  hasAttachments: boolean;
+  attachments: TicketAttachment[];
+  createdAt: Dayjs | null;
+  receivedAt: Dayjs | null;
+  fixedAt: Dayjs | null;
+}
 
 export function signedUrl(path: string, filename?: string): Promise<string>;
 
