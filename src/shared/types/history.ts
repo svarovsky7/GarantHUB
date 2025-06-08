@@ -16,3 +16,9 @@ export interface HistoryEvent {
   /** Дата изменения ISO */
   changed_at: string;
 }
+
+/** Запись истории с именем пользователя */
+export interface HistoryEventWithUser extends HistoryEvent {
+  /** Имя пользователя, инициировавшего изменение */
+  user_name: string | null;
+}
