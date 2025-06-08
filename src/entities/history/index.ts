@@ -33,10 +33,35 @@ export function useUnitHistory(unitId?: number) {
         );
       }
 
-      return events.map((e) => ({
+      const mapped = events.map((e) => ({
         ...e,
         user_name: userMap[e.changed_by as string] ?? null,
       })) as HistoryEventWithUser[];
+
+      // Skip immediate updates right after creation
+      const asc = [...mapped].sort(
+        (a, b) => new Date(a.changed_at).getTime() - new Date(b.changed_at).getTime(),
+      );
+      const creationMap = new Map<string, number>();
+      const filtered: HistoryEventWithUser[] = [];
+      for (const ev of asc) {
+        const key = `${ev.entity_type}:${ev.entity_id}`;
+        if (ev.action === 'created') {
+          creationMap.set(key, new Date(ev.changed_at).getTime());
+          filtered.push(ev);
+        } else if (ev.action === 'updated') {
+          const t = creationMap.get(key);
+          if (t && Math.abs(new Date(ev.changed_at).getTime() - t) < 10000) {
+            continue;
+          }
+          filtered.push(ev);
+        } else {
+          filtered.push(ev);
+        }
+      }
+      return filtered.sort(
+        (a, b) => new Date(b.changed_at).getTime() - new Date(a.changed_at).getTime(),
+      );
     },
     staleTime: 60_000,
   });
