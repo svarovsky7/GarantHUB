@@ -31,6 +31,26 @@ export function useRealtimeUpdates() {
       .on(
         'postgres_changes',
         {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'tickets',
+          filter: `project_id=eq.${projectId}`,
+        },
+        () => qc.invalidateQueries({ queryKey: ['tickets', projectId] }),
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'tickets',
+          filter: `project_id=eq.${projectId}`,
+        },
+        () => qc.invalidateQueries({ queryKey: ['tickets', projectId] }),
+      )
+      .on(
+        'postgres_changes',
+        {
           event: 'INSERT',
           schema: 'public',
           table: 'court_cases',
@@ -41,7 +61,47 @@ export function useRealtimeUpdates() {
       .on(
         'postgres_changes',
         {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'court_cases',
+          filter: `project_id=eq.${projectId}`,
+        },
+        () => qc.invalidateQueries({ queryKey: ['court_cases', projectId] }),
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'court_cases',
+          filter: `project_id=eq.${projectId}`,
+        },
+        () => qc.invalidateQueries({ queryKey: ['court_cases', projectId] }),
+      )
+      .on(
+        'postgres_changes',
+        {
           event: 'INSERT',
+          schema: 'public',
+          table: 'letters',
+          filter: `project_id=eq.${projectId}`,
+        },
+        () => qc.invalidateQueries({ queryKey: ['letters'] }),
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'letters',
+          filter: `project_id=eq.${projectId}`,
+        },
+        () => qc.invalidateQueries({ queryKey: ['letters'] }),
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
           schema: 'public',
           table: 'letters',
           filter: `project_id=eq.${projectId}`,
