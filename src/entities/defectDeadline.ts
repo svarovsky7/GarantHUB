@@ -1,5 +1,6 @@
 import { supabase } from '@/shared/api/supabaseClient';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import type { DefectDeadline } from '@/shared/types/defectDeadline';
 
 const TABLE = 'defect_deadlines';
 const SELECT = `
@@ -9,7 +10,7 @@ const SELECT = `
 `;
 
 export const useDefectDeadlines = () =>
-  useQuery({
+  useQuery<DefectDeadline[]>({
     queryKey: [TABLE],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -17,22 +18,24 @@ export const useDefectDeadlines = () =>
         .select(SELECT)
         .order('id');
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as unknown as DefectDeadline[];
     },
     staleTime: 5 * 60_000,
   });
 
 export const useAddDefectDeadline = () => {
   const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (payload) => {
+  return useMutation<DefectDeadline, Error, Omit<DefectDeadline, 'id' | 'project' | 'ticket_type'>>({
+    mutationFn: async (
+      payload: Omit<DefectDeadline, 'id' | 'project' | 'ticket_type'>,
+    ): Promise<DefectDeadline> => {
       const { data, error } = await supabase
         .from(TABLE)
         .insert(payload)
         .select(SELECT)
         .single();
       if (error) throw error;
-      return data;
+      return data as unknown as DefectDeadline;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: [TABLE] }),
   });
@@ -40,8 +43,11 @@ export const useAddDefectDeadline = () => {
 
 export const useUpdateDefectDeadline = () => {
   const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ id, updates }) => {
+  return useMutation<DefectDeadline, Error, { id: number; updates: Partial<Omit<DefectDeadline, 'id' | 'project' | 'ticket_type'>> }>({
+    mutationFn: async ({
+      id,
+      updates,
+    }): Promise<DefectDeadline> => {
       const { data, error } = await supabase
         .from(TABLE)
         .update(updates)
@@ -49,7 +55,7 @@ export const useUpdateDefectDeadline = () => {
         .select(SELECT)
         .single();
       if (error) throw error;
-      return data;
+      return data as unknown as DefectDeadline;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: [TABLE] }),
   });
@@ -57,8 +63,8 @@ export const useUpdateDefectDeadline = () => {
 
 export const useDeleteDefectDeadline = () => {
   const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (id) => {
+  return useMutation<number, Error, number>({
+    mutationFn: async (id: number): Promise<number> => {
       const { error } = await supabase.from(TABLE).delete().eq('id', id);
       if (error) throw error;
       return id;

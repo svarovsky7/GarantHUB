@@ -10,7 +10,7 @@ const RoleSelect = ({ user, roles }) => {
 
   return (
     <FormControl size="small" sx={{ minWidth: 140 }}>
-      {updateRole.isLoading && (
+      {updateRole.isPending && (
         <CircularProgress
           size={18}
           sx={{ position: "absolute", right: 8, top: 8 }}
@@ -19,7 +19,7 @@ const RoleSelect = ({ user, roles }) => {
       <Select
         value={user.role}
         onChange={handleChange}
-        disabled={updateRole.isLoading}
+        disabled={updateRole.isPending}
       >
         {roles.map((r) => (
           <MenuItem key={r.name} value={r.name}>

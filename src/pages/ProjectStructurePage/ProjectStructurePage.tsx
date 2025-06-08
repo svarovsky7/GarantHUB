@@ -85,7 +85,7 @@ export default function ProjectStructurePage() {
       ) {
         setProjectId(profile.project_id);
       } else if (projects.length > 0) {
-        setProjectId(projects[0].id);
+        setProjectId(String(projects[0].id));
       }
     }
   }, [projectId, projects, setProjectId]);
