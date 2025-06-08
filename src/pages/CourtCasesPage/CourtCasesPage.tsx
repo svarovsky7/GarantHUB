@@ -111,7 +111,7 @@ export default function CourtCasesPage() {
   const [dialogCase, setDialogCase] = useState<CourtCase | null>(null);
   const [tab, setTab] = useState('defects');
 
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [form] = Form.useForm();
   const projectId = Form.useWatch('project_id', form);
@@ -779,7 +779,14 @@ export default function CourtCasesPage() {
 
       <CaseDialog
         open={!!dialogCase}
-        onClose={() => setDialogCase(null)}
+        onClose={() => {
+          setDialogCase(null);
+          setSearchParams((prev) => {
+            const params = new URLSearchParams(prev);
+            params.delete('case_id');
+            return params;
+          });
+        }}
         caseData={dialogCase}
         tab={tab}
         onTabChange={setTab}
