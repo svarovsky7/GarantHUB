@@ -28,6 +28,7 @@ import { useAttachmentTypes } from "@/entities/attachmentType";
 import { useCreateTicket, useTicket, signedUrl } from "@/entities/ticket";
 import { useProjectId } from "@/shared/hooks/useProjectId";
 import { useUnsavedChangesWarning } from "@/shared/hooks/useUnsavedChangesWarning";
+import { useNotify } from "@/shared/hooks/useNotify";
 import AttachmentEditorTable from "@/shared/ui/AttachmentEditorTable";
 import type { Ticket } from "@/shared/types/ticket";
 
@@ -82,6 +83,7 @@ export default function TicketForm({
   initialUnitId,
 }: TicketFormProps) {
   const globalProjectId = useProjectId();
+  const notify = useNotify();
   const {
     control,
     handleSubmit,
@@ -202,6 +204,13 @@ export default function TicketForm({
 
 
   const submit = async (values: TicketFormValues) => {
+    if (
+      newFiles.some((f) => f.type_id == null) ||
+      remoteFiles.some((f) => (changedTypes[f.id] ?? null) == null)
+    ) {
+      notify.warn('Выберите тип файла для всех документов');
+      return;
+    }
     const payload = {
       project_id: values.project_id ?? globalProjectId,
       unit_ids: values.unit_ids,
