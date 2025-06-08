@@ -30,10 +30,10 @@ import { useProjectId } from "@/shared/hooks/useProjectId";
 import { useUnsavedChangesWarning } from "@/shared/hooks/useUnsavedChangesWarning";
 import { useNotify } from "@/shared/hooks/useNotify";
 import AttachmentEditorTable from "@/shared/ui/AttachmentEditorTable";
-import type { Ticket } from "@/shared/types/ticket";
+import type { Ticket } from "@/entities/ticket";
 
 interface Attachment {
-  id: string;
+  id: string | number;
   name: string;
   path: string;
   url: string;
@@ -306,7 +306,7 @@ export default function TicketForm({
                 displayEmpty
                 value={field.value ?? ""}
                 onChange={(e) => {
-                  const val = e.target.value; // CHANGE: avoid incorrect string cast
+                  const val = String(e.target.value);
                   field.onChange(val === "" ? null : Number(val));
                 }}
               >
@@ -398,7 +398,7 @@ export default function TicketForm({
                 displayEmpty
                 value={field.value ?? ""}
                 onChange={(e) => {
-                  const val = e.target.value; // CHANGE: avoid incorrect string cast
+                  const val = String(e.target.value);
                   field.onChange(val === "" ? null : Number(val));
                 }}
               >
@@ -432,7 +432,7 @@ export default function TicketForm({
                 displayEmpty
                 value={field.value ?? ""}
                 onChange={(e) => {
-                  const val = e.target.value; // CHANGE: avoid incorrect string cast
+                  const val = String(e.target.value);
                   field.onChange(val === "" ? null : Number(val));
                 }}
               >
@@ -578,7 +578,7 @@ export default function TicketForm({
           </Typography>
           <AttachmentEditorTable
             remoteFiles={remoteFiles.map((f) => ({
-              id: f.id,
+              id: String(f.id),
               name: f.name,
               path: f.path,
               typeId: changedTypes[f.id] ?? f.attachment_type_id,
