@@ -5,6 +5,7 @@ import { useLocation } from "react-router-dom";
 
 import { supabase } from "@shared/api/supabaseClient";
 import { useAuthStore } from "@shared/store/authStore";
+import { useRealtimeUpdates } from "@/shared/hooks/useRealtimeUpdates";
 
 import NavBar from "@/widgets/NavBar";
 import AppRouter from "./Router";
@@ -14,6 +15,7 @@ const log = (...a) => console.log("%c[App]", "color:teal", ...a);
 export default function App() {
   const setProfile = useAuthStore((s) => s.setProfile);
   const location = useLocation();
+  useRealtimeUpdates();
 
   const loadProfile = useCallback(
     async (user, tag = "") => {
