@@ -1,12 +1,14 @@
 -- Обновление функции логирования unit_history, чтобы значения
 -- поля action соответствовали check-constraint.
 create or replace function map_action() returns text as $$
-  select case tg_op
+begin
+  return case TG_OP
            when 'INSERT' then 'created'
            when 'UPDATE' then 'updated'
            when 'DELETE' then 'deleted'
          end;
-$$ language sql;
+end;
+$$ language plpgsql;
 
 create or replace function log_ticket_history() returns trigger as $$
 declare
