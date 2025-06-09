@@ -935,7 +935,7 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange, projects }: Cas
   const saveChanges = async (values: any) => {
     if (!caseData) return;
     try {
-      await updateCaseMutation.mutateAsync({
+      const updated = await updateCaseMutation.mutateAsync({
         id: Number(caseData.id),
         updates: {
           project_id: values.project_id,
@@ -955,6 +955,22 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange, projects }: Cas
           description: values.description || '',
         },
       });
+      const mapped = {
+        ...caseData,
+        ...updated,
+        plaintiff:
+          projectPersons.find((p) => p.id === updated.plaintiff_id)?.full_name ||
+          contractors.find((c) => c.id === updated.plaintiff_id)?.name ||
+          (caseData as any).plaintiff,
+        defendant:
+          contractors.find((c) => c.id === updated.defendant_id)?.name ||
+          projectPersons.find((p) => p.id === updated.defendant_id)?.full_name ||
+          (caseData as any).defendant,
+        responsibleLawyer:
+          users.find((u) => u.id === updated.responsible_lawyer_id)?.name ||
+          (caseData as any).responsibleLawyer,
+      } as CourtCase & any;
+      setDialogCase(mapped);
       notify.success('Дело обновлено');
       setEditing(false);
     } catch (e: any) {
