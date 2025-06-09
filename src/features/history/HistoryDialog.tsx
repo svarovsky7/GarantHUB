@@ -84,7 +84,7 @@ export default function HistoryDialog({ open, unit, onClose, onOpenCourtCase }: 
                   if (onOpenCourtCase) {
                     onOpenCourtCase(record.entity_id);
                   } else {
-                    navigate(`/court-cases?case_id=${record.entity_id}&from=structure`);
+                    navigate(`/court-cases?case_id=${record.entity_id}`);
                   }
                 }
                 onClose();

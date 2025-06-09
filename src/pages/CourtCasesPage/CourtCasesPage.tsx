@@ -788,7 +788,6 @@ export default function CourtCasesPage() {
         <CaseDialog
           open
           onClose={() => {
-            const back = searchParams.get('from');
             setSearchParams(
               (prev) => {
                 const params = new URLSearchParams(prev);
@@ -798,9 +797,6 @@ export default function CourtCasesPage() {
               },
               { replace: true },
             );
-            if (back === 'structure') {
-              navigate('/structure');
-            }
             setDialogCase(null);
           }}
           caseData={dialogCase}
