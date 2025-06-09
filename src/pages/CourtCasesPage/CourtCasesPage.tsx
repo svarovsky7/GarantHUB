@@ -784,24 +784,25 @@ export default function CourtCasesPage() {
         size="middle"
       />
 
-      {dialogCase && (
-        <CaseDialog
-          open
-          onClose={() => {
-            const back = searchParams.get('from');
-            setSearchParams(
-              (prev) => {
-                const params = new URLSearchParams(prev);
-                params.delete('case_id');
-                params.delete('from');
-                return params;
-              },
-              { replace: true },
-            );
-            if (back === 'structure') {
-              navigate('/structure');
+        {dialogCase && (
+            <CaseDialog
+                open
+                onClose={() => {
+                  setDialogCase(null);
+                  const back = searchParams.get('from');
+                  setSearchParams(
+                      (prev) => {
+                        const params = new URLSearchParams(prev);
+                        params.delete('case_id');
+                        params.delete('from');
+                        return params;
+                      },
+                      { replace: true },
+                  );
+                  if (back === 'structure') {
+              navigate('/structure', { replace: true });
             }
-            setDialogCase(null);
+
           }}
           caseData={dialogCase}
           tab={tab}
