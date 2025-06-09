@@ -11,10 +11,11 @@ interface HistoryDialogProps {
   open: boolean;
   unit: { id: number; name: string } | null;
   onClose: () => void;
+  onOpenCourtCase?: (caseId: number) => void; // <-- добавьте если нужно открывать дело в модалке
 }
 
 /** Диалог отображения истории объекта */
-export default function HistoryDialog({ open, unit, onClose }: HistoryDialogProps) {
+export default function HistoryDialog({ open, unit, onClose, onOpenCourtCase }: HistoryDialogProps) {
   const { data = [], isLoading } = useUnitHistory(unit?.id);
   const navigate = useNavigate();
   const [primaryOnly, setPrimaryOnly] = React.useState(false);
@@ -72,48 +73,53 @@ export default function HistoryDialog({ open, unit, onClose }: HistoryDialogProp
       title: 'Действие',
       key: 'open',
       render: (_: any, record) => (
-        <Button
-          type="link"
-          onClick={() => {
-            if (record.entity_type === 'ticket') {
-              navigate(`/tickets?ticket_id=${record.entity_id}`);
-            } else if (record.entity_type === 'letter') {
-              navigate(`/correspondence?letter_id=${record.entity_id}`);
-            } else if (record.entity_type === 'court_case') {
-              navigate(`/court-cases?case_id=${record.entity_id}&from=structure`);
-            }
-            onClose();
-          }}
-        >
-          Открыть
-        </Button>
+          <Button
+              type="link"
+              onClick={() => {
+                if (record.entity_type === 'ticket') {
+                  navigate(`/tickets?ticket_id=${record.entity_id}`);
+                } else if (record.entity_type === 'letter') {
+                  navigate(`/correspondence?letter_id=${record.entity_id}`);
+                } else if (record.entity_type === 'court_case') {
+                  if (onOpenCourtCase) {
+                    onOpenCourtCase(record.entity_id);
+                  } else {
+                    navigate(`/court-cases?case_id=${record.entity_id}&from=structure`);
+                  }
+                }
+                onClose();
+              }}
+          >
+            Открыть
+          </Button>
       ),
     },
   ];
 
   return (
-    <ConfigProvider locale={ruRU}>
-      <Modal
-        open={open}
-        onCancel={onClose}
-        footer={null}
-        title={unit ? `История объекта ${unit.name}` : 'История'}
-        width={700}
-        zIndex={1400}
-      >
-        <Space style={{ marginBottom: 12 }}>
-          <Switch checked={primaryOnly} onChange={setPrimaryOnly} />
-          Показать основные документы
-        </Space>
-        <Table
-          rowKey="id"
-          columns={columns}
-          dataSource={displayedData}
-          loading={isLoading}
-          pagination={{ pageSize: 10 }}
-          size="small"
-        />
-      </Modal>
-    </ConfigProvider>
+      <ConfigProvider locale={ruRU}>
+        <Modal
+            open={open}
+            onCancel={onClose}
+            footer={null}
+            title={unit ? `История объекта ${unit.name}` : 'История'}
+            width={700}
+            zIndex={1400}
+            destroyOnClose
+        >
+          <Space style={{ marginBottom: 12 }}>
+            <Switch checked={primaryOnly} onChange={setPrimaryOnly} />
+            Показать основные документы
+          </Space>
+          <Table
+              rowKey="id"
+              columns={columns}
+              dataSource={displayedData}
+              loading={isLoading}
+              pagination={{ pageSize: 10 }}
+              size="small"
+          />
+        </Modal>
+      </ConfigProvider>
   );
 }
