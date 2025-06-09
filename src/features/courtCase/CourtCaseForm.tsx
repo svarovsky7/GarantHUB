@@ -20,12 +20,19 @@ export interface CourtCaseFormValues {
 }
 
 interface Props {
+  defaultValues: CourtCaseFormValues;
+  /** Если true, форма отображается только для чтения */
+  disabled?: boolean;
   onSubmit: (values: CourtCaseFormValues) => void;
 }
 
-export default function CourtCaseForm({ onSubmit }: Props) {
+export default function CourtCaseForm({
+  defaultValues,
+  disabled = false,
+  onSubmit,
+}: Props) {
   const { control, handleSubmit, reset } = useForm<CourtCaseFormValues>({
-    defaultValues: {
+    defaultValues,
       number: '',
       date: null,
       project_object: '',
@@ -53,7 +60,15 @@ export default function CourtCaseForm({ onSubmit }: Props) {
           control={control}
           rules={{ required: 'Номер обязателен' }}
           render={({ field, fieldState }) => (
-            <TextField {...field} label="Номер дела" fullWidth required error={!!fieldState.error} helperText={fieldState.error?.message} />
+            <TextField
+              {...field}
+              label="Номер дела"
+              fullWidth
+              required
+              disabled={disabled}
+              error={!!fieldState.error}
+              helperText={fieldState.error?.message}
+            />
           )}
         />
         <Controller
@@ -66,7 +81,15 @@ export default function CourtCaseForm({ onSubmit }: Props) {
               format="DD.MM.YYYY"
               value={field.value ? dayjs(field.value) : null}
               onChange={(d) => field.onChange(d ? d.format('YYYY-MM-DD') : null)}
-              slotProps={{ textField: { fullWidth: true, required: true, error: !!fieldState.error, helperText: fieldState.error?.message } }}
+              slotProps={{
+                textField: {
+                  fullWidth: true,
+                  required: true,
+                  disabled,
+                  error: !!fieldState.error,
+                  helperText: fieldState.error?.message,
+                },
+              }}
             />
           )}
         />
@@ -75,7 +98,15 @@ export default function CourtCaseForm({ onSubmit }: Props) {
           control={control}
           rules={{ required: 'Объект обязателен' }}
           render={({ field, fieldState }) => (
-            <TextField {...field} label="Объект" fullWidth required error={!!fieldState.error} helperText={fieldState.error?.message} />
+            <TextField
+              {...field}
+              label="Объект"
+              fullWidth
+              required
+              disabled={disabled}
+              error={!!fieldState.error}
+              helperText={fieldState.error?.message}
+            />
           )}
         />
         <Controller
@@ -83,7 +114,15 @@ export default function CourtCaseForm({ onSubmit }: Props) {
           control={control}
           rules={{ required: 'Истец обязателен' }}
           render={({ field, fieldState }) => (
-            <TextField {...field} label="Истец" fullWidth required error={!!fieldState.error} helperText={fieldState.error?.message} />
+            <TextField
+              {...field}
+              label="Истец"
+              fullWidth
+              required
+              disabled={disabled}
+              error={!!fieldState.error}
+              helperText={fieldState.error?.message}
+            />
           )}
         />
         <Controller
@@ -91,7 +130,15 @@ export default function CourtCaseForm({ onSubmit }: Props) {
           control={control}
           rules={{ required: 'Ответчик обязателен' }}
           render={({ field, fieldState }) => (
-            <TextField {...field} label="Ответчик" fullWidth required error={!!fieldState.error} helperText={fieldState.error?.message} />
+            <TextField
+              {...field}
+              label="Ответчик"
+              fullWidth
+              required
+              disabled={disabled}
+              error={!!fieldState.error}
+              helperText={fieldState.error?.message}
+            />
           )}
         />
         <Controller
@@ -99,14 +146,22 @@ export default function CourtCaseForm({ onSubmit }: Props) {
           control={control}
           rules={{ required: 'Юрист обязателен' }}
           render={({ field, fieldState }) => (
-            <TextField {...field} label="Ответственный юрист" fullWidth required error={!!fieldState.error} helperText={fieldState.error?.message} />
+            <TextField
+              {...field}
+              label="Ответственный юрист"
+              fullWidth
+              required
+              disabled={disabled}
+              error={!!fieldState.error}
+              helperText={fieldState.error?.message}
+            />
           )}
         />
         <Controller
           name="status"
           control={control}
           render={({ field }) => (
-            <Select {...field} fullWidth>
+            <Select {...field} fullWidth disabled={disabled}>
               <MenuItem value="active">В процессе</MenuItem>
               <MenuItem value="won">Выиграно</MenuItem>
               <MenuItem value="lost">Проиграно</MenuItem>
@@ -118,7 +173,7 @@ export default function CourtCaseForm({ onSubmit }: Props) {
           name="claim_amount"
           control={control}
           render={({ field }) => (
-            <TextField {...field} label="Сумма иска" type="number" fullWidth />
+            <TextField {...field} label="Сумма иска" type="number" fullWidth disabled={disabled} />
           )}
         />
         <Controller
@@ -130,7 +185,7 @@ export default function CourtCaseForm({ onSubmit }: Props) {
               format="DD.MM.YYYY"
               value={field.value ? dayjs(field.value) : null}
               onChange={(d) => field.onChange(d ? d.format('YYYY-MM-DD') : null)}
-              slotProps={{ textField: { fullWidth: true, label: 'Дата начала устранения' } }}
+              slotProps={{ textField: { fullWidth: true, label: 'Дата начала устранения', disabled } }}
             />
           )}
         />
@@ -143,7 +198,7 @@ export default function CourtCaseForm({ onSubmit }: Props) {
               format="DD.MM.YYYY"
               value={field.value ? dayjs(field.value) : null}
               onChange={(d) => field.onChange(d ? d.format('YYYY-MM-DD') : null)}
-              slotProps={{ textField: { fullWidth: true, label: 'Дата завершения устранения' } }}
+              slotProps={{ textField: { fullWidth: true, label: 'Дата завершения устранения', disabled } }}
             />
           )}
         />
@@ -151,12 +206,14 @@ export default function CourtCaseForm({ onSubmit }: Props) {
           name="description"
           control={control}
           render={({ field }) => (
-            <TextField {...field} label="Описание дела" fullWidth multiline rows={3} />
+            <TextField {...field} label="Описание дела" fullWidth multiline rows={3} disabled={disabled} />
           )}
         />
-        <DialogActions sx={{ px: 0 }}>
-          <Button type="submit" variant="contained">Добавить дело</Button>
-        </DialogActions>
+        {!disabled && (
+          <DialogActions sx={{ px: 0 }}>
+            <Button type="submit" variant="contained">Добавить дело</Button>
+          </DialogActions>
+        )}
       </Stack>
     </form>
   );

@@ -941,8 +941,13 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange, projects }: Cas
     }
   }, [caseData, form, projectPersons]);
 
+  const prevCaseIdRef = React.useRef<number | null>(null);
   useEffect(() => {
-    setEditing(false);
+    const curId = caseData?.id ?? null;
+    if (curId !== prevCaseIdRef.current) {
+      setEditing(false);
+      prevCaseIdRef.current = curId;
+    }
     if (!caseData) {
       form.resetFields();
     }
