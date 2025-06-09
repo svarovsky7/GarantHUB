@@ -798,10 +798,10 @@ export default function CourtCasesPage() {
               },
               { replace: true },
             );
-            if (back === 'structure') {
-              navigate('/structure');
-            }
             setDialogCase(null);
+            if (back === 'structure') {
+              navigate('/structure', { replace: true });
+            }
           }}
           caseData={dialogCase}
           tab={tab}
