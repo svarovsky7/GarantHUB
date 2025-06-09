@@ -927,7 +927,9 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange, projects }: Cas
 
   useEffect(() => {
     setEditing(false);
-    form.resetFields();
+    if (!caseData) {
+      form.resetFields();
+    }
   }, [caseData, form]);
 
   const saveChanges = async (values: any) => {
