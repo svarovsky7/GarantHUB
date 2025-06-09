@@ -124,17 +124,14 @@ export default function CourtCasesPage() {
   useEffect(() => {
     const state = location.state as { openCaseId?: number } | null;
     if (state?.openCaseId) {
-      setSearchParams(
-        (prev) => {
-          const params = new URLSearchParams(prev);
-          params.set('case_id', String(state.openCaseId));
-          return params;
-        },
-        { replace: true },
-      );
-      navigate('.', { replace: true, state: null });
+      const params = new URLSearchParams(location.search);
+      params.set('case_id', String(state.openCaseId));
+      navigate({ pathname: '.', search: params.toString() }, {
+        replace: true,
+        state: null,
+      });
     }
-  }, [location.state, navigate, setSearchParams]);
+  }, [location.state, location.search, navigate]);
 
   useEffect(() => {
     const p = searchParams.get('project_id');
