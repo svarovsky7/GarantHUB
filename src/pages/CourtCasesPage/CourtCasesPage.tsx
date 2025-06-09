@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import dayjs, { Dayjs } from 'dayjs';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import 'dayjs/locale/ru';
@@ -113,12 +113,28 @@ export default function CourtCasesPage() {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [form] = Form.useForm();
   const projectId = Form.useWatch('project_id', form);
   const globalProjectId = useProjectId();
   const profileId = useAuthStore((s) => s.profile?.id);
   const prevProjectIdRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const state = location.state as { openCaseId?: number } | null;
+    if (state?.openCaseId) {
+      setSearchParams(
+        (prev) => {
+          const params = new URLSearchParams(prev);
+          params.set('case_id', String(state.openCaseId));
+          return params;
+        },
+        { replace: true },
+      );
+      navigate('.', { replace: true, state: null });
+    }
+  }, [location.state, navigate, setSearchParams]);
 
   useEffect(() => {
     const p = searchParams.get('project_id');

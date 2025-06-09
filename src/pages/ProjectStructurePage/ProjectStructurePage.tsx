@@ -424,7 +424,7 @@ export default function ProjectStructurePage() {
                 onClose={() => setHistoryDialogOpen(false)}
                 onOpenCourtCase={(caseId) => {
                     setHistoryDialogOpen(false);
-                    navigate(`/court-cases?case_id=${caseId}`);
+                    navigate('/court-cases', { state: { openCaseId: caseId } });
                 }}
             />
 
