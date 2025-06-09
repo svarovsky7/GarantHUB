@@ -80,7 +80,7 @@ export default function HistoryDialog({ open, unit, onClose }: HistoryDialogProp
             } else if (record.entity_type === 'letter') {
               navigate(`/correspondence?letter_id=${record.entity_id}`);
             } else if (record.entity_type === 'court_case') {
-              navigate(`/court-cases?case_id=${record.entity_id}`);
+              navigate(`/court-cases?case_id=${record.entity_id}&from=structure`);
             }
             onClose();
           }}

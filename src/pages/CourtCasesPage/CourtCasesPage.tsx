@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import dayjs, { Dayjs } from 'dayjs';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import 'dayjs/locale/ru';
@@ -112,6 +112,7 @@ export default function CourtCasesPage() {
   const [tab, setTab] = useState('defects');
 
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   const [form] = Form.useForm();
   const projectId = Form.useWatch('project_id', form);
@@ -301,6 +302,12 @@ export default function CourtCasesPage() {
       }
     }
   }, [searchParams, casesData]);
+
+  useEffect(() => {
+    if (!searchParams.get('case_id')) {
+      setDialogCase(null);
+    }
+  }, [searchParams]);
 
   const columns: ColumnsType<CourtCase & any> = [
     {
@@ -781,11 +788,20 @@ export default function CourtCasesPage() {
         <CaseDialog
           open
           onClose={() => {
-            setSearchParams((prev) => {
-              const params = new URLSearchParams(prev);
-              params.delete('case_id');
-              return params;
-            });
+            const back = searchParams.get('from');
+            if (back === 'structure') {
+              navigate('/structure');
+            } else {
+              setSearchParams(
+                (prev) => {
+                  const params = new URLSearchParams(prev);
+                  params.delete('case_id');
+                  params.delete('from');
+                  return params;
+                },
+                { replace: true },
+              );
+            }
             setDialogCase(null);
           }}
           caseData={dialogCase}
