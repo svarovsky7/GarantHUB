@@ -21,7 +21,7 @@ import StatusLegend from "@/widgets/StatusLegend";
 import useProjectStructure from "@/shared/hooks/useProjectStructure";
 // Новое:
 import HistoryDialog from "@/features/history/HistoryDialog"; // путь скорректируйте под ваш проект
-import CourtCaseForm from "@/features/courtCase/CourtCaseForm"; // путь скорректируйте под ваш проект
+import { useNavigate } from 'react-router-dom';
 
 function getCurrentProfile() {
     try {
@@ -73,7 +73,7 @@ export default function ProjectStructurePage() {
     // --- Новое: стейты для истории и дела ---
     const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
     const [selectedUnit, setSelectedUnit] = useState(null);
-    const [openedCourtCaseId, setOpenedCourtCaseId] = useState(null);
+    const navigate = useNavigate();
 
     // Автоматический выбор проекта, корпуса, секции
     useEffect(() => {
@@ -423,35 +423,10 @@ export default function ProjectStructurePage() {
                 unit={selectedUnit}
                 onClose={() => setHistoryDialogOpen(false)}
                 onOpenCourtCase={(caseId) => {
-                    setHistoryDialogOpen(false); // закрываем историю перед открытием дела
-                    setOpenedCourtCaseId(caseId);
+                    setHistoryDialogOpen(false);
+                    navigate(`/court-cases?case_id=${caseId}&from=structure`);
                 }}
             />
-
-            {/* Модалка просмотра судебного дела */}
-            <Dialog
-                open={openedCourtCaseId !== null}
-                onClose={() => setOpenedCourtCaseId(null)}
-                maxWidth="md"
-                fullWidth
-                scroll="body"
-                TransitionProps={{ onExited: () => setOpenedCourtCaseId(null) }}
-            >
-                <DialogTitle>Судебное дело</DialogTitle>
-                <DialogContent>
-                    {openedCourtCaseId && (
-                        <CourtCaseForm
-                            disabled
-                            onClose={() => setOpenedCourtCaseId(null)}
-                        />
-                    )}
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setOpenedCourtCaseId(null)}>
-                        Закрыть
-                    </Button>
-                </DialogActions>
-            </Dialog>
 
             {/* Диалог добавления корпуса/секции */}
             <AddBuildingOrSectionDialog
