@@ -441,7 +441,6 @@ export default function ProjectStructurePage() {
                 <DialogContent>
                     {openedCourtCaseId && (
                         <CourtCaseForm
-                            caseId={openedCourtCaseId}
                             disabled
                             onClose={() => setOpenedCourtCaseId(null)}
                         />

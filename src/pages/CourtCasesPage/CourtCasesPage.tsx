@@ -808,6 +808,7 @@ export default function CourtCasesPage() {
           tab={tab}
           onTabChange={setTab}
           projects={projects}
+          onCaseChange={setDialogCase}
         />
       )}
       <Modal
@@ -882,9 +883,11 @@ interface CaseDialogProps {
   tab: string;
   onTabChange: (k: string) => void;
   projects: Project[];
+  /** Вызывается после успешного сохранения дела */
+  onCaseChange?: (c: CourtCase) => void;
 }
 
-function CaseDialog({ open, onClose, caseData, tab, onTabChange, projects }: CaseDialogProps) {
+function CaseDialog({ open, onClose, caseData, tab, onTabChange, projects, onCaseChange }: CaseDialogProps) {
   const notify = useNotify();
   const { data: defects = [] } = useCaseDefects(caseData ? Number(caseData.id) : 0);
   const { data: stages = [] } = useLitigationStages();
@@ -991,7 +994,7 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange, projects }: Cas
           users.find((u) => u.id === updated.responsible_lawyer_id)?.name ||
           (caseData as any).responsibleLawyer,
       } as CourtCase & any;
-      setDialogCase(mapped);
+      onCaseChange?.(mapped);
       notify.success('Дело обновлено');
       setEditing(false);
     } catch (e: any) {
