@@ -789,18 +789,17 @@ export default function CourtCasesPage() {
           open
           onClose={() => {
             const back = searchParams.get('from');
+            setSearchParams(
+              (prev) => {
+                const params = new URLSearchParams(prev);
+                params.delete('case_id');
+                params.delete('from');
+                return params;
+              },
+              { replace: true },
+            );
             if (back === 'structure') {
               navigate('/structure');
-            } else {
-              setSearchParams(
-                (prev) => {
-                  const params = new URLSearchParams(prev);
-                  params.delete('case_id');
-                  params.delete('from');
-                  return params;
-                },
-                { replace: true },
-              );
             }
             setDialogCase(null);
           }}
@@ -1041,7 +1040,7 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange, projects }: Cas
         onCancel={onClose}
         width="80%"
         footer={null}
-        destroyOnHidden
+        destroyOnClose
         title={caseData ? `Дело № ${caseData.number}` : ''}
     >
       {caseData && (
