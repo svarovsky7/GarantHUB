@@ -41,6 +41,7 @@ interface Filters {
   subject?: string;
   content?: string;
   search?: string;
+  id?: string;
 }
 
 /** Страница учёта корреспонденции */
@@ -60,6 +61,7 @@ export default function CorrespondencePage() {
     subject: '',
     content: '',
     search: '',
+    id: '',
   });
   const [searchParams] = useSearchParams();
   const [form] = Form.useForm();
@@ -80,6 +82,11 @@ export default function CorrespondencePage() {
     if (id && letters.length) {
       const letter = letters.find((l) => String(l.id) === id);
       if (letter) setView(letter);
+    }
+    const ids = searchParams.get('ids');
+    if (ids) {
+      setFilters((f) => ({ ...f, id: ids }));
+      form.setFieldValue('id', ids);
     }
   }, [searchParams, letters]);
 
@@ -102,6 +109,7 @@ export default function CorrespondencePage() {
       type: values.type ?? '',
       project: values.project ?? '',
       unit: values.unit ?? '',
+      id: values.id ?? '',
       sender: values.sender ?? '',
       receiver: values.receiver ?? '',
       subject: values.subject ?? '',
@@ -116,6 +124,7 @@ export default function CorrespondencePage() {
       type: '',
       project: '',
       unit: '',
+      id: '',
       sender: '',
       receiver: '',
       subject: '',
@@ -160,6 +169,10 @@ export default function CorrespondencePage() {
     if (filters.type && l.type !== filters.type) return false;
     if (filters.project && l.project_id !== Number(filters.project)) return false;
     if (filters.unit && !l.unit_ids.includes(Number(filters.unit))) return false;
+    if (filters.id) {
+      const ids = filters.id.split(',').map((s) => s.trim()).filter(Boolean);
+      if (ids.length && !ids.includes(String(l.id))) return false;
+    }
     const sender = (l.sender || '').toLowerCase();
     const receiver = (l.receiver || '').toLowerCase();
     const subject = (l.subject || '').toLowerCase();
@@ -247,6 +260,9 @@ export default function CorrespondencePage() {
                   options={projectUnits.map((u) => ({ value: u.id, label: u.name }))}
                   disabled={!form.getFieldValue('project')}
               />
+            </Form.Item>
+            <Form.Item name="id" label="ID">
+              <Input allowClear autoComplete="off" />
             </Form.Item>
             <Form.Item name="sender" label="Отправитель">
               <Input allowClear autoComplete="off" />

@@ -28,12 +28,22 @@ export default function TicketsPage() {
   const qc = useQueryClient();
   const [searchParams] = useSearchParams();
   const [filters, setFilters] = useState({});
+  const [initialFilters, setInitialFilters] = useState({});
   const [viewId, setViewId] = useState<number | null>(null);
 
   React.useEffect(() => {
     const id = searchParams.get('ticket_id');
     if (id) {
       setViewId(Number(id));
+    }
+    const ids = searchParams.get('ids');
+    if (ids) {
+      const arr = ids
+        .split(',')
+        .map((v) => Number(v))
+        .filter(Boolean);
+      setInitialFilters({ id: arr });
+      setFilters((f) => ({ ...f, id: arr }));
     }
   }, [searchParams]);
   const initialValues = {
@@ -95,6 +105,7 @@ export default function TicketsPage() {
       statuses: uniq(ticketsWithNames, "statusName"),
       types: uniq(ticketsWithNames, "typeName"),
       responsibleEngineers: uniq(ticketsWithNames, "responsibleEngineerName"),
+      ids: uniq(ticketsWithNames, "id"),
     };
   }, [ticketsWithNames]);
 
@@ -111,7 +122,11 @@ export default function TicketsPage() {
         </Card>
 
         <Card style={{ marginBottom: 24 }}>
-          <TicketsFilters options={options} onChange={setFilters} />
+          <TicketsFilters
+            options={options}
+            onChange={setFilters}
+            initialValues={initialFilters}
+          />
         </Card>
 
         <Card>
