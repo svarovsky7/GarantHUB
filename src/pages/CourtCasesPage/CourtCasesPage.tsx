@@ -90,7 +90,7 @@ type Filters = {
   lawyer?: string;
   search?: string;
   hideClosed?: boolean;
-  ids?: string;
+  ids?: number[];
 };
 
 export default function CourtCasesPage() {
@@ -306,6 +306,15 @@ export default function CourtCasesPage() {
       : null,
   }));
 
+  const idOptions = React.useMemo(
+    () =>
+      Array.from(new Set(cases.map((c) => c.id))).map((id) => ({
+        value: id,
+        label: String(id),
+      })),
+    [cases],
+  );
+
   useEffect(() => {
     const id = searchParams.get('case_id');
     if (id && casesData.length) {
@@ -320,7 +329,11 @@ export default function CourtCasesPage() {
   useEffect(() => {
     const ids = searchParams.get('ids');
     if (ids) {
-      setFilters((f) => ({ ...f, ids }));
+      const arr = ids
+        .split(',')
+        .map((s) => Number(s))
+        .filter(Boolean);
+      setFilters((f) => ({ ...f, ids: arr }));
     }
   }, [searchParams]);
 
@@ -331,6 +344,11 @@ export default function CourtCasesPage() {
   }, [searchParams]);
 
   const columns: ColumnsType<CourtCase & any> = [
+    {
+      title: 'ID',
+      dataIndex: 'id',
+      width: 80,
+    },
     {
       title: 'Проект',
       dataIndex: 'projectName',
@@ -410,9 +428,7 @@ export default function CourtCasesPage() {
 
   const filteredCases = casesData.filter((c: any) => {
     const search = filters.search?.toLowerCase() ?? '';
-    const idFilter = filters.ids
-      ? filters.ids.split(',').map((s) => s.trim()).filter(Boolean)
-      : null;
+    const idFilter = filters.ids && filters.ids.length ? filters.ids.map(String) : null;
     const matchesSearch =
       c.number.toLowerCase().includes(search) ||
       c.plaintiff.toLowerCase().includes(search) ||
@@ -758,9 +774,14 @@ export default function CourtCasesPage() {
           />
         </Col>
         <Col>
-          <Input
+          <Select
+            mode="multiple"
+            allowClear
             placeholder="ID"
-            onChange={(e) => setFilters((f) => ({ ...f, ids: e.target.value }))}
+            options={idOptions}
+            value={filters.ids}
+            onChange={(v) => setFilters((f) => ({ ...f, ids: v }))}
+            style={{ minWidth: 120 }}
           />
         </Col>
         <Col>

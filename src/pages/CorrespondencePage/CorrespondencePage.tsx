@@ -41,7 +41,7 @@ interface Filters {
   subject?: string;
   content?: string;
   search?: string;
-  id?: string;
+  id?: number[];
 }
 
 /** Страница учёта корреспонденции */
@@ -61,7 +61,7 @@ export default function CorrespondencePage() {
     subject: '',
     content: '',
     search: '',
-    id: '',
+    id: [],
   });
   const [searchParams] = useSearchParams();
   const [form] = Form.useForm();
@@ -85,8 +85,12 @@ export default function CorrespondencePage() {
     }
     const ids = searchParams.get('ids');
     if (ids) {
-      setFilters((f) => ({ ...f, id: ids }));
-      form.setFieldValue('id', ids);
+      const arr = ids
+        .split(',')
+        .map((v) => Number(v))
+        .filter(Boolean);
+      setFilters((f) => ({ ...f, id: arr }));
+      form.setFieldValue('id', arr);
     }
   }, [searchParams, letters]);
 
@@ -104,12 +108,17 @@ export default function CorrespondencePage() {
   );
   const { data: allUnits = [] } = useUnitsByIds(unitIds);
 
+  const idOptions = React.useMemo(
+    () => letters.map((l) => ({ value: l.id, label: String(l.id) })),
+    [letters],
+  );
+
   const handleFiltersChange = (_: any, values: any) => {
     setFilters({
       type: values.type ?? '',
       project: values.project ?? '',
       unit: values.unit ?? '',
-      id: values.id ?? '',
+      id: values.id ?? [],
       sender: values.sender ?? '',
       receiver: values.receiver ?? '',
       subject: values.subject ?? '',
@@ -124,7 +133,7 @@ export default function CorrespondencePage() {
       type: '',
       project: '',
       unit: '',
-      id: '',
+      id: [],
       sender: '',
       receiver: '',
       subject: '',
@@ -169,9 +178,9 @@ export default function CorrespondencePage() {
     if (filters.type && l.type !== filters.type) return false;
     if (filters.project && l.project_id !== Number(filters.project)) return false;
     if (filters.unit && !l.unit_ids.includes(Number(filters.unit))) return false;
-    if (filters.id) {
-      const ids = filters.id.split(',').map((s) => s.trim()).filter(Boolean);
-      if (ids.length && !ids.includes(String(l.id))) return false;
+    if (filters.id && filters.id.length) {
+      const ids = filters.id.map(String);
+      if (!ids.includes(String(l.id))) return false;
     }
     const sender = (l.sender || '').toLowerCase();
     const receiver = (l.receiver || '').toLowerCase();
@@ -262,7 +271,12 @@ export default function CorrespondencePage() {
               />
             </Form.Item>
             <Form.Item name="id" label="ID">
-              <Input allowClear autoComplete="off" />
+              <Select
+                mode="multiple"
+                allowClear
+                options={idOptions}
+                placeholder="ID"
+              />
             </Form.Item>
             <Form.Item name="sender" label="Отправитель">
               <Input allowClear autoComplete="off" />
