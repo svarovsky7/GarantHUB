@@ -89,8 +89,9 @@ export default function CorrespondencePage() {
         .split(',')
         .map((v) => Number(v))
         .filter(Boolean);
-      setFilters((f) => ({ ...f, id: arr }));
-      form.setFieldValue('id', arr);
+      const valid = arr.filter((lid) => letters.some((l) => Number(l.id) === lid));
+      setFilters((f) => ({ ...f, id: valid }));
+      form.setFieldValue('id', valid);
     }
   }, [searchParams, letters]);
 

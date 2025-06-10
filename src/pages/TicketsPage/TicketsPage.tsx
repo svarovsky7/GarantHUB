@@ -42,10 +42,11 @@ export default function TicketsPage() {
         .split(',')
         .map((v) => Number(v))
         .filter(Boolean);
-      setInitialFilters({ id: arr });
-      setFilters((f) => ({ ...f, id: arr }));
+      const valid = arr.filter((tid) => tickets.some((t) => t.id === tid));
+      setInitialFilters({ id: valid });
+      setFilters((f) => ({ ...f, id: valid }));
     }
-  }, [searchParams]);
+  }, [searchParams, tickets]);
   const initialValues = {
     project_id: searchParams.get('project_id')
       ? Number(searchParams.get('project_id')!)

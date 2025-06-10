@@ -333,9 +333,10 @@ export default function CourtCasesPage() {
         .split(',')
         .map((s) => Number(s))
         .filter(Boolean);
-      setFilters((f) => ({ ...f, ids: arr }));
+      const valid = arr.filter((id) => cases.some((c) => c.id === id));
+      setFilters((f) => ({ ...f, ids: valid }));
     }
-  }, [searchParams]);
+  }, [searchParams, cases]);
 
   useEffect(() => {
     if (!searchParams.get('case_id')) {
