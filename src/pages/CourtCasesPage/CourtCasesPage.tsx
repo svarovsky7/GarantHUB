@@ -90,6 +90,7 @@ type Filters = {
   lawyer?: string;
   search?: string;
   hideClosed?: boolean;
+  ids?: string;
 };
 
 export default function CourtCasesPage() {
@@ -317,6 +318,13 @@ export default function CourtCasesPage() {
   }, [searchParams, casesData]);
 
   useEffect(() => {
+    const ids = searchParams.get('ids');
+    if (ids) {
+      setFilters((f) => ({ ...f, ids }));
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
     if (!searchParams.get('case_id')) {
       setDialogCase(null);
     }
@@ -402,6 +410,9 @@ export default function CourtCasesPage() {
 
   const filteredCases = casesData.filter((c: any) => {
     const search = filters.search?.toLowerCase() ?? '';
+    const idFilter = filters.ids
+      ? filters.ids.split(',').map((s) => s.trim()).filter(Boolean)
+      : null;
     const matchesSearch =
       c.number.toLowerCase().includes(search) ||
       c.plaintiff.toLowerCase().includes(search) ||
@@ -419,7 +430,9 @@ export default function CourtCasesPage() {
     const matchesLawyer =
       !filters.lawyer || c.responsibleLawyer.toLowerCase().includes(filters.lawyer.toLowerCase());
     const matchesClosed = !filters.hideClosed || !c.is_closed;
+    const matchesIds = !idFilter || idFilter.includes(String(c.id));
     return (
+      matchesIds &&
       matchesSearch &&
       matchesStatus &&
       matchesProject &&
@@ -742,6 +755,12 @@ export default function CourtCasesPage() {
           <Input
             placeholder="Проект"
             onChange={(e) => setFilters((f) => ({ ...f, project: e.target.value }))}
+          />
+        </Col>
+        <Col>
+          <Input
+            placeholder="ID"
+            onChange={(e) => setFilters((f) => ({ ...f, ids: e.target.value }))}
           />
         </Col>
         <Col>

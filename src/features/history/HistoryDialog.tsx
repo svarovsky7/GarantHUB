@@ -20,6 +20,38 @@ export default function HistoryDialog({ open, unit, onClose, onOpenCourtCase }: 
   const navigate = useNavigate();
   const [primaryOnly, setPrimaryOnly] = React.useState(false);
 
+  const ticketIds = React.useMemo(
+    () =>
+      Array.from(
+        new Set(
+          data
+            .filter((e) => e.entity_type === 'ticket')
+            .map((e) => e.entity_id),
+        ),
+      ),
+    [data],
+  );
+  const caseIds = React.useMemo(
+    () =>
+      Array.from(
+        new Set(
+          data
+            .filter((e) => e.entity_type === 'court_case')
+            .map((e) => e.entity_id),
+        ),
+      ),
+    [data],
+  );
+  const letterIds = React.useMemo(
+    () =>
+      Array.from(
+        new Set(
+          data.filter((e) => e.entity_type === 'letter').map((e) => e.entity_id),
+        ),
+      ),
+    [data],
+  );
+
   const displayedData = React.useMemo(() => {
     if (!primaryOnly) return data;
     const latest = new Map<string, HistoryEventWithUser>();
@@ -110,6 +142,35 @@ export default function HistoryDialog({ open, unit, onClose, onOpenCourtCase }: 
           <Space style={{ marginBottom: 12 }}>
             <Switch checked={primaryOnly} onChange={setPrimaryOnly} />
             Показать основные документы
+          </Space>
+          <Space style={{ marginBottom: 12 }}>
+            <Button
+              disabled={!ticketIds.length}
+              onClick={() => {
+                navigate(`/tickets?ids=${ticketIds.join(',')}`);
+                onClose();
+              }}
+            >
+              Показать замечания
+            </Button>
+            <Button
+              disabled={!caseIds.length}
+              onClick={() => {
+                navigate(`/court-cases?ids=${caseIds.join(',')}`);
+                onClose();
+              }}
+            >
+              Судебные дела
+            </Button>
+            <Button
+              disabled={!letterIds.length}
+              onClick={() => {
+                navigate(`/correspondence?ids=${letterIds.join(',')}`);
+                onClose();
+              }}
+            >
+              Письма
+            </Button>
           </Space>
           <Table
               rowKey="id"

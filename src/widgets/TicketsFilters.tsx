@@ -16,8 +16,11 @@ const LS_PROJECT_KEY = "ticketsProject";
  * @param onChange callback, возвращающий значения формы
  */
 
-export default function TicketsFilters({ options, onChange }) {
+export default function TicketsFilters({ options, onChange, initialValues = {} }) {
   const [form] = Form.useForm();
+  useEffect(() => {
+    form.setFieldsValue(initialValues);
+  }, [initialValues, form]);
 
   useEffect(() => {
     try {
@@ -97,6 +100,9 @@ export default function TicketsFilters({ options, onChange }) {
       </Form.Item>
       <Form.Item name="units" label="Объекты">
         <Select mode="multiple" allowClear options={options.units} />
+      </Form.Item>
+      <Form.Item name="id" label="ID">
+        <Select mode="multiple" allowClear options={options.ids} />
       </Form.Item>
       <Form.Item name="warranty" label="Гарантия">
         <Select allowClear>

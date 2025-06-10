@@ -38,6 +38,7 @@ const daysPassed = (receivedAt) =>
 /** Фильтрация по фильтрам */
 const applyFilters = (rows, f) =>
   rows.filter((r) => {
+    if (Array.isArray(f.id) && f.id.length > 0 && !f.id.includes(r.id)) return false;
     if (f.hideClosed && r.isClosed) return false;
     const days = daysPassed(r.receivedAt);
     if (f.period && f.period.length === 2) {
