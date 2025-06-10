@@ -17,7 +17,7 @@ export function useLetterLinks() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from(LINKS_TABLE)
-        .select('parent_id, child_id');
+        .select('id, parent_id, child_id');
       if (error) throw error;
       return (data ?? []) as LetterLink[];
     },
@@ -38,7 +38,7 @@ export function useLetters() {
       if (error) throw error;
       const { data: links, error: linkErr } = await supabase
         .from(LINKS_TABLE)
-        .select('parent_id, child_id');
+        .select('id, parent_id, child_id');
       if (linkErr) throw linkErr;
       const allIds = Array.from(
         new Set((data ?? []).flatMap((r: any) => r.attachment_ids || [])),
