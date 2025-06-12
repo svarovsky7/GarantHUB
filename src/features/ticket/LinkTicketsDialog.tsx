@@ -39,13 +39,15 @@ export default function LinkTicketsDialog({ open, parent, tickets, onClose, onSu
         (t) =>
           !term ||
           String(t.id).includes(term) ||
-          (t.title ?? '').toLowerCase().includes(term)
+          (t.title ?? '').toLowerCase().includes(term) ||
+          (t.typeName ?? '').toLowerCase().includes(term)
       );
   }, [tickets, parent, search, parents]);
 
   const columns: ColumnsType<Ticket> = [
     { title: 'ID', dataIndex: 'id', width: 100 },
-    { title: 'Название', dataIndex: 'title', ellipsis: true },
+    { title: 'Тип', dataIndex: 'typeName', width: 160 },
+    { title: 'Краткое описание', dataIndex: 'title', ellipsis: true },
   ];
 
   return (
@@ -70,7 +72,7 @@ export default function LinkTicketsDialog({ open, parent, tickets, onClose, onSu
       destroyOnClose
     >
       <Input
-        placeholder="Поиск по ID или названию"
+        placeholder="Поиск по ID, описанию или типу"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         allowClear
