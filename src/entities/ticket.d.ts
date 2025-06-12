@@ -59,5 +59,6 @@ export function useDeleteTicket(): UseMutationResult<void, Error, number>;
 
 export function useAllTicketsSimple(): UseQueryResult<Array<{ id: number; status_id: number }>>;
 export function useTicketsStats(): UseQueryResult<any[]>;
+export function useUpdateTicket(): UseMutationResult<any, Error, { id: number; updates: object }>;
 export function useUpdateTicketStatus(): UseMutationResult<any, Error, { id: number; statusId: number }>;
 export function useUpdateTicketClosed(): UseMutationResult<any, Error, { id: number; isClosed: boolean }>;
