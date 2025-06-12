@@ -41,16 +41,11 @@ export interface Ticket {
   createdAt: Dayjs | null;
   receivedAt: Dayjs | null;
   fixedAt: Dayjs | null;
-  parentId: string | null;
 }
 
 export function signedUrl(path: string, filename?: string): Promise<string>;
 
 export function useTickets(): UseQueryResult<Ticket[]>;
-
-export function useLinkTickets(): UseMutationResult<void, Error, { parentId: string; childIds: string[] }>;
-
-export function useUnlinkTicket(): UseMutationResult<void, Error, string>;
 
 export function useCreateTicket(): UseMutationResult<any, Error, any>;
 

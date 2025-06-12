@@ -18,8 +18,6 @@ import {
   DeleteOutlined,
   CheckCircleTwoTone,
   CloseCircleTwoTone,
-  PlusOutlined,
-  LinkOutlined,
 } from "@ant-design/icons";
 
 import { useDeleteTicket } from "@/entities/ticket";
@@ -82,7 +80,7 @@ const applyFilters = (rows, f) =>
  * @param {Object} filters - активные фильтры
  * @param {boolean} loading - индикатор загрузки
  */
-export default function TicketsTable({ tickets, filters, loading, onView, onAddChild, onUnlink }) {
+export default function TicketsTable({ tickets, filters, loading, onView }) {
   const { mutateAsync: remove, isPending } = useDeleteTicket();
 
   const columns: ColumnsType<any> = useMemo(
@@ -212,26 +210,6 @@ export default function TicketsTable({ tickets, filters, loading, onView, onAddC
                 onClick={() => onView && onView(record.id)}
               />
             </Tooltip>
-            {onAddChild && (
-              <Tooltip title="Связать подзамечание">
-                <Button
-                  size="small"
-                  type="text"
-                  icon={<PlusOutlined />}
-                  onClick={() => onAddChild(record)}
-                />
-              </Tooltip>
-            )}
-            {onUnlink && record.parentId && (
-              <Tooltip title="Исключить из связи">
-                <Button
-                  size="small"
-                  type="text"
-                  icon={<LinkOutlined style={{ color: '#c41d7f', textDecoration: 'line-through' }} />}
-                  onClick={() => onUnlink(record.id)}
-                />
-              </Tooltip>
-            )}
             <Popconfirm
               title="Удалить замечание?"
               okText="Да"
@@ -249,7 +227,7 @@ export default function TicketsTable({ tickets, filters, loading, onView, onAddC
       },
     ],
 
-    [onView, onAddChild, onUnlink, remove, isPending],
+    [onView, remove, isPending],
   );
 
   const dataSource = useMemo(
