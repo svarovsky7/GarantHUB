@@ -18,6 +18,10 @@ import {
   DeleteOutlined,
   CheckCircleTwoTone,
   CloseCircleTwoTone,
+  PlusOutlined,
+  LinkOutlined,
+  PlusSquareOutlined,
+  MinusSquareOutlined,
 } from "@ant-design/icons";
 
 import { useDeleteTicket } from "@/entities/ticket";
@@ -80,7 +84,7 @@ const applyFilters = (rows, f) =>
  * @param {Object} filters - активные фильтры
  * @param {boolean} loading - индикатор загрузки
  */
-export default function TicketsTable({ tickets, filters, loading, onView }) {
+export default function TicketsTable({ tickets, filters, loading, onView, onAddChild, onUnlink }) {
   const { mutateAsync: remove, isPending } = useDeleteTicket();
 
   const columns: ColumnsType<any> = useMemo(
@@ -210,6 +214,26 @@ export default function TicketsTable({ tickets, filters, loading, onView }) {
                 onClick={() => onView && onView(record.id)}
               />
             </Tooltip>
+            {onAddChild && (
+              <Tooltip title="Связать подзамечание">
+                <Button
+                  size="small"
+                  type="text"
+                  icon={<PlusOutlined />}
+                  onClick={() => onAddChild(record)}
+                />
+              </Tooltip>
+            )}
+            {onUnlink && record.parentId && (
+              <Tooltip title="Исключить из связи">
+                <Button
+                  size="small"
+                  type="text"
+                  icon={<LinkOutlined style={{ color: '#c41d7f', textDecoration: 'line-through' }} />}
+                  onClick={() => onUnlink(record.id)}
+                />
+              </Tooltip>
+            )}
             <Popconfirm
               title="Удалить замечание?"
               okText="Да"
@@ -227,13 +251,17 @@ export default function TicketsTable({ tickets, filters, loading, onView }) {
       },
     ],
 
-    [onView, remove, isPending],
+    [onView, onAddChild, onUnlink, remove, isPending],
   );
 
-  const dataSource = useMemo(
-    () =>
-      applyFilters(tickets, filters).map((t) => ({
+  const dataSource = useMemo(() => {
+    const filtered = applyFilters(tickets, filters);
+    const map = new Map();
+    const roots: any[] = [];
+    filtered.forEach((t) => {
+      const row = {
         ...t,
+        key: t.id,
         receivedAt: t.receivedAt,
         fixedAt: t.fixedAt,
         customerRequestDate: t.customerRequestDate,
@@ -241,9 +269,23 @@ export default function TicketsTable({ tickets, filters, loading, onView }) {
         createdByName: t.createdByName,
         responsibleEngineerName: t.responsibleEngineerName,
         days: daysPassed(t.receivedAt),
-      })),
-    [tickets, filters],
-  );
+        children: [],
+      };
+      map.set(t.id, row);
+    });
+    filtered.forEach((t) => {
+      const row = map.get(t.id);
+      if (t.parentId && map.has(t.parentId)) {
+        map.get(t.parentId).children.push(row);
+      } else {
+        roots.push(row);
+      }
+    });
+    map.forEach((row) => {
+      if (!row.children.length) row.children = undefined;
+    });
+    return roots;
+  }, [tickets, filters]);
 
   if (loading) return <Skeleton active paragraph={{ rows: 6 }} />;
 
@@ -255,6 +297,21 @@ export default function TicketsTable({ tickets, filters, loading, onView }) {
       loading={isPending}
       pagination={{ pageSize: 25, showSizeChanger: true }}
       size="middle"
+      expandable={{
+        expandRowByClick: true,
+        indentSize: 24,
+        expandIcon: ({ expanded, onExpand, record }) => {
+          if (!record.children) return <span style={{ marginInlineEnd: 16 }} />;
+          const Icon = expanded ? MinusSquareOutlined : PlusSquareOutlined;
+          return (
+            <Icon
+              onClick={(e) => onExpand(record, e)}
+              style={{ marginInlineEnd: 8 }}
+            />
+          );
+        },
+      }}
+      rowClassName={(r) => (r.parentId ? 'child-ticket-row' : 'main-ticket-row')}
     />
   );
 }
