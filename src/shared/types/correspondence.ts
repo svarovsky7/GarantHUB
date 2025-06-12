@@ -53,6 +53,10 @@ export interface CorrespondenceAttachment {
 
 /** Связь писем: parent_id - родительское письмо, child_id - дочернее */
 export interface LetterLink {
+  /** Уникальный идентификатор связи */
+  id: string;
+  /** Идентификатор родительского письма */
   parent_id: string;
+  /** Идентификатор дочернего письма */
   child_id: string;
 }

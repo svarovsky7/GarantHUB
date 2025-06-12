@@ -29,3 +29,12 @@ VITE_ATTACH_BUCKET=<название корзины для вложений>
 ## Структура базы данных
 
 Описание таблиц и полей находится в файле [`database_structure.json`](database_structure.json).
+
+## Миграции
+
+SQL-скрипты для обновления структуры базы данных находятся в каталоге `migrations/`.
+Чтобы добавить столбец `id` в таблицу `letter_links`, выполните:
+
+```sql
+\i migrations/2025-06-13-add-letter-links-id.sql
+```
