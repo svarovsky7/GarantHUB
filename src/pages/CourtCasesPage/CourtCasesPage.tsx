@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import dayjs, { Dayjs } from 'dayjs';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import 'dayjs/locale/ru';
@@ -114,8 +114,6 @@ export default function CourtCasesPage() {
   const [tab, setTab] = useState('defects');
 
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const location = useLocation();
 
   const [form] = Form.useForm();
   const projectId = Form.useWatch('project_id', form);
@@ -123,17 +121,6 @@ export default function CourtCasesPage() {
   const profileId = useAuthStore((s) => s.profile?.id);
   const prevProjectIdRef = useRef<number | null>(null);
 
-  useEffect(() => {
-    const state = location.state as { openCaseId?: number } | null;
-    if (state?.openCaseId) {
-      const params = new URLSearchParams(location.search);
-      params.set('case_id', String(state.openCaseId));
-      navigate({ pathname: '.', search: params.toString() }, {
-        replace: true,
-        state: null,
-      });
-    }
-  }, [location.state, location.search, navigate]);
 
   useEffect(() => {
     const p = searchParams.get('project_id');
@@ -870,28 +857,30 @@ export default function CourtCasesPage() {
         size="middle"
       />
 
-      {dialogCase && (
-        <CaseDialog
-          open
-          onClose={() => {
-            setSearchParams(
-              (prev) => {
-                const params = new URLSearchParams(prev);
-                params.delete('case_id');
-                params.delete('from');
-                return params;
-              },
-              { replace: true },
-            );
-            setDialogCase(null);
-          }}
-          caseData={dialogCase}
-          tab={tab}
-          onTabChange={setTab}
-          projects={projects}
-          onCaseChange={setDialogCase}
-        />
-      )}
+{/* открываем модалку только если dialogCase существует */}
+{dialogCase && (
+  <CaseDialog
+    key={dialogCase.id}            // FIX: даём «ключ» – состояние редактирования
+                                    // больше не теряется при обновлении данных
+    open
+    onClose={() => {
+      /* FIX: убираем case_id из строки запроса, этого достаточно
+         (navigate не нужен) */
+      setSearchParams((prev) => {
+        const p = new URLSearchParams(prev);
+        p.delete('case_id');
+        p.delete('from');
+        return p;
+      }, { replace: true });
+      setDialogCase(null);
+    }}
+    caseData={dialogCase}
+    tab={tab}
+    onTabChange={setTab}
+    projects={projects}
+    onCaseChange={setDialogCase}
+  />
+)}
       <Modal
         open={!!partySelect}
         onCancel={() => setPartySelect(null)}

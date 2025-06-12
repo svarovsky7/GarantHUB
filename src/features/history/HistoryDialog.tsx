@@ -113,10 +113,11 @@ export default function HistoryDialog({ open, unit, onClose, onOpenCourtCase }: 
                 } else if (record.entity_type === 'letter') {
                   navigate(`/correspondence?letter_id=${record.entity_id}`);
                 } else if (record.entity_type === 'court_case') {
+                  /* FIX: передаём дело через query‑param, а не через location.state */
                   if (onOpenCourtCase) {
                     onOpenCourtCase(record.entity_id);
                   } else {
-                    navigate('/court-cases', { state: { openCaseId: record.entity_id } });
+                    navigate(`/court-cases?case_id=${record.entity_id}`);
                   }
                 }
                 onClose();

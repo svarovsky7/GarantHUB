@@ -423,8 +423,10 @@ export default function ProjectStructurePage() {
                 unit={selectedUnit}
                 onClose={() => setHistoryDialogOpen(false)}
                 onOpenCourtCase={(caseId) => {
+                    /* FIX: закрываем историю и переходим на страницу дел,
+                       добавляя ?case_id=… вместо state */
                     setHistoryDialogOpen(false);
-                    navigate('/court-cases', { state: { openCaseId: caseId } });
+                    navigate(`/court-cases?case_id=${caseId}&from=structure`);
                 }}
             />
 
