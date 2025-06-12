@@ -45,6 +45,7 @@ import {
   EditOutlined,
   DeleteOutlined,
   DownloadOutlined,
+  EyeOutlined,
 } from '@ant-design/icons';
 import { formatPhone } from '@/shared/utils/formatPhone';
 import {
@@ -349,14 +350,18 @@ export default function CourtCasesPage() {
       title: 'ID',
       dataIndex: 'id',
       width: 80,
+      sorter: (a, b) => a.id - b.id,
     },
     {
       title: 'Проект',
       dataIndex: 'projectName',
+      sorter: (a, b) => (a.projectName || '').localeCompare(b.projectName || ''),
     },
     {
       title: 'Объект',
       dataIndex: 'projectObject',
+      sorter: (a, b) =>
+        (a.projectObject || '').localeCompare(b.projectObject || ''),
     },
     {
       title: '№ дела',
@@ -374,6 +379,7 @@ export default function CourtCasesPage() {
     {
       title: 'Статус',
       dataIndex: 'status',
+      sorter: (a, b) => a.status - b.status,
       render: (_: number, row) => (
         <CourtCaseStatusSelect caseId={row.id} status={row.status} />
       ),
@@ -381,32 +387,45 @@ export default function CourtCasesPage() {
     {
       title: 'Прошло дней с начала устранения',
       dataIndex: 'daysSinceFixStart',
+      sorter: (a, b) =>
+        (a.daysSinceFixStart ?? 0) - (b.daysSinceFixStart ?? 0),
     },
     {
       title: 'Истец',
       dataIndex: 'plaintiff',
+      sorter: (a, b) => (a.plaintiff || '').localeCompare(b.plaintiff || ''),
     },
     {
       title: 'Ответчик',
       dataIndex: 'defendant',
+      sorter: (a, b) => (a.defendant || '').localeCompare(b.defendant || ''),
     },
     {
       title: 'Дата начала устранения',
       dataIndex: 'fix_start_date',
       render: (v: string | null) => (v ? dayjs(v).format('DD.MM.YYYY') : ''),
+      sorter: (a, b) =>
+        dayjs(a.fix_start_date || 0).valueOf() -
+        dayjs(b.fix_start_date || 0).valueOf(),
     },
     {
       title: 'Дата завершения устранения',
       dataIndex: 'fix_end_date',
       render: (v: string | null) => (v ? dayjs(v).format('DD.MM.YYYY') : ''),
+      sorter: (a, b) =>
+        dayjs(a.fix_end_date || 0).valueOf() -
+        dayjs(b.fix_end_date || 0).valueOf(),
     },
     {
       title: 'Юрист',
       dataIndex: 'responsibleLawyer',
+      sorter: (a, b) =>
+        (a.responsibleLawyer || '').localeCompare(b.responsibleLawyer || ''),
     },
     {
       title: 'Дело закрыто',
       dataIndex: 'is_closed',
+      sorter: (a, b) => Number(a.is_closed) - Number(b.is_closed),
       render: (_: boolean, row) => (
         <CourtCaseClosedSelect caseId={row.id} isClosed={row.is_closed} />
       ),
@@ -414,14 +433,27 @@ export default function CourtCasesPage() {
     {
       title: 'Действия',
       key: 'actions',
+      width: 120,
       render: (_: any, record) => (
-        <Space>
-          <Button size="small" onClick={() => { setDialogCase(record); setTab('defects'); }}>
-            Просмотр
-          </Button>
-          <Button size="small" danger onClick={() => deleteCase(Number(record.id))}>
-            Удалить
-          </Button>
+        <Space size="middle">
+          <Tooltip title="Просмотр">
+            <Button
+              type="text"
+              icon={<EyeOutlined />}
+              onClick={() => {
+                setDialogCase(record);
+                setTab('defects');
+              }}
+            />
+          </Tooltip>
+          <Popconfirm
+            title="Удалить дело?"
+            okText="Да"
+            cancelText="Нет"
+            onConfirm={() => deleteCase(Number(record.id))}
+          >
+            <Button type="text" danger icon={<DeleteOutlined />} />
+          </Popconfirm>
         </Space>
       ),
     },
