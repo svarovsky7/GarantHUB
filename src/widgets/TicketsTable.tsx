@@ -21,6 +21,7 @@ import {
 } from "@ant-design/icons";
 
 import { useDeleteTicket } from "@/entities/ticket";
+// FIX: импорт обновлённого компонента
 import TicketStatusSelect from "@/features/ticket/TicketStatusSelect";
 import TicketClosedSelect from "@/features/ticket/TicketClosedSelect";
 
@@ -119,10 +120,11 @@ export default function TicketsTable({ tickets, filters, loading, onView }) {
             </Tag>
           ),
       },
+      // FIX: колонку сдвинул чуть левее и расширил до 180 px
       {
         title: "Статус",
         dataIndex: "statusId",
-        width: 160,
+        width: 180,
         sorter: (a, b) => a.statusName.localeCompare(b.statusName),
         render: (_, row) => (
           <TicketStatusSelect
