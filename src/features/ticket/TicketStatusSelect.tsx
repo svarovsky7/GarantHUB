@@ -1,15 +1,16 @@
-import React from "react";
-import { Select, Tag } from "antd";
-import { useTicketStatuses } from "@/entities/ticketStatus";
-import { useUpdateTicketStatus } from "@/entities/ticket";
+import React, { useMemo, useState } from 'react';
+import { Tag, Dropdown, MenuProps, Spin, message } from 'antd';
+import { DownOutlined } from '@ant-design/icons';
+import { useTicketStatuses } from '@/entities/ticketStatus';
+import { useUpdateTicket } from '@/entities/ticket';
 
 interface TicketStatusSelectProps {
   ticketId: number;
-  statusId: number | null;
-  /** цвет статуса, используется до загрузки списка */
-  statusColor?: string | null;
-  /** имя статуса, используется до загрузки списка */
-  statusName?: string | null;
+  statusId: number;
+  /** Цвет тега. Если null, используется серый. */
+  statusColor: string | null;
+  /** Название статуса. */
+  statusName: string;
 }
 
 /**
@@ -21,34 +22,55 @@ export default function TicketStatusSelect({
   statusColor,
   statusName,
 }: TicketStatusSelectProps) {
-  const { data: statuses = [] } = useTicketStatuses();
-  const update = useUpdateTicketStatus();
+  const { data: statuses = [], isLoading } = useTicketStatuses();
+  const updateMutation = useUpdateTicket();
+  const [pending, setPending] = useState(false);
 
-  const handleChange = (value: number) => {
-    (update as any).mutate({ id: ticketId, statusId: value });
+  /** Элементы меню после загрузки справочника. */
+  const items = useMemo<MenuProps['items']>(() => {
+    return statuses.map((s) => ({
+      key: String(s.id),
+      label: s.name,
+      icon: (
+        <span
+          style={{
+            display: 'inline-block',
+            width: 10,
+            height: 10,
+            borderRadius: '50%',
+            background: s.color || '#d9d9d9',
+            marginRight: 6,
+          }}
+        />
+      ),
+    }));
+  }, [statuses]);
+
+  const onSelect: MenuProps['onClick'] = async ({ key }) => {
+    const id = Number(key);
+    if (id === statusId) return;
+    try {
+      setPending(true);
+      await updateMutation.mutateAsync({ id: ticketId, updates: { status_id: id } });
+      message.success('Статус обновлён');
+    } catch (e: any) {
+      message.error(e.message);
+    } finally {
+      setPending(false);
+    }
   };
 
-  const options = statuses.map((s) => ({
-    label: <Tag color={s.color ?? undefined}>{s.name}</Tag>,
-    value: s.id,
-  }));
-
-  const selected = options.find((o) => o.value === statusId);
-  const fallback = statusId ? (
-    <Tag color={statusColor ?? undefined}>{statusName ?? statusId}</Tag>
-  ) : undefined;
+  if (isLoading) return <Spin size="small" />;
 
   return (
-    <Select
-      size="small"
-      value={statusId ?? undefined}
-      onChange={handleChange}
-      loading={update.isPending}
-      optionLabelProp="label"
-      options={options}
-      style={{ width: "100%" }}
-    >
-      {selected ? null : fallback}
-    </Select>
+    <Dropdown menu={{ items, onClick: onSelect }} trigger={['click']}>
+      <Tag
+        color={statusColor || 'default'}
+        style={{ cursor: 'pointer', userSelect: 'none', display: 'inline-flex', alignItems: 'center' }}
+      >
+        {pending ? <Spin size="small" /> : statusName}
+        <DownOutlined style={{ fontSize: 10, marginLeft: 4 }} />
+      </Tag>
+    </Dropdown>
   );
 }
