@@ -520,29 +520,6 @@ export function useTicketsStats() {
 }
 
 // -----------------------------------------------------------------------------
-// FIX: универсальное обновление полей замечания
-// -----------------------------------------------------------------------------
-export function useUpdateTicket() {
-  const projectId = useProjectId();
-  const qc = useQueryClient();
-  return useMutation(
-    async ({ id, updates }) => {
-      const { error } = await supabase
-        .from('tickets')
-        .update(updates)
-        .eq('id', id)
-        .eq('project_id', projectId);
-      if (error) throw error;
-    },
-    {
-      onSuccess: () => {
-        qc.invalidateQueries({ queryKey: ['tickets', projectId] });
-      },
-    },
-  );
-}
-
-// -----------------------------------------------------------------------------
 // Обновить статус замечания
 // -----------------------------------------------------------------------------
 export function useUpdateTicketStatus() {
