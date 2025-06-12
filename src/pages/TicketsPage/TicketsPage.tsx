@@ -8,15 +8,13 @@ import ruRU from "antd/locale/ru_RU";
 import { useSnackbar } from "notistack";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { useTickets, useLinkTickets, useUnlinkTicket } from "@/entities/ticket";
-import type { Ticket } from "@/shared/types/ticket";
+import { useTickets } from "@/entities/ticket";
 import { useUsers } from "@/entities/user";
 import { useUnitsByIds } from "@/entities/unit";
 import TicketsTable from "@/widgets/TicketsTable";
 import TicketsFilters from "@/widgets/TicketsFilters";
 import TicketFormAntd from "@/features/ticket/TicketFormAntd";
 import TicketViewModal from "@/features/ticket/TicketViewModal";
-import LinkTicketsDialog from "@/features/ticket/LinkTicketsDialog";
 
 export default function TicketsPage() {
   const { enqueueSnackbar } = useSnackbar();
@@ -32,9 +30,6 @@ export default function TicketsPage() {
   const [filters, setFilters] = useState({});
   const [initialFilters, setInitialFilters] = useState({});
   const [viewId, setViewId] = useState<number | null>(null);
-  const [linkFor, setLinkFor] = useState<Ticket | null>(null);
-  const linkTickets = useLinkTickets();
-  const unlinkTicket = useUnlinkTicket();
 
   React.useEffect(() => {
     const id = searchParams.get('ticket_id');
@@ -115,12 +110,6 @@ export default function TicketsPage() {
     };
   }, [ticketsWithNames]);
 
-  const handleUnlink = (id: string) => {
-    unlinkTicket.mutate(id, {
-      onSuccess: () => enqueueSnackbar('Связь удалена', { variant: 'success' }),
-    });
-  };
-
   return (
     <ConfigProvider locale={ruRU}>
       <>
@@ -150,26 +139,9 @@ export default function TicketsPage() {
               filters={filters}
               loading={isLoading}
               onView={(id) => setViewId(id)}
-              onAddChild={(t) => setLinkFor(t)}
-              onUnlink={handleUnlink}
             />
           )}
         </Card>
-        <LinkTicketsDialog
-          open={!!linkFor}
-          parent={linkFor}
-          tickets={ticketsWithNames}
-          onClose={() => setLinkFor(null)}
-          onSubmit={(ids) => {
-            if (!linkFor) return;
-            linkTickets.mutate({ parentId: String(linkFor.id), childIds: ids }, {
-              onSuccess: () => {
-                enqueueSnackbar('Связано', { variant: 'success' });
-                setLinkFor(null);
-              },
-            });
-          }}
-        />
         <TicketViewModal
           open={viewId !== null}
           ticketId={viewId}
