@@ -39,6 +39,10 @@ if (ATTACH_BUCKET.toLowerCase() === "s3") {
   ATTACH_BUCKET = "attachments";
 }
 
+const TICKETS_TABLE = "tickets";
+const TICKET_LINKS_TABLE = "ticket_links";
+const ATTACH_TABLE = "attachments";
+
 // ──────────────────────────── helpers ──────────────────────────────
 export const slugify = (str) =>
   str
@@ -166,6 +170,7 @@ function mapTicket(r) {
     createdAt: toDayjs(r.created_at),
     receivedAt: toDayjs(r.received_at),
     fixedAt: toDayjs(r.fixed_at),
+    parentId: r.parent_id ?? null,
   };
 }
 
@@ -173,11 +178,11 @@ function mapTicket(r) {
 export function useTickets() {
   const projectId = useProjectId();
   return useQuery({
-    queryKey: ["tickets", projectId],
+    queryKey: [TICKETS_TABLE, projectId],
     enabled: !!projectId,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("tickets")
+        .from(TICKETS_TABLE)
         .select(
           `
           id, project_id, unit_ids, type_id, status_id, title, description,
@@ -211,6 +216,13 @@ export function useTickets() {
         });
       }
 
+      const { data: links, error: linkErr } = await supabase
+        .from(TICKET_LINKS_TABLE)
+        .select('parent_id, child_id');
+      if (linkErr) throw linkErr;
+      const linkMap = new Map();
+      (links ?? []).forEach((lnk) => linkMap.set(lnk.child_id, lnk.parent_id));
+
       const result = [];
       for (const r of data ?? []) {
         const atts = (r.attachment_ids || [])
@@ -219,13 +231,15 @@ export function useTickets() {
         if (atts.length !== (r.attachment_ids || []).length) {
           const existIds = atts.map((a) => a.id);
           await supabase
-            .from("tickets")
+            .from(TICKETS_TABLE)
             .update({ attachment_ids: existIds })
             .eq("id", r.id)
             .eq("project_id", projectId);
           r.attachment_ids = existIds;
         }
-        result.push(mapTicket({ ...r, attachments: atts }));
+        result.push(
+          mapTicket({ ...r, attachments: atts, parent_id: linkMap.get(r.id) })
+        );
       }
       return result;
     },
@@ -252,7 +266,7 @@ export function useCreateTicket() {
       }
 
       const { data: newTicket, error } = await supabase
-        .from("tickets")
+        .from(TICKETS_TABLE)
         .insert({
           ...dto,
           project_id: dto.project_id ?? projectId,
@@ -277,7 +291,7 @@ export function useCreateTicket() {
         );
         ids = uploaded.map((u) => u.id);
         await supabase
-          .from("tickets")
+          .from(TICKETS_TABLE)
           .update({ attachment_ids: ids })
           .eq("id", newTicket.id);
       }
@@ -285,7 +299,7 @@ export function useCreateTicket() {
     },
     onSuccess: (_, vars) => {
       const pid = vars.project_id ?? projectId;
-      qc.invalidateQueries({ queryKey: ["tickets", pid] });
+      qc.invalidateQueries({ queryKey: [TICKETS_TABLE, pid] });
       notify.success("Замечание успешно создано");
     },
     onError: (e) => notify.error(`Ошибка создания замечания: ${e.message}`),
@@ -304,7 +318,7 @@ export function useTicket(ticketId) {
     enabled: !!id && !!projectId,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("tickets")
+        .from(TICKETS_TABLE)
         .select(
           `
           id, project_id, unit_ids, type_id, status_id, title, description,
@@ -333,7 +347,7 @@ export function useTicket(ticketId) {
         const existIds = files.map((f) => f.id);
         if (existIds.length !== data.attachment_ids.length) {
           await supabase
-            .from("tickets")
+            .from(TICKETS_TABLE)
             .update({ attachment_ids: existIds })
             .eq("id", id)
             .eq("project_id", projectId);
@@ -358,7 +372,7 @@ export function useTicket(ticketId) {
 
       // удаляем вложения
       const { data: current } = await supabase
-        .from("tickets")
+        .from(TICKETS_TABLE)
         .select("attachment_ids")
         .eq("id", updId)
         .single();
@@ -384,7 +398,7 @@ export function useTicket(ticketId) {
       // обновляем тикет
       if (Object.keys(updates).length) {
         const { error } = await supabase
-          .from("tickets")
+          .from(TICKETS_TABLE)
           .update(updates)
           .eq("id", updId)
           .eq("project_id", projectId);
@@ -420,7 +434,7 @@ export function useTicket(ticketId) {
         updatedAttachments.length
       ) {
         const { error } = await supabase
-          .from("tickets")
+          .from(TICKETS_TABLE)
           .update({ ...updates, attachment_ids: ids })
           .eq("id", updId)
           .eq("project_id", projectId);
@@ -429,7 +443,7 @@ export function useTicket(ticketId) {
       return uploaded;
     },
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: ["tickets", projectId] });
+      qc.invalidateQueries({ queryKey: [TICKETS_TABLE, projectId] });
       qc.invalidateQueries({ queryKey: ["ticket", vars.id, projectId] });
       notify.success("Замечание успешно обновлено");
     },
@@ -452,7 +466,7 @@ export function useDeleteTicket() {
   return useMutation({
     mutationFn: async (ticketId) => {
       const { data: ticket } = await supabase
-        .from("tickets")
+        .from(TICKETS_TABLE)
         .select("attachment_ids")
         .eq("id", ticketId)
         .single();
@@ -464,17 +478,22 @@ export function useDeleteTicket() {
             .from(ATTACH_BUCKET)
             .remove(files.map((f) => f.storage_path));
         }
-        await supabase.from("attachments").delete().in("id", ids);
+        await supabase.from(ATTACH_TABLE).delete().in("id", ids);
       }
 
       await supabase
-        .from("tickets")
+        .from(TICKET_LINKS_TABLE)
+        .delete()
+        .or(`parent_id.eq.${ticketId},child_id.eq.${ticketId}`);
+
+      await supabase
+        .from(TICKETS_TABLE)
         .delete()
         .eq("id", ticketId)
         .eq("project_id", projectId);
     },
     onSuccess: (_, id) => {
-      qc.invalidateQueries({ queryKey: ["tickets", projectId] });
+      qc.invalidateQueries({ queryKey: [TICKETS_TABLE, projectId] });
       qc.invalidateQueries({
         queryKey: ["ticket", id, projectId],
         exact: true,
@@ -493,7 +512,7 @@ export function useAllTicketsSimple() {
     queryKey: ["tickets-all"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("tickets")
+        .from(TICKETS_TABLE)
         .select("id, status_id");
       if (error) throw error;
       return data ?? [];
@@ -510,7 +529,7 @@ export function useTicketsStats() {
     queryKey: ["tickets-stats"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("tickets")
+        .from(TICKETS_TABLE)
         .select("id, project_id, type_id, is_warranty, fixed_at");
       if (error) throw error;
       return data ?? [];
@@ -530,7 +549,7 @@ export function useUpdateTicketStatus() {
   return useMutation({
     mutationFn: async ({ id, statusId }) => {
       const { data, error } = await supabase
-        .from("tickets")
+        .from(TICKETS_TABLE)
         .update({ status_id: statusId })
         .eq("id", id)
         .eq("project_id", projectId)
@@ -540,7 +559,7 @@ export function useUpdateTicketStatus() {
       return data;
     },
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: ["tickets", projectId] });
+      qc.invalidateQueries({ queryKey: [TICKETS_TABLE, projectId] });
       qc.invalidateQueries({
         queryKey: ["ticket", vars.id, projectId],
         exact: true,
@@ -562,7 +581,7 @@ export function useUpdateTicketClosed() {
   return useMutation({
     mutationFn: async ({ id, isClosed }) => {
       const { data, error } = await supabase
-        .from("tickets")
+        .from(TICKETS_TABLE)
         .update({ is_closed: isClosed })
         .eq("id", id)
         .eq("project_id", projectId)
@@ -572,7 +591,7 @@ export function useUpdateTicketClosed() {
       return data;
     },
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: ["tickets", projectId] });
+      qc.invalidateQueries({ queryKey: [TICKETS_TABLE, projectId] });
       qc.invalidateQueries({
         queryKey: ["ticket", vars.id, projectId],
         exact: true,
@@ -580,5 +599,52 @@ export function useUpdateTicketClosed() {
       notify.success("Статус закрытия обновлён");
     },
     onError: (e) => notify.error(`Ошибка обновления: ${e.message}`),
+  });
+}
+
+// -----------------------------------------------------------------------------
+// Связи замечаний
+// -----------------------------------------------------------------------------
+export function useTicketLinks() {
+  return useQuery({
+    queryKey: [TICKET_LINKS_TABLE],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from(TICKET_LINKS_TABLE)
+        .select('id, parent_id, child_id');
+      if (error) throw error;
+      return (data ?? []);
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
+export function useLinkTickets() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ parentId, childIds }) => {
+      const ids = childIds.map((c) => Number(c));
+      if (ids.length === 0) return;
+      await supabase
+        .from(TICKET_LINKS_TABLE)
+        .delete()
+        .in('child_id', ids);
+      const rows = ids.map((child_id) => ({ parent_id: Number(parentId), child_id }));
+      await supabase.from(TICKET_LINKS_TABLE).insert(rows);
+      qc.invalidateQueries({ queryKey: [TICKET_LINKS_TABLE] });
+      qc.invalidateQueries({ queryKey: [TICKETS_TABLE] });
+    },
+  });
+}
+
+export function useUnlinkTicket() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id) => {
+      const childId = Number(id);
+      await supabase.from(TICKET_LINKS_TABLE).delete().eq('child_id', childId);
+      qc.invalidateQueries({ queryKey: [TICKET_LINKS_TABLE] });
+      qc.invalidateQueries({ queryKey: [TICKETS_TABLE] });
+    },
   });
 }
