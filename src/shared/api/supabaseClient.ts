@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import { useAuthStore } from '@/shared/store/authStore';
 
 // Переменные окружения с поддержкой префиксов VITE_ и REACT_APP_
 const SUPABASE_URL =
@@ -51,8 +50,4 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     persistSession: true,
     autoRefreshToken: true,
   },
-});
-
-supabase.auth.onAuthStateChange((_event, session) => {
-  useAuthStore.getState().setProfile(session?.user ?? null);
 });
