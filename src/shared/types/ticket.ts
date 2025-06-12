@@ -17,3 +17,14 @@ export interface Ticket {
   fixed_at: string | null;
   attachment_ids?: number[];
 }
+
+/** Связь замечаний */
+export interface TicketLink {
+  /** Уникальный идентификатор связи */
+  id: string;
+  /** Родительское замечание */
+  parent_id: string;
+  /** Дочернее замечание */
+  child_id: string;
+}
+
