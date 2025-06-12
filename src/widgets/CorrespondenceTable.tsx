@@ -106,6 +106,11 @@ export default function CorrespondenceTable({
       },
     },
     {
+      title: 'ID',
+      dataIndex: 'id',
+      width: 80,
+    },
+    {
       title: 'Тип',
       dataIndex: 'type',
       width: 100,
