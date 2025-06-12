@@ -86,6 +86,12 @@ export default function TicketsTable({ tickets, filters, loading, onView }) {
   const columns: ColumnsType<any> = useMemo(
     () => [
       {
+        title: "ID",
+        dataIndex: "id",
+        width: 80,
+        sorter: (a, b) => a.id - b.id,
+      },
+      {
         title: "Проект",
         dataIndex: "projectName",
         width: 180,
