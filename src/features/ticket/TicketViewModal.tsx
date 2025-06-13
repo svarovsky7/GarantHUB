@@ -1,6 +1,5 @@
 import React from 'react';
-import { Modal, Skeleton } from 'antd';
-import { useTicket } from '@/entities/ticket';
+import { Modal } from 'antd';
 import TicketForm from './TicketForm';
 
 interface Props {
@@ -11,20 +10,9 @@ interface Props {
 
 export default function TicketViewModal({ open, ticketId, onClose }: Props) {
   if (!ticketId) return null;
-  const { data: ticket } = useTicket(ticketId);
-  const title = ticket
-    ? `Замечание (ID ${ticket.id}). Создано ${
-        ticket.createdAt ? ticket.createdAt.format('DD.MM.YYYY [в] HH:mm') : ''
-      }`
-    : 'Замечание';
-
   return (
-    <Modal open={open} onCancel={onClose} footer={null} width="80%" title={title}>
-      {ticket ? (
-        <TicketForm embedded ticketId={String(ticketId)} onCancel={onClose} onCreated={onClose} />
-      ) : (
-        <Skeleton active />
-      )}
+    <Modal open={open} onCancel={onClose} footer={null} width="80%">
+      <TicketForm embedded ticketId={String(ticketId)} onCancel={onClose} onCreated={onClose} />
     </Modal>
   );
 }
