@@ -105,7 +105,7 @@ export default function LinkLettersDialog({
             </Button>,
           ]}
           width={700}
-          destroyOnClose
+          destroyOnHidden
       >
         <Input
             placeholder="Поиск по номеру, теме, корреспонденту"
