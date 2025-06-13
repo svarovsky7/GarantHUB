@@ -3,12 +3,24 @@
 // -----------------------------------------------------------------------------
 import React, { useState, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { ConfigProvider, Typography, Alert, Card, Button } from "antd";
+import { ConfigProvider, Typography, Alert, Card, Button, message, Tooltip, Space, Popconfirm, Tag } from "antd";
+import {
+  SettingOutlined,
+  EyeOutlined,
+  DeleteOutlined,
+  PlusOutlined,
+  BranchesOutlined,
+  LinkOutlined,
+  FileTextOutlined,
+  CheckCircleTwoTone,
+  CloseCircleTwoTone,
+} from "@ant-design/icons";
+import dayjs from "dayjs";
 import ruRU from "antd/locale/ru_RU";
 import { useSnackbar } from "notistack";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { useTickets, useLinkTickets, useUnlinkTicket } from "@/entities/ticket";
+import { useTickets, useLinkTickets, useUnlinkTicket, useDeleteTicket } from "@/entities/ticket";
 import { useUsers } from "@/entities/user";
 import { useUnitsByIds } from "@/entities/unit";
 import TicketsTable from "@/widgets/TicketsTable";
@@ -17,9 +29,19 @@ import TicketFormAntd from "@/features/ticket/TicketFormAntd";
 import TicketViewModal from "@/features/ticket/TicketViewModal";
 import LinkTicketsDialog from "@/features/ticket/LinkTicketsDialog";
 import ExportTicketsButton from "@/features/ticket/ExportTicketsButton";
+import TicketStatusSelect from "@/features/ticket/TicketStatusSelect";
+import TicketClosedSelect from "@/features/ticket/TicketClosedSelect";
+import TableColumnsDrawer from "@/widgets/TableColumnsDrawer";
+import type { TableColumnSetting } from "@/shared/types/tableColumnSetting";
+import type { ColumnsType } from "antd/es/table";
 import type { TicketWithNames } from "@/shared/types/ticketWithNames";
 import { useNotify } from "@/shared/hooks/useNotify";
 import { filterTickets } from "@/shared/utils/ticketFilter";
+
+const fmt = (d: any, withTime = false) =>
+  d && dayjs.isDayjs(d) && d.isValid()
+    ? d.format(withTime ? "DD.MM.YYYY HH:mm" : "DD.MM.YYYY")
+    : "—";
 
 export default function TicketsPage() {
   const { enqueueSnackbar } = useSnackbar();
@@ -41,6 +63,31 @@ export default function TicketsPage() {
   const [linkFor, setLinkFor] = useState<any | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const hideOnScroll = React.useRef(false);
+  const deleteTicketMutation = useDeleteTicket();
+
+  const LS_FILTERS_VISIBLE_KEY = 'ticketsFiltersVisible';
+  const LS_COLUMNS_KEY = 'ticketsColumns';
+  const [showFilters, setShowFilters] = useState(() => {
+    try {
+      const saved = localStorage.getItem(LS_FILTERS_VISIBLE_KEY);
+      return saved ? JSON.parse(saved) : true;
+    } catch {
+      return true;
+    }
+  });
+  const [showColumnsDrawer, setShowColumnsDrawer] = useState(false);
+
+  React.useEffect(() => {
+    const handler = (e: StorageEvent) => {
+      if (e.key === LS_FILTERS_VISIBLE_KEY) {
+        try {
+          setShowFilters(JSON.parse(e.newValue || 'true'));
+        } catch {}
+      }
+    };
+    window.addEventListener('storage', handler);
+    return () => window.removeEventListener('storage', handler);
+  }, []);
 
   React.useEffect(() => {
     const id = searchParams.get('ticket_id');
@@ -140,6 +187,207 @@ export default function TicketsPage() {
     );
   };
 
+  const getBaseColumns = () => {
+    return {
+      tree: {
+        title: '',
+        dataIndex: 'tree',
+        width: 40,
+        render: (_: any, record: any) => {
+          if (!record.parentId) {
+            return (
+              <Tooltip title="Основное замечание">
+                <FileTextOutlined style={{ color: '#1890ff', fontSize: 17 }} />
+              </Tooltip>
+            );
+          }
+          return (
+            <Tooltip title="Связанное замечание">
+              <BranchesOutlined style={{ color: '#52c41a', fontSize: 16 }} />
+            </Tooltip>
+          );
+        },
+      },
+      id: {
+        title: 'ID',
+        dataIndex: 'id',
+        width: 80,
+        sorter: (a: any, b: any) => a.id - b.id,
+      },
+      projectName: {
+        title: 'Проект',
+        dataIndex: 'projectName',
+        width: 180,
+        sorter: (a: any, b: any) => a.projectName.localeCompare(b.projectName),
+      },
+      unitNames: {
+        title: 'Объекты',
+        dataIndex: 'unitNames',
+        width: 160,
+        sorter: (a: any, b: any) => a.unitNames.localeCompare(b.unitNames),
+      },
+      isWarranty: {
+        title: 'Гарантия',
+        dataIndex: 'isWarranty',
+        width: 110,
+        sorter: (a: any, b: any) => Number(a.isWarranty) - Number(b.isWarranty),
+        render: (v: boolean) =>
+          v ? (
+            <Tag icon={<CheckCircleTwoTone twoToneColor="#52c41a" />} color="success">Да</Tag>
+          ) : (
+            <Tag icon={<CloseCircleTwoTone twoToneColor="#eb2f96" />} color="default">Нет</Tag>
+          ),
+      },
+      statusId: {
+        title: 'Статус',
+        dataIndex: 'statusId',
+        width: 160,
+        sorter: (a: any, b: any) => a.statusName.localeCompare(b.statusName),
+        render: (_: any, row: any) => (
+          <TicketStatusSelect
+            ticketId={row.id}
+            statusId={row.statusId}
+            statusColor={row.statusColor}
+            statusName={row.statusName}
+          />
+        ),
+      },
+      isClosed: {
+        title: 'Замечание закрыто',
+        dataIndex: 'isClosed',
+        width: 160,
+        sorter: (a: any, b: any) => Number(a.isClosed) - Number(b.isClosed),
+        render: (_: any, row: any) => <TicketClosedSelect ticketId={row.id} isClosed={row.isClosed} />,
+      },
+      typeName: {
+        title: 'Тип замечания',
+        dataIndex: 'typeName',
+        width: 160,
+        sorter: (a: any, b: any) => a.typeName.localeCompare(b.typeName),
+      },
+      days: {
+        title: 'Прошло дней с Даты получения',
+        dataIndex: 'days',
+        width: 120,
+        sorter: (a: any, b: any) => (a.days ?? -1) - (b.days ?? -1),
+      },
+      receivedAt: {
+        title: 'Дата получения',
+        dataIndex: 'receivedAt',
+        width: 140,
+        defaultSortOrder: 'descend' as const,
+        sorter: (a: any, b: any) =>
+          (a.receivedAt ? a.receivedAt.valueOf() : 0) - (b.receivedAt ? b.receivedAt.valueOf() : 0),
+        render: (v: any) => fmt(v),
+      },
+      fixedAt: {
+        title: 'Дата устранения',
+        dataIndex: 'fixedAt',
+        width: 140,
+        sorter: (a: any, b: any) =>
+          (a.fixedAt ? a.fixedAt.valueOf() : 0) - (b.fixedAt ? b.fixedAt.valueOf() : 0),
+        render: (v: any) => fmt(v),
+      },
+      customerRequestNo: {
+        title: '№ заявки от Заказчика',
+        dataIndex: 'customerRequestNo',
+        width: 160,
+        sorter: (a: any, b: any) => (a.customerRequestNo || '').localeCompare(b.customerRequestNo || ''),
+      },
+      customerRequestDate: {
+        title: 'Дата заявки Заказчика',
+        dataIndex: 'customerRequestDate',
+        width: 160,
+        sorter: (a: any, b: any) =>
+          (a.customerRequestDate ? a.customerRequestDate.valueOf() : 0) -
+          (b.customerRequestDate ? b.customerRequestDate.valueOf() : 0),
+        render: (v: any) => fmt(v),
+      },
+      responsibleEngineerName: {
+        title: 'Ответственный инженер',
+        dataIndex: 'responsibleEngineerName',
+        width: 180,
+        sorter: (a: any, b: any) =>
+          (a.responsibleEngineerName || '').localeCompare(b.responsibleEngineerName || ''),
+      },
+      actions: {
+        title: 'Действия',
+        key: 'actions',
+        width: 100,
+        render: (_: any, record: any) => (
+          <Space size="middle">
+            <Tooltip title="Просмотр">
+              <Button
+                size="small"
+                type="text"
+                icon={<EyeOutlined />}
+                onClick={() => setViewId(record.id)}
+              />
+            </Tooltip>
+            <Button size="small" type="text" icon={<PlusOutlined />} onClick={() => setLinkFor(record)} />
+            {record.parentId && (
+              <Tooltip title="Исключить из связи">
+                <Button
+                  size="small"
+                  type="text"
+                  icon={<LinkOutlined style={{ color: '#c41d7f', textDecoration: 'line-through', fontWeight: 700 }} />}
+                  onClick={() => handleUnlink(record.id)}
+                />
+              </Tooltip>
+            )}
+            <Popconfirm
+              title="Удалить замечание?"
+              okText="Да"
+              cancelText="Нет"
+              onConfirm={async () => {
+                await deleteTicketMutation.mutateAsync(record.id);
+                message.success('Удалено');
+              }}
+              disabled={deleteTicketMutation.isPending}
+            >
+              <Button size="small" type="text" danger icon={<DeleteOutlined />} loading={deleteTicketMutation.isPending} />
+            </Popconfirm>
+          </Space>
+        ),
+      },
+    } as Record<string, ColumnsType<any>[number]>;
+  };
+
+  const [columnsState, setColumnsState] = useState<TableColumnSetting[]>(() => {
+    const base = getBaseColumns();
+    const defaults = Object.keys(base).map((key) => ({
+      key,
+      title: base[key].title as string,
+      visible: true,
+    }));
+    try {
+      const saved = localStorage.getItem(LS_COLUMNS_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved) as TableColumnSetting[];
+        return parsed.filter((c) => base[c.key]);
+      }
+    } catch {}
+    return defaults;
+  });
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem(LS_COLUMNS_KEY, JSON.stringify(columnsState));
+    } catch {}
+  }, [columnsState]);
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem(LS_FILTERS_VISIBLE_KEY, JSON.stringify(showFilters));
+    } catch {}
+  }, [showFilters]);
+
+  const baseColumns = React.useMemo(getBaseColumns, [deleteTicketMutation.isPending]);
+  const columns: ColumnsType<any> = React.useMemo(
+    () => columnsState.filter((c) => c.visible).map((c) => baseColumns[c.key]),
+    [columnsState, baseColumns],
+  );
+
   const total = tickets.length;
   const closedCount = useMemo(() => tickets.filter((t) => t.isClosed).length, [tickets]);
   const openCount = total - closedCount;
@@ -155,10 +403,21 @@ export default function TicketsPage() {
         <Button
           type="primary"
           onClick={() => setShowAddForm((p) => !p)}
-          style={{ marginBottom: 16 }}
+          style={{ marginBottom: 16, marginRight: 8 }}
         >
           {showAddForm ? 'Скрыть форму' : 'Добавить замечание'}
         </Button>
+        <Button onClick={() => setShowFilters((p) => !p)} style={{ marginBottom: 16 }}>
+          {showFilters ? 'Скрыть фильтры' : 'Показать фильтры'}
+        </Button>
+        <Button
+          icon={<SettingOutlined />}
+          style={{ marginBottom: 16, marginLeft: 8 }}
+          onClick={() => setShowColumnsDrawer(true)}
+        />
+        <span style={{ marginBottom: 16, marginLeft: 8, display: 'inline-block' }}>
+          <ExportTicketsButton tickets={ticketsWithNames} filters={filters} />
+        </span>
         {showAddForm && (
           <Card style={{ marginBottom: 24 }}>
             <TicketFormAntd
@@ -178,6 +437,12 @@ export default function TicketsPage() {
           onClose={() => setLinkFor(null)}
           onSubmit={handleLink}
         />
+        <TableColumnsDrawer
+          open={showColumnsDrawer}
+          columns={columnsState}
+          onChange={setColumnsState}
+          onClose={() => setShowColumnsDrawer(false)}
+        />
         <div
           onWheel={() => {
             if (hideOnScroll.current) {
@@ -186,13 +451,15 @@ export default function TicketsPage() {
             }
           }}
         >
-          <Card style={{ marginBottom: 24 }}>
-            <TicketsFilters
-              options={options}
-              onChange={setFilters}
-              initialValues={initialFilters}
-            />
-          </Card>
+          {showFilters && (
+            <Card style={{ marginBottom: 24 }}>
+              <TicketsFilters
+                options={options}
+                onChange={setFilters}
+                initialValues={initialFilters}
+              />
+            </Card>
+          )}
 
           <Card>
             {error ? (
@@ -202,6 +469,7 @@ export default function TicketsPage() {
                 tickets={ticketsWithNames}
                 filters={filters}
                 loading={isLoading}
+                columns={columns}
                 onView={(id) => setViewId(id)}
                 onAddChild={setLinkFor}
                 onUnlink={handleUnlink}
@@ -214,9 +482,6 @@ export default function TicketsPage() {
           <Typography.Text style={{ display: 'block', marginTop: 4 }}>
             Готовых замечаний к выгрузке: {readyToExport}
           </Typography.Text>
-          <div style={{ marginTop: 8 }}>
-            <ExportTicketsButton tickets={ticketsWithNames} filters={filters} />
-          </div>
         </div>
         <TicketViewModal
           open={viewId !== null}
