@@ -69,7 +69,6 @@ export default function CourtCasesPage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showFilters, setShowFilters] = useState(true);
   const [columnsDrawer, setColumnsDrawer] = useState(false);
-  const LS_COL_ORDER = 'courtCasesColumnOrder';
   const [columnKeys, setColumnKeys] = useState<string[]>([]);
   const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
   const hideOnScroll = useRef(false);
@@ -337,30 +336,7 @@ export default function CourtCasesPage() {
     return map;
   }, [unlinkCase, deleteCaseMutation]);
 
-  const moveColumn = (from: number, to: number) => {
-    setColumnKeys((prev) => {
-      const arr = [...prev];
-      if (to < 0 || to >= arr.length) return prev;
-      const [moved] = arr.splice(from, 1);
-      arr.splice(to, 0, moved);
-      try {
-        localStorage.setItem(LS_COL_ORDER, JSON.stringify(arr));
-      } catch {}
-      return arr;
-    });
-  };
-
   useEffect(() => {
-    const saved = localStorage.getItem(LS_COL_ORDER);
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved) as string[];
-        if (parsed.length) {
-          setColumnKeys(parsed);
-          return;
-        }
-      } catch {}
-    }
     setColumnKeys(Object.keys(columnDefs));
   }, [columnDefs]);
 
@@ -466,7 +442,10 @@ export default function CourtCasesPage() {
             <DragDropContext
               onDragEnd={(result: DropResult) => {
                 if (!result.destination) return;
-                moveColumn(result.source.index, result.destination.index);
+                const newOrder = Array.from(columnKeys);
+                const [moved] = newOrder.splice(result.source.index, 1);
+                newOrder.splice(result.destination.index, 0, moved);
+                setColumnKeys(newOrder);
               }}
             >
               <Droppable droppableId="cols">
@@ -498,12 +477,26 @@ export default function CourtCasesPage() {
                               <Button
                                 size="small"
                                 icon={<ArrowUpOutlined />}
-                                onClick={() => moveColumn(index, index - 1)}
+                                onClick={() => {
+                                  setColumnKeys((prev) => {
+                                    if (index === 0) return prev;
+                                    const arr = [...prev];
+                                    [arr[index - 1], arr[index]] = [arr[index], arr[index - 1]];
+                                    return arr;
+                                  });
+                                }}
                               />
                               <Button
                                 size="small"
                                 icon={<ArrowDownOutlined />}
-                                onClick={() => moveColumn(index, index + 1)}
+                                onClick={() => {
+                                  setColumnKeys((prev) => {
+                                    if (index === prev.length - 1) return prev;
+                                    const arr = [...prev];
+                                    [arr[index], arr[index + 1]] = [arr[index + 1], arr[index]];
+                                    return arr;
+                                  });
+                                }}
                               />
                             </Space>
                           </div>
