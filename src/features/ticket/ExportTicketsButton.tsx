@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from 'antd';
+import { Button, Tooltip } from 'antd';
 import { FileExcelOutlined } from '@ant-design/icons';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
@@ -15,10 +15,14 @@ export interface ExportTicketsButtonProps {
 }
 
 /** Кнопка экспорта списка замечаний в Excel */
-export default function ExportTicketsButton({ tickets, filters }: ExportTicketsButtonProps) {
+export default function ExportTicketsButton({
+  tickets,
+  filters,
+}: ExportTicketsButtonProps) {
   const handleClick = React.useCallback(() => {
     const rows = filterTickets(tickets, filters).map((t) => ({
       ID: t.id,
+      'ID родителя': t.parentId ?? '',
       Проект: t.projectName,
       Объекты: t.unitNames,
       Гарантия: t.isWarranty ? 'Да' : 'Нет',
@@ -32,7 +36,7 @@ export default function ExportTicketsButton({ tickets, filters }: ExportTicketsB
         ? t.customerRequestDate.format('DD.MM.YYYY')
         : '',
       'Ответственный инженер': t.responsibleEngineerName ?? '',
-      Название: t.title,
+      Название: t.parentId ? `↳ ${t.title}` : t.title,
     }));
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(rows);
@@ -42,8 +46,8 @@ export default function ExportTicketsButton({ tickets, filters }: ExportTicketsB
   }, [tickets, filters]);
 
   return (
-    <Button icon={<FileExcelOutlined />} onClick={handleClick} style={{ marginLeft: 16 }}>
-      Выгрузить в Excel
-    </Button>
+    <Tooltip title="Выгрузить в Excel">
+      <Button icon={<FileExcelOutlined />} onClick={handleClick} />
+    </Tooltip>
   );
 }
