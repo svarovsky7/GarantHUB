@@ -4,13 +4,13 @@ import { DownloadOutlined } from '@ant-design/icons';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import dayjs from 'dayjs';
-import { Ticket } from '@/shared/types/ticket';
+import type { TicketWithNames } from '@/shared/types/ticketWithNames';
 import { TicketFilters } from '@/shared/types/ticketFilters';
 import { filterTickets } from '@/shared/utils/ticketFilter';
 
 export interface ExportTicketsButtonProps {
   /** Список замечаний */
-  tickets: Ticket[];
+  tickets: TicketWithNames[];
   /** Активные фильтры */
   filters: TicketFilters;
 }

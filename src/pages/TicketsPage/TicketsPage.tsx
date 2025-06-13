@@ -17,6 +17,7 @@ import TicketFormAntd from "@/features/ticket/TicketFormAntd";
 import TicketViewModal from "@/features/ticket/TicketViewModal";
 import LinkTicketsDialog from "@/features/ticket/LinkTicketsDialog";
 import ExportTicketsButton from "@/features/ticket/ExportTicketsButton";
+import type { TicketWithNames } from "@/shared/types/ticketWithNames";
 import { useNotify } from "@/shared/hooks/useNotify";
 import { filterTickets } from "@/shared/utils/ticketFilter";
 
@@ -89,7 +90,7 @@ export default function TicketsPage() {
     return map;
   }, [units]);
 
-  const ticketsWithNames = useMemo(
+  const ticketsWithNames: TicketWithNames[] = useMemo(
     () =>
       tickets.map((t) => ({
         ...t,
@@ -120,8 +121,8 @@ export default function TicketsPage() {
     };
   }, [ticketsWithNames]);
 
-  const handleUnlink = (id: string) => {
-    unlinkTicket.mutate(id, {
+  const handleUnlink = (id: number) => {
+    unlinkTicket.mutate(String(id), {
       onSuccess: () => notify.success('Замечание исключено из связи'),
     });
   };
