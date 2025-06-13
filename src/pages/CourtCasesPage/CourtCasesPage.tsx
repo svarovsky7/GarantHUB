@@ -195,6 +195,9 @@ export default function CourtCasesPage() {
   const { data: attachmentTypes = [] } = useAttachmentTypes();
   const [caseFiles, setCaseFiles] = useState<{ file: File; type_id: number | null }[]>([]);
 
+  const [showAddForm, setShowAddForm] = useState(false);
+  const hideOnScroll = useRef(false);
+
   const plaintiffId = Form.useWatch('plaintiff_id', form);
   const defendantId = Form.useWatch('defendant_id', form);
 
@@ -260,6 +263,7 @@ export default function CourtCasesPage() {
 
       form.resetFields();
       setCaseFiles([]);
+      hideOnScroll.current = true;
       notify.success('Дело успешно добавлено!');
     } catch (e: any) {
       notify.error(e.message);
@@ -483,7 +487,21 @@ export default function CourtCasesPage() {
   return (
     <ConfigProvider locale={ruRU}>
       <>
-        <Form form={form} layout="vertical" onFinish={handleAddCase} autoComplete="off">
+        <Button
+          type="primary"
+          onClick={() => setShowAddForm((p) => !p)}
+          style={{ marginTop: 16 }}
+        >
+          {showAddForm ? 'Скрыть форму' : 'Добавить дело'}
+        </Button>
+        {showAddForm && (
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={handleAddCase}
+            autoComplete="off"
+            style={{ marginTop: 16 }}
+          >
         {/* Row 1: Project, Object, Lawyer */}
         <Row gutter={16}>
           <Col span={8}>
@@ -771,8 +789,18 @@ export default function CourtCasesPage() {
           </Button>
         </Form.Item>
       </Form>
+        )}
 
-      <Row gutter={16} style={{ marginTop: 24, marginBottom: 12 }}>
+      <div
+        style={{ marginTop: 24 }}
+        onWheel={() => {
+          if (hideOnScroll.current) {
+            setShowAddForm(false);
+            hideOnScroll.current = false;
+          }
+        }}
+      >
+      <Row gutter={16} style={{ marginBottom: 12 }}>
         <Col>
           <Select
             allowClear
@@ -856,6 +884,8 @@ export default function CourtCasesPage() {
         pagination={{ pageSize: 25, showSizeChanger: true }}
         size="middle"
       />
+
+      </div>
 
 {/* открываем модалку только если dialogCase существует */}
 {dialogCase && (
