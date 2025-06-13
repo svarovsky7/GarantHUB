@@ -71,6 +71,8 @@ import CourtCaseStatusSelect from '@/features/courtCase/CourtCaseStatusSelect';
 import CourtCaseClosedSelect from '@/features/courtCase/CourtCaseClosedSelect';
 import LinkCasesDialog from '@/features/courtCase/LinkCasesDialog';
 import ExportCourtCasesButton from '@/features/courtCase/ExportCourtCasesButton';
+import AddCourtCaseFormAntd from '@/features/courtCase/AddCourtCaseFormAntd';
+import CourtCasesFilters from '@/widgets/CourtCasesFilters';
 
 const fmtCurrency = (n: number) =>
   new Intl.NumberFormat('ru-RU', {
@@ -114,6 +116,15 @@ export default function CourtCasesPage() {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const initialValues = {
+    project_id: searchParams.get('project_id')
+      ? Number(searchParams.get('project_id')!)
+      : undefined,
+    unit_ids: searchParams.get('unit_id')
+      ? [Number(searchParams.get('unit_id')!)]
+      : undefined,
+    responsible_lawyer_id: searchParams.get('responsible_lawyer_id') || undefined,
+  };
 
   const [form] = Form.useForm();
   const projectId = Form.useWatch('project_id', form);
