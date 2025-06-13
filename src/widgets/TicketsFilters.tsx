@@ -84,13 +84,8 @@ export default function TicketsFilters({ options, onChange, initialValues = {} }
       form={form}
       layout="vertical"
       onValuesChange={handleValuesChange}
-      style={{
-        marginBottom: 20,
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
-        gap: 12,
-        alignItems: "end",
-      }}
+      className="filter-grid"
+      style={{ marginBottom: 20 }}
     >
       <Form.Item name="period" label="Период получения замечаний">
         <RangePicker format="DD.MM.YYYY" style={{ width: "100%" }} />

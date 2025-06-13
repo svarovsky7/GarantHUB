@@ -800,81 +800,80 @@ export default function CourtCasesPage() {
           }
         }}
       >
-      <Row gutter={16} style={{ marginBottom: 12 }}>
-        <Col>
-          <Select
-            allowClear
-            placeholder="Статус"
-            onChange={(v) => setFilters((f) => ({ ...f, status: v }))}
-            style={{ width: 150 }}
-          >
-            {stages.map((s) => (
-              <Select.Option key={s.id} value={s.id}>
-                {s.name}
-              </Select.Option>
-            ))}
-          </Select>
-        </Col>
-        <Col>
-          <Input
-            placeholder="Проект"
-            onChange={(e) => setFilters((f) => ({ ...f, project: e.target.value }))}
-          />
-        </Col>
-        <Col>
-          <Select
-            mode="multiple"
-            allowClear
-            placeholder="ID"
-            options={idOptions}
-            value={filters.ids}
-            onChange={(v) => setFilters((f) => ({ ...f, ids: v }))}
-            style={{ minWidth: 120 }}
-          />
-        </Col>
-        <Col>
-          <Input
-            placeholder="Фильтр по объекту"
-            onChange={(e) => setFilters((f) => ({ ...f, object: e.target.value }))}
-          />
-        </Col>
-        <Col>
-          <Input
-            placeholder="Истец"
-            onChange={(e) => setFilters((f) => ({ ...f, plaintiff: e.target.value }))}
-          />
-        </Col>
-        <Col>
-          <Input
-            placeholder="Ответчик"
-            onChange={(e) => setFilters((f) => ({ ...f, defendant: e.target.value }))}
-          />
-        </Col>
-        <Col>
-          <Input
-            placeholder="Юрист"
-            onChange={(e) => setFilters((f) => ({ ...f, lawyer: e.target.value }))}
-          />
-        </Col>
-        <Col>
-          <Switch
-            checked={!!filters.hideClosed}
-            onChange={(checked) => {
-              setFilters((f) => ({ ...f, hideClosed: checked }));
-              try {
-                localStorage.setItem(LS_KEY, JSON.stringify(checked));
-              } catch {}
-            }}
-          />{' '}
-          Скрыть закрытые
-        </Col>
-        <Col flex="auto">
-          <Input
-            placeholder="Поиск"
-            onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
-          />
-        </Col>
-      </Row>
+      <Card style={{ marginBottom: 24 }}>
+        <Form layout="vertical" className="filter-grid">
+          <Form.Item label="Статус">
+            <Select
+              allowClear
+              placeholder="Статус"
+              onChange={(v) => setFilters((f) => ({ ...f, status: v }))}
+            >
+              {stages.map((s) => (
+                <Select.Option key={s.id} value={s.id}>
+                  {s.name}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item label="Проект">
+            <Input
+              placeholder="Проект"
+              onChange={(e) => setFilters((f) => ({ ...f, project: e.target.value }))}
+            />
+          </Form.Item>
+          <Form.Item label="ID">
+            <Select
+              mode="multiple"
+              allowClear
+              placeholder="ID"
+              options={idOptions}
+              value={filters.ids}
+              onChange={(v) => setFilters((f) => ({ ...f, ids: v }))}
+            />
+          </Form.Item>
+          <Form.Item label="Объект">
+            <Input
+              placeholder="Фильтр по объекту"
+              onChange={(e) => setFilters((f) => ({ ...f, object: e.target.value }))}
+            />
+          </Form.Item>
+          <Form.Item label="Истец">
+            <Input
+              placeholder="Истец"
+              onChange={(e) => setFilters((f) => ({ ...f, plaintiff: e.target.value }))}
+            />
+          </Form.Item>
+          <Form.Item label="Ответчик">
+            <Input
+              placeholder="Ответчик"
+              onChange={(e) => setFilters((f) => ({ ...f, defendant: e.target.value }))}
+            />
+          </Form.Item>
+          <Form.Item label="Юрист">
+            <Input
+              placeholder="Юрист"
+              onChange={(e) => setFilters((f) => ({ ...f, lawyer: e.target.value }))}
+            />
+          </Form.Item>
+          <Form.Item label="Скрыть закрытые" valuePropName="checked">
+            <Switch
+              checked={!!filters.hideClosed}
+              onChange={(checked) => {
+                setFilters((f) => ({ ...f, hideClosed: checked }));
+                try {
+                  localStorage.setItem(LS_KEY, JSON.stringify(checked));
+                } catch {}
+              }}
+            />
+          </Form.Item>
+          <Form.Item label="Поиск">
+            <Input
+              placeholder="Поиск"
+              onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
+            />
+          </Form.Item>
+        </Form>
+      </Card>
 
       <Table
         rowKey="id"
