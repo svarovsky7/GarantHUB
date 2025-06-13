@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button, Tooltip } from 'antd';
-import { FileExcelOutlined } from '@ant-design/icons';
+import { DownloadOutlined } from '@ant-design/icons';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import dayjs from 'dayjs';
@@ -60,7 +60,7 @@ export default function ExportTicketsButton({
 
   return (
     <Tooltip title="Выгрузить в Excel">
-      <Button icon={<FileExcelOutlined />} onClick={handleClick} />
+      <Button icon={<DownloadOutlined />} onClick={handleClick} />
     </Tooltip>
   );
 }

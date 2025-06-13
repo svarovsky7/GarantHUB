@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button, Tooltip } from 'antd';
-import { FileExcelOutlined } from '@ant-design/icons';
+import { DownloadOutlined } from '@ant-design/icons';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import dayjs from 'dayjs';
@@ -76,7 +76,7 @@ export default function ExportCourtCasesButton({
 
   return (
     <Tooltip title="Выгрузить в Excel">
-      <Button icon={<FileExcelOutlined />} loading={loading} onClick={handleExport} />
+      <Button icon={<DownloadOutlined />} loading={loading} onClick={handleExport} />
     </Tooltip>
   );
 }
