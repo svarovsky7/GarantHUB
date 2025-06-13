@@ -45,7 +45,7 @@ export default function ExportTicketsButton({
       'Подробное описание': t.description ?? '',
       'Ссылки на прикрепленные файлы': (t.attachments ?? [])
         .map((a) => a.url)
-        .join(', '),
+        .join('\n'),
       Название: t.parentId ? `↳ ${t.title}` : t.title,
     }));
     const wb = XLSX.utils.book_new();
