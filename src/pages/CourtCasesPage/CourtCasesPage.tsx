@@ -1094,8 +1094,6 @@ export default function CourtCasesPage() {
   );
 }
 
-}
-
 interface AddPersonModalProps {
   open: boolean;
   onClose: () => void;
