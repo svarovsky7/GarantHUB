@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button, Tooltip } from 'antd';
 import { DownloadOutlined } from '@ant-design/icons';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import dayjs from 'dayjs';
 import type { TicketWithNames } from '@/shared/types/ticketWithNames';
@@ -20,7 +20,7 @@ export default function ExportTicketsButton({
   tickets,
   filters,
 }: ExportTicketsButtonProps) {
-  const handleClick = React.useCallback(() => {
+  const handleClick = React.useCallback(async () => {
     const today = dayjs();
     const rows = filterTickets(tickets, filters).map((t) => ({
       ID: t.id,
@@ -51,11 +51,14 @@ export default function ExportTicketsButton({
         .join('\n'),
       Название: t.parentId ? `↳ ${t.title}` : t.title,
     }));
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(rows);
-    XLSX.utils.book_append_sheet(wb, ws, 'Tickets');
-    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    saveAs(new Blob([wbout], { type: 'application/octet-stream' }), 'tickets.xlsx');
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('Tickets');
+    if (rows.length) {
+      ws.columns = Object.keys(rows[0]).map((key) => ({ header: key, key }));
+      rows.forEach((r) => ws.addRow(r));
+    }
+    const buffer = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([buffer], { type: 'application/octet-stream' }), 'tickets.xlsx');
   }, [tickets, filters]);
 
   return (
