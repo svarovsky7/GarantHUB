@@ -23,6 +23,7 @@ import { usePersons, useDeletePerson } from '@/entities/person';
 import { useAttachmentTypes } from '@/entities/attachmentType';
 import PersonModal from '@/features/person/PersonModal';
 import ContractorModal from '@/features/contractor/ContractorModal';
+import { useLetterStatuses } from '@/entities/letterStatus';
 import { useAuthStore } from '@/shared/store/authStore';
 
 export interface AddLetterFormData {
@@ -37,6 +38,8 @@ export interface AddLetterFormData {
   letter_type_id: number | null;
   project_id: number | null;
   unit_ids: number[];
+  /** Статус письма */
+  status_id: number | null;
   attachments: { file: File; type_id: number | null }[];
   parent_id: string | null;
 }
@@ -68,6 +71,7 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
   const { data: contractors = [], isLoading: loadingContractors } = useContractors();
   const { data: persons = [], isLoading: loadingPersons } = usePersons();
   const { data: attachmentTypes = [], isLoading: loadingAttachmentTypes } = useAttachmentTypes();
+  const { data: statuses = [] } = useLetterStatuses();
   const deletePerson = useDeletePerson();
   const deleteContractor = useDeleteContractor();
 
@@ -126,6 +130,7 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
     onSubmit({
       ...values,
       date: values.date ?? dayjs(),
+      status_id: statuses[0]?.id ?? null,
       attachments: files,
       parent_id: parentId,
     });

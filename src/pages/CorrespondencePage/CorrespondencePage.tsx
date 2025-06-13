@@ -187,7 +187,7 @@ export default function CorrespondencePage() {
         responsible_user_id: data.responsible_user_id || null,
         date: data.date ? data.date.toISOString() : dayjs().toISOString(),
       },
-      ['responsible_user_id', 'letter_type_id', 'project_id'],
+      ['responsible_user_id', 'letter_type_id', 'project_id', 'status_id'],
     );
 
     add.mutate(safeData, {
@@ -405,6 +405,7 @@ export default function CorrespondencePage() {
             letterTypes={letterTypes}
             projects={projects}
             units={allUnits}
+            statuses={statuses}
           />
           <Typography.Text style={{ display: 'block', marginTop: 8 }}>
             Всего писем: {total}
@@ -416,6 +417,7 @@ export default function CorrespondencePage() {
               letterTypes={letterTypes}
               projects={projects}
               units={allUnits}
+              statuses={statuses}
             />
           </div>
         </div>

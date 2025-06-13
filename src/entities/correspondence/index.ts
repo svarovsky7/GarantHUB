@@ -6,6 +6,7 @@ import {
 } from '@/shared/types/correspondence';
 import { addLetterAttachments, ATTACH_BUCKET } from '../attachment';
 import { supabase } from '@/shared/api/supabaseClient';
+import { useNotify } from '@/shared/hooks/useNotify';
 
 const LETTERS_TABLE = 'letters';
 const LINKS_TABLE = 'letter_links';
@@ -363,5 +364,27 @@ export function useUpdateLetter() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [LETTERS_TABLE] });
     },
+  });
+}
+
+export function useUpdateLetterStatus() {
+  const qc = useQueryClient();
+  const notify = useNotify();
+  return useMutation({
+    mutationFn: async ({ id, statusId }: { id: string; statusId: number }) => {
+      const { data, error } = await supabase
+        .from(LETTERS_TABLE)
+        .update({ status_id: statusId })
+        .eq('id', Number(id))
+        .select('id, status_id')
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [LETTERS_TABLE] });
+      notify.success('Статус письма обновлён');
+    },
+    onError: (e: any) => notify.error(`Ошибка обновления статуса: ${e.message}`),
   });
 }
