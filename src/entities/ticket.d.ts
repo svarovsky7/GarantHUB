@@ -1,5 +1,6 @@
 import type { UseMutationResult, UseQueryResult } from '@tanstack/react-query';
 import type { Dayjs } from 'dayjs';
+import type { TicketLink } from '@/shared/types/ticket';
 
 export interface TicketAttachment {
   id: number | string;
@@ -19,6 +20,8 @@ export interface TicketAttachment {
 
 export interface Ticket {
   id: number;
+  /** Идентификатор родительского замечания */
+  parentId: number | null;
   projectId: number;
   unitIds: number[];
   typeId: number | null;
@@ -62,3 +65,9 @@ export function useTicketsStats(): UseQueryResult<any[]>;
 export function useUpdateTicket(): UseMutationResult<any, Error, { id: number; updates: object }>;
 export function useUpdateTicketStatus(): UseMutationResult<any, Error, { id: number; statusId: number }>;
 export function useUpdateTicketClosed(): UseMutationResult<any, Error, { id: number; isClosed: boolean }>;
+
+export function useTicketLinks(): UseQueryResult<TicketLink[]>;
+
+export function useLinkTickets(): UseMutationResult<void, Error, { parentId: string; childIds: string[] }>;
+
+export function useUnlinkTicket(): UseMutationResult<void, Error, string>;

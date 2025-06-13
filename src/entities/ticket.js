@@ -17,6 +17,8 @@ import { useNotify } from "@/shared/hooks/useNotify";
 import { useProjectId } from "@/shared/hooks/useProjectId";
 import { useAuthStore } from "@/shared/store/authStore";
 
+const LINKS_TABLE = "ticket_links";
+
 // ──────────────────────────── constants ────────────────────────────
 let ATTACH_BUCKET =
   (typeof import.meta !== "undefined" && import.meta.env?.VITE_ATTACH_BUCKET) ||
@@ -144,6 +146,7 @@ function mapTicket(r) {
 
   return {
     id: r.id,
+    parentId: r.parent_id ?? null,
     projectId: r.project_id,
     unitIds: r.unit_ids || [],
     typeId: r.type_id,
@@ -211,6 +214,13 @@ export function useTickets() {
         });
       }
 
+      const { data: links, error: linkErr } = await supabase
+        .from(LINKS_TABLE)
+        .select('parent_id, child_id');
+      if (linkErr) throw linkErr;
+      const linkMap = new Map();
+      (links ?? []).forEach((lnk) => linkMap.set(lnk.child_id, lnk.parent_id));
+
       const result = [];
       for (const r of data ?? []) {
         const atts = (r.attachment_ids || [])
@@ -225,7 +235,9 @@ export function useTickets() {
             .eq("project_id", projectId);
           r.attachment_ids = existIds;
         }
-        result.push(mapTicket({ ...r, attachments: atts }));
+        result.push(
+          mapTicket({ ...r, attachments: atts, parent_id: linkMap.get(r.id) })
+        );
       }
       return result;
     },
@@ -340,7 +352,12 @@ export function useTicket(ticketId) {
           data.attachment_ids = existIds;
         }
       }
-      return data ? mapTicket({ ...data, attachments: atts }) : null;
+      const { data: link } = await supabase
+        .from(LINKS_TABLE)
+        .select('parent_id')
+        .eq('child_id', id)
+        .maybeSingle();
+      return data ? mapTicket({ ...data, attachments: atts, parent_id: link?.parent_id }) : null;
     },
     staleTime: 5 * 60_000,
     gcTime: 10 * 60_000,
@@ -580,5 +597,49 @@ export function useUpdateTicketClosed() {
       notify.success("Статус закрытия обновлён");
     },
     onError: (e) => notify.error(`Ошибка обновления: ${e.message}`),
+  });
+}
+
+// -----------------------------------------------------------------------------
+// Работа со связями замечаний
+// -----------------------------------------------------------------------------
+export function useTicketLinks() {
+  return useQuery({
+    queryKey: [LINKS_TABLE],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from(LINKS_TABLE)
+        .select('id, parent_id, child_id');
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
+export function useLinkTickets() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ parentId, childIds }) => {
+      const ids = childIds.map((c) => Number(c));
+      if (!ids.length) return;
+      await supabase.from(LINKS_TABLE).delete().in('child_id', ids);
+      const rows = ids.map((child_id) => ({ parent_id: Number(parentId), child_id }));
+      await supabase.from(LINKS_TABLE).insert(rows);
+      qc.invalidateQueries({ queryKey: [LINKS_TABLE] });
+      qc.invalidateQueries({ queryKey: ['tickets'] });
+    },
+  });
+}
+
+export function useUnlinkTicket() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id) => {
+      const childId = Number(id);
+      await supabase.from(LINKS_TABLE).delete().eq('child_id', childId);
+      qc.invalidateQueries({ queryKey: [LINKS_TABLE] });
+      qc.invalidateQueries({ queryKey: ['tickets'] });
+    },
   });
 }

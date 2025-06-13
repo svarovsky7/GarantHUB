@@ -1,5 +1,7 @@
 export interface Ticket {
   id: number;
+  /** Идентификатор родительского замечания */
+  parent_id?: number | null;
   project_id: number;
   /** массив ID объектов, к которым относится замечание */
   unit_ids: number[];
@@ -16,4 +18,14 @@ export interface Ticket {
   received_at: string;
   fixed_at: string | null;
   attachment_ids?: number[];
+}
+
+/** Связь замечаний: parent_id - родительское замечание, child_id - дочернее */
+export interface TicketLink {
+  /** Уникальный идентификатор связи */
+  id: string;
+  /** Идентификатор родительского замечания */
+  parent_id: string;
+  /** Идентификатор дочернего замечания */
+  child_id: string;
 }

@@ -52,4 +52,15 @@ body {
     font-style: italic;
     border-left: 3px solid #52c41a;
 }
+
+.main-ticket-row {
+    background: #fffbe6 !important;
+    font-weight: 600;
+}
+.child-ticket-row {
+    background: #fcfcfc !important;
+    color: #888;
+    font-style: italic;
+    border-left: 3px solid #faad14;
+}
 /* Skeleton эффекты были выше (оставил без изменений) */

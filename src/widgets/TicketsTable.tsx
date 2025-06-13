@@ -16,6 +16,10 @@ import type { ColumnsType } from "antd/es/table";
 import {
   EyeOutlined,
   DeleteOutlined,
+  PlusOutlined,
+  BranchesOutlined,
+  LinkOutlined,
+  FileTextOutlined,
   CheckCircleTwoTone,
   CloseCircleTwoTone,
 } from "@ant-design/icons";
@@ -79,12 +83,40 @@ const applyFilters = (rows, f) =>
  * @param {Array} tickets - массив замечаний
  * @param {Object} filters - активные фильтры
  * @param {boolean} loading - индикатор загрузки
+ * @param {Function} onAddChild - открыть диалог для связывания
+ * @param {Function} onUnlink - удалить связь
  */
-export default function TicketsTable({ tickets, filters, loading, onView }) {
+export default function TicketsTable({
+  tickets,
+  filters,
+  loading,
+  onView,
+  onAddChild,
+  onUnlink,
+}) {
   const { mutateAsync: remove, isPending } = useDeleteTicket();
 
   const columns: ColumnsType<any> = useMemo(
     () => [
+      {
+        title: '',
+        dataIndex: 'tree',
+        width: 40,
+        render: (_: any, record: any) => {
+          if (!record.parentId) {
+            return (
+              <Tooltip title="Основное замечание">
+                <FileTextOutlined style={{ color: '#1890ff', fontSize: 17 }} />
+              </Tooltip>
+            );
+          }
+          return (
+            <Tooltip title="Связанное замечание">
+              <BranchesOutlined style={{ color: '#52c41a', fontSize: 16 }} />
+            </Tooltip>
+          );
+        },
+      },
       {
         title: "ID",
         dataIndex: "id",
@@ -210,6 +242,22 @@ export default function TicketsTable({ tickets, filters, loading, onView }) {
                 onClick={() => onView && onView(record.id)}
               />
             </Tooltip>
+            <Button
+              size="small"
+              type="text"
+              icon={<PlusOutlined />}
+              onClick={() => onAddChild && onAddChild(record)}
+            />
+            {record.parentId && (
+              <Tooltip title="Исключить из связи">
+                <Button
+                  size="small"
+                  type="text"
+                  icon={<LinkOutlined style={{ color: '#c41d7f', textDecoration: 'line-through', fontWeight: 700 }} />}
+                  onClick={() => onUnlink && onUnlink(record.id)}
+                />
+              </Tooltip>
+            )}
             <Popconfirm
               title="Удалить замечание?"
               okText="Да"
@@ -230,10 +278,19 @@ export default function TicketsTable({ tickets, filters, loading, onView }) {
     [onView, remove, isPending],
   );
 
-  const dataSource = useMemo(
-    () =>
-      applyFilters(tickets, filters).map((t) => ({
+  const filtered = useMemo(
+    () => applyFilters(tickets, filters),
+    [tickets, filters],
+  );
+
+  const treeData = useMemo(() => {
+    const map = new Map<number, any>();
+    const roots: any[] = [];
+    filtered.forEach((t) => {
+      const row = {
         ...t,
+        key: t.id,
+        children: [] as any[],
         receivedAt: t.receivedAt,
         fixedAt: t.fixedAt,
         customerRequestDate: t.customerRequestDate,
@@ -241,20 +298,44 @@ export default function TicketsTable({ tickets, filters, loading, onView }) {
         createdByName: t.createdByName,
         responsibleEngineerName: t.responsibleEngineerName,
         days: daysPassed(t.receivedAt),
-      })),
-    [tickets, filters],
-  );
+      };
+      map.set(t.id, row);
+    });
+    filtered.forEach((t) => {
+      const row = map.get(t.id);
+      if (t.parentId && map.has(t.parentId)) {
+        map.get(t.parentId).children.push(row);
+      } else {
+        roots.push(row);
+      }
+    });
+    map.forEach((row) => {
+      if (!row.children.length) row.children = undefined;
+    });
+    return roots;
+  }, [filtered]);
 
   if (loading) return <Skeleton active paragraph={{ rows: 6 }} />;
+
+  const rowClassName = (record: any) => {
+    if (!record.parentId) return 'main-ticket-row';
+    return 'child-ticket-row';
+  };
 
   return (
     <Table
       rowKey="id"
       columns={columns}
-      dataSource={dataSource}
+      dataSource={treeData}
       loading={isPending}
       pagination={{ pageSize: 25, showSizeChanger: true }}
       size="middle"
+      expandable={{
+        expandRowByClick: true,
+        defaultExpandAllRows: true,
+        indentSize: 24,
+      }}
+      rowClassName={rowClassName}
     />
   );
 }
