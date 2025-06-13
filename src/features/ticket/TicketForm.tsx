@@ -278,8 +278,14 @@ export default function TicketForm({
           <Controller
             name="project_id"
             control={control}
-            render={({ field }) => (
-              <FormControl fullWidth sx={highlight('project_id')}>
+            rules={{ required: true }}
+            render={({ field, fieldState }) => (
+              <FormControl
+                fullWidth
+                required
+                error={!!fieldState.error}
+                sx={highlight('project_id')}
+              >
               <InputLabel id="project-label">Проект</InputLabel>
               <Select
                 {...field}
@@ -309,8 +315,14 @@ export default function TicketForm({
           <Controller
             name="unit_ids"
             control={control}
-            render={({ field }) => (
-              <FormControl fullWidth sx={highlight('unit_ids')}>
+            rules={{ required: true }}
+            render={({ field, fieldState }) => (
+              <FormControl
+                fullWidth
+                required
+                error={!!fieldState.error}
+                sx={highlight('unit_ids')}
+              >
               <InputLabel id="units-label">Объекты</InputLabel>
               <Select
                 {...field}
@@ -340,8 +352,14 @@ export default function TicketForm({
           <Controller
             name="responsible_engineer_id"
             control={control}
-            render={({ field }) => (
-              <FormControl fullWidth sx={highlight('responsible_engineer_id')}>
+            rules={{ required: true }}
+            render={({ field, fieldState }) => (
+              <FormControl
+                fullWidth
+                required
+                error={!!fieldState.error}
+                sx={highlight('responsible_engineer_id')}
+              >
               <InputLabel id="engineer-label">Ответственный инженер</InputLabel>
               <Select
                 {...field}
@@ -507,7 +525,8 @@ export default function TicketForm({
           <Controller
             name="fixed_at"
             control={control}
-            render={({ field }) => (
+            rules={{ required: true }}
+            render={({ field, fieldState }) => (
               <DatePicker
                 {...field}
                 format="DD.MM.YYYY"
@@ -517,6 +536,8 @@ export default function TicketForm({
                   textField: {
                     fullWidth: true,
                     label: 'Дата устранения',
+                    required: true,
+                    error: !!fieldState.error,
                     sx: highlight('fixed_at'),
                   },
                 }}
