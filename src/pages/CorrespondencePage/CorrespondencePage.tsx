@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   ConfigProvider,
@@ -76,6 +76,8 @@ export default function CorrespondencePage() {
   };
   const [view, setView] = useState<CorrespondenceLetter | null>(null);
   const [linkFor, setLinkFor] = useState<CorrespondenceLetter | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const hideOnScroll = useRef(false);
 
   React.useEffect(() => {
     const id = searchParams.get('letter_id');
@@ -158,6 +160,7 @@ export default function CorrespondencePage() {
     add.mutate(safeData, {
       onSuccess: () => {
         notify.success('Письмо добавлено');
+        hideOnScroll.current = true;
       },
     });
   };
@@ -220,9 +223,18 @@ export default function CorrespondencePage() {
   return (
     <ConfigProvider locale={ruRU}>
       <>
-        <div style={{ marginTop: 16 }}>
-          <AddLetterForm onSubmit={handleAdd} initialValues={initialValues} />
-        </div>
+        <Button
+          type="primary"
+          onClick={() => setShowAddForm((p) => !p)}
+          style={{ marginTop: 16 }}
+        >
+          {showAddForm ? 'Скрыть форму' : 'Добавить письмо'}
+        </Button>
+        {showAddForm && (
+          <div style={{ marginTop: 16 }}>
+            <AddLetterForm onSubmit={handleAdd} initialValues={initialValues} />
+          </div>
+        )}
 
         <LinkLettersDialog
           open={!!linkFor}
@@ -240,7 +252,15 @@ export default function CorrespondencePage() {
           }}
         />
 
-        <div style={{ marginTop: 24 }}>
+        <div
+          style={{ marginTop: 24 }}
+          onWheel={() => {
+            if (hideOnScroll.current) {
+              setShowAddForm(false);
+              hideOnScroll.current = false;
+            }
+          }}
+        >
           <Form
             form={form}
             layout="vertical"
