@@ -33,8 +33,6 @@ import {
   BranchesOutlined,
   SettingOutlined,
   MenuOutlined,
-  ArrowUpOutlined,
-  ArrowDownOutlined,
 } from '@ant-design/icons';
 import {
   useCourtCases,
@@ -367,10 +365,6 @@ export default function CourtCasesPage() {
             {showFilters ? 'Скрыть фильтры' : 'Показать фильтры'}
           </Button>
           <Button icon={<SettingOutlined />} onClick={() => setColumnsDrawer(true)} />
-          <ExportCourtCasesButton
-            cases={filteredCases}
-            stages={Object.fromEntries(stages.map((s) => [s.id, s.name]))}
-          />
         </Space>
         {showAddForm && (
           <AddCourtCaseFormAntd
@@ -414,7 +408,6 @@ export default function CourtCasesPage() {
 
           <Table
             rowKey="id"
-            key={columnKeys.join('-')}
             columns={columns}
             dataSource={treeData}
             loading={casesLoading}
@@ -457,12 +450,10 @@ export default function CourtCasesPage() {
                           <div
                             ref={p.innerRef}
                             {...p.draggableProps}
+                            {...p.dragHandleProps}
                             style={{ display: 'flex', alignItems: 'center', marginBottom: 8, ...p.draggableProps.style }}
                           >
-                            <MenuOutlined
-                              style={{ marginRight: 8, cursor: 'grab' }}
-                              {...p.dragHandleProps}
-                            />
+                            <MenuOutlined style={{ marginRight: 8, cursor: 'grab' }} />
                             <Checkbox
                               checked={!hiddenColumns.includes(k)}
                               onChange={(e) => {
@@ -473,32 +464,6 @@ export default function CourtCasesPage() {
                             >
                               {columnDefs[k].title}
                             </Checkbox>
-                            <Space style={{ marginLeft: 'auto' }}>
-                              <Button
-                                size="small"
-                                icon={<ArrowUpOutlined />}
-                                onClick={() => {
-                                  setColumnKeys((prev) => {
-                                    if (index === 0) return prev;
-                                    const arr = [...prev];
-                                    [arr[index - 1], arr[index]] = [arr[index], arr[index - 1]];
-                                    return arr;
-                                  });
-                                }}
-                              />
-                              <Button
-                                size="small"
-                                icon={<ArrowDownOutlined />}
-                                onClick={() => {
-                                  setColumnKeys((prev) => {
-                                    if (index === prev.length - 1) return prev;
-                                    const arr = [...prev];
-                                    [arr[index], arr[index + 1]] = [arr[index + 1], arr[index]];
-                                    return arr;
-                                  });
-                                }}
-                              />
-                            </Space>
                           </div>
                         )}
                       </Draggable>
