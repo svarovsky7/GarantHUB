@@ -15,6 +15,7 @@ import { AddLetterFormData } from '@/features/correspondence/AddLetterForm';
 import AddLetterForm from '@/features/correspondence/AddLetterForm';
 import LinkLettersDialog from '@/features/correspondence/LinkLettersDialog';
 import EditLetterDialog from '@/features/correspondence/EditLetterDialog';
+import ExportLettersButton from '@/features/correspondence/ExportLettersButton';
 import CorrespondenceTable from '@/widgets/CorrespondenceTable';
 import {
   useLetters,
@@ -336,6 +337,15 @@ export default function CorrespondencePage() {
           <Typography.Text style={{ display: 'block', marginTop: 8 }}>
             Всего писем: {total}
           </Typography.Text>
+          <div style={{ marginTop: 8 }}>
+            <ExportLettersButton
+              letters={filtered}
+              users={users}
+              letterTypes={letterTypes}
+              projects={projects}
+              units={allUnits}
+            />
+          </div>
         </div>
 
         <EditLetterDialog
