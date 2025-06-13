@@ -10,6 +10,10 @@ import {
   Button,
   Card,
   DatePicker,
+  Tooltip,
+  Space,
+  Popconfirm,
+  Tag,
 } from 'antd';
 import ruRU from 'antd/locale/ru_RU';
 import dayjs from 'dayjs';
@@ -20,6 +24,10 @@ import EditLetterDialog from '@/features/correspondence/EditLetterDialog';
 import ExportLettersButton from '@/features/correspondence/ExportLettersButton';
 import CorrespondenceTable from '@/widgets/CorrespondenceTable';
 import CorrespondenceFilters from '@/widgets/CorrespondenceFilters';
+import TableColumnsDrawer from '@/widgets/TableColumnsDrawer';
+import LetterStatusSelect from '@/features/correspondence/LetterStatusSelect';
+import type { TableColumnSetting } from '@/shared/types/tableColumnSetting';
+import type { ColumnsType } from 'antd/es/table';
 import {
   useLetters,
   useAddLetter,
@@ -39,6 +47,15 @@ import { useNotify } from '@/shared/hooks/useNotify';
 import { useLetterStatuses } from '@/entities/letterStatus';
 import { useContractors } from '@/entities/contractor';
 import { usePersons } from '@/entities/person';
+import {
+  SettingOutlined,
+  EyeOutlined,
+  DeleteOutlined,
+  PlusOutlined,
+  MailOutlined,
+  BranchesOutlined,
+  LinkOutlined,
+} from '@ant-design/icons';
 
 interface Filters {
   period?: [dayjs.Dayjs, dayjs.Dayjs] | null;
@@ -103,6 +120,35 @@ export default function CorrespondencePage() {
   const [linkFor, setLinkFor] = useState<CorrespondenceLetter | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const hideOnScroll = useRef(false);
+  const LS_FILTERS_VISIBLE_KEY = 'correspondenceFiltersVisible';
+  const LS_COLUMNS_KEY = 'correspondenceColumns';
+  const [showFilters, setShowFilters] = useState(() => {
+    try {
+      const saved = localStorage.getItem(LS_FILTERS_VISIBLE_KEY);
+      return saved ? JSON.parse(saved) : true;
+    } catch {
+      return true;
+    }
+  });
+  const [showColumnsDrawer, setShowColumnsDrawer] = useState(false);
+
+  React.useEffect(() => {
+    const handler = (e: StorageEvent) => {
+      if (e.key === LS_FILTERS_VISIBLE_KEY) {
+        try {
+          setShowFilters(JSON.parse(e.newValue || 'true'));
+        } catch {}
+      }
+      if (e.key === LS_HIDE_CLOSED_KEY) {
+        try {
+          setFilters((f) => ({ ...f, hideClosed: JSON.parse(e.newValue || 'false') }));
+          form.setFieldValue('hideClosed', JSON.parse(e.newValue || 'false'));
+        } catch {}
+      }
+    };
+    window.addEventListener('storage', handler);
+    return () => window.removeEventListener('storage', handler);
+  }, [form]);
 
   React.useEffect(() => {
     const id = searchParams.get('letter_id');
@@ -122,18 +168,6 @@ export default function CorrespondencePage() {
     }
   }, [searchParams, letters]);
 
-  React.useEffect(() => {
-    const handler = (e: StorageEvent) => {
-      if (e.key === LS_HIDE_CLOSED_KEY) {
-        try {
-          setFilters((f) => ({ ...f, hideClosed: JSON.parse(e.newValue || 'false') }));
-          form.setFieldValue('hideClosed', JSON.parse(e.newValue || 'false'));
-        } catch {}
-      }
-    };
-    window.addEventListener('storage', handler);
-    return () => window.removeEventListener('storage', handler);
-  }, [form]);
 
   const { data: users = [] } = useUsers();
   const { data: letterTypes = [] } = useLetterTypes();
@@ -240,6 +274,165 @@ export default function CorrespondencePage() {
     });
   };
 
+  const getBaseColumns = () => {
+    return {
+      treeIcon: {
+        title: '',
+        dataIndex: 'treeIcon',
+        width: 40,
+        render: (_: any, record: any) => {
+          if (!record.parent_id) {
+            return (
+              <Tooltip title="Главное письмо">
+                <MailOutlined style={{ color: '#1890ff', fontSize: 17 }} />
+              </Tooltip>
+            );
+          }
+          return (
+            <Tooltip title="Связанное письмо">
+              <BranchesOutlined style={{ color: '#52c41a', fontSize: 16 }} />
+            </Tooltip>
+          );
+        },
+      },
+      id: { title: 'ID', dataIndex: 'id', width: 80 },
+      type: {
+        title: 'Тип',
+        dataIndex: 'type',
+        width: 100,
+        sorter: (a: any, b: any) => a.type.localeCompare(b.type),
+        render: (v: string) => (
+          <Tag color={v === 'incoming' ? 'success' : 'processing'}>
+            {v === 'incoming' ? 'Входящее' : 'Исходящее'}
+          </Tag>
+        ),
+      },
+      number: {
+        title: 'Номер',
+        dataIndex: 'number',
+        width: 120,
+        sorter: (a: any, b: any) => a.number.localeCompare(b.number),
+        render: (num: string, record: any) => (
+          <b style={!record.parent_id ? { fontWeight: 600 } : {}}>{num}</b>
+        ),
+      },
+      date: {
+        title: 'Дата',
+        dataIndex: 'date',
+        width: 120,
+        sorter: (a: any, b: any) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf(),
+        render: (v: string) => dayjs(v).format('DD.MM.YYYY'),
+      },
+      sender: {
+        title: 'Отправитель',
+        dataIndex: 'sender',
+        sorter: (a: any, b: any) => (a.sender || '').localeCompare(b.sender || ''),
+        render: (val: string, record: any) => (
+          <span style={record.parent_id ? { color: '#888' } : {}}>{val}</span>
+        ),
+      },
+      receiver: {
+        title: 'Получатель',
+        dataIndex: 'receiver',
+        sorter: (a: any, b: any) => (a.receiver || '').localeCompare(b.receiver || ''),
+        render: (val: string, record: any) => (
+          <span style={record.parent_id ? { color: '#888' } : {}}>{val}</span>
+        ),
+      },
+      subject: {
+        title: 'Тема',
+        dataIndex: 'subject',
+        sorter: (a: any, b: any) => a.subject.localeCompare(b.subject),
+        render: (val: string, record: any) => (
+          <span style={record.parent_id ? { color: '#888' } : {}}>{val}</span>
+        ),
+      },
+      projectName: {
+        title: 'Проект',
+        dataIndex: 'projectName',
+        sorter: (a: any, b: any) => (a.projectName || '').localeCompare(b.projectName || ''),
+      },
+      unitNames: {
+        title: 'Объекты',
+        dataIndex: 'unitNames',
+        sorter: (a: any, b: any) => (a.unitNames || '').localeCompare(b.unitNames || ''),
+      },
+      letterTypeName: {
+        title: 'Категория',
+        dataIndex: 'letterTypeName',
+        sorter: (a: any, b: any) => (a.letterTypeName || '').localeCompare(b.letterTypeName || ''),
+      },
+      statusName: {
+        title: 'Статус',
+        dataIndex: 'statusName',
+        sorter: (a: any, b: any) => (a.statusName || '').localeCompare(b.statusName || ''),
+        render: (_: any, row: any) => (
+          <LetterStatusSelect letterId={row.id} statusId={row.status_id} statusName={row.statusName} />
+        ),
+      },
+      responsibleName: {
+        title: 'Ответственный',
+        dataIndex: 'responsibleName',
+        sorter: (a: any, b: any) => (a.responsibleName || '').localeCompare(b.responsibleName || ''),
+        render: (name: string) => name || '—',
+      },
+      actions: {
+        title: 'Действия',
+        key: 'actions',
+        width: 130,
+        render: (_: any, record: CorrespondenceLetter) => (
+          <Space size="middle">
+            <Button type="text" icon={<EyeOutlined />} onClick={() => setView(record)} />
+            <Button type="text" icon={<PlusOutlined />} onClick={() => setLinkFor(record)} />
+            {record.parent_id && (
+              <Tooltip title="Исключить из связи">
+                <Button
+                  type="text"
+                  icon={<LinkOutlined style={{ color: '#c41d7f', textDecoration: 'line-through', fontWeight: 700 }} />}
+                  onClick={() => handleUnlink(record.id)}
+                />
+              </Tooltip>
+            )}
+            <Popconfirm title="Удалить письмо?" okText="Да" cancelText="Нет" onConfirm={() => handleDelete(record.id)}>
+              <Button type="text" danger icon={<DeleteOutlined />} />
+            </Popconfirm>
+          </Space>
+        ),
+      },
+    } as Record<string, ColumnsType<any>[number]>;
+  };
+
+  const [columnsState, setColumnsState] = useState<TableColumnSetting[]>(() => {
+    const base = getBaseColumns();
+    const defaults = Object.keys(base).map((key) => ({ key, title: base[key].title as string, visible: true }));
+    try {
+      const saved = localStorage.getItem(LS_COLUMNS_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved) as TableColumnSetting[];
+        return parsed.filter((c) => base[c.key]);
+      }
+    } catch {}
+    return defaults;
+  });
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem(LS_COLUMNS_KEY, JSON.stringify(columnsState));
+    } catch {}
+  }, [columnsState]);
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem(LS_FILTERS_VISIBLE_KEY, JSON.stringify(showFilters));
+    } catch {}
+  }, [showFilters]);
+
+  const baseColumns = React.useMemo(getBaseColumns, [remove.isPending]);
+  const columns: ColumnsType<any> = React.useMemo(
+    () => columnsState.filter((c) => c.visible).map((c) => baseColumns[c.key]),
+    [columnsState, baseColumns],
+  );
+
   /** ID статуса "Закрыто", определяется по названию */
   const closedStatusId = React.useMemo(
     () => statuses.find((s) => /закры/i.test(s.name))?.id ?? null,
@@ -307,10 +500,28 @@ export default function CorrespondencePage() {
         <Button
           type="primary"
           onClick={() => setShowAddForm((p) => !p)}
-          style={{ marginTop: 16 }}
+          style={{ marginTop: 16, marginRight: 8 }}
         >
           {showAddForm ? 'Скрыть форму' : 'Добавить письмо'}
         </Button>
+        <Button onClick={() => setShowFilters((p) => !p)} style={{ marginTop: 16 }}>
+          {showFilters ? 'Скрыть фильтры' : 'Показать фильтры'}
+        </Button>
+        <Button
+          icon={<SettingOutlined />}
+          style={{ marginTop: 16, marginLeft: 8 }}
+          onClick={() => setShowColumnsDrawer(true)}
+        />
+        <span style={{ marginTop: 16, marginLeft: 8, display: 'inline-block' }}>
+          <ExportLettersButton
+            letters={filtered}
+            users={users}
+            letterTypes={letterTypes}
+            projects={projects}
+            units={allUnits}
+            statuses={statuses}
+          />
+        </span>
         {showAddForm && (
           <div style={{ marginTop: 16 }}>
             <AddLetterForm onSubmit={handleAdd} initialValues={initialValues} />
@@ -332,6 +543,12 @@ export default function CorrespondencePage() {
             });
           }}
         />
+        <TableColumnsDrawer
+          open={showColumnsDrawer}
+          columns={columnsState}
+          onChange={setColumnsState}
+          onClose={() => setShowColumnsDrawer(false)}
+        />
 
         <div
           style={{ marginTop: 24 }}
@@ -342,21 +559,23 @@ export default function CorrespondencePage() {
             }
           }}
         >
-          <Card style={{ marginBottom: 24 }}>
-            <CorrespondenceFilters
-              form={form}
-              filters={filters}
-              onChange={handleFiltersChange}
-              users={users.map((u) => ({ value: u.id, label: u.name }))}
-              letterTypes={letterTypes.map((t) => ({ value: t.id, label: t.name }))}
-              projects={projects.map((p) => ({ value: p.id, label: p.name }))}
-              projectUnits={projectUnits.map((u) => ({ value: u.id, label: u.name }))}
-              contactOptions={contactOptions}
-              statuses={statuses.map((s) => ({ value: s.id, label: s.name }))}
-              idOptions={idOptions}
-              onReset={resetFilters}
-            />
-          </Card>
+          {showFilters && (
+            <Card style={{ marginBottom: 24 }}>
+              <CorrespondenceFilters
+                form={form}
+                filters={filters}
+                onChange={handleFiltersChange}
+                users={users.map((u) => ({ value: u.id, label: u.name }))}
+                letterTypes={letterTypes.map((t) => ({ value: t.id, label: t.name }))}
+                projects={projects.map((p) => ({ value: p.id, label: p.name }))}
+                projectUnits={projectUnits.map((u) => ({ value: u.id, label: u.name }))}
+                contactOptions={contactOptions}
+                statuses={statuses.map((s) => ({ value: s.id, label: s.name }))}
+                idOptions={idOptions}
+                onReset={resetFilters}
+              />
+            </Card>
+          )}
           <CorrespondenceTable
             letters={filtered}
             onView={setView}
@@ -368,6 +587,7 @@ export default function CorrespondencePage() {
             projects={projects}
             units={allUnits}
             statuses={statuses}
+            columns={columns}
           />
           <Typography.Text style={{ display: 'block', marginTop: 8 }}>
             Всего писем: {total}, из них закрытых: {closedCount} и не закрытых: {openCount}
@@ -375,16 +595,6 @@ export default function CorrespondencePage() {
           <Typography.Text style={{ display: 'block', marginTop: 4 }}>
             Готовых писем к выгрузке: {readyToExport}
           </Typography.Text>
-          <div style={{ marginTop: 8 }}>
-            <ExportLettersButton
-              letters={filtered}
-              users={users}
-              letterTypes={letterTypes}
-              projects={projects}
-              units={allUnits}
-              statuses={statuses}
-            />
-          </div>
         </div>
 
         <EditLetterDialog
