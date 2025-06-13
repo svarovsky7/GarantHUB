@@ -854,6 +854,7 @@ export default function CourtCasesPage() {
               allowClear
               placeholder="Объект"
               options={allUnits
+
                 .filter((u) => !filters.projectId || u.project_id === filters.projectId)
                 .map((u) => ({ value: u.id, label: u.name }))}
               value={filters.objectId}
@@ -930,11 +931,13 @@ export default function CourtCasesPage() {
               }}
             />
           </Form.Item>
+
           <Form.Item>
             <Button onClick={resetFilters} block>
               Сбросить фильтры
             </Button>
           </Form.Item>
+
         </Form>
       </Card>
 
