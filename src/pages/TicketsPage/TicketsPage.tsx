@@ -16,6 +16,7 @@ import TicketsFilters from "@/widgets/TicketsFilters";
 import TicketFormAntd from "@/features/ticket/TicketFormAntd";
 import TicketViewModal from "@/features/ticket/TicketViewModal";
 import LinkTicketsDialog from "@/features/ticket/LinkTicketsDialog";
+import ExportTicketsButton from "@/features/ticket/ExportTicketsButton";
 import { useNotify } from "@/shared/hooks/useNotify";
 
 export default function TicketsPage() {
@@ -148,6 +149,7 @@ export default function TicketsPage() {
         >
           {showAddForm ? 'Скрыть форму' : 'Добавить замечание'}
         </Button>
+        <ExportTicketsButton tickets={ticketsWithNames} filters={filters} />
         {showAddForm && (
           <Card style={{ marginBottom: 24 }}>
             <TicketFormAntd

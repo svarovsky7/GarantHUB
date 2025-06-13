@@ -27,6 +27,7 @@ import {
 import { useDeleteTicket } from "@/entities/ticket";
 import TicketStatusSelect from "@/features/ticket/TicketStatusSelect";
 import TicketClosedSelect from "@/features/ticket/TicketClosedSelect";
+import { filterTickets } from "@/shared/utils/ticketFilter";
 
 /** Форматирование даты */
 const fmt = (d, withTime = false) =>
@@ -39,44 +40,7 @@ const daysPassed = (receivedAt) =>
     ? dayjs().diff(receivedAt, "day") + 1 // +1, т.к. «включительно»
     : null;
 
-/** Фильтрация по фильтрам */
-const applyFilters = (rows, f) =>
-  rows.filter((r) => {
-    if (Array.isArray(f.id) && f.id.length > 0 && !f.id.includes(r.id)) return false;
-    if (f.hideClosed && r.isClosed) return false;
-    const days = daysPassed(r.receivedAt);
-    if (f.period && f.period.length === 2) {
-      const [from, to] = f.period;
-      if (!r.receivedAt) return false;
-      if (r.receivedAt.isBefore(from, "day") || r.receivedAt.isAfter(to, "day"))
-        return false;
-    }
-    if (f.requestPeriod && f.requestPeriod.length === 2) {
-      const [from, to] = f.requestPeriod;
-      if (!r.customerRequestDate) return false;
-      if (
-        r.customerRequestDate.isBefore(from, "day") ||
-        r.customerRequestDate.isAfter(to, "day")
-      )
-        return false;
-    }
-    if (f.requestNo && r.customerRequestNo !== f.requestNo) return false;
-    if (f.project && r.projectName !== f.project) return false;
-    if (Array.isArray(f.units) && f.units.length > 0) {
-      const rowUnits = r.unitNames.split(',').map((u) => u.trim());
-      const hasMatch = f.units.some((u) => rowUnits.includes(u));
-      if (!hasMatch) return false;
-    }
-    if (f.warranty) {
-      const want = f.warranty === "yes";
-      if (r.isWarranty !== want) return false;
-    }
-    if (f.status && r.statusName !== f.status) return false;
-    if (f.type && r.typeName !== f.type) return false;
-    if (f.responsible && r.responsibleEngineerName !== f.responsible)
-      return false;
-    return true;
-  });
+// Фильтрация по активным фильтрам вынесена в @/shared/utils/ticketFilter
 
 /**
  * Таблица замечаний
@@ -279,7 +243,7 @@ export default function TicketsTable({
   );
 
   const filtered = useMemo(
-    () => applyFilters(tickets, filters),
+    () => filterTickets(tickets, filters),
     [tickets, filters],
   );
 
