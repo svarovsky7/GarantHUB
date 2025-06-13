@@ -7,6 +7,7 @@ import {
   Select,
   Input,
   Button,
+  Card,
 } from 'antd';
 import ruRU from 'antd/locale/ru_RU';
 import dayjs from 'dayjs';
