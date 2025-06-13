@@ -4,18 +4,7 @@ import dayjs from 'dayjs';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import 'dayjs/locale/ru';
-import {
-  ConfigProvider,
-  Button,
-  Card,
-  Table,
-  Space,
-  Popconfirm,
-  Tooltip,
-  Typography,
-  Drawer,
-  Checkbox,
-} from 'antd';
+import { ConfigProvider, Button, Card, Table, Space, Popconfirm, Tooltip, Typography } from 'antd';
 import ruRU from 'antd/locale/ru_RU';
 import type { ColumnsType } from 'antd/es/table';
 import type { CourtCase } from '@/shared/types/courtCase';
@@ -25,15 +14,7 @@ import { useContractors } from '@/entities/contractor';
 import { useUsers } from '@/entities/user';
 import { useLitigationStages } from '@/entities/litigationStage';
 import { usePersons } from '@/entities/person';
-import {
-  PlusOutlined,
-  DeleteOutlined,
-  LinkOutlined,
-  BookOutlined,
-  BranchesOutlined,
-  SettingOutlined,
-  MenuOutlined,
-} from '@ant-design/icons';
+import { PlusOutlined, DeleteOutlined, LinkOutlined } from '@ant-design/icons';
 import {
   useCourtCases,
   useDeleteCourtCase,
@@ -49,7 +30,6 @@ import LinkCasesDialog from '@/features/courtCase/LinkCasesDialog';
 import ExportCourtCasesButton from '@/features/courtCase/ExportCourtCasesButton';
 import AddCourtCaseFormAntd from '@/features/courtCase/AddCourtCaseFormAntd';
 import CourtCasesFilters, { CourtCasesFiltersValues } from '@/widgets/CourtCasesFilters';
-import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 
  dayjs.locale('ru');
  dayjs.extend(isSameOrAfter);
@@ -65,10 +45,6 @@ export default function CourtCasesPage() {
   const unlinkCase = useUnlinkCase();
   const [linkFor, setLinkFor] = useState<CourtCase | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [showFilters, setShowFilters] = useState(true);
-  const [columnsDrawer, setColumnsDrawer] = useState(false);
-  const [columnKeys, setColumnKeys] = useState<string[]>([]);
-  const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
   const hideOnScroll = useRef(false);
 
   const [searchParams] = useSearchParams();
@@ -208,143 +184,82 @@ export default function CourtCasesPage() {
     return roots;
   }, [filteredCases]);
 
-  const columnDefs = React.useMemo(() => {
-    const map: Record<string, any> = {
-      tree: {
-        title: '',
-        dataIndex: 'tree',
-        width: 40,
-        render: (_: any, record: any) => {
-          if (!record.parent_id) {
-            return (
-              <Tooltip title="Основное дело">
-                <BookOutlined style={{ color: '#722ed1', fontSize: 17 }} />
-              </Tooltip>
-            );
-          }
-          return (
-            <Tooltip title="Связанное дело">
-              <BranchesOutlined style={{ color: '#722ed1', fontSize: 16 }} />
+  const columns: ColumnsType<CourtCase & any> = [
+    { title: 'ID', dataIndex: 'id', width: 80, sorter: (a, b) => a.id - b.id },
+    { title: 'Проект', dataIndex: 'projectName', sorter: (a, b) => (a.projectName || '').localeCompare(b.projectName || '') },
+    { title: 'Объект', dataIndex: 'projectObject', sorter: (a, b) => (a.projectObject || '').localeCompare(b.projectObject || '') },
+    { title: '№ дела', dataIndex: 'number', width: 120, sorter: (a, b) => a.number.localeCompare(b.number) },
+    {
+      title: 'Дата дела',
+      dataIndex: 'date',
+      width: 120,
+      sorter: (a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf(),
+      render: (v: string) => dayjs(v).format('DD.MM.YYYY'),
+    },
+    {
+      title: 'Статус',
+      dataIndex: 'status',
+      sorter: (a, b) => a.status - b.status,
+      render: (_: number, row) => <CourtCaseStatusSelect caseId={row.id} status={row.status} />,
+    },
+    {
+      title: 'Прошло дней с начала устранения',
+      dataIndex: 'daysSinceFixStart',
+      sorter: (a, b) => (a.daysSinceFixStart ?? 0) - (b.daysSinceFixStart ?? 0),
+    },
+    { title: 'Истец', dataIndex: 'plaintiff', sorter: (a, b) => (a.plaintiff || '').localeCompare(b.plaintiff || '') },
+    { title: 'Ответчик', dataIndex: 'defendant', sorter: (a, b) => (a.defendant || '').localeCompare(b.defendant || '') },
+    {
+      title: 'Дата начала устранения',
+      dataIndex: 'fix_start_date',
+      render: (v: string | null) => (v ? dayjs(v).format('DD.MM.YYYY') : ''),
+      sorter: (a, b) => dayjs(a.fix_start_date || 0).valueOf() - dayjs(b.fix_start_date || 0).valueOf(),
+    },
+    {
+      title: 'Дата окончания устранения',
+      dataIndex: 'fix_end_date',
+      render: (v: string | null) => (v ? dayjs(v).format('DD.MM.YYYY') : ''),
+      sorter: (a, b) => dayjs(a.fix_end_date || 0).valueOf() - dayjs(b.fix_end_date || 0).valueOf(),
+    },
+    {
+      title: 'Юрист',
+      dataIndex: 'responsibleLawyer',
+      sorter: (a, b) => (a.responsibleLawyer || '').localeCompare(b.responsibleLawyer || ''),
+    },
+    {
+      title: 'Дело закрыто',
+      dataIndex: 'is_closed',
+      sorter: (a, b) => Number(a.is_closed) - Number(b.is_closed),
+      render: (_: boolean, row) => <CourtCaseClosedSelect caseId={row.id} isClosed={row.is_closed} />,
+    },
+    {
+      title: 'Действия',
+      key: 'actions',
+      width: 120,
+      render: (_: any, record) => (
+        <Space size="middle">
+          <Button type="text" icon={<PlusOutlined />} onClick={() => setLinkFor(record)} />
+          {record.parent_id && (
+            <Tooltip title="Исключить из связи">
+              <Button
+                type="text"
+                icon={<LinkOutlined style={{ color: '#c41d7f', textDecoration: 'line-through', fontWeight: 700 }} />}
+                onClick={() => unlinkCase.mutate(record.id)}
+              />
             </Tooltip>
-          );
-        },
-      },
-      id: {
-        title: 'ID',
-        dataIndex: 'id',
-        width: 80,
-        sorter: (a: any, b: any) => a.id - b.id,
-        render: (v: number) => <span style={{ whiteSpace: 'nowrap' }}>{v}</span>,
-      },
-      projectName: {
-        title: 'Проект',
-        dataIndex: 'projectName',
-        sorter: (a: any, b: any) => (a.projectName || '').localeCompare(b.projectName || ''),
-      },
-      projectObject: {
-        title: 'Объект',
-        dataIndex: 'projectObject',
-        sorter: (a: any, b: any) => (a.projectObject || '').localeCompare(b.projectObject || ''),
-      },
-      number: {
-        title: '№ дела',
-        dataIndex: 'number',
-        width: 120,
-        sorter: (a: any, b: any) => a.number.localeCompare(b.number),
-      },
-      date: {
-        title: 'Дата дела',
-        dataIndex: 'date',
-        width: 120,
-        sorter: (a: any, b: any) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf(),
-        render: (v: string) => dayjs(v).format('DD.MM.YYYY'),
-      },
-      status: {
-        title: 'Статус',
-        dataIndex: 'status',
-        sorter: (a: any, b: any) => a.status - b.status,
-        render: (_: number, row: any) => <CourtCaseStatusSelect caseId={row.id} status={row.status} />,
-      },
-      daysSinceFixStart: {
-        title: 'Прошло дней с начала устранения',
-        dataIndex: 'daysSinceFixStart',
-        sorter: (a: any, b: any) => (a.daysSinceFixStart ?? 0) - (b.daysSinceFixStart ?? 0),
-      },
-      plaintiff: {
-        title: 'Истец',
-        dataIndex: 'plaintiff',
-        sorter: (a: any, b: any) => (a.plaintiff || '').localeCompare(b.plaintiff || ''),
-      },
-      defendant: {
-        title: 'Ответчик',
-        dataIndex: 'defendant',
-        sorter: (a: any, b: any) => (a.defendant || '').localeCompare(b.defendant || ''),
-      },
-      fix_start_date: {
-        title: 'Дата начала устранения',
-        dataIndex: 'fix_start_date',
-        render: (v: string | null) => (v ? dayjs(v).format('DD.MM.YYYY') : ''),
-        sorter: (a: any, b: any) => dayjs(a.fix_start_date || 0).valueOf() - dayjs(b.fix_start_date || 0).valueOf(),
-      },
-      fix_end_date: {
-        title: 'Дата окончания устранения',
-        dataIndex: 'fix_end_date',
-        render: (v: string | null) => (v ? dayjs(v).format('DD.MM.YYYY') : ''),
-        sorter: (a: any, b: any) => dayjs(a.fix_end_date || 0).valueOf() - dayjs(b.fix_end_date || 0).valueOf(),
-      },
-      responsibleLawyer: {
-        title: 'Юрист',
-        dataIndex: 'responsibleLawyer',
-        sorter: (a: any, b: any) => (a.responsibleLawyer || '').localeCompare(b.responsibleLawyer || ''),
-      },
-      is_closed: {
-        title: 'Дело закрыто',
-        dataIndex: 'is_closed',
-        sorter: (a: any, b: any) => Number(a.is_closed) - Number(b.is_closed),
-        render: (_: boolean, row: any) => <CourtCaseClosedSelect caseId={row.id} isClosed={row.is_closed} />,
-      },
-      actions: {
-        title: 'Действия',
-        key: 'actions',
-        width: 120,
-        render: (_: any, record: any) => (
-          <Space size="middle">
-            <Button type="text" icon={<PlusOutlined />} onClick={() => setLinkFor(record)} />
-            {record.parent_id && (
-              <Tooltip title="Исключить из связи">
-                <Button
-                  type="text"
-                  icon={<LinkOutlined style={{ color: '#c41d7f', textDecoration: 'line-through', fontWeight: 700 }} />}
-                  onClick={() => unlinkCase.mutate(record.id)}
-                />
-              </Tooltip>
-            )}
-            <Popconfirm
-              title="Удалить дело?"
-              okText="Да"
-              cancelText="Нет"
-              onConfirm={() => deleteCaseMutation.mutate(record.id)}
-            >
-              <Button type="text" danger icon={<DeleteOutlined />} />
-            </Popconfirm>
-          </Space>
-        ),
-      },
-    };
-    return map;
-  }, [unlinkCase, deleteCaseMutation]);
-
-  useEffect(() => {
-    setColumnKeys(Object.keys(columnDefs));
-  }, [columnDefs]);
-
-  const columns: ColumnsType<any> = React.useMemo(
-    () =>
-      columnKeys
-        .filter((k) => !hiddenColumns.includes(k))
-        .map((k) => columnDefs[k]),
-    [columnKeys, hiddenColumns, columnDefs],
-  );
+          )}
+          <Popconfirm
+            title="Удалить дело?"
+            okText="Да"
+            cancelText="Нет"
+            onConfirm={() => deleteCaseMutation.mutate(record.id)}
+          >
+            <Button type="text" danger icon={<DeleteOutlined />} />
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
 
   const total = cases.length;
   const closedCount = React.useMemo(
@@ -357,15 +272,9 @@ export default function CourtCasesPage() {
   return (
     <ConfigProvider locale={ruRU}>
       <>
-        <Space style={{ marginTop: 16 }}>
-          <Button type="primary" onClick={() => setShowAddForm((p) => !p)}>
-            {showAddForm ? 'Скрыть форму' : 'Добавить дело'}
-          </Button>
-          <Button onClick={() => setShowFilters((p) => !p)}>
-            {showFilters ? 'Скрыть фильтры' : 'Показать фильтры'}
-          </Button>
-          <Button icon={<SettingOutlined />} onClick={() => setColumnsDrawer(true)} />
-        </Space>
+        <Button type="primary" onClick={() => setShowAddForm((p) => !p)} style={{ marginTop: 16 }}>
+          {showAddForm ? 'Скрыть форму' : 'Добавить дело'}
+        </Button>
         {showAddForm && (
           <AddCourtCaseFormAntd
             initialValues={initialValues}
@@ -391,20 +300,18 @@ export default function CourtCasesPage() {
             }
           }}
         >
-          {showFilters && (
-            <Card style={{ marginBottom: 24 }}>
-              <CourtCasesFilters
-                values={filters}
-                onChange={handleFiltersChange}
-                onReset={resetFilters}
-                projects={projects}
-                units={allUnits}
-                stages={stages}
-                users={users}
-                idOptions={idOptions}
-              />
-            </Card>
-          )}
+          <Card style={{ marginBottom: 24 }}>
+            <CourtCasesFilters
+              values={filters}
+              onChange={handleFiltersChange}
+              onReset={resetFilters}
+              projects={projects}
+              units={allUnits}
+              stages={stages}
+              users={users}
+              idOptions={idOptions}
+            />
+          </Card>
 
           <Table
             rowKey="id"
@@ -414,7 +321,6 @@ export default function CourtCasesPage() {
             pagination={{ pageSize: 25, showSizeChanger: true }}
             size="middle"
             expandable={{ expandRowByClick: true, defaultExpandAllRows: true, indentSize: 24 }}
-            rowClassName={(record: any) => (!record.parent_id ? 'main-case-row' : 'child-case-row')}
           />
 
           <Typography.Text style={{ display: 'block', marginTop: 8 }}>
@@ -426,53 +332,6 @@ export default function CourtCasesPage() {
           <div style={{ marginTop: 8 }}>
             <ExportCourtCasesButton cases={filteredCases} stages={Object.fromEntries(stages.map((s) => [s.id, s.name]))} />
           </div>
-          <Drawer
-            title="Столбцы"
-            placement="right"
-            onClose={() => setColumnsDrawer(false)}
-            open={columnsDrawer}
-          >
-            <DragDropContext
-              onDragEnd={(result: DropResult) => {
-                if (!result.destination) return;
-                const newOrder = Array.from(columnKeys);
-                const [moved] = newOrder.splice(result.source.index, 1);
-                newOrder.splice(result.destination.index, 0, moved);
-                setColumnKeys(newOrder);
-              }}
-            >
-              <Droppable droppableId="cols">
-                {(prov) => (
-                  <div ref={prov.innerRef} {...prov.droppableProps}>
-                    {columnKeys.map((k, index) => (
-                      <Draggable key={k} draggableId={k} index={index}>
-                        {(p) => (
-                          <div
-                            ref={p.innerRef}
-                            {...p.draggableProps}
-                            style={{ display: 'flex', alignItems: 'center', marginBottom: 8, ...p.draggableProps.style }}
-                          >
-                            <MenuOutlined style={{ marginRight: 8, cursor: 'grab' }} {...p.dragHandleProps} />
-                            <Checkbox
-                              checked={!hiddenColumns.includes(k)}
-                              onChange={(e) => {
-                                setHiddenColumns((prev) =>
-                                  e.target.checked ? prev.filter((c) => c !== k) : [...prev, k],
-                                );
-                              }}
-                            >
-                              {columnDefs[k].title}
-                            </Checkbox>
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
-                    {prov.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </DragDropContext>
-          </Drawer>
         </div>
       </>
     </ConfigProvider>
