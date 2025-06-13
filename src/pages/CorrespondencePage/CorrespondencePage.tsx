@@ -19,6 +19,7 @@ import LinkLettersDialog from '@/features/correspondence/LinkLettersDialog';
 import EditLetterDialog from '@/features/correspondence/EditLetterDialog';
 import ExportLettersButton from '@/features/correspondence/ExportLettersButton';
 import CorrespondenceTable from '@/widgets/CorrespondenceTable';
+import CorrespondenceFilters from '@/widgets/CorrespondenceFilters';
 import {
   useLetters,
   useAddLetter,
@@ -342,97 +343,19 @@ export default function CorrespondencePage() {
           }}
         >
           <Card style={{ marginBottom: 24 }}>
-            <Form
+            <CorrespondenceFilters
               form={form}
-              layout="vertical"
-              onValuesChange={handleFiltersChange}
-              initialValues={filters}
-              className="filter-grid"
-            >
-            <Form.Item name="period" label="Период">
-              <DatePicker.RangePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
-            </Form.Item>
-
-            <Form.Item name="type" label="Тип письма">
-              <Select allowClear placeholder="Все типы">
-                <Select.Option value="incoming">Входящее</Select.Option>
-                <Select.Option value="outgoing">Исходящее</Select.Option>
-              </Select>
-            </Form.Item>
-
-            <Form.Item name="id" label="ID">
-              <Select mode="multiple" allowClear options={idOptions} placeholder="ID" />
-            </Form.Item>
-
-            <Form.Item name="category" label="Категория">
-              <Select allowClear options={letterTypes.map((t) => ({ value: t.id, label: t.name }))} />
-            </Form.Item>
-
-            <Form.Item name="project" label="Проект">
-              <Select
-                  showSearch
-                  allowClear
-                  options={projects.map((p) => ({ value: p.id, label: p.name }))}
-                  onChange={() => form.setFieldValue('unit', undefined)}
-              />
-            </Form.Item>
-
-            <Form.Item name="unit" label="Объект">
-              <Select
-                  showSearch
-                  allowClear
-                  options={projectUnits.map((u) => ({ value: u.id, label: u.name }))}
-                  disabled={!form.getFieldValue('project')}
-              />
-            </Form.Item>
-
-            <Form.Item name="sender" label="Отправитель">
-              <Select
-                showSearch
-                allowClear
-                options={contactOptions}
-                filterOption={(input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase())}
-              />
-            </Form.Item>
-
-            <Form.Item name="receiver" label="Получатель">
-              <Select
-                showSearch
-                allowClear
-                options={contactOptions}
-                filterOption={(input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase())}
-              />
-            </Form.Item>
-
-            <Form.Item name="subject" label="В теме">
-              <Input allowClear autoComplete="off" />
-            </Form.Item>
-
-            <Form.Item name="content" label="В содержании">
-              <Input allowClear autoComplete="off" />
-            </Form.Item>
-
-            <Form.Item name="status" label="Статус писем">
-              <Select allowClear options={statuses.map((s) => ({ value: s.id, label: s.name }))} />
-            </Form.Item>
-
-            <Form.Item name="responsible" label="Ответственный">
-              <Select
-                showSearch
-                allowClear
-                options={users.map((u) => ({ value: u.id, label: u.name }))}
-              />
-            </Form.Item>
-
-            <Form.Item name="hideClosed" label="Скрыть закрытые" valuePropName="checked">
-              <Switch />
-            </Form.Item>
-            <Form.Item>
-              <Button onClick={resetFilters} block>
-                Сбросить фильтры
-              </Button>
-            </Form.Item>
-            </Form>
+              filters={filters}
+              onChange={handleFiltersChange}
+              users={users.map((u) => ({ value: u.id, label: u.name }))}
+              letterTypes={letterTypes.map((t) => ({ value: t.id, label: t.name }))}
+              projects={projects.map((p) => ({ value: p.id, label: p.name }))}
+              projectUnits={projectUnits.map((u) => ({ value: u.id, label: u.name }))}
+              contactOptions={contactOptions}
+              statuses={statuses.map((s) => ({ value: s.id, label: s.name }))}
+              idOptions={idOptions}
+              onReset={resetFilters}
+            />
           </Card>
           <CorrespondenceTable
             letters={filtered}
