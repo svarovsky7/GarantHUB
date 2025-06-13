@@ -46,10 +46,6 @@ import type { TableColumnSetting } from '@/shared/types/tableColumnSetting';
 
 const LS_KEY = 'courtCasesHideClosed';
 const LS_COLUMNS_KEY = 'courtCasesColumns';
-/** Ключ в localStorage для состояния показа фильтров */
-const LS_SHOW_FILTERS_KEY = 'courtCasesShowFilters';
-/** Ключ в localStorage для раскрытых строк таблицы судебных дел */
-const LS_EXPANDED_KEY = 'courtCasesExpandedRows';
 
 export default function CourtCasesPage() {
   const { data: cases = [], isPending: casesLoading } = useCourtCases();
@@ -59,14 +55,7 @@ export default function CourtCasesPage() {
   const unlinkCase = useUnlinkCase();
   const [linkFor, setLinkFor] = useState<CourtCase | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [showFilters, setShowFilters] = useState(() => {
-    try {
-      const saved = localStorage.getItem(LS_SHOW_FILTERS_KEY);
-      return saved ? JSON.parse(saved) : true;
-    } catch {
-      return true;
-    }
-  });
+  const [showFilters, setShowFilters] = useState(true);
   const [showColumnsDrawer, setShowColumnsDrawer] = useState(false);
   const hideOnScroll = useRef(false);
 
@@ -115,24 +104,6 @@ export default function CourtCasesPage() {
     window.addEventListener('storage', handler);
     return () => window.removeEventListener('storage', handler);
   }, []);
-
-  useEffect(() => {
-    const handler = (e: StorageEvent) => {
-      if (e.key === LS_SHOW_FILTERS_KEY) {
-        try {
-          setShowFilters(JSON.parse(e.newValue || 'true'));
-        } catch {}
-      }
-    };
-    window.addEventListener('storage', handler);
-    return () => window.removeEventListener('storage', handler);
-  }, []);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(LS_SHOW_FILTERS_KEY, JSON.stringify(showFilters));
-    } catch {}
-  }, [showFilters]);
 
   const handleFiltersChange = (v: CourtCasesFiltersValues) => {
     if (v.hideClosed !== filters.hideClosed) {
@@ -375,29 +346,6 @@ export default function CourtCasesPage() {
     [columnsState],
   );
 
-  const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(LS_EXPANDED_KEY);
-      if (saved) {
-        const parsed: React.Key[] = JSON.parse(saved);
-        const valid = parsed.filter((id) =>
-          filteredCases.some((c) => String(c.id) === String(id)),
-        );
-        setExpandedRowKeys(valid);
-        return;
-      }
-    } catch {}
-    setExpandedRowKeys(filteredCases.map((c) => c.id));
-  }, [filteredCases]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(LS_EXPANDED_KEY, JSON.stringify(expandedRowKeys));
-    } catch {}
-  }, [expandedRowKeys]);
-
 
   const total = cases.length;
   const closedCount = React.useMemo(
@@ -420,11 +368,6 @@ export default function CourtCasesPage() {
           icon={<SettingOutlined />}
           style={{ marginTop: 16, marginLeft: 8 }}
           onClick={() => setShowColumnsDrawer(true)}
-        />
-        <ExportCourtCasesButton
-          cases={filteredCases}
-          stages={Object.fromEntries(stages.map((s) => [s.id, s.name]))}
-          style={{ marginTop: 16, marginLeft: 8 }}
         />
         {showAddForm && (
           <AddCourtCaseFormAntd
@@ -479,19 +422,7 @@ export default function CourtCasesPage() {
             loading={casesLoading}
             pagination={{ pageSize: 25, showSizeChanger: true }}
             size="middle"
-            expandable={{
-              expandRowByClick: true,
-              indentSize: 24,
-              expandedRowKeys,
-              onExpand: (expanded, record) => {
-                setExpandedRowKeys((prev) => {
-                  const set = new Set(prev);
-                  if (expanded) set.add(record.id);
-                  else set.delete(record.id);
-                  return Array.from(set);
-                });
-              },
-            }}
+            expandable={{ expandRowByClick: true, defaultExpandAllRows: true, indentSize: 24 }}
             rowClassName={(record) => (record.parent_id ? 'child-case-row' : 'main-case-row')}
           />
 
@@ -501,6 +432,9 @@ export default function CourtCasesPage() {
           <Typography.Text style={{ display: 'block', marginTop: 4 }}>
             Готовых дел к выгрузке: {readyToExport}
           </Typography.Text>
+          <div style={{ marginTop: 8 }}>
+            <ExportCourtCasesButton cases={filteredCases} stages={Object.fromEntries(stages.map((s) => [s.id, s.name]))} />
+          </div>
         </div>
       </>
     </ConfigProvider>
