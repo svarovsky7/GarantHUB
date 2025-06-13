@@ -138,6 +138,8 @@ export default function TicketsPage() {
     );
   };
 
+  const total = tickets.length;
+
   return (
     <ConfigProvider locale={ruRU}>
       <>
@@ -149,7 +151,6 @@ export default function TicketsPage() {
         >
           {showAddForm ? 'Скрыть форму' : 'Добавить замечание'}
         </Button>
-        <ExportTicketsButton tickets={ticketsWithNames} filters={filters} />
         {showAddForm && (
           <Card style={{ marginBottom: 24 }}>
             <TicketFormAntd
@@ -200,6 +201,12 @@ export default function TicketsPage() {
               />
             )}
           </Card>
+          <Typography.Text style={{ display: 'block', marginTop: 8 }}>
+            Всего замечаний: {total}
+          </Typography.Text>
+          <div style={{ marginTop: 8 }}>
+            <ExportTicketsButton tickets={ticketsWithNames} filters={filters} />
+          </div>
         </div>
         <TicketViewModal
           open={viewId !== null}
