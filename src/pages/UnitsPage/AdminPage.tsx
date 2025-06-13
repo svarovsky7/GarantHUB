@@ -10,6 +10,7 @@ import UsersTable from "../../widgets/UsersTable";
 import LitigationStagesAdmin from "../../widgets/LitigationStagesAdmin";
 import LetterTypesAdmin from "../../widgets/LetterTypesAdmin";
 import AttachmentTypesAdmin from "../../widgets/AttachmentTypesAdmin";
+import LetterStatusesAdmin from "../../widgets/LetterStatusesAdmin";
 
 export default function AdminPage() {
   return (
@@ -41,6 +42,11 @@ export default function AdminPage() {
 
 
         <LetterTypesAdmin
+          pageSize={25}
+          rowsPerPageOptions={[10, 25, 50, 100]}
+        />
+
+        <LetterStatusesAdmin
           pageSize={25}
           rowsPerPageOptions={[10, 25, 50, 100]}
         />

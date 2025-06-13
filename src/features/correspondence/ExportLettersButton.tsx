@@ -47,6 +47,7 @@ export default function ExportLettersButton({
   const handleExport = () => {
     const data = letters.map((l) => ({
       ID: l.id,
+      'ID родителя': l.parent_id ?? '',
       Тип: l.type === 'incoming' ? 'Входящее' : 'Исходящее',
       Номер: l.number,
       Дата: dayjs(l.date).format('DD.MM.YYYY'),
@@ -57,6 +58,7 @@ export default function ExportLettersButton({
       Объекты: l.unit_ids.map((id) => maps.unit[id]).filter(Boolean).join(', '),
       Категория: l.letter_type_id ? maps.type[l.letter_type_id] : '',
       Ответственный: l.responsible_user_id ? maps.user[l.responsible_user_id] : '',
+      'Ссылки на файлы': (l.attachments ?? []).map((a) => a.file_url).join('\n'),
     }));
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();

@@ -9,6 +9,8 @@ export interface CorrespondenceLetter {
 
   /** Идентификатор ответственного пользователя */
   responsible_user_id: string | null;
+  /** Статус письма */
+  status_id?: number | null;
   /** Идентификатор категории письма */
   letter_type_id: number | null;
   /** Проект */
