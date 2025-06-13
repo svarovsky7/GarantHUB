@@ -2,12 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import dayjs, { Dayjs } from 'dayjs';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import 'dayjs/locale/ru';
 import { ConfigProvider } from 'antd';
 import ruRU from 'antd/locale/ru_RU';
 
 dayjs.locale('ru');
 dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
 import {
   Row,
   Col,
@@ -209,6 +211,17 @@ export default function CourtCasesPage() {
     [cases],
   );
   const { data: caseUnits = [] } = useUnitsByIds(unitIds);
+  const { data: allUnits = [] } = useQuery({
+    queryKey: ['allUnits'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('units')
+        .select('id, name, project_id');
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 5 * 60_000,
+  });
 
   const { data: projectPersons = [], isPending: personsLoading } = useQuery({
     queryKey: ['projectPersons'],
@@ -496,6 +509,8 @@ export default function CourtCasesPage() {
       matchesClosed
     );
   });
+
+  const resetFilters = () => setFilters((f) => ({ hideClosed: f.hideClosed }));
 
   return (
     <ConfigProvider locale={ruRU}>
@@ -838,7 +853,7 @@ export default function CourtCasesPage() {
             <Select
               allowClear
               placeholder="Объект"
-              options={caseUnits
+              options={allUnits
                 .filter((u) => !filters.projectId || u.project_id === filters.projectId)
                 .map((u) => ({ value: u.id, label: u.name }))}
               value={filters.objectId}
@@ -914,6 +929,11 @@ export default function CourtCasesPage() {
                 } catch {}
               }}
             />
+          </Form.Item>
+          <Form.Item>
+            <Button onClick={resetFilters} block>
+              Сбросить фильтры
+            </Button>
           </Form.Item>
         </Form>
       </Card>
