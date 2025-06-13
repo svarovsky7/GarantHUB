@@ -260,6 +260,20 @@ export default function CorrespondencePage() {
   });
 
   const total = letters.length;
+  /** ID статуса "Закрыто", определяется по названию */
+  const closedStatusId = React.useMemo(
+    () => statuses.find((s) => /закры/i.test(s.name))?.id ?? null,
+    [statuses],
+  );
+  /** Количество закрытых писем */
+  const closedCount = React.useMemo(
+    () => letters.filter((l) => closedStatusId != null && l.status_id === closedStatusId).length,
+    [letters, closedStatusId],
+  );
+  /** Количество не закрытых писем */
+  const openCount = total - closedCount;
+  /** Сколько писем пройдёт в выгрузку с учётом фильтров */
+  const readyToExport = filtered.length;
 
   return (
     <ConfigProvider locale={ruRU}>
@@ -408,7 +422,10 @@ export default function CorrespondencePage() {
             statuses={statuses}
           />
           <Typography.Text style={{ display: 'block', marginTop: 8 }}>
-            Всего писем: {total}
+            Всего писем: {total}, из них закрытых: {closedCount} и не закрытых: {openCount}
+          </Typography.Text>
+          <Typography.Text style={{ display: 'block', marginTop: 4 }}>
+            Готовых писем к выгрузке: {readyToExport}
           </Typography.Text>
           <div style={{ marginTop: 8 }}>
             <ExportLettersButton
