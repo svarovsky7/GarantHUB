@@ -25,6 +25,7 @@ import ExportLettersButton from '@/features/correspondence/ExportLettersButton';
 import CorrespondenceTable from '@/widgets/CorrespondenceTable';
 import CorrespondenceFilters from '@/widgets/CorrespondenceFilters';
 import TableColumnsDrawer from '@/widgets/TableColumnsDrawer';
+import LetterStatusSelect from '@/features/correspondence/LetterStatusSelect';
 import type { TableColumnSetting } from '@/shared/types/tableColumnSetting';
 import type { ColumnsType } from 'antd/es/table';
 import {
@@ -132,6 +133,24 @@ export default function CorrespondencePage() {
   const [showColumnsDrawer, setShowColumnsDrawer] = useState(false);
 
   React.useEffect(() => {
+    const handler = (e: StorageEvent) => {
+      if (e.key === LS_FILTERS_VISIBLE_KEY) {
+        try {
+          setShowFilters(JSON.parse(e.newValue || 'true'));
+        } catch {}
+      }
+      if (e.key === LS_HIDE_CLOSED_KEY) {
+        try {
+          setFilters((f) => ({ ...f, hideClosed: JSON.parse(e.newValue || 'false') }));
+          form.setFieldValue('hideClosed', JSON.parse(e.newValue || 'false'));
+        } catch {}
+      }
+    };
+    window.addEventListener('storage', handler);
+    return () => window.removeEventListener('storage', handler);
+  }, [form]);
+
+  React.useEffect(() => {
     const id = searchParams.get('letter_id');
     if (id && letters.length) {
       const letter = letters.find((l) => String(l.id) === id);
@@ -149,18 +168,6 @@ export default function CorrespondencePage() {
     }
   }, [searchParams, letters]);
 
-  React.useEffect(() => {
-    const handler = (e: StorageEvent) => {
-      if (e.key === LS_HIDE_CLOSED_KEY) {
-        try {
-          setFilters((f) => ({ ...f, hideClosed: JSON.parse(e.newValue || 'false') }));
-          form.setFieldValue('hideClosed', JSON.parse(e.newValue || 'false'));
-        } catch {}
-      }
-    };
-    window.addEventListener('storage', handler);
-    return () => window.removeEventListener('storage', handler);
-  }, [form]);
 
   const { data: users = [] } = useUsers();
   const { data: letterTypes = [] } = useLetterTypes();

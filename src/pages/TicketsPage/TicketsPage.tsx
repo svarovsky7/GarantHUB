@@ -29,6 +29,8 @@ import TicketFormAntd from "@/features/ticket/TicketFormAntd";
 import TicketViewModal from "@/features/ticket/TicketViewModal";
 import LinkTicketsDialog from "@/features/ticket/LinkTicketsDialog";
 import ExportTicketsButton from "@/features/ticket/ExportTicketsButton";
+import TicketStatusSelect from "@/features/ticket/TicketStatusSelect";
+import TicketClosedSelect from "@/features/ticket/TicketClosedSelect";
 import TableColumnsDrawer from "@/widgets/TableColumnsDrawer";
 import type { TableColumnSetting } from "@/shared/types/tableColumnSetting";
 import type { ColumnsType } from "antd/es/table";
@@ -74,6 +76,18 @@ export default function TicketsPage() {
     }
   });
   const [showColumnsDrawer, setShowColumnsDrawer] = useState(false);
+
+  React.useEffect(() => {
+    const handler = (e: StorageEvent) => {
+      if (e.key === LS_FILTERS_VISIBLE_KEY) {
+        try {
+          setShowFilters(JSON.parse(e.newValue || 'true'));
+        } catch {}
+      }
+    };
+    window.addEventListener('storage', handler);
+    return () => window.removeEventListener('storage', handler);
+  }, []);
 
   React.useEffect(() => {
     const id = searchParams.get('ticket_id');
