@@ -14,9 +14,6 @@ const SELECT = `
   id, name, building, section, floor,
   project_id,
   project:projects ( id, name ),
-  unit_persons (
-    person:persons ( id, full_name, phone, email )
-  ),
   person_id
 `;
 
@@ -47,7 +44,7 @@ export const useUnits = () => {
 
             return (data ?? []).map((u) => ({
                 ...u,
-                persons: (u.unit_persons?.map((l) => l.person).filter(Boolean)) ?? [],
+                persons: [], // unit_persons removed
             }));
         },
         staleTime: 5 * 60_000,
@@ -69,7 +66,7 @@ export const useUnitsByProject = (projectId) =>
 
             return (data ?? []).map((u) => ({
                 ...u,
-                persons: (u.unit_persons?.map((l) => l.person).filter(Boolean)) ?? [],
+                persons: [], // unit_persons removed
             }));
         },
         staleTime: 5 * 60_000,
@@ -120,7 +117,7 @@ export const useUnit = (unitId) => {
 
             return {
                 ...data,
-                persons: (data.unit_persons?.map((l) => l.person).filter(Boolean)) ?? [],
+                persons: [], // unit_persons removed
             };
         },
         staleTime: 5 * 60_000,
@@ -193,7 +190,7 @@ const updateUnit = async ({ id, updates }) => {
 
     return {
         ...data,
-        persons: (data.unit_persons?.map((l) => l.person).filter(Boolean)) ?? [],
+        persons: [], // unit_persons removed
     };
 };
 

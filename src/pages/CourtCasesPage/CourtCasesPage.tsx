@@ -1863,9 +1863,7 @@ function AddPersonModal({ open, onClose, unitId, onSelect, initialData = null }:
       : addPersonMutation.mutateAsync(values);
     action
       .then(async (person: any) => {
-        if (unitId && !isEdit) {
-          await supabase.from('unit_persons').insert({ unit_id: unitId, person_id: person.id });
-        }
+        // unit_persons table removed
         notify.success(isEdit ? 'Физлицо обновлено' : 'Физлицо добавлено');
         qc.invalidateQueries({ queryKey: ['projectPersons'] });
         onSelect(person.id);

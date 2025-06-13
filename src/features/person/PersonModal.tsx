@@ -45,12 +45,7 @@ export default function PersonModal({
       const res = isEdit
         ? await update.mutateAsync({ id: initialData.id, updates: values })
         : await add.mutateAsync(values);
-      if (unitId && !isEdit) {
-        await supabase.from('unit_persons').insert({
-          unit_id: unitId,
-          person_id: res.id,
-        });
-      }
+      // unit_persons table removed
       message.success(isEdit ? 'Физлицо обновлено' : 'Физлицо добавлено');
       qc.invalidateQueries({ queryKey: ['projectPersons'] });
       onSelect(res.full_name);
