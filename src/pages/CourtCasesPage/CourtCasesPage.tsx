@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import dayjs, { Dayjs } from 'dayjs';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
@@ -125,6 +125,7 @@ export default function CourtCasesPage() {
   const [tab, setTab] = useState('defects');
 
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   const [form] = Form.useForm();
   const projectId = Form.useWatch('project_id', form);
@@ -1074,14 +1075,20 @@ export default function CourtCasesPage() {
                                     // больше не теряется при обновлении данных
     open
     onClose={() => {
-      /* FIX: убираем case_id из строки запроса, этого достаточно
-         (navigate не нужен) */
-      setSearchParams((prev) => {
-        const p = new URLSearchParams(prev);
-        p.delete('case_id');
-        p.delete('from');
-        return p;
-      }, { replace: true });
+      const from = searchParams.get('from');
+      if (from === 'structure') {
+        navigate('/structure', { replace: true });
+      } else {
+        setSearchParams(
+          (prev) => {
+            const p = new URLSearchParams(prev);
+            p.delete('case_id');
+            p.delete('from');
+            return p;
+          },
+          { replace: true },
+        );
+      }
       setDialogCase(null);
     }}
     caseData={dialogCase}
@@ -1559,6 +1566,9 @@ function CaseDialog({ open, onClose, caseData, tab, onTabChange, projects, onCas
               <CaseFilesTab caseData={caseData} />
             </Tabs.TabPane>
           </Tabs>
+          <div style={{ textAlign: 'right' }}>
+            <Button onClick={onClose}>Закрыть</Button>
+          </div>
         </>
       )}
     </Modal>
