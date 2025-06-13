@@ -28,6 +28,7 @@ import {
   Tooltip,
   Radio,
   Switch,
+  Typography,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import type { CourtCase, Defect } from '@/shared/types/courtCase';
@@ -79,6 +80,7 @@ import FileDropZone from '@/shared/ui/FileDropZone';
 import CourtCaseStatusSelect from '@/features/courtCase/CourtCaseStatusSelect';
 import CourtCaseClosedSelect from '@/features/courtCase/CourtCaseClosedSelect';
 import LinkCasesDialog from '@/features/courtCase/LinkCasesDialog';
+import ExportCourtCasesButton from '@/features/courtCase/ExportCourtCasesButton';
 
 const fmtCurrency = (n: number) =>
   new Intl.NumberFormat('ru-RU', {
@@ -185,6 +187,14 @@ export default function CourtCasesPage() {
   const { data: users = [], isPending: usersLoading } = useUsers();
   const { data: stages = [], isPending: stagesLoading } = useLitigationStages();
   const { data: personsList = [] } = usePersons();
+
+  const stageMap = React.useMemo(() => {
+    const m: Record<number, string> = {};
+    stages.forEach((s) => {
+      m[s.id] = s.name;
+    });
+    return m;
+  }, [stages]);
   const deletePersonMutation = useDeletePerson();
   const deleteContractorMutation = useDeleteContractor();
   const [personModal, setPersonModal] = useState<any | null>(null);
@@ -576,6 +586,17 @@ export default function CourtCasesPage() {
     if (!record.parent_id) return 'main-case-row';
     return 'child-case-row';
   };
+
+  const total = cases.length;
+  const closedCount = React.useMemo(
+    () =>
+      cases.filter((c) =>
+        closedStageId ? c.status === closedStageId : c.is_closed,
+      ).length,
+    [cases, closedStageId],
+  );
+  const openCount = total - closedCount;
+  const readyToExport = filteredCases.length;
 
   const resetFilters = () => setFilters((f) => ({ hideClosed: f.hideClosed }));
 
@@ -1030,6 +1051,16 @@ export default function CourtCasesPage() {
         }}
         rowClassName={rowClassName}
       />
+
+      <Typography.Text style={{ display: 'block', marginTop: 8 }}>
+        Всего дел: {total}, из них закрытых: {closedCount} и не закрытых: {openCount}
+      </Typography.Text>
+      <Typography.Text style={{ display: 'block', marginTop: 4 }}>
+        Готовых дел к выгрузке: {readyToExport}
+      </Typography.Text>
+      <div style={{ marginTop: 8 }}>
+        <ExportCourtCasesButton cases={filteredCases} stages={stageMap} />
+      </div>
 
       </div>
 
