@@ -22,14 +22,21 @@ export function useTicketAttachments(options: {
     if (!ticket) return;
     const attachmentsWithType = (ticket.attachments || []).map((file) => {
       const typeObj = attachmentTypes.find((t) => t.id === file.attachment_type_id);
+      const storagePath = 'storage_path' in file ? (file as any).storage_path : (file as any).path;
+      const fileUrl = (file as any).file_url ?? (file as any).url ?? '';
+      const fileType = (file as any).file_type ?? (file as any).type ?? '';
+      const name =
+        (file as any).original_name ||
+        (storagePath ? storagePath.split('/').pop() : (file as any).name) ||
+        'file';
       return {
-        id: file.id,
-        name: file.original_name || file.storage_path.split('/').pop() || 'file',
-        path: file.storage_path,
-        url: file.file_url,
-        type: file.file_type,
+        id: (file as any).id,
+        name,
+        path: storagePath ?? '',
+        url: fileUrl,
+        type: fileType,
         attachment_type_id: file.attachment_type_id ?? null,
-        attachment_type_name: typeObj?.name || file.file_type || '—',
+        attachment_type_name: typeObj?.name || fileType || '—',
       } as RemoteTicketFile;
     });
     setRemoteFiles(attachmentsWithType);

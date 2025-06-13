@@ -74,7 +74,7 @@ export default function LinkTicketsDialog({
         </Button>,
       ]}
       width={700}
-      destroyOnClose
+      destroyOnHidden
     >
       <Input
         placeholder="Поиск по ID или названию"
