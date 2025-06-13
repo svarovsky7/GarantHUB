@@ -3,7 +3,7 @@ import React from "react";
 import { Box, Paper, Typography, Alert } from "@mui/material";
 import { useParams } from "react-router-dom";
 
-import TicketForm from "@/features/ticket/TicketForm";
+import TicketFormAntdEdit from "@/features/ticket/TicketFormAntdEdit";
 import { useProjectId } from "@/shared/hooks/useProjectId";
 
 export default function TicketFormPage() {
@@ -44,7 +44,7 @@ export default function TicketFormPage() {
         </Box>
         {/* --- форма --- */}
         <Box sx={{ p: { xs: 3, md: 5 } }}>
-          <TicketForm
+          <TicketFormAntdEdit
             key={`${projectId ?? "none"}-${ticketId ?? "new"}`}
             ticketId={ticketId}
             onCreated={() => {}}

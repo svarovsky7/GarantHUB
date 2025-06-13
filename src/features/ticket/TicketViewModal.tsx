@@ -1,7 +1,7 @@
 import React from 'react';
 import { Modal, Skeleton, Typography } from 'antd';
 import { useTicket } from '@/entities/ticket';
-import TicketForm from './TicketForm';
+import TicketFormAntdEdit from './TicketFormAntdEdit';
 
 interface Props {
   open: boolean;
@@ -28,7 +28,12 @@ export default function TicketViewModal({ open, ticketId, onClose }: Props) {
       title={<Typography.Title level={4} style={{ margin: 0 }}>{titleText}</Typography.Title>}
     >
       {ticket ? (
-        <TicketForm embedded ticketId={String(ticketId)} onCancel={onClose} onCreated={onClose} />
+        <TicketFormAntdEdit
+          embedded
+          ticketId={String(ticketId)}
+          onCancel={onClose}
+          onCreated={onClose}
+        />
       ) : (
         <Skeleton active />
       )}

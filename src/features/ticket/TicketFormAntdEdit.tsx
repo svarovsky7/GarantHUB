@@ -1,0 +1,338 @@
+import React, { useEffect } from 'react';
+import dayjs, { Dayjs } from 'dayjs';
+import {
+  Form,
+  Input,
+  Select,
+  DatePicker,
+  Switch,
+  Button,
+  Row,
+  Col,
+  Skeleton,
+} from 'antd';
+import {
+  useTicketTypes,
+  useTicketStatuses,
+} from '@/entities/ticketType';
+import { useUnitsByProject } from '@/entities/unit';
+import { useUsers } from '@/entities/user';
+import { useProjects } from '@/entities/project';
+import { useCreateTicket, useTicket } from '@/entities/ticket';
+import { useDefectDeadlines } from '@/entities/defectDeadline';
+import { useAttachmentTypes } from '@/entities/attachmentType';
+import { useProjectId } from '@/shared/hooks/useProjectId';
+import { useAuthStore } from '@/shared/store/authStore';
+import FileDropZone from '@/shared/ui/FileDropZone';
+import AttachmentEditorTable from '@/shared/ui/AttachmentEditorTable';
+import { useNotify } from '@/shared/hooks/useNotify';
+import { useTicketAttachments } from './model/useTicketAttachments';
+
+export interface TicketFormAntdEditProps {
+  ticketId?: string;
+  onCreated?: () => void;
+  onCancel?: () => void;
+  embedded?: boolean;
+  initialUnitId?: number;
+}
+
+export interface TicketFormAntdEditValues {
+  project_id: number | null;
+  unit_ids: number[];
+  type_id: number | null;
+  status_id: number | null;
+  title: string;
+  description: string | null;
+  customer_request_no: string | null;
+  customer_request_date: Dayjs | null;
+  responsible_engineer_id: string | null;
+  is_warranty: boolean;
+  received_at: Dayjs | null;
+  fixed_at: Dayjs | null;
+}
+
+export default function TicketFormAntdEdit({
+  ticketId,
+  onCreated,
+  onCancel,
+  embedded = false,
+  initialUnitId,
+}: TicketFormAntdEditProps) {
+  const [form] = Form.useForm<TicketFormAntdEditValues>();
+  const globalProjectId = useProjectId();
+  const { data: ticket, updating, updateAsync } = useTicket(ticketId);
+  const isEdit = Boolean(ticketId);
+
+  const { data: types = [] } = useTicketTypes();
+  const { data: statuses = [] } = useTicketStatuses();
+  const { data: projects = [] } = useProjects();
+  const { data: users = [] } = useUsers();
+  const projectId = Form.useWatch('project_id', form) ?? globalProjectId;
+  const { data: units = [] } = useUnitsByProject(projectId);
+  const { data: attachmentTypes = [] } = useAttachmentTypes();
+  const { data: deadlines = [] } = useDefectDeadlines();
+  const create = useCreateTicket();
+  const notify = useNotify();
+  const profileId = useAuthStore((s) => s.profile?.id);
+
+  const {
+    remoteFiles,
+    newFiles,
+    changedTypes,
+    removedIds,
+    addFiles,
+    removeNew,
+    removeRemote,
+    changeRemoteType,
+    changeNewType,
+    appendRemote,
+    markPersisted,
+    attachmentsChanged,
+    reset: resetAttachments,
+  } = useTicketAttachments({ ticket, attachmentTypes });
+
+  const typeId = Form.useWatch('type_id', form);
+  const deadlineDays = React.useMemo(() => {
+    if (!projectId || !typeId) return null;
+    const rec = deadlines.find(
+      (d) => d.project_id === projectId && d.ticket_type_id === typeId,
+    );
+    return rec?.fix_days ?? null;
+  }, [projectId, typeId, deadlines]);
+
+  useEffect(() => {
+    if (ticket) {
+      form.setFieldsValue({
+        project_id: ticket.projectId,
+        unit_ids: ticket.unitIds,
+        responsible_engineer_id: ticket.responsibleEngineerId ?? undefined,
+        status_id: ticket.statusId ?? undefined,
+        type_id: ticket.typeId ?? undefined,
+        is_warranty: ticket.isWarranty,
+        customer_request_no: ticket.customerRequestNo ?? undefined,
+        customer_request_date: ticket.customerRequestDate ?? null,
+        received_at: ticket.receivedAt ?? null,
+        fixed_at: ticket.fixedAt ?? null,
+        title: ticket.title,
+        description: ticket.description ?? undefined,
+      });
+      appendRemote(ticket.attachments || []);
+    } else {
+      form.setFieldsValue({
+        project_id: globalProjectId ?? null,
+        unit_ids: initialUnitId != null ? [initialUnitId] : [],
+        responsible_engineer_id: profileId ?? undefined,
+        received_at: dayjs(),
+      });
+    }
+  }, [ticket, form, globalProjectId, profileId, initialUnitId, appendRemote]);
+
+  const handleFiles = (files: File[]) => addFiles(files);
+
+  const handleSubmit = async (values: TicketFormAntdEditValues) => {
+    if (
+      newFiles.some((f) => f.type_id == null) ||
+      remoteFiles.some((f) => (changedTypes[f.id] ?? null) == null)
+    ) {
+      notify.error('Выберите тип файла для всех документов');
+      return;
+    }
+
+    const payload = {
+      project_id: values.project_id ?? globalProjectId,
+      unit_ids: values.unit_ids,
+      type_id: values.type_id,
+      status_id: values.status_id,
+      title: values.title,
+      description: values.description || null,
+      customer_request_no: values.customer_request_no || null,
+      customer_request_date: values.customer_request_date
+        ? values.customer_request_date.format('YYYY-MM-DD')
+        : null,
+      responsible_engineer_id: values.responsible_engineer_id ?? null,
+      is_warranty: values.is_warranty,
+      received_at: values.received_at
+        ? values.received_at.format('YYYY-MM-DD')
+        : dayjs().format('YYYY-MM-DD'),
+      fixed_at: values.fixed_at ? values.fixed_at.format('YYYY-MM-DD') : null,
+    };
+
+    try {
+      if (isEdit && ticketId) {
+        const uploaded = await updateAsync({
+          id: Number(ticketId),
+          ...payload,
+          newAttachments: newFiles,
+          removedAttachmentIds: removedIds,
+          updatedAttachments: Object.entries(changedTypes).map(([id, type]) => ({
+            id,
+            type_id: type,
+          })),
+        });
+        if (uploaded?.length) {
+          appendRemote(
+            uploaded.map((u: any) => ({
+              id: u.id,
+              name: u.original_name || u.storage_path.split('/').pop() || 'file',
+              path: u.storage_path,
+              url: u.file_url,
+              type: u.file_type,
+              attachment_type_id: u.attachment_type_id ?? null,
+            })),
+          );
+        }
+        markPersisted();
+        onCreated?.();
+      } else {
+        await create.mutateAsync({
+          ...payload,
+          attachments: newFiles.map((f) => ({ file: f.file, type_id: f.type_id })),
+        } as any);
+        onCreated?.();
+        form.resetFields();
+        resetAttachments();
+      }
+    } catch (e: unknown) {
+      console.error(e);
+    }
+  };
+
+  if (isEdit && !ticket) return <Skeleton active />;
+
+  return (
+    <Form
+      form={form}
+      layout="vertical"
+      onFinish={handleSubmit}
+      style={{ maxWidth: embedded ? 'none' : 640 }}
+      autoComplete="off"
+    >
+      <Row gutter={16}>
+        <Col span={8}>
+          <Form.Item name="project_id" label="Проект" rules={[{ required: true }]}> 
+            <Select allowClear options={projects.map((p) => ({ value: p.id, label: p.name }))} />
+          </Form.Item>
+        </Col>
+        <Col span={8}>
+          <Form.Item name="unit_ids" label="Объекты" rules={[{ required: true }]}> 
+            <Select
+              mode="multiple"
+              disabled={!projectId}
+              options={units.map((u) => ({ value: u.id, label: u.name }))}
+            />
+          </Form.Item>
+        </Col>
+        <Col span={8}>
+          <Form.Item name="responsible_engineer_id" label="Ответственный инженер" rules={[{ required: true }]}> 
+            <Select allowClear options={users.map((u) => ({ value: u.id, label: u.name }))} />
+          </Form.Item>
+        </Col>
+      </Row>
+      <Row gutter={16}>
+        <Col span={8}>
+          <Form.Item name="status_id" label="Статус" rules={[{ required: true }]}> 
+            <Select options={statuses.map((s) => ({ value: s.id, label: s.name }))} />
+          </Form.Item>
+        </Col>
+        <Col span={8}>
+          <Form.Item name="type_id" label={`Тип${deadlineDays ? ` (${deadlineDays} дн.)` : ''}`} rules={[{ required: true }]}> 
+            <Select options={types.map((t) => ({ value: t.id, label: t.name }))} />
+          </Form.Item>
+        </Col>
+        <Col span={8}>
+          <Form.Item name="is_warranty" label="Гарантия" valuePropName="checked">
+            <Switch />
+          </Form.Item>
+        </Col>
+      </Row>
+      <Row gutter={16}>
+        <Col span={12}>
+          <Form.Item name="customer_request_no" label="№ заявки от Заказчика">
+            <Input />
+          </Form.Item>
+        </Col>
+        <Col span={12}>
+          <Form.Item name="customer_request_date" label="Дата заявки Заказчика">
+            <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
+          </Form.Item>
+        </Col>
+      </Row>
+      <Row gutter={16}>
+        <Col span={8}>
+          <Form.Item name="received_at" label="Дата получения" rules={[{ required: true }]}> 
+            <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
+          </Form.Item>
+        </Col>
+        <Col span={8}>
+          <Form.Item name="fixed_at" label="Дата устранения">
+            <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
+          </Form.Item>
+        </Col>
+      </Row>
+      <Row gutter={8} style={{ marginBottom: 8 }}>
+        {[10, 45, 60].map((d) => (
+          <Col key={d}>
+            <Button
+              size="small"
+              onClick={() => {
+                const rec = form.getFieldValue('received_at');
+                if (rec) form.setFieldValue('fixed_at', dayjs(rec).add(d, 'day'));
+              }}
+            >
+              +{d} дней
+            </Button>
+          </Col>
+        ))}
+        {deadlineDays && (
+          <Col>
+            <Button
+              size="small"
+              style={{ background: '#2e7d32', color: '#fff' }}
+              onClick={() => {
+                const rec = form.getFieldValue('received_at');
+                if (rec) form.setFieldValue('fixed_at', dayjs(rec).add(deadlineDays, 'day'));
+              }}
+            >
+              +{deadlineDays} дней
+            </Button>
+          </Col>
+        )}
+      </Row>
+      <Form.Item name="title" label="Краткое описание" rules={[{ required: true }]}> 
+        <Input />
+      </Form.Item>
+      <Form.Item name="description" label="Подробное описание">
+        <Input.TextArea rows={2} />
+      </Form.Item>
+      <Form.Item label="Файлы">
+        <FileDropZone onFiles={handleFiles} />
+        <AttachmentEditorTable
+          remoteFiles={remoteFiles.map((f) => ({
+            id: String(f.id),
+            name: f.name,
+            path: f.path,
+            typeId: changedTypes[f.id] ?? f.attachment_type_id,
+            typeName: f.attachment_type_name,
+            mime: f.type,
+          }))}
+          newFiles={newFiles.map((f) => ({ file: f.file, typeId: f.type_id, mime: f.file.type }))}
+          attachmentTypes={attachmentTypes}
+          onRemoveRemote={removeRemote}
+          onRemoveNew={removeNew}
+          onChangeRemoteType={changeRemoteType}
+          onChangeNewType={changeNewType}
+        />
+      </Form.Item>
+      <Form.Item style={{ textAlign: 'right' }}>
+        {onCancel && (
+          <Button style={{ marginRight: 8 }} onClick={onCancel} disabled={create.isPending || updating}>
+            Отмена
+          </Button>
+        )}
+        <Button type="primary" htmlType="submit" loading={create.isPending || updating}>
+          {isEdit ? 'Сохранить' : 'Создать'}
+        </Button>
+      </Form.Item>
+    </Form>
+  );
+}
