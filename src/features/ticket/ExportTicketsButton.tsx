@@ -3,6 +3,7 @@ import { Button, Tooltip } from 'antd';
 import { FileExcelOutlined } from '@ant-design/icons';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
+import dayjs from 'dayjs';
 import { Ticket } from '@/shared/types/ticket';
 import { TicketFilters } from '@/shared/types/ticketFilters';
 import { filterTickets } from '@/shared/utils/ticketFilter';
@@ -20,6 +21,7 @@ export default function ExportTicketsButton({
   filters,
 }: ExportTicketsButtonProps) {
   const handleClick = React.useCallback(() => {
+    const today = dayjs();
     const rows = filterTickets(tickets, filters).map((t) => ({
       ID: t.id,
       'ID родителя': t.parentId ?? '',
@@ -30,12 +32,20 @@ export default function ExportTicketsButton({
       'Замечание закрыто': t.isClosed ? 'Да' : 'Нет',
       'Тип замечания': t.typeName,
       'Дата получения': t.receivedAt ? t.receivedAt.format('DD.MM.YYYY') : '',
+      'Прошло дней с Даты получения': t.receivedAt
+        ? today.diff(t.receivedAt, 'day') + 1
+        : '',
       'Дата устранения': t.fixedAt ? t.fixedAt.format('DD.MM.YYYY') : '',
       '№ заявки от Заказчика': t.customerRequestNo ?? '',
       'Дата заявки Заказчика': t.customerRequestDate
         ? t.customerRequestDate.format('DD.MM.YYYY')
         : '',
       'Ответственный инженер': t.responsibleEngineerName ?? '',
+      'Краткое описание': t.title,
+      'Подробное описание': t.description ?? '',
+      'Ссылки на прикрепленные файлы': (t.attachments ?? [])
+        .map((a) => a.url)
+        .join(', '),
       Название: t.parentId ? `↳ ${t.title}` : t.title,
     }));
     const wb = XLSX.utils.book_new();
