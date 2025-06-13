@@ -20,6 +20,7 @@ import {
   LinkOutlined,
   FileTextOutlined,
   BranchesOutlined,
+  SettingOutlined,
 } from '@ant-design/icons';
 import {
   useCourtCases,
@@ -36,12 +37,15 @@ import LinkCasesDialog from '@/features/courtCase/LinkCasesDialog';
 import ExportCourtCasesButton from '@/features/courtCase/ExportCourtCasesButton';
 import AddCourtCaseFormAntd from '@/features/courtCase/AddCourtCaseFormAntd';
 import CourtCasesFilters, { CourtCasesFiltersValues } from '@/widgets/CourtCasesFilters';
+import TableColumnsDrawer from '@/widgets/TableColumnsDrawer';
+import type { TableColumnSetting } from '@/shared/types/tableColumnSetting';
 
  dayjs.locale('ru');
  dayjs.extend(isSameOrAfter);
  dayjs.extend(isSameOrBefore);
 
 const LS_KEY = 'courtCasesHideClosed';
+const LS_COLUMNS_KEY = 'courtCasesColumns';
 
 export default function CourtCasesPage() {
   const { data: cases = [], isPending: casesLoading } = useCourtCases();
@@ -52,6 +56,7 @@ export default function CourtCasesPage() {
   const [linkFor, setLinkFor] = useState<CourtCase | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showFilters, setShowFilters] = useState(true);
+  const [showColumnsDrawer, setShowColumnsDrawer] = useState(false);
   const hideOnScroll = useRef(false);
 
   const [searchParams] = useSearchParams();
@@ -191,8 +196,8 @@ export default function CourtCasesPage() {
     return roots;
   }, [filteredCases]);
 
-  const columns: ColumnsType<CourtCase & any> = [
-    {
+  const baseColumns: Record<string, ColumnsType<CourtCase & any>[number]> = {
+    treeIcon: {
       title: '',
       dataIndex: 'treeIcon',
       width: 40,
@@ -211,60 +216,81 @@ export default function CourtCasesPage() {
         );
       },
     },
-    {
+    id: {
       title: 'ID',
       dataIndex: 'id',
       width: 80,
       sorter: (a, b) => a.id - b.id,
       render: (id: number) => <span style={{ whiteSpace: 'nowrap' }}>{id}</span>,
     },
-    { title: 'Проект', dataIndex: 'projectName', sorter: (a, b) => (a.projectName || '').localeCompare(b.projectName || '') },
-    { title: 'Объект', dataIndex: 'projectObject', sorter: (a, b) => (a.projectObject || '').localeCompare(b.projectObject || '') },
-    { title: '№ дела', dataIndex: 'number', width: 120, sorter: (a, b) => a.number.localeCompare(b.number) },
-    {
+    projectName: {
+      title: 'Проект',
+      dataIndex: 'projectName',
+      sorter: (a, b) => (a.projectName || '').localeCompare(b.projectName || ''),
+    },
+    projectObject: {
+      title: 'Объект',
+      dataIndex: 'projectObject',
+      sorter: (a, b) => (a.projectObject || '').localeCompare(b.projectObject || ''),
+    },
+    number: {
+      title: '№ дела',
+      dataIndex: 'number',
+      width: 120,
+      sorter: (a, b) => a.number.localeCompare(b.number),
+    },
+    date: {
       title: 'Дата дела',
       dataIndex: 'date',
       width: 120,
       sorter: (a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf(),
       render: (v: string) => dayjs(v).format('DD.MM.YYYY'),
     },
-    {
+    status: {
       title: 'Статус',
       dataIndex: 'status',
       sorter: (a, b) => a.status - b.status,
       render: (_: number, row) => <CourtCaseStatusSelect caseId={row.id} status={row.status} />,
     },
-    {
+    daysSinceFixStart: {
       title: 'Прошло дней с начала устранения',
       dataIndex: 'daysSinceFixStart',
       sorter: (a, b) => (a.daysSinceFixStart ?? 0) - (b.daysSinceFixStart ?? 0),
     },
-    { title: 'Истец', dataIndex: 'plaintiff', sorter: (a, b) => (a.plaintiff || '').localeCompare(b.plaintiff || '') },
-    { title: 'Ответчик', dataIndex: 'defendant', sorter: (a, b) => (a.defendant || '').localeCompare(b.defendant || '') },
-    {
+    plaintiff: {
+      title: 'Истец',
+      dataIndex: 'plaintiff',
+      sorter: (a, b) => (a.plaintiff || '').localeCompare(b.plaintiff || ''),
+    },
+    defendant: {
+      title: 'Ответчик',
+      dataIndex: 'defendant',
+      sorter: (a, b) => (a.defendant || '').localeCompare(b.defendant || ''),
+    },
+    fix_start_date: {
       title: 'Дата начала устранения',
       dataIndex: 'fix_start_date',
       render: (v: string | null) => (v ? dayjs(v).format('DD.MM.YYYY') : ''),
       sorter: (a, b) => dayjs(a.fix_start_date || 0).valueOf() - dayjs(b.fix_start_date || 0).valueOf(),
     },
-    {
+    fix_end_date: {
       title: 'Дата окончания устранения',
       dataIndex: 'fix_end_date',
       render: (v: string | null) => (v ? dayjs(v).format('DD.MM.YYYY') : ''),
       sorter: (a, b) => dayjs(a.fix_end_date || 0).valueOf() - dayjs(b.fix_end_date || 0).valueOf(),
     },
-    {
+    responsibleLawyer: {
       title: 'Юрист',
       dataIndex: 'responsibleLawyer',
       sorter: (a, b) => (a.responsibleLawyer || '').localeCompare(b.responsibleLawyer || ''),
     },
-    {
+    is_closed: {
       title: 'Дело закрыто',
       dataIndex: 'is_closed',
       sorter: (a, b) => Number(a.is_closed) - Number(b.is_closed),
       render: (_: boolean, row) => <CourtCaseClosedSelect caseId={row.id} isClosed={row.is_closed} />,
     },
-    {
+    actions: {
       title: 'Действия',
       key: 'actions',
       width: 120,
@@ -291,7 +317,35 @@ export default function CourtCasesPage() {
         </Space>
       ),
     },
-  ];
+  };
+
+  const [columnsState, setColumnsState] = useState<TableColumnSetting[]>(() => {
+    const defaults = Object.keys(baseColumns).map((key) => ({
+      key,
+      title: baseColumns[key].title as string,
+      visible: true,
+    }));
+    try {
+      const saved = localStorage.getItem(LS_COLUMNS_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved) as TableColumnSetting[];
+        return parsed.filter((c) => baseColumns[c.key]);
+      }
+    } catch {}
+    return defaults;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(LS_COLUMNS_KEY, JSON.stringify(columnsState));
+    } catch {}
+  }, [columnsState]);
+
+  const columns: ColumnsType<CourtCase & any> = React.useMemo(
+    () => columnsState.filter((c) => c.visible).map((c) => baseColumns[c.key]),
+    [columnsState],
+  );
+
 
   const total = cases.length;
   const closedCount = React.useMemo(
@@ -310,6 +364,11 @@ export default function CourtCasesPage() {
         <Button onClick={() => setShowFilters((p) => !p)} style={{ marginTop: 16 }}>
           {showFilters ? 'Скрыть фильтры' : 'Показать фильтры'}
         </Button>
+        <Button
+          icon={<SettingOutlined />}
+          style={{ marginTop: 16, marginLeft: 8 }}
+          onClick={() => setShowColumnsDrawer(true)}
+        />
         {showAddForm && (
           <AddCourtCaseFormAntd
             initialValues={initialValues}
@@ -325,6 +384,12 @@ export default function CourtCasesPage() {
           cases={casesData}
           onClose={() => setLinkFor(null)}
           onSubmit={(ids) => linkCases.mutate({ parentId: String(linkFor!.id), childIds: ids })}
+        />
+        <TableColumnsDrawer
+          open={showColumnsDrawer}
+          columns={columnsState}
+          onChange={setColumnsState}
+          onClose={() => setShowColumnsDrawer(false)}
         />
         <div
           style={{ marginTop: 24 }}
