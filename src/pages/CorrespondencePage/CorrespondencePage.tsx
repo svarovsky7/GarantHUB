@@ -261,14 +261,14 @@ export default function CorrespondencePage() {
             }
           }}
         >
-          <Form
-            form={form}
-            layout="vertical"
-            onValuesChange={handleFiltersChange}
-            initialValues={filters}
-            className="filter-grid"
-            style={{ marginBottom: 16 }}
-          >
+          <Card style={{ marginBottom: 24 }}>
+            <Form
+              form={form}
+              layout="vertical"
+              onValuesChange={handleFiltersChange}
+              initialValues={filters}
+              className="filter-grid"
+            >
             <Form.Item name="type" label="Тип письма">
               <Select allowClear placeholder="Все типы">
                 <Select.Option value="incoming">Входящее</Select.Option>
@@ -319,7 +319,8 @@ export default function CorrespondencePage() {
                 Сбросить фильтры
               </Button>
             </Form.Item>
-          </Form>
+            </Form>
+          </Card>
           <CorrespondenceTable
             letters={filtered}
             onView={setView}
