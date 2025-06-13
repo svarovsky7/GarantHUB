@@ -3,7 +3,7 @@
 // -----------------------------------------------------------------------------
 import React, { useState, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { ConfigProvider, Typography, Alert, Card } from "antd";
+import { ConfigProvider, Typography, Alert, Card, Button } from "antd";
 import ruRU from "antd/locale/ru_RU";
 import { useSnackbar } from "notistack";
 import { useQueryClient } from "@tanstack/react-query";
@@ -36,6 +36,8 @@ export default function TicketsPage() {
   const [initialFilters, setInitialFilters] = useState({});
   const [viewId, setViewId] = useState<number | null>(null);
   const [linkFor, setLinkFor] = useState<any | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const hideOnScroll = React.useRef(false);
 
   React.useEffect(() => {
     const id = searchParams.get('ticket_id');
@@ -139,13 +141,24 @@ export default function TicketsPage() {
     <ConfigProvider locale={ruRU}>
       <>
         <Typography.Title level={4} style={{ marginBottom: 16 }}>Замечания</Typography.Title>
-
-        <Card style={{ marginBottom: 24 }}>
-          <TicketFormAntd
-            onCreated={() => qc.invalidateQueries({ queryKey: ['tickets'] })}
-            initialValues={initialValues}
-          />
-        </Card>
+        <Button
+          type="primary"
+          onClick={() => setShowAddForm((p) => !p)}
+          style={{ marginBottom: 16 }}
+        >
+          {showAddForm ? 'Скрыть форму' : 'Добавить замечание'}
+        </Button>
+        {showAddForm && (
+          <Card style={{ marginBottom: 24 }}>
+            <TicketFormAntd
+              onCreated={() => {
+                qc.invalidateQueries({ queryKey: ['tickets'] });
+                hideOnScroll.current = true;
+              }}
+              initialValues={initialValues}
+            />
+          </Card>
+        )}
 
         <LinkTicketsDialog
           open={!!linkFor}
@@ -155,28 +168,37 @@ export default function TicketsPage() {
           onSubmit={handleLink}
         />
 
-        <Card style={{ marginBottom: 24 }}>
-          <TicketsFilters
-            options={options}
-            onChange={setFilters}
-            initialValues={initialFilters}
-          />
-        </Card>
-
-        <Card>
-          {error ? (
-            <Alert type="error" message={error.message} />
-          ) : (
-            <TicketsTable
-              tickets={ticketsWithNames}
-              filters={filters}
-              loading={isLoading}
-              onView={(id) => setViewId(id)}
-              onAddChild={setLinkFor}
-              onUnlink={handleUnlink}
+        <div
+          onWheel={() => {
+            if (hideOnScroll.current) {
+              setShowAddForm(false);
+              hideOnScroll.current = false;
+            }
+          }}
+        >
+          <Card style={{ marginBottom: 24 }}>
+            <TicketsFilters
+              options={options}
+              onChange={setFilters}
+              initialValues={initialFilters}
             />
-          )}
-        </Card>
+          </Card>
+
+          <Card>
+            {error ? (
+              <Alert type="error" message={error.message} />
+            ) : (
+              <TicketsTable
+                tickets={ticketsWithNames}
+                filters={filters}
+                loading={isLoading}
+                onView={(id) => setViewId(id)}
+                onAddChild={setLinkFor}
+                onUnlink={handleUnlink}
+              />
+            )}
+          </Card>
+        </div>
         <TicketViewModal
           open={viewId !== null}
           ticketId={viewId}
