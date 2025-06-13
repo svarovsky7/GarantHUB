@@ -3,11 +3,15 @@ import { TicketFilters } from '@/shared/types/ticketFilters';
 
 /**
  * Фильтрация массива замечаний согласно заданным фильтрам.
+ * Если корневое замечание удовлетворяет фильтрам, то все его дочерние
+ * отображаются независимо от фильтров.
+ *
  * @param rows массив замечаний
  * @param f активные фильтры
  */
 export function filterTickets<T extends {
   id: number;
+  parentId?: number | null;
   isClosed?: boolean;
   receivedAt?: Dayjs | null;
   customerRequestDate?: Dayjs | null;
@@ -19,7 +23,7 @@ export function filterTickets<T extends {
   typeName?: string;
   responsibleEngineerName?: string | null;
 }>(rows: T[], f: TicketFilters): T[] {
-  return rows.filter((r) => {
+  const pass = (r: T): boolean => {
     if (Array.isArray(f.id) && f.id.length > 0 && !f.id.includes(r.id)) {
       return false;
     }
@@ -58,5 +62,40 @@ export function filterTickets<T extends {
       return false;
     }
     return true;
+  };
+
+  const childrenMap = new Map<number, T[]>();
+  rows.forEach((row) => {
+    if (row.parentId) {
+      const pid = Number(row.parentId);
+      const arr = childrenMap.get(pid) || [];
+      arr.push(row);
+      childrenMap.set(pid, arr);
+    }
   });
+
+  const result: T[] = [];
+  const rootIds: number[] = [];
+  rows.forEach((r) => {
+    if (pass(r)) {
+      result.push(r);
+      if (!r.parentId) rootIds.push(r.id);
+    }
+  });
+
+  const added = new Set<number>(result.map((r) => r.id));
+  const addDescendants = (id: number) => {
+    const kids = childrenMap.get(id);
+    if (!kids) return;
+    kids.forEach((c) => {
+      if (!added.has(c.id)) {
+        result.push(c);
+        added.add(c.id);
+        addDescendants(c.id);
+      }
+    });
+  };
+  rootIds.forEach(addDescendants);
+
+  return result;
 }
