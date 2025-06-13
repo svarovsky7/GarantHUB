@@ -399,7 +399,6 @@ export default function TicketsPage() {
   return (
     <ConfigProvider locale={ruRU}>
       <>
-        <Typography.Title level={4} style={{ marginBottom: 16 }}>Замечания</Typography.Title>
         <Button
           type="primary"
           onClick={() => setShowAddForm((p) => !p)}
