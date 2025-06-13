@@ -56,6 +56,8 @@ interface Props {
   tickets: TicketWithNames[];
   filters: TicketFilters;
   loading?: boolean;
+  /** Колонки таблицы. Если не переданы, используется набор по умолчанию */
+  columns?: ColumnsType<any>;
   onView?: (id: number) => void;
   onAddChild?: (ticket: TicketWithNames) => void;
   onUnlink?: (id: number) => void;
@@ -68,13 +70,14 @@ export default function TicketsTable({
   tickets,
   filters,
   loading,
+  columns: columnsProp,
   onView,
   onAddChild,
   onUnlink,
 }: Props) {
   const { mutateAsync: remove, isPending } = useDeleteTicket();
 
-  const columns: ColumnsType<any> = useMemo(
+  const defaultColumns: ColumnsType<any> = useMemo(
     () => [
       {
         title: '',
@@ -253,8 +256,10 @@ export default function TicketsTable({
       },
     ],
 
-    [onView, remove, isPending],
+    [onView, remove, isPending, onAddChild, onUnlink],
   );
+
+  const columns = columnsProp ?? defaultColumns;
 
   const filtered = useMemo(
     () => filterTickets(tickets, filters),
