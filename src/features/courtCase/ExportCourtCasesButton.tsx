@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button, Tooltip } from 'antd';
 import { DownloadOutlined } from '@ant-design/icons';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import dayjs from 'dayjs';
 import type { CourtCase } from '@/shared/types/courtCase';
@@ -18,7 +18,7 @@ export interface ExportCourtCasesButtonProps {
 /**
  * Кнопка выгрузки списка судебных дел в Excel.
  * Загружает недостающие файлы по их идентификаторам
- * и формирует таблицу в формате xlsx.
+ * и формирует таблицу в формате XLSX с использованием exceljs.
  */
 export default function ExportCourtCasesButton({
   cases,
@@ -64,11 +64,14 @@ export default function ExportCourtCasesButton({
           .join('\n'),
         Описание: c.description ?? '',
       }));
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.json_to_sheet(rows);
-      XLSX.utils.book_append_sheet(wb, ws, 'Cases');
-      const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-      saveAs(new Blob([wbout], { type: 'application/octet-stream' }), 'court_cases.xlsx');
+      const wb = new ExcelJS.Workbook();
+      const ws = wb.addWorksheet('Cases');
+      if (rows.length) {
+        ws.columns = Object.keys(rows[0]).map((key) => ({ header: key, key }));
+        rows.forEach((r) => ws.addRow(r));
+      }
+      const buffer = await wb.xlsx.writeBuffer();
+      saveAs(new Blob([buffer], { type: 'application/octet-stream' }), 'court_cases.xlsx');
     } finally {
       setLoading(false);
     }

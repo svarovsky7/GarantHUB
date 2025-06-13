@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button, Tooltip } from 'antd';
 import { DownloadOutlined } from '@ant-design/icons';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import dayjs from 'dayjs';
 import { CorrespondenceLetter } from '@/shared/types/correspondence';
@@ -20,7 +20,7 @@ interface ExportLettersButtonProps {
 
 /**
  * Кнопка выгрузки списка писем в Excel.
- * Использует библиотеку xlsx и file-saver.
+ * Использует библиотеку exceljs и file-saver.
  */
 export default function ExportLettersButton({
   letters,
@@ -48,7 +48,7 @@ export default function ExportLettersButton({
     return m;
   }, [users, letterTypes, projects, units, statuses]);
 
-  const handleExport = () => {
+  const handleExport = async () => {
     const data = letters.map((l) => ({
       ID: l.id,
       'ID родителя': l.parent_id ?? '',
@@ -66,10 +66,13 @@ export default function ExportLettersButton({
       Содержание: l.content,
       'Ссылки на файлы': (l.attachments ?? []).map((a) => a.file_url).join('\n'),
     }));
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Letters');
-    const buffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('Letters');
+    if (data.length) {
+      ws.columns = Object.keys(data[0]).map((key) => ({ header: key, key }));
+      data.forEach((row) => ws.addRow(row));
+    }
+    const buffer = await wb.xlsx.writeBuffer();
     const blob = new Blob([buffer], { type: 'application/octet-stream' });
     saveAs(blob, 'letters.xlsx');
     notify.success('Файл сохранён');
