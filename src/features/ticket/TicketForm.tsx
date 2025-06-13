@@ -31,6 +31,7 @@ import { useUnsavedChangesWarning } from "@/shared/hooks/useUnsavedChangesWarnin
 import { useNotify } from "@/shared/hooks/useNotify";
 import { useTicketAttachments } from "./model/useTicketAttachments";
 import AttachmentEditorTable from "@/shared/ui/AttachmentEditorTable";
+import { downloadZip } from "@/shared/utils/downloadZip";
 import type { Ticket } from "@/entities/ticket";
 
 interface Attachment {
@@ -92,7 +93,7 @@ export default function TicketForm({
     setValue,
     watch,
     getValues,
-    formState: { isSubmitting, isDirty },
+    formState: { isSubmitting, isDirty, dirtyFields },
   } = useForm<TicketFormValues>({
     defaultValues: {
       project_id:
@@ -175,6 +176,26 @@ export default function TicketForm({
 
   useUnsavedChangesWarning(hasChanges);
 
+  const highlight = (name: keyof TicketFormValues) =>
+    dirtyFields[name] ? { bgcolor: '#fffbe6' } : {};
+
+  const handleDownloadArchive = async () => {
+    const files = [
+      ...remoteFiles.map((f) => ({
+        name: f.name,
+        getFile: async () => {
+          const url = await signedUrl(f.path, f.name);
+          const res = await fetch(url);
+          return res.blob();
+        },
+      })),
+      ...newFiles.map((f) => ({ name: f.file.name, getFile: async () => f.file })),
+    ];
+    if (files.length) {
+      await downloadZip(files, `ticket-${ticketId ?? 'new'}-files.zip`);
+    }
+  };
+
   const handleCancel = () => {
     if (hasChanges && !window.confirm('Изменения будут потеряны. Покинуть форму?')) {
       return;
@@ -253,11 +274,12 @@ export default function TicketForm({
   return (
     <form onSubmit={handleSubmit(submit as SubmitHandler<TicketFormValues>)} noValidate>
       <Stack spacing={2} sx={{ maxWidth: embedded ? "none" : 640 }}>
-        <Controller
-          name="project_id"
-          control={control}
-          render={({ field }) => (
-            <FormControl fullWidth>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          <Controller
+            name="project_id"
+            control={control}
+            render={({ field }) => (
+              <FormControl fullWidth sx={highlight('project_id')}>
               <InputLabel id="project-label">Проект</InputLabel>
               <Select
                 {...field}
@@ -281,14 +303,14 @@ export default function TicketForm({
                   </MenuItem>
                 ))}
               </Select>
-            </FormControl>
-          )}
-        />
-        <Controller
-          name="unit_ids"
-          control={control}
-          render={({ field }) => (
-            <FormControl fullWidth>
+              </FormControl>
+            )}
+          />
+          <Controller
+            name="unit_ids"
+            control={control}
+            render={({ field }) => (
+              <FormControl fullWidth sx={highlight('unit_ids')}>
               <InputLabel id="units-label">Объекты</InputLabel>
               <Select
                 {...field}
@@ -312,12 +334,14 @@ export default function TicketForm({
               </Select>
             </FormControl>
           )}
-        />
-        <Controller
-          name="responsible_engineer_id"
-          control={control}
-          render={({ field }) => (
-            <FormControl fullWidth>
+          />
+        </Stack>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          <Controller
+            name="responsible_engineer_id"
+            control={control}
+            render={({ field }) => (
+              <FormControl fullWidth sx={highlight('responsible_engineer_id')}>
               <InputLabel id="engineer-label">Ответственный инженер</InputLabel>
               <Select
                 {...field}
@@ -343,13 +367,13 @@ export default function TicketForm({
               </Select>
             </FormControl>
           )}
-        />
-        <Controller
-          name="status_id"
-          control={control}
-          rules={{ required: true }}
-          render={({ field, fieldState }) => (
-            <FormControl fullWidth error={!!fieldState.error}>
+          />
+          <Controller
+            name="status_id"
+            control={control}
+            rules={{ required: true }}
+            render={({ field, fieldState }) => (
+              <FormControl fullWidth error={!!fieldState.error} sx={highlight('status_id')}>
               <InputLabel id="status-label">Статус</InputLabel>
               <Select
                 {...field}
@@ -375,13 +399,15 @@ export default function TicketForm({
               </Select>
             </FormControl>
           )}
-        />
-        <Controller
-          name="type_id"
-          control={control}
-          rules={{ required: true }}
-          render={({ field, fieldState }) => (
-            <FormControl fullWidth error={!!fieldState.error}>
+          />
+        </Stack>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          <Controller
+            name="type_id"
+            control={control}
+            rules={{ required: true }}
+            render={({ field, fieldState }) => (
+              <FormControl fullWidth error={!!fieldState.error} sx={highlight('type_id')}>
               <InputLabel id="type-label">
                 {`Тип${deadlineDays ? ` (${deadlineDays} дн.)` : ""}`}
               </InputLabel>
@@ -407,77 +433,97 @@ export default function TicketForm({
                   </MenuItem>
                 ))}
               </Select>
-            </FormControl>
-          )}
-        />
-        <Controller
-          name="is_warranty"
-          control={control}
-          render={({ field }) => (
-            <FormControlLabel
-              control={<Switch {...field} checked={field.value} />}
-              label="Гарантийный случай"
-            />
-          )}
-        />
-        <Controller
-          name="customer_request_no"
-          control={control}
-          render={({ field }) => (
-            <TextField {...field} label="№ заявки от Заказчика" fullWidth />
-          )}
-        />
-        <Controller
-          name="customer_request_date"
-          control={control}
-          render={({ field }) => (
-            <DatePicker
-              {...field}
-              format="DD.MM.YYYY"
-              value={field.value}
-              onChange={(d) => field.onChange(d)}
-              slotProps={{
-                textField: { fullWidth: true, label: "Дата заявки Заказчика" },
-              }}
-            />
-          )}
-        />
-        <Controller
-          name="received_at"
-          control={control}
-          rules={{ required: true }}
-          render={({ field, fieldState }) => (
-            <DatePicker
-              {...field}
-              format="DD.MM.YYYY"
-              value={field.value}
-              onChange={(d) => field.onChange(d)}
-              slotProps={{
-                textField: {
-                  fullWidth: true,
-                  label: "Дата получения",
-                  required: true,
-                  error: !!fieldState.error,
-                },
-              }}
-            />
-          )}
-        />
-        <Controller
-          name="fixed_at"
-          control={control}
-          render={({ field }) => (
-            <DatePicker
-              {...field}
-              format="DD.MM.YYYY"
-              value={field.value}
-              onChange={(d) => field.onChange(d)}
-              slotProps={{
-                textField: { fullWidth: true, label: "Дата устранения" },
-              }}
-            />
-          )}
-        />
+              </FormControl>
+            )}
+          />
+          <Controller
+            name="is_warranty"
+            control={control}
+            render={({ field }) => (
+              <FormControlLabel
+                control={<Switch {...field} checked={field.value} />}
+                label="Гарантийный случай"
+                sx={highlight('is_warranty')}
+              />
+            )}
+          />
+        </Stack>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          <Controller
+            name="customer_request_no"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="№ заявки от Заказчика"
+                fullWidth
+                sx={highlight('customer_request_no')}
+              />
+            )}
+          />
+          <Controller
+            name="customer_request_date"
+            control={control}
+            render={({ field }) => (
+              <DatePicker
+                {...field}
+                format="DD.MM.YYYY"
+                value={field.value}
+                onChange={(d) => field.onChange(d)}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    label: 'Дата заявки Заказчика',
+                    sx: highlight('customer_request_date'),
+                  },
+                }}
+              />
+            )}
+          />
+        </Stack>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          <Controller
+            name="received_at"
+            control={control}
+            rules={{ required: true }}
+            render={({ field, fieldState }) => (
+              <DatePicker
+                {...field}
+                format="DD.MM.YYYY"
+                value={field.value}
+                onChange={(d) => field.onChange(d)}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    label: 'Дата получения',
+                    required: true,
+                    error: !!fieldState.error,
+                    sx: highlight('received_at'),
+                  },
+                }}
+              />
+            )}
+          />
+          <Controller
+            name="fixed_at"
+            control={control}
+            render={({ field }) => (
+              <DatePicker
+                {...field}
+                format="DD.MM.YYYY"
+                value={field.value}
+                onChange={(d) => field.onChange(d)}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    label: 'Дата устранения',
+                    sx: highlight('fixed_at'),
+                  },
+                }}
+              />
+            )}
+          />
+        </Stack>
         <Box>
           {[10, 45, 60].map((d) => (
             <Button
@@ -516,6 +562,7 @@ export default function TicketForm({
               fullWidth
               required
               error={!!fieldState.error}
+              sx={highlight('title')}
             />
           )}
         />
@@ -529,13 +576,23 @@ export default function TicketForm({
               fullWidth
               multiline
               rows={3}
+              sx={highlight('description')}
             />
           )}
         />
-        <Box>
-          <Typography variant="subtitle1" sx={{ mb: 1 }}>
-            Файлы
-          </Typography>
+        <Box sx={attachmentsChanged ? { bgcolor: '#fffbe6', p: 1, borderRadius: 1 } : {}}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+            <Typography variant="subtitle1" sx={{ flexGrow: 1 }}>
+              Файлы
+            </Typography>
+            <Button
+              size="small"
+              onClick={handleDownloadArchive}
+              disabled={!remoteFiles.length && !newFiles.length}
+            >
+              Скачать архив
+            </Button>
+          </Box>
           <AttachmentEditorTable
             remoteFiles={remoteFiles.map((f) => ({
               id: String(f.id),
