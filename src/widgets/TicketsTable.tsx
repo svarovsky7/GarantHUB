@@ -1,6 +1,6 @@
 // src/widgets/TicketsTable.js
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import dayjs from "dayjs";
 import {
   Table,
@@ -60,6 +60,9 @@ interface Props {
   onAddChild?: (ticket: TicketWithNames) => void;
   onUnlink?: (id: number) => void;
 }
+
+/** Ключ в localStorage для хранения раскрывшихся строк таблицы замечаний */
+const LS_EXPANDED_KEY = 'ticketsExpandedRows';
 
 export default function TicketsTable({
   tickets,
@@ -290,6 +293,27 @@ export default function TicketsTable({
     return roots;
   }, [filtered]);
 
+  const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(LS_EXPANDED_KEY);
+      if (saved) {
+        const parsed: React.Key[] = JSON.parse(saved);
+        const valid = parsed.filter((id) => filtered.some((t) => String(t.id) === String(id)));
+        setExpandedRowKeys(valid);
+        return;
+      }
+    } catch {}
+    setExpandedRowKeys(filtered.map((t) => t.id));
+  }, [filtered]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(LS_EXPANDED_KEY, JSON.stringify(expandedRowKeys));
+    } catch {}
+  }, [expandedRowKeys]);
+
   if (loading) return <Skeleton active paragraph={{ rows: 6 }} />;
 
   const rowClassName = (record: any) => {
@@ -307,8 +331,19 @@ export default function TicketsTable({
       size="middle"
       expandable={{
         expandRowByClick: true,
-        defaultExpandAllRows: true,
         indentSize: 24,
+        expandedRowKeys,
+        onExpand: (expanded, record) => {
+          setExpandedRowKeys((prev) => {
+            const set = new Set(prev);
+            if (expanded) {
+              set.add(record.id);
+            } else {
+              set.delete(record.id);
+            }
+            return Array.from(set);
+          });
+        },
       }}
       rowClassName={rowClassName}
       style={{ background: '#fff' }}
