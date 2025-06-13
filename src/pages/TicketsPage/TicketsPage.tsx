@@ -8,17 +8,22 @@ import ruRU from "antd/locale/ru_RU";
 import { useSnackbar } from "notistack";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { useTickets } from "@/entities/ticket";
+import { useTickets, useLinkTickets, useUnlinkTicket } from "@/entities/ticket";
 import { useUsers } from "@/entities/user";
 import { useUnitsByIds } from "@/entities/unit";
 import TicketsTable from "@/widgets/TicketsTable";
 import TicketsFilters from "@/widgets/TicketsFilters";
 import TicketFormAntd from "@/features/ticket/TicketFormAntd";
 import TicketViewModal from "@/features/ticket/TicketViewModal";
+import LinkTicketsDialog from "@/features/ticket/LinkTicketsDialog";
+import { useNotify } from "@/shared/hooks/useNotify";
 
 export default function TicketsPage() {
   const { enqueueSnackbar } = useSnackbar();
   const { data: tickets = [], isLoading, error } = useTickets();
+  const linkTickets = useLinkTickets();
+  const unlinkTicket = useUnlinkTicket();
+  const notify = useNotify();
   const { data: users = [] } = useUsers();
   const unitIds = useMemo(
     () => Array.from(new Set(tickets.flatMap((t) => t.unitIds))),
@@ -30,6 +35,7 @@ export default function TicketsPage() {
   const [filters, setFilters] = useState({});
   const [initialFilters, setInitialFilters] = useState({});
   const [viewId, setViewId] = useState<number | null>(null);
+  const [linkFor, setLinkFor] = useState<any | null>(null);
 
   React.useEffect(() => {
     const id = searchParams.get('ticket_id');
@@ -110,6 +116,25 @@ export default function TicketsPage() {
     };
   }, [ticketsWithNames]);
 
+  const handleUnlink = (id: string) => {
+    unlinkTicket.mutate(id, {
+      onSuccess: () => notify.success('Замечание исключено из связи'),
+    });
+  };
+
+  const handleLink = (ids: string[]) => {
+    if (!linkFor) return;
+    linkTickets.mutate(
+      { parentId: String(linkFor.id), childIds: ids },
+      {
+        onSuccess: () => {
+          notify.success('Замечания связаны');
+          setLinkFor(null);
+        },
+      },
+    );
+  };
+
   return (
     <ConfigProvider locale={ruRU}>
       <>
@@ -121,6 +146,14 @@ export default function TicketsPage() {
             initialValues={initialValues}
           />
         </Card>
+
+        <LinkTicketsDialog
+          open={!!linkFor}
+          parent={linkFor}
+          tickets={ticketsWithNames}
+          onClose={() => setLinkFor(null)}
+          onSubmit={handleLink}
+        />
 
         <Card style={{ marginBottom: 24 }}>
           <TicketsFilters
@@ -139,6 +172,8 @@ export default function TicketsPage() {
               filters={filters}
               loading={isLoading}
               onView={(id) => setViewId(id)}
+              onAddChild={setLinkFor}
+              onUnlink={handleUnlink}
             />
           )}
         </Card>
