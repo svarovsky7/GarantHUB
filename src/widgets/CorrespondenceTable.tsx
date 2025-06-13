@@ -4,6 +4,7 @@ import { Table, Space, Button, Popconfirm, Tag, Tooltip } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { EyeOutlined, DeleteOutlined, PlusOutlined, MailOutlined, BranchesOutlined, LinkOutlined } from '@ant-design/icons';
 import { CorrespondenceLetter } from '@/shared/types/correspondence';
+import LetterStatusSelect from '@/features/correspondence/LetterStatusSelect';
 
 interface Option { id: number | string; name: string; }
 
@@ -17,6 +18,7 @@ interface CorrespondenceTableProps {
   letterTypes: Option[];
   projects: Option[];
   units: Option[];
+  statuses: Option[];
 }
 
 /** Таблица писем с иерархией и кнопкой "исключить из связи" */
@@ -30,6 +32,7 @@ export default function CorrespondenceTable({
                                               letterTypes,
                                               projects,
                                               units,
+                                              statuses,
                                             }: CorrespondenceTableProps) {
   const maps = useMemo(() => {
     const m = {
@@ -37,13 +40,15 @@ export default function CorrespondenceTable({
       type: {} as Record<number, string>,
       project: {} as Record<number, string>,
       unit: {} as Record<number, string>,
+      status: {} as Record<number, string>,
     };
     users.forEach((u) => (m.user[u.id as string] = u.name));
     letterTypes.forEach((t) => (m.type[t.id as number] = t.name));
     projects.forEach((p) => (m.project[p.id as number] = p.name));
     units.forEach((u) => (m.unit[u.id as number] = u.name));
+    statuses.forEach((s) => (m.status[s.id as number] = s.name));
     return m;
-  }, [users, letterTypes, projects, units]);
+  }, [users, letterTypes, projects, units, statuses]);
 
   const treeData = useMemo(() => {
     const map = new Map<string, any>();
@@ -62,6 +67,7 @@ export default function CorrespondenceTable({
         responsibleName: l.responsible_user_id
             ? maps.user[l.responsible_user_id]
             : null,
+        statusName: l.status_id ? maps.status[l.status_id] : null,
         children: [],
       };
       map.set(l.id, row);
@@ -174,6 +180,18 @@ export default function CorrespondenceTable({
       dataIndex: 'letterTypeName',
       sorter: (a, b) =>
           (a.letterTypeName || '').localeCompare(b.letterTypeName || ''),
+    },
+    {
+      title: 'Статус',
+      dataIndex: 'statusName',
+      sorter: (a, b) => (a.statusName || '').localeCompare(b.statusName || ''),
+      render: (_: any, row: any) => (
+        <LetterStatusSelect
+          letterId={row.id}
+          statusId={row.status_id}
+          statusName={row.statusName}
+        />
+      ),
     },
     {
       title: 'Ответственный',

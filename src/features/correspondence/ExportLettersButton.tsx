@@ -15,6 +15,7 @@ interface ExportLettersButtonProps {
   letterTypes: Option[];
   projects: Option[];
   units: Option[];
+  statuses: Option[];
 }
 
 /**
@@ -27,6 +28,7 @@ export default function ExportLettersButton({
   letterTypes,
   projects,
   units,
+  statuses,
 }: ExportLettersButtonProps) {
   const notify = useNotify();
 
@@ -36,13 +38,15 @@ export default function ExportLettersButton({
       type: {} as Record<number, string>,
       project: {} as Record<number, string>,
       unit: {} as Record<number, string>,
+      status: {} as Record<number, string>,
     };
     users.forEach((u) => (m.user[u.id as string] = u.name));
     letterTypes.forEach((t) => (m.type[t.id as number] = t.name));
     projects.forEach((p) => (m.project[p.id as number] = p.name));
     units.forEach((u) => (m.unit[u.id as number] = u.name));
+    statuses.forEach((s) => (m.status[s.id as number] = s.name));
     return m;
-  }, [users, letterTypes, projects, units]);
+  }, [users, letterTypes, projects, units, statuses]);
 
   const handleExport = () => {
     const data = letters.map((l) => ({
@@ -57,7 +61,9 @@ export default function ExportLettersButton({
       Проект: l.project_id ? maps.project[l.project_id] : '',
       Объекты: l.unit_ids.map((id) => maps.unit[id]).filter(Boolean).join(', '),
       Категория: l.letter_type_id ? maps.type[l.letter_type_id] : '',
+      Статус: l.status_id ? maps.status[l.status_id] : '',
       Ответственный: l.responsible_user_id ? maps.user[l.responsible_user_id] : '',
+      Содержание: l.content,
       'Ссылки на файлы': (l.attachments ?? []).map((a) => a.file_url).join('\n'),
     }));
     const ws = XLSX.utils.json_to_sheet(data);
