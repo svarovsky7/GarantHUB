@@ -354,6 +354,18 @@ export default function CourtCasesPage() {
     return defaults;
   });
 
+  /**
+   * Сброс колонок к начальному состоянию
+   */
+  const handleResetColumns = () => {
+    const defaults = Object.keys(baseColumns).map((key) => ({
+      key,
+      title: baseColumns[key].title as string,
+      visible: true,
+    }));
+    setColumnsState(defaults);
+  };
+
   useEffect(() => {
     try {
       localStorage.setItem(LS_COLUMNS_KEY, JSON.stringify(columnsState));
@@ -415,6 +427,7 @@ export default function CourtCasesPage() {
           columns={columnsState}
           onChange={setColumnsState}
           onClose={() => setShowColumnsDrawer(false)}
+          onReset={handleResetColumns}
         />
         <div
           style={{ marginTop: 24 }}

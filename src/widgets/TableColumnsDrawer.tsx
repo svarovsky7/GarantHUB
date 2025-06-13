@@ -8,12 +8,14 @@ interface Props {
   columns: TableColumnSetting[];
   onChange: (cols: TableColumnSetting[]) => void;
   onClose: () => void;
+  /** Сбросить состояние столбцов к изначальному */
+  onReset?: () => void;
 }
 
 /**
  * Боковая панель настройки столбцов таблицы.
  */
-export default function TableColumnsDrawer({ open, columns, onChange, onClose }: Props) {
+export default function TableColumnsDrawer({ open, columns, onChange, onClose, onReset }: Props) {
   const move = (from: number, to: number) => {
     if (to < 0 || to >= columns.length) return;
     const updated = [...columns];
@@ -50,6 +52,11 @@ export default function TableColumnsDrawer({ open, columns, onChange, onClose }:
           />
         </div>
       ))}
+      {onReset && (
+        <Button style={{ marginTop: 16 }} block onClick={onReset}>
+          По умолчанию
+        </Button>
+      )}
     </Drawer>
   );
 }

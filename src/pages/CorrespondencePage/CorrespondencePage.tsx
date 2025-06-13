@@ -415,6 +415,19 @@ export default function CorrespondencePage() {
     return defaults;
   });
 
+  /**
+   * Сброс колонок к начальному состоянию
+   */
+  const handleResetColumns = () => {
+    const base = getBaseColumns();
+    const defaults = Object.keys(base).map((key) => ({
+      key,
+      title: base[key].title as string,
+      visible: true,
+    }));
+    setColumnsState(defaults);
+  };
+
   React.useEffect(() => {
     try {
       localStorage.setItem(LS_COLUMNS_KEY, JSON.stringify(columnsState));
@@ -548,6 +561,7 @@ export default function CorrespondencePage() {
           columns={columnsState}
           onChange={setColumnsState}
           onClose={() => setShowColumnsDrawer(false)}
+          onReset={handleResetColumns}
         />
 
         <div
