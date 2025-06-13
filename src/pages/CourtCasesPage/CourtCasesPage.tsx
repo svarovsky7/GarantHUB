@@ -2,12 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import dayjs, { Dayjs } from 'dayjs';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import 'dayjs/locale/ru';
 import { ConfigProvider } from 'antd';
 import ruRU from 'antd/locale/ru_RU';
 
 dayjs.locale('ru');
 dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
 import {
   Row,
   Col,
@@ -84,13 +86,15 @@ const fmtCurrency = (n: number) =>
 const LS_KEY = 'courtCasesHideClosed';
 
 type Filters = {
-  status?: string;
-  project?: string;
-  object?: string;
+  status?: number;
+  projectId?: number;
+  objectId?: number;
+  number?: string;
+  dateRange?: [Dayjs, Dayjs];
   plaintiff?: string;
   defendant?: string;
-  lawyer?: string;
-  search?: string;
+  fixStartRange?: [Dayjs, Dayjs];
+  lawyerId?: string;
   hideClosed?: boolean;
   ids?: number[];
 };
@@ -207,6 +211,17 @@ export default function CourtCasesPage() {
     [cases],
   );
   const { data: caseUnits = [] } = useUnitsByIds(unitIds);
+  const { data: allUnits = [] } = useQuery({
+    queryKey: ['allUnits'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('units')
+        .select('id, name, project_id');
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 5 * 60_000,
+  });
 
   const { data: projectPersons = [], isPending: personsLoading } = useQuery({
     queryKey: ['projectPersons'],
@@ -451,39 +466,51 @@ export default function CourtCasesPage() {
     },
   ];
 
+  const closedStageId = React.useMemo(() => {
+    return stages.find((s) => s.name.toLowerCase().includes('закры'))?.id;
+  }, [stages]);
+
   const filteredCases = casesData.filter((c: any) => {
-    const search = filters.search?.toLowerCase() ?? '';
     const idFilter = filters.ids && filters.ids.length ? filters.ids.map(String) : null;
-    const matchesSearch =
-      c.number.toLowerCase().includes(search) ||
-      c.plaintiff.toLowerCase().includes(search) ||
-      c.defendant.toLowerCase().includes(search) ||
-      (c.description || '').toLowerCase().includes(search);
     const matchesStatus = !filters.status || c.status === filters.status;
-    const matchesProject =
-      !filters.project || c.projectName.toLowerCase().includes(filters.project.toLowerCase());
-    const matchesObject =
-      !filters.object || c.projectObject.toLowerCase().includes(filters.object.toLowerCase());
+    const matchesProject = !filters.projectId || c.project_id === filters.projectId;
+    const matchesObject = !filters.objectId || c.unit_ids.includes(filters.objectId);
+    const matchesNumber =
+      !filters.number || c.number.toLowerCase().includes(filters.number.toLowerCase());
+    const matchesDate =
+      !filters.dateRange ||
+      (dayjs(c.date).isSameOrAfter(filters.dateRange[0], 'day') &&
+        dayjs(c.date).isSameOrBefore(filters.dateRange[1], 'day'));
     const matchesPlaintiff =
       !filters.plaintiff || c.plaintiff.toLowerCase().includes(filters.plaintiff.toLowerCase());
     const matchesDefendant =
       !filters.defendant || c.defendant.toLowerCase().includes(filters.defendant.toLowerCase());
-    const matchesLawyer =
-      !filters.lawyer || c.responsibleLawyer.toLowerCase().includes(filters.lawyer.toLowerCase());
-    const matchesClosed = !filters.hideClosed || !c.is_closed;
+    const matchesFixStart =
+      !filters.fixStartRange ||
+      (c.fix_start_date &&
+        dayjs(c.fix_start_date).isSameOrAfter(filters.fixStartRange[0], 'day') &&
+        dayjs(c.fix_start_date).isSameOrBefore(filters.fixStartRange[1], 'day'));
+    const matchesLawyer = !filters.lawyerId || String(c.responsible_lawyer_id) === filters.lawyerId;
+    const matchesClosed =
+      !filters.hideClosed ||
+      (closedStageId ? c.status !== closedStageId : !c.is_closed);
     const matchesIds = !idFilter || idFilter.includes(String(c.id));
     return (
       matchesIds &&
-      matchesSearch &&
       matchesStatus &&
       matchesProject &&
       matchesObject &&
+      matchesNumber &&
+      matchesDate &&
       matchesPlaintiff &&
       matchesDefendant &&
+      matchesFixStart &&
       matchesLawyer &&
       matchesClosed
     );
   });
+
+  const resetFilters = () => setFilters((f) => ({ hideClosed: f.hideClosed }));
 
   return (
     <ConfigProvider locale={ruRU}>
@@ -803,25 +830,6 @@ export default function CourtCasesPage() {
       >
       <Card style={{ marginBottom: 24 }}>
         <Form layout="vertical" className="filter-grid">
-          <Form.Item label="Статус">
-            <Select
-              allowClear
-              placeholder="Статус"
-              onChange={(v) => setFilters((f) => ({ ...f, status: v }))}
-            >
-              {stages.map((s) => (
-                <Select.Option key={s.id} value={s.id}>
-                  {s.name}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-          <Form.Item label="Проект">
-            <Input
-              placeholder="Проект"
-              onChange={(e) => setFilters((f) => ({ ...f, project: e.target.value }))}
-            />
-          </Form.Item>
           <Form.Item label="ID">
             <Select
               mode="multiple"
@@ -832,28 +840,83 @@ export default function CourtCasesPage() {
               onChange={(v) => setFilters((f) => ({ ...f, ids: v }))}
             />
           </Form.Item>
+          <Form.Item label="Проект">
+            <Select
+              allowClear
+              placeholder="Проект"
+              options={projects.map((p) => ({ value: p.id, label: p.name }))}
+              value={filters.projectId}
+              onChange={(v) => setFilters((f) => ({ ...f, projectId: v, objectId: undefined }))}
+            />
+          </Form.Item>
           <Form.Item label="Объект">
+            <Select
+              allowClear
+              placeholder="Объект"
+              options={allUnits
+                .filter((u) => !filters.projectId || u.project_id === filters.projectId)
+                .map((u) => ({ value: u.id, label: u.name }))}
+              value={filters.objectId}
+              onChange={(v) => setFilters((f) => ({ ...f, objectId: v }))}
+              disabled={!filters.projectId}
+            />
+          </Form.Item>
+          <Form.Item label="Номер дела">
             <Input
-              placeholder="Фильтр по объекту"
-              onChange={(e) => setFilters((f) => ({ ...f, object: e.target.value }))}
+              placeholder="Номер"
+              value={filters.number}
+              onChange={(e) => setFilters((f) => ({ ...f, number: e.target.value }))}
+            />
+          </Form.Item>
+          <Form.Item label="Дата дела">
+            <DatePicker.RangePicker
+              allowClear
+              style={{ width: '100%' }}
+              format="DD.MM.YYYY"
+              value={filters.dateRange as any}
+              onChange={(v) => setFilters((f) => ({ ...f, dateRange: v as any }))}
+            />
+          </Form.Item>
+          <Form.Item label="Статус">
+            <Select
+              allowClear
+              placeholder="Статус"
+              options={stages.map((s) => ({ value: s.id, label: s.name }))}
+              value={filters.status}
+              onChange={(v) => setFilters((f) => ({ ...f, status: v }))}
             />
           </Form.Item>
           <Form.Item label="Истец">
             <Input
               placeholder="Истец"
+              value={filters.plaintiff}
               onChange={(e) => setFilters((f) => ({ ...f, plaintiff: e.target.value }))}
             />
           </Form.Item>
           <Form.Item label="Ответчик">
             <Input
               placeholder="Ответчик"
+              value={filters.defendant}
               onChange={(e) => setFilters((f) => ({ ...f, defendant: e.target.value }))}
             />
           </Form.Item>
+          <Form.Item label="Период начала устранения">
+            <DatePicker.RangePicker
+              allowClear
+              style={{ width: '100%' }}
+              format="DD.MM.YYYY"
+              value={filters.fixStartRange as any}
+              onChange={(v) => setFilters((f) => ({ ...f, fixStartRange: v as any }))}
+            />
+          </Form.Item>
           <Form.Item label="Юрист">
-            <Input
+            <Select
+              allowClear
+              showSearch
               placeholder="Юрист"
-              onChange={(e) => setFilters((f) => ({ ...f, lawyer: e.target.value }))}
+              options={users.map((u) => ({ value: u.id, label: u.name }))}
+              value={filters.lawyerId}
+              onChange={(v) => setFilters((f) => ({ ...f, lawyerId: v }))}
             />
           </Form.Item>
           <Form.Item label="Скрыть закрытые" valuePropName="checked">
@@ -867,11 +930,10 @@ export default function CourtCasesPage() {
               }}
             />
           </Form.Item>
-          <Form.Item label="Поиск">
-            <Input
-              placeholder="Поиск"
-              onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
-            />
+          <Form.Item>
+            <Button onClick={resetFilters} block>
+              Сбросить фильтры
+            </Button>
           </Form.Item>
         </Form>
       </Card>
