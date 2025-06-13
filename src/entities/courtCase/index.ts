@@ -7,6 +7,7 @@ import { getAttachmentsByIds, ATTACH_BUCKET } from '../attachment';
 const CASES_TABLE = 'court_cases';
 const DEFECTS_TABLE = 'defects';
 const CASE_DEFECTS_TABLE = 'court_case_defects';
+const CASE_LINKS_TABLE = 'court_case_links';
 
 export function useCourtCases() {
   const projectId = useProjectId();
@@ -19,7 +20,16 @@ export function useCourtCases() {
         .eq('project_id', projectId)
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return (data ?? []) as CourtCase[];
+      const { data: links, error: linkErr } = await supabase
+        .from(CASE_LINKS_TABLE)
+        .select('parent_id, child_id');
+      if (linkErr) throw linkErr;
+      const linkMap = new Map<number, number>();
+      (links ?? []).forEach((l) => linkMap.set(l.child_id, l.parent_id));
+      return (data ?? []).map((row: any) => ({
+        ...row,
+        parent_id: linkMap.get(row.id) ?? null,
+      })) as CourtCase[];
     },
     enabled: !!projectId,
     staleTime: 5 * 60_000,
@@ -204,6 +214,47 @@ export function useUpdateDefect() {
     },
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: [CASE_DEFECTS_TABLE, vars.case_id] });
+    },
+  });
+}
+
+export function useCaseLinks() {
+  return useQuery({
+    queryKey: [CASE_LINKS_TABLE],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from(CASE_LINKS_TABLE)
+        .select('id, parent_id, child_id');
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
+export function useLinkCases() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ parentId, childIds }: { parentId: string; childIds: string[] }) => {
+      const ids = childIds.map((c) => Number(c));
+      if (ids.length === 0) return;
+      await supabase.from(CASE_LINKS_TABLE).delete().in('child_id', ids);
+      const rows = ids.map((child_id) => ({ parent_id: Number(parentId), child_id }));
+      await supabase.from(CASE_LINKS_TABLE).insert(rows);
+      qc.invalidateQueries({ queryKey: [CASE_LINKS_TABLE] });
+      qc.invalidateQueries({ queryKey: [CASES_TABLE] });
+    },
+  });
+}
+
+export function useUnlinkCase() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const childId = Number(id);
+      await supabase.from(CASE_LINKS_TABLE).delete().eq('child_id', childId);
+      qc.invalidateQueries({ queryKey: [CASE_LINKS_TABLE] });
+      qc.invalidateQueries({ queryKey: [CASES_TABLE] });
     },
   });
 }
