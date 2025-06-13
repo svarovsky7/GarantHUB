@@ -13,8 +13,6 @@ export interface ExportCourtCasesButtonProps {
   cases: (CourtCase & Record<string, any>)[];
   /** Словарь названий стадий по идентификатору. */
   stages: Record<number, string>;
-  /** Стили кнопки (опционально). */
-  style?: React.CSSProperties;
 }
 
 /**
@@ -25,7 +23,6 @@ export interface ExportCourtCasesButtonProps {
 export default function ExportCourtCasesButton({
   cases,
   stages,
-  style,
 }: ExportCourtCasesButtonProps) {
   const [loading, setLoading] = React.useState(false);
 
@@ -82,12 +79,7 @@ export default function ExportCourtCasesButton({
 
   return (
     <Tooltip title="Выгрузить в Excel">
-      <Button
-        icon={<DownloadOutlined />}
-        loading={loading}
-        onClick={handleExport}
-        style={style}
-      />
+      <Button icon={<DownloadOutlined />} loading={loading} onClick={handleExport} />
     </Tooltip>
   );
 }
