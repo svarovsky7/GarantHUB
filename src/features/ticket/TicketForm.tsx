@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, type SubmitHandler } from "react-hook-form";
 import {
   Stack,
   TextField,
@@ -94,7 +94,8 @@ export default function TicketForm({
     formState: { isSubmitting, isDirty },
   } = useForm<TicketFormValues>({
     defaultValues: {
-      project_id: globalProjectId ?? null,
+      project_id:
+        globalProjectId != null ? Number(globalProjectId) : null,
       unit_ids: initialUnitId != null ? [initialUnitId] : [],
       responsible_engineer_id: null,
       status_id: null,
@@ -115,7 +116,8 @@ export default function TicketForm({
   const { data: users = [] } = useUsers();
   const { data: attachmentTypes = [] } = useAttachmentTypes();
   const { data: deadlines = [] } = useDefectDeadlines();
-  const projectIdWatch = watch("project_id") ?? globalProjectId;
+  const projectIdWatch =
+    watch("project_id") ?? (globalProjectId != null ? Number(globalProjectId) : null);
   const { data: units = [] } = useUnitsByProject(projectIdWatch);
   const typeIdWatch = watch("type_id");
   const deadlineDays = React.useMemo(() => {
@@ -212,7 +214,8 @@ export default function TicketForm({
       return;
     }
     const payload = {
-      project_id: values.project_id ?? globalProjectId,
+      project_id:
+        values.project_id ?? (globalProjectId != null ? Number(globalProjectId) : null),
       unit_ids: values.unit_ids,
       type_id: values.type_id,
       status_id: values.status_id,
@@ -291,7 +294,7 @@ export default function TicketForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(submit)} noValidate>
+    <form onSubmit={handleSubmit(submit as SubmitHandler<TicketFormValues>)} noValidate>
       <Stack spacing={2} sx={{ maxWidth: embedded ? "none" : 640 }}>
         <Controller
           name="project_id"

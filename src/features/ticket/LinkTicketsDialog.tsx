@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Modal, Input, Table, Button } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { Ticket } from '@/shared/types/ticket';
+import { Ticket } from '@/entities/ticket';
 
 interface Props {
   open: boolean;
@@ -30,7 +30,7 @@ export default function LinkTicketsDialog({
   const parents = useMemo(() => {
     const ids = new Set<string>();
     tickets.forEach((t) => {
-      if (t.parent_id) ids.add(String(t.parent_id));
+      if (t.parentId) ids.add(String(t.parentId));
     });
     return ids;
   }, [tickets]);
@@ -39,7 +39,7 @@ export default function LinkTicketsDialog({
     const term = search.trim().toLowerCase();
     return tickets
       .filter((t) => String(t.id) !== String(parent?.id))
-      .filter((t) => t.parent_id == null)
+      .filter((t) => t.parentId == null)
       .filter((t) => !parents.has(String(t.id)))
       .filter(
         (t) =>
