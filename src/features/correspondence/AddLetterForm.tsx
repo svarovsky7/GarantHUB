@@ -25,6 +25,7 @@ import PersonModal from '@/features/person/PersonModal';
 import ContractorModal from '@/features/contractor/ContractorModal';
 import { useLetterStatuses } from '@/entities/letterStatus';
 import { useAuthStore } from '@/shared/store/authStore';
+import { useLetterFiles } from './model/useLetterFiles';
 
 export interface AddLetterFormData {
   type: 'incoming' | 'outgoing';
@@ -58,7 +59,7 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
   const senderValue = Form.useWatch('sender', form);
   const receiverValue = Form.useWatch('receiver', form);
 
-  const [files, setFiles] = React.useState<{ file: File; type_id: number | null }[]>([]);
+  const { files, addFiles, setType, removeFile, reset: resetFiles } = useLetterFiles();
   const [senderType, setSenderType] = React.useState<'person' | 'contractor'>('person');
   const [receiverType, setReceiverType] = React.useState<'person' | 'contractor'>('contractor');
   const [personModal, setPersonModal] = React.useState<{ target: 'sender' | 'receiver'; data?: any } | null>(null);
@@ -115,16 +116,10 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
   }, [profileId, form]);
 
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const arr = Array.from(e.target.files || []).map((f) => ({ file: f, type_id: null }));
-    setFiles((p) => [...p, ...arr]);
+    const arr = Array.from(e.target.files || []);
+    addFiles(arr as File[]);
     e.target.value = '';
   };
-
-  const setType = (idx: number, val: number | null) =>
-      setFiles((p) => p.map((f, i) => (i === idx ? { ...f, type_id: val } : f)));
-
-  const removeFile = (idx: number) =>
-      setFiles((p) => p.filter((_, i) => i !== idx));
 
   const submit = (values: Omit<AddLetterFormData, 'attachments'>) => {
     onSubmit({
@@ -135,7 +130,7 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
       parent_id: parentId,
     });
     form.resetFields();
-    setFiles([]);
+    resetFiles();
   };
 
   return (

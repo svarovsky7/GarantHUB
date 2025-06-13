@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useForm, Controller, type SubmitHandler } from "react-hook-form";
 import {
   Stack,
@@ -135,11 +135,21 @@ export default function TicketForm({
   /** Форма открыта для редактирования существующего замечания */
   const isEdit = Boolean(ticketId);
 
-  const [remoteFiles, setRemoteFiles] = useState<Attachment[]>([]);
-  const [changedTypes, setChangedTypes] = useState<Record<string, number | null>>({});
-  const [initialTypes, setInitialTypes] = useState<Record<string, number | null>>({});
-  const [newFiles, setNewFiles] = useState<NewFile[]>([]);
-  const [removedIds, setRemovedIds] = useState<string[]>([]);
+  const {
+    remoteFiles,
+    newFiles,
+    changedTypes,
+    removedIds,
+    addFiles,
+    removeNew,
+    removeRemote,
+    changeRemoteType,
+    changeNewType,
+    appendRemote,
+    markPersisted,
+    attachmentsChanged,
+    reset: resetAttachments,
+  } = useTicketAttachments({ ticket, attachmentTypes });
 
   useEffect(() => {
     if (ticket) {
@@ -157,42 +167,9 @@ export default function TicketForm({
         title: ticket.title,
         description: ticket.description || "",
       });
-      const attachmentsWithType = (ticket.attachments || []).map((file) => {
-        const typeObj = attachmentTypes.find(
-          (t) => t.id === file.attachment_type_id,
-        );
-        return {
-          ...file,
-          attachment_type_name: typeObj?.name || file.type || "—",
-        };
-      });
-      setRemoteFiles(attachmentsWithType);
-      const map = {} as Record<string, number | null>;
-      attachmentsWithType.forEach((f) => {
-        map[f.id] = f.attachment_type_id;
-      });
-      setChangedTypes(map);
-      setInitialTypes(map);
     }
-  }, [ticket, attachmentTypes, reset]);
+  }, [ticket, reset]);
 
-  const addFiles = (files: File[]) =>
-    setNewFiles((p) => [...p, ...files.map((f) => ({ file: f, type_id: null }))]);
-  const removeNew = (idx: number) =>
-    setNewFiles((p) => p.filter((_, i) => i !== idx));
-  const removeRemote = (id: string) => {
-    setRemoteFiles((p) => p.filter((f) => String(f.id) !== String(id)));
-    setRemovedIds((p) => [...p, id]);
-  };
-  const changeRemoteType = (id: string, type: number | null) =>
-    setChangedTypes((p) => ({ ...p, [id]: type }));
-  const changeNewType = (idx: number, type: number | null) =>
-    setNewFiles((p) => p.map((f, i) => (i === idx ? { ...f, type_id: type } : f)));
-
-  const attachmentsChanged =
-    newFiles.length > 0 ||
-    removedIds.length > 0 ||
-    Object.keys(changedTypes).some((id) => changedTypes[id] !== initialTypes[id]);
   const hasChanges = isDirty || attachmentsChanged;
 
   useUnsavedChangesWarning(hasChanges);
@@ -245,9 +222,8 @@ export default function TicketForm({
         })),
       });
       if (uploaded?.length) {
-        setRemoteFiles((p) => [
-          ...p,
-          ...uploaded.map((u) => ({
+        appendRemote(
+          uploaded.map((u) => ({
             id: u.id,
             name:
               u.original_name ||
@@ -257,26 +233,10 @@ export default function TicketForm({
             url: u.file_url,
             type: u.file_type,
             attachment_type_id: u.attachment_type_id ?? null,
-          })),
-        ]);
-        setChangedTypes((prev) => {
-          const copy = { ...prev };
-          uploaded.forEach((u) => {
-            copy[u.id] = u.attachment_type_id ?? null;
-          });
-          return copy;
-        });
-        setInitialTypes((prev) => {
-          const copy = { ...prev };
-          uploaded.forEach((u) => {
-            copy[u.id] = u.attachment_type_id ?? null;
-          });
-          return copy;
-        });
+          }))
+        );
       }
-      setNewFiles([]);
-      setRemovedIds([]);
-      setInitialTypes((prev) => ({ ...prev, ...changedTypes }));
+      markPersisted();
       onCreated?.();
     } else {
       await (create.mutateAsync as any)({
@@ -285,11 +245,7 @@ export default function TicketForm({
       });
       onCreated?.();
       reset();
-      setNewFiles([]);
-      setRemoteFiles([]);
-      setChangedTypes({});
-      setInitialTypes({});
-      setRemovedIds([]);
+      resetAttachments();
     }
   };
 

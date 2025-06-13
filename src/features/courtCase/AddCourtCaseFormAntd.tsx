@@ -34,6 +34,7 @@ import { useNotify } from '@/shared/hooks/useNotify';
 import PersonModalId from '@/features/person/PersonModalId';
 import ContractorModalId from '@/features/contractor/ContractorModalId';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { useCaseFiles } from './model/useCaseFiles';
 
 export interface AddCourtCaseFormAntdProps {
   onCreated?: () => void;
@@ -101,7 +102,7 @@ export default function AddCourtCaseFormAntd({
   const [plaintiffType, setPlaintiffType] = useState<'person' | 'contractor'>('person');
   const [defendantType, setDefendantType] = useState<'person' | 'contractor'>('contractor');
   const [partyRole, setPartyRole] = useState<'plaintiff' | 'defendant' | null>(null);
-  const [caseFiles, setCaseFiles] = useState<{ file: File; type_id: number | null }[]>([]);
+  const { caseFiles, addFiles: addCaseFiles, setType: setCaseFileType, removeFile: removeCaseFile, reset: resetCaseFiles } = useCaseFiles();
 
   const { data: projectPersons = [], isPending: personsLoading } = useQuery({
     queryKey: ['projectPersons'],
@@ -115,16 +116,7 @@ export default function AddCourtCaseFormAntd({
     },
   });
 
-  const handleCaseFiles = (files: File[]) => {
-    const arr = files.map((file) => ({ file, type_id: null }));
-    setCaseFiles((p) => [...p, ...arr]);
-  };
-
-  const setCaseFileType = (idx: number, val: number | null) =>
-    setCaseFiles((p) => p.map((f, i) => (i === idx ? { ...f, type_id: val } : f)));
-
-  const removeCaseFile = (idx: number) =>
-    setCaseFiles((p) => p.filter((_, i) => i !== idx));
+  const handleCaseFiles = (files: File[]) => addCaseFiles(files);
 
   const handleAddCase = async (values: any) => {
     try {
@@ -158,7 +150,7 @@ export default function AddCourtCaseFormAntd({
       }
 
       form.resetFields();
-      setCaseFiles([]);
+      resetCaseFiles();
       notify.success('Дело успешно добавлено!');
       onCreated?.();
     } catch (e: any) {
