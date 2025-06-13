@@ -395,6 +395,9 @@ export default function CourtCasesPage() {
       dataIndex: 'id',
       width: 80,
       sorter: (a, b) => a.id - b.id,
+      render: (id: number) => (
+        <span style={{ whiteSpace: 'nowrap' }}>{id}</span>
+      ),
     },
     {
       title: 'Проект',
