@@ -28,6 +28,8 @@ import { useDeleteTicket } from "@/entities/ticket";
 import TicketStatusSelect from "@/features/ticket/TicketStatusSelect";
 import TicketClosedSelect from "@/features/ticket/TicketClosedSelect";
 import { filterTickets } from "@/shared/utils/ticketFilter";
+import type { TicketFilters } from "@/shared/types/ticketFilters";
+import type { TicketWithNames } from "@/shared/types/ticketWithNames";
 
 /** Форматирование даты */
 const fmt = (d, withTime = false) =>
@@ -50,6 +52,15 @@ const daysPassed = (receivedAt) =>
  * @param {Function} onAddChild - открыть диалог для связывания
  * @param {Function} onUnlink - удалить связь
  */
+interface Props {
+  tickets: TicketWithNames[];
+  filters: TicketFilters;
+  loading?: boolean;
+  onView?: (id: number) => void;
+  onAddChild?: (ticket: TicketWithNames) => void;
+  onUnlink?: (id: number) => void;
+}
+
 export default function TicketsTable({
   tickets,
   filters,
@@ -57,7 +68,7 @@ export default function TicketsTable({
   onView,
   onAddChild,
   onUnlink,
-}) {
+}: Props) {
   const { mutateAsync: remove, isPending } = useDeleteTicket();
 
   const columns: ColumnsType<any> = useMemo(
