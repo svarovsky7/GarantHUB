@@ -300,6 +300,7 @@ export default function TicketsTable({
         indentSize: 24,
       }}
       rowClassName={rowClassName}
+      style={{ background: '#fff' }}
     />
   );
 }

@@ -54,13 +54,14 @@ body {
 }
 
 .main-ticket-row {
-    background: #fffbe6 !important;
+    background: #eaf4ff !important;
     font-weight: 600;
+    box-shadow: 0 1px 0 #b5d3f7;
 }
 .child-ticket-row {
-    background: #fcfcfc !important;
+    background: #f8fafb !important;
     color: #888;
     font-style: italic;
-    border-left: 3px solid #faad14;
+    border-left: 3px solid #1890ff;
 }
 /* Skeleton эффекты были выше (оставил без изменений) */
