@@ -211,7 +211,7 @@ export default function CourtCasesPage() {
   const columnDefs = React.useMemo(() => {
     const map: Record<string, any> = {
       tree: {
-        title: 'Иконка',
+        title: '',
         dataIndex: 'tree',
         width: 40,
         render: (_: any, record: any) => {
@@ -450,10 +450,9 @@ export default function CourtCasesPage() {
                           <div
                             ref={p.innerRef}
                             {...p.draggableProps}
-                            {...p.dragHandleProps}
                             style={{ display: 'flex', alignItems: 'center', marginBottom: 8, ...p.draggableProps.style }}
                           >
-                            <MenuOutlined style={{ marginRight: 8, cursor: 'grab' }} />
+                            <MenuOutlined style={{ marginRight: 8, cursor: 'grab' }} {...p.dragHandleProps} />
                             <Checkbox
                               checked={!hiddenColumns.includes(k)}
                               onChange={(e) => {
