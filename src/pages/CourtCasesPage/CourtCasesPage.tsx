@@ -460,7 +460,7 @@ export default function CourtCasesPage() {
             loading={casesLoading}
             pagination={{ pageSize: 25, showSizeChanger: true }}
             size="middle"
-            expandable={{ expandRowByClick: true, defaultExpandAllRows: true, indentSize: 24 }}
+            expandable={{ expandRowByClick: true, defaultExpandAllRows: false, indentSize: 24 }}
             rowClassName={(record) => (record.parent_id ? 'child-case-row' : 'main-case-row')}
           />
 
