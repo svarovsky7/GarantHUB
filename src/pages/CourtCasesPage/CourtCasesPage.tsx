@@ -14,7 +14,13 @@ import { useContractors } from '@/entities/contractor';
 import { useUsers } from '@/entities/user';
 import { useLitigationStages } from '@/entities/litigationStage';
 import { usePersons } from '@/entities/person';
-import { PlusOutlined, DeleteOutlined, LinkOutlined } from '@ant-design/icons';
+import {
+  PlusOutlined,
+  DeleteOutlined,
+  LinkOutlined,
+  FileTextOutlined,
+  BranchesOutlined,
+} from '@ant-design/icons';
 import {
   useCourtCases,
   useDeleteCourtCase,
@@ -45,6 +51,7 @@ export default function CourtCasesPage() {
   const unlinkCase = useUnlinkCase();
   const [linkFor, setLinkFor] = useState<CourtCase | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showFilters, setShowFilters] = useState(true);
   const hideOnScroll = useRef(false);
 
   const [searchParams] = useSearchParams();
@@ -185,7 +192,32 @@ export default function CourtCasesPage() {
   }, [filteredCases]);
 
   const columns: ColumnsType<CourtCase & any> = [
-    { title: 'ID', dataIndex: 'id', width: 80, sorter: (a, b) => a.id - b.id },
+    {
+      title: '',
+      dataIndex: 'treeIcon',
+      width: 40,
+      render: (_: any, record) => {
+        if (!record.parent_id) {
+          return (
+            <Tooltip title="Основное дело">
+              <FileTextOutlined style={{ color: '#1890ff', fontSize: 17 }} />
+            </Tooltip>
+          );
+        }
+        return (
+          <Tooltip title="Связанное дело">
+            <BranchesOutlined style={{ color: '#52c41a', fontSize: 16 }} />
+          </Tooltip>
+        );
+      },
+    },
+    {
+      title: 'ID',
+      dataIndex: 'id',
+      width: 80,
+      sorter: (a, b) => a.id - b.id,
+      render: (id: number) => <span style={{ whiteSpace: 'nowrap' }}>{id}</span>,
+    },
     { title: 'Проект', dataIndex: 'projectName', sorter: (a, b) => (a.projectName || '').localeCompare(b.projectName || '') },
     { title: 'Объект', dataIndex: 'projectObject', sorter: (a, b) => (a.projectObject || '').localeCompare(b.projectObject || '') },
     { title: '№ дела', dataIndex: 'number', width: 120, sorter: (a, b) => a.number.localeCompare(b.number) },
@@ -272,8 +304,11 @@ export default function CourtCasesPage() {
   return (
     <ConfigProvider locale={ruRU}>
       <>
-        <Button type="primary" onClick={() => setShowAddForm((p) => !p)} style={{ marginTop: 16 }}>
+        <Button type="primary" onClick={() => setShowAddForm((p) => !p)} style={{ marginTop: 16, marginRight: 8 }}>
           {showAddForm ? 'Скрыть форму' : 'Добавить дело'}
+        </Button>
+        <Button onClick={() => setShowFilters((p) => !p)} style={{ marginTop: 16 }}>
+          {showFilters ? 'Скрыть фильтры' : 'Показать фильтры'}
         </Button>
         {showAddForm && (
           <AddCourtCaseFormAntd
@@ -300,18 +335,20 @@ export default function CourtCasesPage() {
             }
           }}
         >
-          <Card style={{ marginBottom: 24 }}>
-            <CourtCasesFilters
-              values={filters}
-              onChange={handleFiltersChange}
-              onReset={resetFilters}
-              projects={projects}
-              units={allUnits}
-              stages={stages}
-              users={users}
-              idOptions={idOptions}
-            />
-          </Card>
+          {showFilters && (
+            <Card style={{ marginBottom: 24 }}>
+              <CourtCasesFilters
+                values={filters}
+                onChange={handleFiltersChange}
+                onReset={resetFilters}
+                projects={projects}
+                units={allUnits}
+                stages={stages}
+                users={users}
+                idOptions={idOptions}
+              />
+            </Card>
+          )}
 
           <Table
             rowKey="id"
@@ -321,6 +358,7 @@ export default function CourtCasesPage() {
             pagination={{ pageSize: 25, showSizeChanger: true }}
             size="middle"
             expandable={{ expandRowByClick: true, defaultExpandAllRows: true, indentSize: 24 }}
+            rowClassName={(record) => (record.parent_id ? 'child-case-row' : 'main-case-row')}
           />
 
           <Typography.Text style={{ display: 'block', marginTop: 8 }}>
