@@ -46,6 +46,7 @@ import type { TableColumnSetting } from '@/shared/types/tableColumnSetting';
 
 const LS_KEY = 'courtCasesHideClosed';
 const LS_COLUMNS_KEY = 'courtCasesColumns';
+const LS_FILTERS_VISIBLE_KEY = 'courtCasesFiltersVisible';
 
 export default function CourtCasesPage() {
   const { data: cases = [], isPending: casesLoading } = useCourtCases();
@@ -55,7 +56,14 @@ export default function CourtCasesPage() {
   const unlinkCase = useUnlinkCase();
   const [linkFor, setLinkFor] = useState<CourtCase | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [showFilters, setShowFilters] = useState(true);
+  const [showFilters, setShowFilters] = useState(() => {
+    try {
+      const saved = localStorage.getItem(LS_FILTERS_VISIBLE_KEY);
+      return saved ? JSON.parse(saved) : true;
+    } catch {
+      return true;
+    }
+  });
   const [showColumnsDrawer, setShowColumnsDrawer] = useState(false);
   const hideOnScroll = useRef(false);
 
@@ -100,10 +108,21 @@ export default function CourtCasesPage() {
           setFilters((f) => ({ ...f, hideClosed: JSON.parse(e.newValue || 'false') }));
         } catch {}
       }
+      if (e.key === LS_FILTERS_VISIBLE_KEY) {
+        try {
+          setShowFilters(JSON.parse(e.newValue || 'true'));
+        } catch {}
+      }
     };
     window.addEventListener('storage', handler);
     return () => window.removeEventListener('storage', handler);
   }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(LS_FILTERS_VISIBLE_KEY, JSON.stringify(showFilters));
+    } catch {}
+  }, [showFilters]);
 
   const handleFiltersChange = (v: CourtCasesFiltersValues) => {
     if (v.hideClosed !== filters.hideClosed) {
@@ -369,6 +388,12 @@ export default function CourtCasesPage() {
           style={{ marginTop: 16, marginLeft: 8 }}
           onClick={() => setShowColumnsDrawer(true)}
         />
+        <span style={{ marginTop: 16, marginLeft: 8, display: 'inline-block' }}>
+          <ExportCourtCasesButton
+            cases={filteredCases}
+            stages={Object.fromEntries(stages.map((s) => [s.id, s.name]))}
+          />
+        </span>
         {showAddForm && (
           <AddCourtCaseFormAntd
             initialValues={initialValues}
@@ -432,9 +457,6 @@ export default function CourtCasesPage() {
           <Typography.Text style={{ display: 'block', marginTop: 4 }}>
             Готовых дел к выгрузке: {readyToExport}
           </Typography.Text>
-          <div style={{ marginTop: 8 }}>
-            <ExportCourtCasesButton cases={filteredCases} stages={Object.fromEntries(stages.map((s) => [s.id, s.name]))} />
-          </div>
         </div>
       </>
     </ConfigProvider>
