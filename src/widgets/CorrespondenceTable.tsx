@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import dayjs from 'dayjs';
 import { Table, Space, Button, Popconfirm, Tag, Tooltip } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
@@ -20,6 +20,9 @@ interface CorrespondenceTableProps {
   units: Option[];
   statuses: Option[];
 }
+
+/** Ключ в localStorage для хранения раскрывшихся строк */
+const LS_EXPANDED_KEY = 'correspondenceExpandedRows';
 
 /** Таблица писем с иерархией и кнопкой "исключить из связи" */
 export default function CorrespondenceTable({
@@ -90,6 +93,27 @@ export default function CorrespondenceTable({
 
     return roots;
   }, [letters, maps]);
+
+  const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(LS_EXPANDED_KEY);
+      if (saved) {
+        const parsed: React.Key[] = JSON.parse(saved);
+        const valid = parsed.filter((id) => letters.some((l) => String(l.id) === String(id)));
+        setExpandedRowKeys(valid);
+        return;
+      }
+    } catch {}
+    setExpandedRowKeys(letters.map((l) => l.id));
+  }, [letters]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(LS_EXPANDED_KEY, JSON.stringify(expandedRowKeys));
+    } catch {}
+  }, [expandedRowKeys]);
 
   const columns: ColumnsType<any> = [
     {
@@ -261,8 +285,19 @@ export default function CorrespondenceTable({
           size="middle"
           expandable={{
             expandRowByClick: true,
-            defaultExpandAllRows: true,
             indentSize: 24,
+            expandedRowKeys,
+            onExpand: (expanded, record) => {
+              setExpandedRowKeys((prev) => {
+                const set = new Set(prev);
+                if (expanded) {
+                  set.add(record.id);
+                } else {
+                  set.delete(record.id);
+                }
+                return Array.from(set);
+              });
+            },
           }}
           rowClassName={rowClassName}
           style={{ background: '#fff' }}
