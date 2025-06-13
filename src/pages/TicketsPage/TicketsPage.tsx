@@ -177,7 +177,6 @@ export default function TicketsPage() {
           onClose={() => setLinkFor(null)}
           onSubmit={handleLink}
         />
-
         <div
           onWheel={() => {
             if (hideOnScroll.current) {
