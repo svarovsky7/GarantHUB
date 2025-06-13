@@ -68,7 +68,7 @@ export default function LinkCasesDialog({ open, parent, cases, onClose, onSubmit
         </Button>,
       ]}
       width={700}
-      destroyOnHidden
+      destroyOnClose
     >
       <Input
         placeholder="Поиск по ID или номеру"
