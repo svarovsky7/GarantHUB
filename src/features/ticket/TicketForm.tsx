@@ -29,6 +29,7 @@ import { useCreateTicket, useTicket, signedUrl } from "@/entities/ticket";
 import { useProjectId } from "@/shared/hooks/useProjectId";
 import { useUnsavedChangesWarning } from "@/shared/hooks/useUnsavedChangesWarning";
 import { useNotify } from "@/shared/hooks/useNotify";
+import { useTicketAttachments } from "./model/useTicketAttachments";
 import AttachmentEditorTable from "@/shared/ui/AttachmentEditorTable";
 import type { Ticket } from "@/entities/ticket";
 
