@@ -49,6 +49,7 @@ import {
   DeleteOutlined,
   DownloadOutlined,
   EyeOutlined,
+  LinkOutlined,
 } from '@ant-design/icons';
 import { formatPhone } from '@/shared/utils/formatPhone';
 import {
@@ -60,6 +61,8 @@ import {
   useAddDefect,
   useDeleteDefect,
   useUpdateDefect,
+  useLinkCases,
+  useUnlinkCase,
 } from '@/entities/courtCase';
 import { useAttachmentTypes } from '@/entities/attachmentType';
 import {
@@ -75,6 +78,7 @@ import { useNotify } from '@/shared/hooks/useNotify';
 import FileDropZone from '@/shared/ui/FileDropZone';
 import CourtCaseStatusSelect from '@/features/courtCase/CourtCaseStatusSelect';
 import CourtCaseClosedSelect from '@/features/courtCase/CourtCaseClosedSelect';
+import LinkCasesDialog from '@/features/courtCase/LinkCasesDialog';
 
 const fmtCurrency = (n: number) =>
   new Intl.NumberFormat('ru-RU', {
@@ -203,6 +207,10 @@ export default function CourtCasesPage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const hideOnScroll = useRef(false);
 
+  const linkCases = useLinkCases();
+  const unlinkCase = useUnlinkCase();
+  const [linkFor, setLinkFor] = useState<CourtCase | null>(null);
+
   const plaintiffId = Form.useWatch('plaintiff_id', form);
   const defendantId = Form.useWatch('defendant_id', form);
 
@@ -291,6 +299,25 @@ export default function CourtCasesPage() {
       onSuccess: () => notify.success('Дело удалено!'),
       onError: (e: any) => notify.error(e.message),
     });
+  };
+
+  const handleUnlink = (id: number) => {
+    unlinkCase.mutate(id, {
+      onSuccess: () => notify.success('Дело исключено из связи'),
+    });
+  };
+
+  const handleLink = (ids: string[]) => {
+    if (!linkFor) return;
+    linkCases.mutate(
+      { parentId: String(linkFor.id), childIds: ids },
+      {
+        onSuccess: () => {
+          notify.success('Дела связаны');
+          setLinkFor(null);
+        },
+      },
+    );
   };
 
   const casesData = cases.map((c: any) => ({
@@ -453,6 +480,20 @@ export default function CourtCasesPage() {
               }}
             />
           </Tooltip>
+          <Button
+            type="text"
+            icon={<PlusOutlined />}
+            onClick={() => setLinkFor(record)}
+          />
+          {record.parent_id && (
+            <Tooltip title="Исключить из связи">
+              <Button
+                type="text"
+                icon={<LinkOutlined style={{ color: '#c41d7f', textDecoration: 'line-through', fontWeight: 700 }} />}
+                onClick={() => handleUnlink(record.id)}
+              />
+            </Tooltip>
+          )}
           <Popconfirm
             title="Удалить дело?"
             okText="Да"
@@ -509,6 +550,32 @@ export default function CourtCasesPage() {
       matchesClosed
     );
   });
+
+  const treeData = React.useMemo(() => {
+    const map = new Map<number, any>();
+    const roots: any[] = [];
+    filteredCases.forEach((c) => {
+      const row = { ...c, key: c.id, children: [] as any[] };
+      map.set(c.id, row);
+    });
+    filteredCases.forEach((c) => {
+      const row = map.get(c.id);
+      if (c.parent_id && map.has(c.parent_id)) {
+        map.get(c.parent_id).children.push(row);
+      } else {
+        roots.push(row);
+      }
+    });
+    map.forEach((row) => {
+      if (!row.children.length) row.children = undefined;
+    });
+    return roots;
+  }, [filteredCases]);
+
+  const rowClassName = (record: any) => {
+    if (!record.parent_id) return 'main-case-row';
+    return 'child-case-row';
+  };
 
   const resetFilters = () => setFilters((f) => ({ hideClosed: f.hideClosed }));
 
@@ -819,6 +886,14 @@ export default function CourtCasesPage() {
       </Form>
         )}
 
+      <LinkCasesDialog
+        open={!!linkFor}
+        parent={linkFor}
+        cases={casesData}
+        onClose={() => setLinkFor(null)}
+        onSubmit={handleLink}
+      />
+
       <div
         style={{ marginTop: 24 }}
         onWheel={() => {
@@ -944,10 +1019,16 @@ export default function CourtCasesPage() {
       <Table
         rowKey="id"
         columns={columns}
-        dataSource={filteredCases}
+        dataSource={treeData}
         loading={casesLoading}
         pagination={{ pageSize: 25, showSizeChanger: true }}
         size="middle"
+        expandable={{
+          expandRowByClick: true,
+          defaultExpandAllRows: true,
+          indentSize: 24,
+        }}
+        rowClassName={rowClassName}
       />
 
       </div>

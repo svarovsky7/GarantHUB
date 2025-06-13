@@ -11,6 +11,8 @@ export type CaseStatus = 'active' | 'won' | 'lost' | 'settled';
 
 export interface CourtCase {
   id: number;
+  /** Идентификатор родительского дела */
+  parent_id?: number | null;
   project_id: number;
   /** Идентификаторы объектов проекта */
   unit_ids: number[];
@@ -28,4 +30,14 @@ export interface CourtCase {
   /** Ссылки на загруженные файлы */
   attachment_ids?: number[];
   defects: Defect[];
+}
+
+/** Связь дел: parent_id - родительское дело, child_id - дочернее */
+export interface CourtCaseLink {
+  /** Уникальный идентификатор связи */
+  id: string;
+  /** Идентификатор родительского дела */
+  parent_id: string;
+  /** Идентификатор дочернего дела */
+  child_id: string;
 }
