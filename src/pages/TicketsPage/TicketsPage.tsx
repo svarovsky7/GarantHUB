@@ -208,7 +208,7 @@ export default function TicketsPage() {
             )}
           </Card>
           <Typography.Text style={{ display: 'block', marginTop: 8 }}>
-            Всего замечаний, из них закрытых: {closedCount} и не закрытых: {openCount}
+            Всего замечаний: {total}, из них закрытых: {closedCount} и не закрытых: {openCount}
           </Typography.Text>
           <Typography.Text style={{ display: 'block', marginTop: 4 }}>
             Готовых замечаний к выгрузке: {readyToExport}
