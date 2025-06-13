@@ -14,8 +14,6 @@ interface CorrespondenceTableProps {
   onDelete: (id: string) => void;
   onAddChild: (parent: CorrespondenceLetter) => void;
   onUnlink: (letterId: string) => void; // <--- новый проп
-  /** Колонки таблицы. Если не переданы, используется набор по умолчанию */
-  columns?: ColumnsType<any>;
   users: Option[];
   letterTypes: Option[];
   projects: Option[];
@@ -33,7 +31,6 @@ export default function CorrespondenceTable({
                                               onDelete,
                                               onAddChild,
                                               onUnlink,
-                                              columns: columnsProp,
                                               users,
                                               letterTypes,
                                               projects,
@@ -118,8 +115,7 @@ export default function CorrespondenceTable({
     } catch {}
   }, [expandedRowKeys]);
 
-  const defaultColumns: ColumnsType<any> = React.useMemo(
-    () => [
+  const columns: ColumnsType<any> = [
     {
       title: '',
       dataIndex: 'treeIcon',
@@ -273,11 +269,7 @@ export default function CorrespondenceTable({
           </Space>
       ),
     },
-  ],
-    [onView, onAddChild, onUnlink, onDelete],
-  );
-
-  const columns = columnsProp ?? defaultColumns;
+  ];
 
   const rowClassName = (record: any) => {
     if (!record.parent_id) return 'main-letter-row';
