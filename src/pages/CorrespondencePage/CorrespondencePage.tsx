@@ -6,6 +6,7 @@ import {
   Form,
   Select,
   Input,
+  Switch,
   Button,
   Card,
   DatePicker,
@@ -51,8 +52,10 @@ interface Filters {
   content?: string;
   status?: number | '';
   responsible?: string | '';
-  search?: string;
+  hideClosed?: boolean;
 }
+
+const LS_HIDE_CLOSED_KEY = 'correspondenceHideClosed';
 
 /** Страница учёта корреспонденции */
 export default function CorrespondencePage() {
@@ -62,20 +65,27 @@ export default function CorrespondencePage() {
   const linkLetters = useLinkLetters();
   const unlinkLetter = useUnlinkLetter();
   const notify = useNotify();
-  const [filters, setFilters] = useState<Filters>({
-    period: null,
-    type: '',
-    id: [],
-    category: '',
-    project: '',
-    unit: '',
-    sender: '',
-    receiver: '',
-    subject: '',
-    content: '',
-    status: '',
-    responsible: '',
-    search: '',
+  const [filters, setFilters] = useState<Filters>(() => {
+    let hideClosed = false;
+    try {
+      const saved = localStorage.getItem(LS_HIDE_CLOSED_KEY);
+      hideClosed = saved ? JSON.parse(saved) : false;
+    } catch {}
+    return {
+      period: null,
+      type: '',
+      id: [],
+      category: '',
+      project: '',
+      unit: '',
+      sender: '',
+      receiver: '',
+      subject: '',
+      content: '',
+      status: '',
+      responsible: '',
+      hideClosed,
+    };
   });
   const [searchParams] = useSearchParams();
   const [form] = Form.useForm();
@@ -110,6 +120,19 @@ export default function CorrespondencePage() {
       form.setFieldValue('id', valid);
     }
   }, [searchParams, letters]);
+
+  React.useEffect(() => {
+    const handler = (e: StorageEvent) => {
+      if (e.key === LS_HIDE_CLOSED_KEY) {
+        try {
+          setFilters((f) => ({ ...f, hideClosed: JSON.parse(e.newValue || 'false') }));
+          form.setFieldValue('hideClosed', JSON.parse(e.newValue || 'false'));
+        } catch {}
+      }
+    };
+    window.addEventListener('storage', handler);
+    return () => window.removeEventListener('storage', handler);
+  }, [form]);
 
   const { data: users = [] } = useUsers();
   const { data: letterTypes = [] } = useLetterTypes();
@@ -155,8 +178,13 @@ export default function CorrespondencePage() {
       content: values.content ?? '',
       status: values.status ?? '',
       responsible: values.responsible ?? '',
-      search: values.search ?? '',
+      hideClosed: values.hideClosed ?? false,
     });
+    if (Object.prototype.hasOwnProperty.call(values, 'hideClosed')) {
+      try {
+        localStorage.setItem(LS_HIDE_CLOSED_KEY, JSON.stringify(values.hideClosed));
+      } catch {}
+    }
   };
 
   const resetFilters = () => {
@@ -174,7 +202,7 @@ export default function CorrespondencePage() {
       content: '',
       status: '',
       responsible: '',
-      search: '',
+      hideClosed: filters.hideClosed,
     });
   };
 
@@ -210,6 +238,12 @@ export default function CorrespondencePage() {
       onSuccess: () => notify.success('Письмо исключено из связи'),
     });
   };
+
+  /** ID статуса "Закрыто", определяется по названию */
+  const closedStatusId = React.useMemo(
+    () => statuses.find((s) => /закры/i.test(s.name))?.id ?? null,
+    [statuses],
+  );
 
   const filtered = letters.filter((l) => {
     if (filters.period && filters.period.length === 2) {
@@ -247,24 +281,15 @@ export default function CorrespondencePage() {
     )
       return false;
     if (
-        filters.search &&
-        !(
-            l.number.includes(filters.search) ||
-            sender.includes(filters.search.toLowerCase()) ||
-            receiver.includes(filters.search.toLowerCase()) ||
-            subject.includes(filters.search.toLowerCase())
-        )
+        filters.hideClosed &&
+        closedStatusId != null &&
+        l.status_id === closedStatusId
     )
       return false;
     return true;
   });
 
   const total = letters.length;
-  /** ID статуса "Закрыто", определяется по названию */
-  const closedStatusId = React.useMemo(
-    () => statuses.find((s) => /закры/i.test(s.name))?.id ?? null,
-    [statuses],
-  );
   /** Количество закрытых писем */
   const closedCount = React.useMemo(
     () => letters.filter((l) => closedStatusId != null && l.status_id === closedStatusId).length,
@@ -399,8 +424,8 @@ export default function CorrespondencePage() {
               />
             </Form.Item>
 
-            <Form.Item name="search" label="Поиск">
-              <Input allowClear autoComplete="off" />
+            <Form.Item name="hideClosed" label="Скрыть закрытые" valuePropName="checked">
+              <Switch />
             </Form.Item>
             <Form.Item>
               <Button onClick={resetFilters} block>
