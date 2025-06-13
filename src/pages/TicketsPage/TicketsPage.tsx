@@ -18,6 +18,7 @@ import TicketViewModal from "@/features/ticket/TicketViewModal";
 import LinkTicketsDialog from "@/features/ticket/LinkTicketsDialog";
 import ExportTicketsButton from "@/features/ticket/ExportTicketsButton";
 import { useNotify } from "@/shared/hooks/useNotify";
+import { filterTickets } from "@/shared/utils/ticketFilter";
 
 export default function TicketsPage() {
   const { enqueueSnackbar } = useSnackbar();
@@ -139,6 +140,12 @@ export default function TicketsPage() {
   };
 
   const total = tickets.length;
+  const closedCount = useMemo(() => tickets.filter((t) => t.isClosed).length, [tickets]);
+  const openCount = total - closedCount;
+  const readyToExport = useMemo(
+    () => filterTickets(ticketsWithNames, filters).length,
+    [ticketsWithNames, filters],
+  );
 
   return (
     <ConfigProvider locale={ruRU}>
@@ -202,7 +209,10 @@ export default function TicketsPage() {
             )}
           </Card>
           <Typography.Text style={{ display: 'block', marginTop: 8 }}>
-            Всего замечаний: {total}
+            Всего замечаний, из них закрытых: {closedCount} и не закрытых: {openCount}
+          </Typography.Text>
+          <Typography.Text style={{ display: 'block', marginTop: 4 }}>
+            Готовых замечаний к выгрузке: {readyToExport}
           </Typography.Text>
           <div style={{ marginTop: 8 }}>
             <ExportTicketsButton tickets={ticketsWithNames} filters={filters} />
