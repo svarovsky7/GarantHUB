@@ -415,23 +415,23 @@ export default function TicketsPage() {
         <Button
           type="primary"
           onClick={() => setShowAddForm((p) => !p)}
-          style={{ marginBottom: 16, marginRight: 8 }}
+          style={{ marginTop: 16, marginRight: 8 }}
         >
           {showAddForm ? 'Скрыть форму' : 'Добавить замечание'}
         </Button>
-        <Button onClick={() => setShowFilters((p) => !p)} style={{ marginBottom: 16 }}>
+        <Button onClick={() => setShowFilters((p) => !p)} style={{ marginTop: 16 }}>
           {showFilters ? 'Скрыть фильтры' : 'Показать фильтры'}
         </Button>
         <Button
           icon={<SettingOutlined />}
-          style={{ marginBottom: 16, marginLeft: 8 }}
+          style={{ marginTop: 16, marginLeft: 8 }}
           onClick={() => setShowColumnsDrawer(true)}
         />
-        <span style={{ marginBottom: 16, marginLeft: 8, display: 'inline-block' }}>
+        <span style={{ marginTop: 16, marginLeft: 8, display: 'inline-block' }}>
           <ExportTicketsButton tickets={ticketsWithNames} filters={filters} />
         </span>
         {showAddForm && (
-          <Card style={{ marginBottom: 24 }}>
+          <div style={{ marginTop: 16 }}>
             <TicketFormAntd
               onCreated={() => {
                 qc.invalidateQueries({ queryKey: ['tickets'] });
@@ -439,7 +439,7 @@ export default function TicketsPage() {
               }}
               initialValues={initialValues}
             />
-          </Card>
+          </div>
         )}
 
         <LinkTicketsDialog
@@ -457,6 +457,7 @@ export default function TicketsPage() {
           onReset={handleResetColumns}
         />
         <div
+          style={{ marginTop: 24 }}
           onWheel={() => {
             if (hideOnScroll.current) {
               setShowAddForm(false);
@@ -474,21 +475,19 @@ export default function TicketsPage() {
             </Card>
           )}
 
-          <Card>
-            {error ? (
-              <Alert type="error" message={error.message} />
-            ) : (
-              <TicketsTable
-                tickets={ticketsWithNames}
-                filters={filters}
-                loading={isLoading}
-                columns={columns}
-                onView={(id) => setViewId(id)}
-                onAddChild={setLinkFor}
-                onUnlink={handleUnlink}
-              />
-            )}
-          </Card>
+          {error ? (
+            <Alert type="error" message={error.message} />
+          ) : (
+            <TicketsTable
+              tickets={ticketsWithNames}
+              filters={filters}
+              loading={isLoading}
+              columns={columns}
+              onView={(id) => setViewId(id)}
+              onAddChild={setLinkFor}
+              onUnlink={handleUnlink}
+            />
+          )}
           <Typography.Text style={{ display: 'block', marginTop: 8 }}>
             Всего замечаний: {total}, из них закрытых: {closedCount} и не закрытых: {openCount}
           </Typography.Text>
