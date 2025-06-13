@@ -8,6 +8,7 @@ import {
   Input,
   Button,
   Card,
+  DatePicker,
 } from 'antd';
 import ruRU from 'antd/locale/ru_RU';
 import dayjs from 'dayjs';
@@ -33,17 +34,24 @@ import { useProjects } from '@/entities/project';
 import { useUnitsByProject, useUnitsByIds } from '@/entities/unit';
 import { useAttachmentTypes } from '@/entities/attachmentType';
 import { useNotify } from '@/shared/hooks/useNotify';
+import { useLetterStatuses } from '@/entities/letterStatus';
+import { useContractors } from '@/entities/contractor';
+import { usePersons } from '@/entities/person';
 
 interface Filters {
+  period?: [dayjs.Dayjs, dayjs.Dayjs] | null;
   type?: 'incoming' | 'outgoing' | '';
+  id?: number[];
+  category?: number | '';
   project?: number | '';
   unit?: number | '';
   sender?: string;
   receiver?: string;
   subject?: string;
   content?: string;
+  status?: number | '';
+  responsible?: string | '';
   search?: string;
-  id?: number[];
 }
 
 /** Страница учёта корреспонденции */
@@ -55,15 +63,19 @@ export default function CorrespondencePage() {
   const unlinkLetter = useUnlinkLetter();
   const notify = useNotify();
   const [filters, setFilters] = useState<Filters>({
+    period: null,
     type: '',
+    id: [],
+    category: '',
     project: '',
     unit: '',
     sender: '',
     receiver: '',
     subject: '',
     content: '',
+    status: '',
+    responsible: '',
     search: '',
-    id: [],
   });
   const [searchParams] = useSearchParams();
   const [form] = Form.useForm();
@@ -101,6 +113,9 @@ export default function CorrespondencePage() {
 
   const { data: users = [] } = useUsers();
   const { data: letterTypes = [] } = useLetterTypes();
+  const { data: statuses = [] } = useLetterStatuses();
+  const { data: contractors = [] } = useContractors();
+  const { data: persons = [] } = usePersons();
   const { data: projects = [] } = useProjects();
   const { data: attachmentTypes = [] } = useAttachmentTypes();
   const { data: projectUnits = [] } = useUnitsByProject(
@@ -113,6 +128,14 @@ export default function CorrespondencePage() {
   );
   const { data: allUnits = [] } = useUnitsByIds(unitIds);
 
+  const contactOptions = React.useMemo(
+    () => [
+      ...contractors.map((c) => ({ value: c.name, label: c.name })),
+      ...persons.map((p) => ({ value: p.full_name, label: p.full_name })),
+    ],
+    [contractors, persons],
+  );
+
   const idOptions = React.useMemo(
     () => letters.map((l) => ({ value: l.id, label: String(l.id) })),
     [letters],
@@ -120,14 +143,18 @@ export default function CorrespondencePage() {
 
   const handleFiltersChange = (_: any, values: any) => {
     setFilters({
+      period: values.period ?? null,
       type: values.type ?? '',
+      id: values.id ?? [],
+      category: values.category ?? '',
       project: values.project ?? '',
       unit: values.unit ?? '',
-      id: values.id ?? [],
       sender: values.sender ?? '',
       receiver: values.receiver ?? '',
       subject: values.subject ?? '',
       content: values.content ?? '',
+      status: values.status ?? '',
+      responsible: values.responsible ?? '',
       search: values.search ?? '',
     });
   };
@@ -135,14 +162,18 @@ export default function CorrespondencePage() {
   const resetFilters = () => {
     form.resetFields();
     setFilters({
+      period: null,
       type: '',
+      id: [],
+      category: '',
       project: '',
       unit: '',
-      id: [],
       sender: '',
       receiver: '',
       subject: '',
       content: '',
+      status: '',
+      responsible: '',
       search: '',
     });
   };
@@ -181,13 +212,21 @@ export default function CorrespondencePage() {
   };
 
   const filtered = letters.filter((l) => {
+    if (filters.period && filters.period.length === 2) {
+      const [from, to] = filters.period;
+      const d = dayjs(l.date);
+      if (d.isBefore(from, 'day') || d.isAfter(to, 'day')) return false;
+    }
     if (filters.type && l.type !== filters.type) return false;
+    if (filters.category && l.letter_type_id !== Number(filters.category)) return false;
     if (filters.project && l.project_id !== Number(filters.project)) return false;
     if (filters.unit && !l.unit_ids.includes(Number(filters.unit))) return false;
     if (filters.id && filters.id.length) {
       const ids = filters.id.map(String);
       if (!ids.includes(String(l.id))) return false;
     }
+    if (filters.status && l.status_id !== Number(filters.status)) return false;
+    if (filters.responsible && String(l.responsible_user_id) !== filters.responsible) return false;
     const sender = (l.sender || '').toLowerCase();
     const receiver = (l.receiver || '').toLowerCase();
     const subject = (l.subject || '').toLowerCase();
@@ -271,12 +310,25 @@ export default function CorrespondencePage() {
               initialValues={filters}
               className="filter-grid"
             >
+            <Form.Item name="period" label="Период">
+              <DatePicker.RangePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
+            </Form.Item>
+
             <Form.Item name="type" label="Тип письма">
               <Select allowClear placeholder="Все типы">
                 <Select.Option value="incoming">Входящее</Select.Option>
                 <Select.Option value="outgoing">Исходящее</Select.Option>
               </Select>
             </Form.Item>
+
+            <Form.Item name="id" label="ID">
+              <Select mode="multiple" allowClear options={idOptions} placeholder="ID" />
+            </Form.Item>
+
+            <Form.Item name="category" label="Категория">
+              <Select allowClear options={letterTypes.map((t) => ({ value: t.id, label: t.name }))} />
+            </Form.Item>
+
             <Form.Item name="project" label="Проект">
               <Select
                   showSearch
@@ -285,6 +337,7 @@ export default function CorrespondencePage() {
                   onChange={() => form.setFieldValue('unit', undefined)}
               />
             </Form.Item>
+
             <Form.Item name="unit" label="Объект">
               <Select
                   showSearch
@@ -293,26 +346,45 @@ export default function CorrespondencePage() {
                   disabled={!form.getFieldValue('project')}
               />
             </Form.Item>
-            <Form.Item name="id" label="ID">
+
+            <Form.Item name="sender" label="Отправитель">
               <Select
-                mode="multiple"
+                showSearch
                 allowClear
-                options={idOptions}
-                placeholder="ID"
+                options={contactOptions}
+                filterOption={(input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase())}
               />
             </Form.Item>
-            <Form.Item name="sender" label="Отправитель">
-              <Input allowClear autoComplete="off" />
-            </Form.Item>
+
             <Form.Item name="receiver" label="Получатель">
-              <Input allowClear autoComplete="off" />
+              <Select
+                showSearch
+                allowClear
+                options={contactOptions}
+                filterOption={(input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase())}
+              />
             </Form.Item>
+
             <Form.Item name="subject" label="В теме">
               <Input allowClear autoComplete="off" />
             </Form.Item>
+
             <Form.Item name="content" label="В содержании">
               <Input allowClear autoComplete="off" />
             </Form.Item>
+
+            <Form.Item name="status" label="Статус писем">
+              <Select allowClear options={statuses.map((s) => ({ value: s.id, label: s.name }))} />
+            </Form.Item>
+
+            <Form.Item name="responsible" label="Ответственный">
+              <Select
+                showSearch
+                allowClear
+                options={users.map((u) => ({ value: u.id, label: u.name }))}
+              />
+            </Form.Item>
+
             <Form.Item name="search" label="Поиск">
               <Input allowClear autoComplete="off" />
             </Form.Item>

@@ -32,7 +32,7 @@ export function useLetters() {
       const { data, error } = await supabase
         .from(LETTERS_TABLE)
         .select(
-          `id, project_id, number, letter_type_id, letter_date, subject, content, sender, receiver, responsible_user_id, unit_ids, attachment_ids, created_at`
+          `id, project_id, number, letter_type_id, status_id, letter_date, subject, content, sender, receiver, responsible_user_id, unit_ids, attachment_ids, created_at`
         )
         .order('id');
       if (error) throw error;
@@ -89,6 +89,7 @@ export function useLetters() {
           responsible_user_id: row.responsible_user_id
             ? String(row.responsible_user_id)
             : null,
+          status_id: row.status_id ?? null,
           letter_type_id: row.letter_type_id ?? null,
           project_id: row.project_id ?? null,
           unit_ids: (row.unit_ids ?? []) as number[],
@@ -128,6 +129,7 @@ export function useAddLetter() {
         project_id: data.project_id,
         number: data.number,
         letter_type_id: data.letter_type_id,
+        status_id: data.status_id ?? null,
         letter_date: data.date,
         subject: data.subject,
         content: data.content,
@@ -187,6 +189,7 @@ export function useAddLetter() {
         type: data.type,
         parent_id,
         responsible_user_id: data.responsible_user_id ?? null,
+        status_id: data.status_id ?? null,
         letter_type_id: data.letter_type_id ?? null,
         project_id: data.project_id ?? null,
         unit_ids: data.unit_ids ?? [],
@@ -325,6 +328,7 @@ export function useUpdateLetter() {
         project_id: updates.project_id,
         number: updates.number,
         letter_type_id: updates.letter_type_id,
+        status_id: updates.status_id,
         letter_date: updates.date,
         subject: updates.subject,
         content: updates.content,
