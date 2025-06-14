@@ -25,13 +25,15 @@ export function useTicketAttachments(options: {
       const storagePath = 'storage_path' in file ? (file as any).storage_path : (file as any).path;
       const fileUrl = (file as any).file_url ?? (file as any).url ?? '';
       const fileType = (file as any).file_type ?? (file as any).type ?? '';
+      const originalName = (file as any).original_name ?? null;
       const name =
-        (file as any).original_name ||
+        originalName ||
         (storagePath ? storagePath.split('/').pop() : (file as any).name) ||
         'file';
       return {
         id: (file as any).id,
         name,
+        original_name: originalName,
         path: storagePath ?? '',
         url: fileUrl,
         type: fileType,
