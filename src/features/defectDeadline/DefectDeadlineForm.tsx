@@ -9,17 +9,17 @@ import {
   MenuItem,
 } from '@mui/material';
 import { useProjects } from '@/entities/project';
-import { useDefectTypes } from '@/entities/defectType';
+import { useTicketTypes } from '@/entities/ticketType';
 
 interface FormValues {
   project_id: number | '';
-  defect_type_id: number | '';
+  ticket_type_id: number | '';
   fix_days: number | '';
 }
 
 interface Props {
-  initialData?: { project_id?: number; defect_type_id?: number; fix_days?: number };
-  onSubmit: (values: { project_id: number; defect_type_id: number; fix_days: number }) => void;
+  initialData?: { project_id?: number; ticket_type_id?: number; fix_days?: number };
+  onSubmit: (values: { project_id: number; ticket_type_id: number; fix_days: number }) => void;
   onCancel: () => void;
 }
 
@@ -27,18 +27,18 @@ export default function DefectDeadlineForm({ initialData, onSubmit, onCancel }: 
   const { control, handleSubmit, formState: { isSubmitting } } = useForm<FormValues>({
     defaultValues: {
       project_id: initialData?.project_id ?? '',
-      defect_type_id: initialData?.defect_type_id ?? '',
+      ticket_type_id: initialData?.ticket_type_id ?? '',
       fix_days: initialData?.fix_days ?? '',
     },
   });
 
   const { data: projects = [] } = useProjects();
-  const { data: types = [] } = useDefectTypes();
+  const { data: types = [] } = useTicketTypes();
 
   return (
     <form onSubmit={handleSubmit((v) => onSubmit({
       project_id: Number(v.project_id),
-      defect_type_id: Number(v.defect_type_id),
+      ticket_type_id: Number(v.ticket_type_id),
       fix_days: Number(v.fix_days),
     }))} noValidate>
       <Stack spacing={2} sx={{ minWidth: 320 }}>
@@ -55,7 +55,7 @@ export default function DefectDeadlineForm({ initialData, onSubmit, onCancel }: 
           )}
         />
         <Controller
-          name="defect_type_id"
+          name="ticket_type_id"
           control={control}
           rules={{ required: 'Тип дефекта обязателен' }}
           render={({ field, fieldState }) => (
