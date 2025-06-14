@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import dayjs, { Dayjs } from 'dayjs';
-import { Form, Input, Select, DatePicker, Switch, Button, Row, Col, Table } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
-import { useDefectTypes } from '@/entities/defectType';
-import { useDefectStatuses } from '@/entities/defectStatus';
+import { Form, Input, Select, DatePicker, Switch, Button, Row, Col } from 'antd';
 import { useTicketStatuses } from '@/entities/ticketStatus';
 import { useUnitsByProject } from '@/entities/unit';
 import { useUsers } from '@/entities/user';
@@ -15,6 +12,7 @@ import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useAuthStore } from '@/shared/store/authStore';
 import FileDropZone from '@/shared/ui/FileDropZone';
 import { useNotify } from '@/shared/hooks/useNotify';
+import DefectEditableTable from '@/widgets/DefectEditableTable';
 
 /**
  * Форма создания замечания на основе Ant Design.
@@ -52,8 +50,6 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
   const globalProjectId = useProjectId();
   const projectId = Form.useWatch('project_id', form) ?? globalProjectId;
 
-  const { data: defectTypes = [] } = useDefectTypes();
-  const { data: defectStatuses = [] } = useDefectStatuses();
   const { data: statuses = [] } = useTicketStatuses();
   const { data: projects = [] } = useProjects();
   const { data: units = [] } = useUnitsByProject(projectId);
@@ -201,107 +197,7 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
       </Row>
       <Form.List name="defects">
         {(fields, { add, remove }) => (
-          <div style={{ maxWidth: '50%' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-              <span style={{ fontWeight: 500 }}>Дефекты</span>
-              <Button type="dashed" icon={<PlusOutlined />} onClick={() => add()}>
-                Добавить дефект
-              </Button>
-            </div>
-            <Table
-              size="small"
-              pagination={false}
-              rowKey="key"
-              columns={[
-                {
-                  title: '#',
-                  dataIndex: 'index',
-                  width: 40,
-                  render: (_: any, __: any, i: number) => i + 1,
-                },
-                {
-                  title: 'Описание дефекта',
-                  dataIndex: 'description',
-                  render: (_: any, field: any) => (
-                    <Form.Item name={[field.name, 'description']} noStyle>
-                      <Input placeholder="Описание" />
-                    </Form.Item>
-                  ),
-                },
-                {
-                  title: 'Статус',
-                  dataIndex: 'status_id',
-                  render: (_: any, field: any) => (
-                    <Form.Item
-                      name={[field.name, 'status_id']}
-                      noStyle
-                      initialValue={defectStatuses[0]?.id}
-                    >
-                      <Select
-                        placeholder="Статус"
-                        options={defectStatuses.map((s) => ({ value: s.id, label: s.name }))}
-                      />
-                    </Form.Item>
-                  ),
-                },
-                {
-                  title: 'Тип',
-                  dataIndex: 'type_id',
-                  render: (_: any, field: any) => (
-                    <Form.Item name={[field.name, 'type_id']} noStyle>
-                      <Select
-                        placeholder="Тип"
-                        options={defectTypes.map((d) => ({ value: d.id, label: d.name }))}
-                      />
-                    </Form.Item>
-                  ),
-                },
-                {
-                  title: 'Дата получения',
-                  dataIndex: 'received_at',
-                  render: (_: any, field: any) => (
-                    <Form.Item name={[field.name, 'received_at']} noStyle initialValue={dayjs()}>
-                      <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
-                    </Form.Item>
-                  ),
-                },
-                {
-                  title: 'Дата устранения',
-                  dataIndex: 'fixed_at',
-                  render: (_: any, field: any) => (
-                    <Form.Item name={[field.name, 'fixed_at']} noStyle>
-                      <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
-                    </Form.Item>
-                  ),
-                },
-                {
-                  title: 'Кем устраняется',
-                  dataIndex: 'fix_by',
-                  render: (_: any, field: any) => (
-                    <Form.Item name={[field.name, 'fix_by']} noStyle initialValue="own">
-                      <Select
-                        options={[
-                          { value: 'own', label: 'Собственные силы' },
-                          { value: 'contractor', label: 'Подрядчик' },
-                        ]}
-                      />
-                    </Form.Item>
-                  ),
-                },
-                {
-                  title: '',
-                  dataIndex: 'actions',
-                  width: 80,
-                  render: (_: any, field: any) => (
-                    <Button type="text" danger onClick={() => remove(field.name)}>
-                      Удалить
-                    </Button>
-                  ),
-                },
-              ]}
-              dataSource={fields}
-            />
-          </div>
+          <DefectEditableTable fields={fields} add={add} remove={remove} />
         )}
       </Form.List>
       <Row gutter={16}>
