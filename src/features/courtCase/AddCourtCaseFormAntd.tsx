@@ -36,12 +36,18 @@ import ContractorModalId from '@/features/contractor/ContractorModalId';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useCaseFiles } from './model/useCaseFiles';
 
+/**
+ * Props for {@link AddCourtCaseFormAntd} component.
+ */
 export interface AddCourtCaseFormAntdProps {
+  /** Callback when case created successfully */
   onCreated?: () => void;
+  /** Initial field values */
   initialValues?: Partial<{
     project_id: number;
     unit_ids: number[];
     responsible_lawyer_id: string;
+    status: number;
   }>;
 }
 
@@ -72,6 +78,9 @@ export default function AddCourtCaseFormAntd({
     } else if (profileId) {
       form.setFieldValue('responsible_lawyer_id', profileId);
     }
+    if (initialValues.status) {
+      form.setFieldValue('status', initialValues.status);
+    }
   }, [initialValues, globalProjectId, profileId, form]);
 
   useEffect(() => {
@@ -95,6 +104,13 @@ export default function AddCourtCaseFormAntd({
   const deleteContractorMutation = useDeleteContractor();
   const notify = useNotify();
   const qc = useQueryClient();
+
+  // Set default litigation stage when loaded
+  useEffect(() => {
+    if (stages.length && !form.getFieldValue('status')) {
+      form.setFieldValue('status', stages[0].id);
+    }
+  }, [stages, form]);
 
   const [personModal, setPersonModal] = useState<any | null>(null);
   const [contractorModal, setContractorModal] = useState<any | null>(null);
