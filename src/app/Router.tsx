@@ -10,7 +10,6 @@ import { useAuthStore } from "@/shared/store/authStore";
 import DashboardPage from "@/pages/DashboardPage/DashboardPage";
 import TicketsPage from "@/pages/TicketsPage/TicketsPage";
 import TicketFormPage from "@/pages/TicketsPage/TicketFormPage";
-import StatsPage from "@/pages/StatsPage/StatsPage";
 import CourtCasesPage from "@/pages/CourtCasesPage/CourtCasesPage";
 import CorrespondencePage from "@/pages/CorrespondencePage/CorrespondencePage";
 import LoginPage from "@/pages/UnitsPage/LoginPage"; // ← CHANGE
@@ -118,15 +117,6 @@ export default function AppRouter() {
         data-oid="rdc_d7y"
       />
 
-      <Route
-        path="/stats"
-        element={
-          <RequireAuth data-oid="h4w-vcl">
-            <StatsPage data-oid="w2703fq" />
-          </RequireAuth>
-        }
-        data-oid="9csi_3u"
-      />
 
       <Route
         path="/admin"
