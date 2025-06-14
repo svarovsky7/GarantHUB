@@ -70,3 +70,18 @@ export function useCreateDefects() {
     onError: (e) => notify.error(e.message),
   });
 }
+
+/** Удалить дефект */
+export function useDeleteDefect() {
+  const qc = useQueryClient();
+  const notify = useNotify();
+  return useMutation<number, Error, number>({
+    mutationFn: async (id: number) => {
+      const { error } = await supabase.from(TABLE).delete().eq('id', id);
+      if (error) throw error;
+      return id;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: [TABLE] }),
+    onError: (e) => notify.error(e.message),
+  });
+}
