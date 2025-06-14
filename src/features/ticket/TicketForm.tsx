@@ -182,9 +182,9 @@ export default function TicketForm({
   const handleDownloadArchive = async () => {
     const files = [
       ...remoteFiles.map((f) => ({
-        name: f.name,
+        name: f.original_name ?? f.name,
         getFile: async () => {
-          const url = await signedUrl(f.path, f.name);
+          const url = await signedUrl(f.path, f.original_name ?? f.name);
           const res = await fetch(url);
           return res.blob();
         },
@@ -243,21 +243,22 @@ export default function TicketForm({
           type_id: type,
         })),
       });
-      if (uploaded?.length) {
-        appendRemote(
-          uploaded.map((u) => ({
-            id: u.id,
-            name:
-              u.original_name ||
-              u.storage_path.split("/").pop() ||
-              "file",
-            path: u.storage_path,
-            url: u.file_url,
-            type: u.file_type,
-            attachment_type_id: u.attachment_type_id ?? null,
-          }))
-        );
-      }
+        if (uploaded?.length) {
+          appendRemote(
+            uploaded.map((u) => ({
+              id: u.id,
+              name:
+                u.original_name ||
+                u.storage_path.split("/").pop() ||
+                "file",
+              original_name: u.original_name ?? null,
+              path: u.storage_path,
+              url: u.file_url,
+              type: u.file_type,
+              attachment_type_id: u.attachment_type_id ?? null,
+            }))
+          );
+        }
       markPersisted();
       onCreated?.();
     } else {
@@ -617,7 +618,7 @@ export default function TicketForm({
           <AttachmentEditorTable
             remoteFiles={remoteFiles.map((f) => ({
               id: String(f.id),
-              name: f.name,
+              name: f.original_name ?? f.name,
               path: f.path,
               typeId: changedTypes[f.id] ?? f.attachment_type_id,
               typeName: f.attachment_type_name,

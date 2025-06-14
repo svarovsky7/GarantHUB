@@ -2,6 +2,7 @@
 export interface RemoteTicketFile {
   id: string | number;
   name: string;
+  original_name?: string | null;
   path: string;
   url: string;
   type: string;

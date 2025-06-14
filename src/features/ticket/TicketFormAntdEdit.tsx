@@ -119,7 +119,6 @@ export default function TicketFormAntdEdit({
         title: ticket.title,
         description: ticket.description ?? undefined,
       });
-      appendRemote(ticket.attachments || []);
       setFormTouched(false);
     } else {
       form.setFieldsValue({
@@ -130,7 +129,7 @@ export default function TicketFormAntdEdit({
       });
       setFormTouched(false);
     }
-  }, [ticket, form, globalProjectId, profileId, initialUnitId, appendRemote]);
+  }, [ticket, form, globalProjectId, profileId, initialUnitId]);
 
   const handleFiles = (files: File[]) => addFiles(files);
   const handleValuesChange = () => setFormTouched(true);
@@ -138,9 +137,9 @@ export default function TicketFormAntdEdit({
   const handleDownloadArchive = async () => {
     const files = [
       ...remoteFiles.map((f) => ({
-        name: f.name,
+        name: f.original_name ?? f.name,
         getFile: async () => {
-          const url = await signedUrl(f.path, f.name);
+          const url = await signedUrl(f.path, f.original_name ?? f.name);
           const res = await fetch(url);
           return res.blob();
         },
@@ -197,6 +196,7 @@ export default function TicketFormAntdEdit({
             uploaded.map((u: any) => ({
               id: u.id,
               name: u.original_name || u.storage_path.split('/').pop() || 'file',
+              original_name: u.original_name ?? null,
               path: u.storage_path,
               url: u.file_url,
               type: u.file_type,
@@ -355,7 +355,7 @@ export default function TicketFormAntdEdit({
         <AttachmentEditorTable
           remoteFiles={remoteFiles.map((f) => ({
             id: String(f.id),
-            name: f.name,
+            name: f.original_name ?? f.name,
             path: f.path,
             typeId: changedTypes[f.id] ?? f.attachment_type_id,
             typeName: f.attachment_type_name,
