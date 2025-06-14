@@ -9,6 +9,7 @@ import {
   Tooltip,
   Select,
   MenuItem,
+  OutlinedInput,
 } from '@mui/material';
 import FileIcon from '@mui/icons-material/InsertDriveFileOutlined';
 import DeleteIcon from '@mui/icons-material/DeleteOutline';
@@ -110,6 +111,7 @@ export default function AttachmentEditorTable({
                   )
                 }
                 displayEmpty
+                input={<OutlinedInput notched={false} />}
                 sx={{ minWidth: 120 }}
               >
                 <MenuItem value="">
@@ -162,6 +164,7 @@ export default function AttachmentEditorTable({
                   )
                 }
                 displayEmpty
+                input={<OutlinedInput notched={false} />}
                 sx={{ minWidth: 120 }}
               >
                 <MenuItem value="">
