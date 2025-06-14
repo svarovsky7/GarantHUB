@@ -9,6 +9,8 @@ import {
   DatePicker,
   Skeleton,
   Tooltip,
+  Tag,
+  Space,
 } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useDefectTypes } from '@/entities/defectType';
@@ -31,6 +33,7 @@ interface Props {
 export default function DefectEditableTable({ fields, add, remove }: Props) {
   const { data: defectTypes = [], isPending: loadingTypes } = useDefectTypes();
   const { data: defectStatuses = [], isPending: loadingStatuses } = useDefectStatuses();
+  const form = Form.useFormInstance();
 
   const columns: ColumnsType<any> = useMemo(
     () => [
@@ -43,9 +46,14 @@ export default function DefectEditableTable({ fields, add, remove }: Props) {
       {
         title: 'Описание дефекта',
         dataIndex: 'description',
+        width: 240,
         ellipsis: true,
         render: (_: any, field: any) => (
-          <Form.Item name={[field.name, 'description']} noStyle>
+          <Form.Item
+            name={[field.name, 'description']}
+            noStyle
+            rules={[{ required: true, message: 'Введите описание' }]}
+          >
             <Input.TextArea size="small" autoSize placeholder="Описание" />
           </Form.Item>
         ),
@@ -53,12 +61,20 @@ export default function DefectEditableTable({ fields, add, remove }: Props) {
       {
         title: 'Статус',
         dataIndex: 'status_id',
+        width: 180,
         ellipsis: true,
         render: (_: any, field: any) => (
-          <Form.Item name={[field.name, 'status_id']} noStyle initialValue={defectStatuses[0]?.id}>
+          <Form.Item
+            name={[field.name, 'status_id']}
+            noStyle
+            rules={[{ required: true, message: 'Выберите статус' }]}
+            initialValue={defectStatuses[0]?.id}
+          >
             <Select
               size="small"
               placeholder="Статус"
+              style={{ minWidth: 160 }}
+              dropdownMatchSelectWidth={false}
               options={defectStatuses.map((s) => ({ value: s.id, label: s.name }))}
             />
           </Form.Item>
@@ -67,12 +83,20 @@ export default function DefectEditableTable({ fields, add, remove }: Props) {
       {
         title: 'Тип',
         dataIndex: 'type_id',
+        width: 200,
         ellipsis: true,
         render: (_: any, field: any) => (
-          <Form.Item name={[field.name, 'type_id']} noStyle>
+          <Form.Item
+            name={[field.name, 'type_id']}
+            noStyle
+            rules={[{ required: true, message: 'Выберите тип' }]}
+            initialValue={defectTypes[0]?.id}
+          >
             <Select
               size="small"
               placeholder="Тип"
+              style={{ minWidth: 160 }}
+              dropdownMatchSelectWidth={false}
               options={defectTypes.map((d) => ({ value: d.id, label: d.name }))}
             />
           </Form.Item>
@@ -81,19 +105,52 @@ export default function DefectEditableTable({ fields, add, remove }: Props) {
       {
         title: 'Дата получения',
         dataIndex: 'received_at',
+        width: 200,
         ellipsis: true,
         render: (_: any, field: any) => (
-          <Form.Item name={[field.name, 'received_at']} noStyle initialValue={dayjs()}>
-            <DatePicker size="small" format="DD.MM.YYYY" style={{ width: '100%' }} />
-          </Form.Item>
+          <Space direction="vertical" size={2}>
+            <Form.Item
+              name={[field.name, 'received_at']}
+              noStyle
+              rules={[{ required: true, message: 'Укажите дату' }]}
+              initialValue={dayjs()}
+            >
+              <DatePicker size="small" format="DD.MM.YYYY" style={{ width: '100%' }} />
+            </Form.Item>
+            <Space size={4}>
+              {[10, 45, 60].map((d) => (
+                <Tag
+                  key={d}
+                  color="blue"
+                  onClick={() => {
+                    const rec = form.getFieldValue(['defects', field.name, 'received_at']);
+                    if (rec) {
+                      form.setFieldValue(
+                        ['defects', field.name, 'fixed_at'],
+                        dayjs(rec).add(d, 'day'),
+                      );
+                    }
+                  }}
+                  style={{ cursor: 'pointer' }}
+                >
+                  +{d}
+                </Tag>
+              ))}
+            </Space>
+          </Space>
         ),
       },
       {
         title: 'Дата устранения',
         dataIndex: 'fixed_at',
+        width: 180,
         ellipsis: true,
         render: (_: any, field: any) => (
-          <Form.Item name={[field.name, 'fixed_at']} noStyle>
+          <Form.Item
+            name={[field.name, 'fixed_at']}
+            noStyle
+            rules={[{ required: true, message: 'Укажите дату' }]}
+          >
             <DatePicker size="small" format="DD.MM.YYYY" style={{ width: '100%' }} />
           </Form.Item>
         ),
@@ -101,9 +158,15 @@ export default function DefectEditableTable({ fields, add, remove }: Props) {
       {
         title: 'Кем устраняется',
         dataIndex: 'fix_by',
+        width: 180,
         ellipsis: true,
         render: (_: any, field: any) => (
-          <Form.Item name={[field.name, 'fix_by']} noStyle initialValue="own">
+          <Form.Item
+            name={[field.name, 'fix_by']}
+            noStyle
+            rules={[{ required: true, message: 'Выберите исполнителя' }]}
+            initialValue="own"
+          >
             <Select
               size="small"
               options={[
@@ -142,7 +205,20 @@ export default function DefectEditableTable({ fields, add, remove }: Props) {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
         <span style={{ fontWeight: 500 }}>Дефекты</span>
-        <Button type="dashed" icon={<PlusOutlined />} onClick={() => add()}>
+        <Button
+          type="dashed"
+          icon={<PlusOutlined />}
+          onClick={() =>
+            add({
+              description: '',
+              status_id: defectStatuses[0]?.id ?? null,
+              type_id: defectTypes[0]?.id ?? null,
+              received_at: dayjs(),
+              fixed_at: null,
+              fix_by: 'own',
+            })
+          }
+        >
           Добавить дефект
         </Button>
       </div>
