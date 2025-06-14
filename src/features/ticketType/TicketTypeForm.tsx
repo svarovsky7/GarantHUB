@@ -15,7 +15,7 @@ import {
  *   onCancel: () => void
  * }} props
  */
-export default function DefectTypeForm({ initialData, onSubmit, onCancel }) {
+export default function TicketTypeForm({ initialData, onSubmit, onCancel }) {
   const {
     control,
     handleSubmit,

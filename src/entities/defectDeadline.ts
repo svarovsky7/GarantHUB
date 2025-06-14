@@ -4,9 +4,9 @@ import type { DefectDeadline } from '@/shared/types/defectDeadline';
 
 const TABLE = 'defect_deadlines';
 const SELECT = `
-  id, project_id, defect_type_id, fix_days,
+  id, project_id, ticket_type_id, fix_days,
   project:projects ( id, name ),
-  defect_type:defect_types ( id, name )
+  ticket_type:ticket_types ( id, name )
 `;
 
 export const useDefectDeadlines = () =>
@@ -25,9 +25,9 @@ export const useDefectDeadlines = () =>
 
 export const useAddDefectDeadline = () => {
   const qc = useQueryClient();
-  return useMutation<DefectDeadline, Error, Omit<DefectDeadline, 'id' | 'project' | 'defect_type'>>({
+  return useMutation<DefectDeadline, Error, Omit<DefectDeadline, 'id' | 'project' | 'ticket_type'>>({
     mutationFn: async (
-      payload: Omit<DefectDeadline, 'id' | 'project' | 'defect_type'>,
+      payload: Omit<DefectDeadline, 'id' | 'project' | 'ticket_type'>,
     ): Promise<DefectDeadline> => {
       const { data, error } = await supabase
         .from(TABLE)
@@ -43,7 +43,7 @@ export const useAddDefectDeadline = () => {
 
 export const useUpdateDefectDeadline = () => {
   const qc = useQueryClient();
-  return useMutation<DefectDeadline, Error, { id: number; updates: Partial<Omit<DefectDeadline, 'id' | 'project' | 'defect_type'>> }>({
+  return useMutation<DefectDeadline, Error, { id: number; updates: Partial<Omit<DefectDeadline, 'id' | 'project' | 'ticket_type'>> }>({
     mutationFn: async ({
       id,
       updates,

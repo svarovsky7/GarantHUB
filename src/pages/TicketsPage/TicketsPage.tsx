@@ -180,6 +180,7 @@ export default function TicketsPage() {
       projects: uniq(ticketsWithNames, "projectName"),
       units: uniq(ticketsWithNames, "unitNames"),
       statuses: uniq(ticketsWithNames, "statusName"),
+      types: uniq(ticketsWithNames, "typeName"),
       responsibleEngineers: uniq(ticketsWithNames, "responsibleEngineerName"),
       ids: uniq(ticketsWithNames, "id"),
     };
@@ -275,6 +276,12 @@ export default function TicketsPage() {
         width: 160,
         sorter: (a: any, b: any) => Number(a.isClosed) - Number(b.isClosed),
         render: (_: any, row: any) => <TicketClosedSelect ticketId={row.id} isClosed={row.isClosed} />,
+      },
+      typeName: {
+        title: 'Тип замечания',
+        dataIndex: 'typeName',
+        width: 160,
+        sorter: (a: any, b: any) => a.typeName.localeCompare(b.typeName),
       },
       days: {
         title: 'Прошло дней с Даты получения',
