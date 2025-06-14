@@ -7,6 +7,7 @@ const { RangePicker } = DatePicker;
 interface Options {
   ids: { label: string; value: number }[];
   tickets: { label: string; value: number }[];
+  projects: { label: string; value: number }[];
   units: { label: string; value: number }[];
 }
 
@@ -39,6 +40,9 @@ export default function DefectsFilters({
       </Form.Item>
       <Form.Item name="ticketId" label="№ замечания">
         <Select mode="multiple" allowClear options={options.tickets} />
+      </Form.Item>
+      <Form.Item name="project" label="Проект">
+        <Select allowClear options={options.projects} />
       </Form.Item>
       <Form.Item name="units" label="Объекты">
         <Select mode="multiple" allowClear options={options.units} />
