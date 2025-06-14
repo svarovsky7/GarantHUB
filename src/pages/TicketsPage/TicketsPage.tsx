@@ -65,6 +65,12 @@ export default function TicketsPage() {
   const hideOnScroll = React.useRef(false);
   const deleteTicketMutation = useDeleteTicket();
 
+  React.useEffect(() => {
+    if (searchParams.get('open_form') === '1') {
+      setShowAddForm(true);
+    }
+  }, [searchParams]);
+
   const LS_FILTERS_VISIBLE_KEY = 'ticketsFiltersVisible';
   const LS_COLUMNS_KEY = 'ticketsColumns';
   const [showFilters, setShowFilters] = useState(() => {

@@ -331,35 +331,33 @@ export default function UnitsMatrix({
               onClick={() => {
                 const id = actionDialog.unit?.id;
                 navigate(
-                  `/tickets?project_id=${projectId}&unit_id=${id}&responsible_engineer_id=${profileId ?? ''}`,
+                  `/tickets?project_id=${projectId}&unit_id=${id}&responsible_engineer_id=${profileId ?? ''}&open_form=1`,
                 );
                 setActionDialog({ open: false, unit: null, action: '' });
               }}
             >
               Добавить замечание
             </Button>
-            <Tooltip title="Добавить судебное дело" arrow>
-              <Button
-                variant="outlined"
-                color="secondary"
-                fullWidth
-                onClick={() => {
-                  const id = actionDialog.unit?.id;
-                  const search = createSearchParams({
-                    project_id: String(projectId),
-                    unit_id: String(id ?? ''),
-                    responsible_lawyer_id: String(profileId ?? ''),
-                  }).toString();
-                  navigate(`/court-cases?${search}`);
-                  setActionDialog({ open: false, unit: null, action: '' });
-                }}
-              >
-                Добавить судебное дело
-              </Button>
-            </Tooltip>
             <Button
-              variant="outlined"
-              color="inherit"
+              variant="contained"
+              color="secondary"
+              fullWidth
+              onClick={() => {
+                const id = actionDialog.unit?.id;
+                const search = createSearchParams({
+                  project_id: String(projectId),
+                  unit_id: String(id ?? ''),
+                  responsible_lawyer_id: String(profileId ?? ''),
+                }).toString();
+                navigate(`/court-cases?${search}`);
+                setActionDialog({ open: false, unit: null, action: '' });
+              }}
+            >
+              Добавить судебное дело
+            </Button>
+            <Button
+              variant="contained"
+              color="info"
               fullWidth
               onClick={() => {
                 const id = actionDialog.unit?.id;
@@ -372,11 +370,11 @@ export default function UnitsMatrix({
               Добавить письмо
             </Button>
             <Button
-              variant="text"
-              color="info"
+              variant="contained"
+              color="inherit"
               fullWidth
               onClick={() =>
-                setActionDialog((ad) => ({ ...ad, action: "history" }))
+                setActionDialog((ad) => ({ ...ad, action: 'history' }))
               }
             >
               Показать историю
