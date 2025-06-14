@@ -70,7 +70,7 @@ export default function CourtCasesPage() {
   const [viewId, setViewId] = useState<number | null>(null);
   const hideOnScroll = useRef(false);
 
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const initialValues = {
     project_id: searchParams.get('project_id')
       ? Number(searchParams.get('project_id')!)
@@ -455,7 +455,16 @@ export default function CourtCasesPage() {
           onClose={() => setShowColumnsDrawer(false)}
           onReset={handleResetColumns}
         />
-        <CourtCaseViewModal open={viewId !== null} caseId={viewId} onClose={() => setViewId(null)} />
+        <CourtCaseViewModal
+          open={viewId !== null}
+          caseId={viewId}
+          onClose={() => {
+            setViewId(null);
+            const params = new URLSearchParams(searchParams);
+            params.delete('case_id');
+            setSearchParams(params, { replace: true });
+          }}
+        />
         <div
           style={{ marginTop: 24 }}
           onWheel={() => {

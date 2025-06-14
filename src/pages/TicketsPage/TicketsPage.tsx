@@ -56,7 +56,7 @@ export default function TicketsPage() {
   );
   const { data: units = [] } = useUnitsByIds(unitIds);
   const qc = useQueryClient();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [filters, setFilters] = useState({});
   const [initialFilters, setInitialFilters] = useState({});
   const [viewId, setViewId] = useState<number | null>(null);
@@ -510,7 +510,12 @@ export default function TicketsPage() {
         <TicketViewModal
           open={viewId !== null}
           ticketId={viewId}
-          onClose={() => setViewId(null)}
+          onClose={() => {
+            setViewId(null);
+            const params = new URLSearchParams(searchParams);
+            params.delete('ticket_id');
+            setSearchParams(params, { replace: true });
+          }}
         />
       </>
     </ConfigProvider>

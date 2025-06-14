@@ -83,7 +83,7 @@ export default function CorrespondencePage() {
   const linkLetters = useLinkLetters();
   const unlinkLetter = useUnlinkLetter();
   const notify = useNotify();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [filters, setFilters] = useState<Filters>(() => {
     let hideClosed = false;
     try {
@@ -620,7 +620,16 @@ export default function CorrespondencePage() {
             Готовых писем к выгрузке: {readyToExport}
           </Typography.Text>
         </div>
-        <LetterViewModal open={viewId !== null} letterId={viewId} onClose={() => setViewId(null)} />
+        <LetterViewModal
+          open={viewId !== null}
+          letterId={viewId}
+          onClose={() => {
+            setViewId(null);
+            const params = new URLSearchParams(searchParams);
+            params.delete('letter_id');
+            setSearchParams(params, { replace: true });
+          }}
+        />
       </>
     </ConfigProvider>
   );
