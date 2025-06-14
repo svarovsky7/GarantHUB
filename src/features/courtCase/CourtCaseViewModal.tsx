@@ -17,9 +17,23 @@ export default function CourtCaseViewModal({ open, caseId, onClose }: Props) {
   if (!caseId) return null;
 
   return (
-    <Modal open={open} onCancel={onClose} footer={null} width="80%" title={<Typography.Title level={4} style={{ margin: 0 }}>{titleText}</Typography.Title>}>
+    <Modal
+      destroyOnClose
+      open={open}
+      onCancel={onClose}
+      footer={null}
+      width="80%"
+      title={<Typography.Title level={4} style={{ margin: 0 }}>{titleText}</Typography.Title>}
+    >
       {courtCase ? (
-        <CourtCaseFormAntdEdit caseId={String(caseId)} onCancel={onClose} onSaved={onClose} embedded />
+        <CourtCaseFormAntdEdit
+          key={String(caseId)}
+          caseId={String(caseId)}
+          caseData={courtCase}
+          onCancel={onClose}
+          onSaved={onClose}
+          embedded
+        />
       ) : null}
     </Modal>
   );
