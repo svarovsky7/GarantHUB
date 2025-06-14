@@ -119,7 +119,6 @@ export default function TicketFormAntdEdit({
         title: ticket.title,
         description: ticket.description ?? undefined,
       });
-      appendRemote(ticket.attachments || []);
       setFormTouched(false);
     } else {
       form.setFieldsValue({
@@ -130,7 +129,7 @@ export default function TicketFormAntdEdit({
       });
       setFormTouched(false);
     }
-  }, [ticket, form, globalProjectId, profileId, initialUnitId, appendRemote]);
+  }, [ticket, form, globalProjectId, profileId, initialUnitId]);
 
   const handleFiles = (files: File[]) => addFiles(files);
   const handleValuesChange = () => setFormTouched(true);
