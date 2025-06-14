@@ -308,15 +308,42 @@ export function useLetter(letterId: number | string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from(LETTERS_TABLE)
-        .select('*')
+        .select(
+          `id, project_id, number, letter_type_id, status_id, letter_date, subject, content, sender, receiver, responsible_user_id, unit_ids, attachment_ids`
+        )
         .eq('id', id)
         .single();
       if (error) throw error;
+      const { data: link } = await supabase
+        .from(LINKS_TABLE)
+        .select('parent_id')
+        .eq('child_id', id)
+        .maybeSingle();
+      const type = data?.receiver ? 'outgoing' : 'incoming';
+      const sender = data?.sender || '';
+      const receiver = data?.receiver || '';
       let attachments: any[] = [];
       if (data?.attachment_ids?.length) {
         attachments = await getAttachmentsByIds(data.attachment_ids);
       }
-      return { ...(data as any), attachments } as CorrespondenceLetter & { attachments: any[] };
+      return {
+        id: String(data!.id),
+        type,
+        parent_id: link?.parent_id != null ? String(link.parent_id) : null,
+        responsible_user_id: data?.responsible_user_id ? String(data.responsible_user_id) : null,
+        status_id: data?.status_id ?? null,
+        letter_type_id: data?.letter_type_id ?? null,
+        project_id: data?.project_id ?? null,
+        unit_ids: (data?.unit_ids ?? []) as number[],
+        attachment_ids: data?.attachment_ids ?? [],
+        number: data!.number,
+        date: data!.letter_date,
+        sender,
+        receiver,
+        subject: data?.subject ?? '',
+        content: data?.content ?? '',
+        attachments,
+      } as CorrespondenceLetter & { attachments: any[] };
     },
     staleTime: 5 * 60_000,
   });
