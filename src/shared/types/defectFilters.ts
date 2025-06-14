@@ -4,6 +4,7 @@ import { Dayjs } from 'dayjs';
 export interface DefectFilters {
   id?: number[];
   ticketId?: number[];
+  project?: number;
   units?: number[];
   period?: [Dayjs, Dayjs];
 }
