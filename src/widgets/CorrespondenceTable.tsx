@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import dayjs from 'dayjs';
 import { Table, Space, Button, Popconfirm, Tag, Tooltip } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { DeleteOutlined, PlusOutlined, MailOutlined, BranchesOutlined, LinkOutlined, EyeOutlined } from '@ant-design/icons';
+import { DeleteOutlined, PlusOutlined, MailOutlined, BranchesOutlined, LinkOutlined } from '@ant-design/icons';
 import { CorrespondenceLetter } from '@/shared/types/correspondence';
 import LetterStatusSelect from '@/features/correspondence/LetterStatusSelect';
 
@@ -12,8 +12,7 @@ interface CorrespondenceTableProps {
   letters: CorrespondenceLetter[];
   onDelete: (id: string) => void;
   onAddChild: (parent: CorrespondenceLetter) => void;
-  onUnlink: (letterId: string) => void;
-  onView?: (id: string) => void;
+  onUnlink: (letterId: string) => void; // <--- новый проп
   /** Колонки таблицы. Если не переданы, используется набор по умолчанию */
   columns?: ColumnsType<any>;
   users: Option[];
@@ -32,7 +31,6 @@ export default function CorrespondenceTable({
                                               onDelete,
                                               onAddChild,
                                               onUnlink,
-                                              onView,
                                               columns: columnsProp,
                                               users,
                                               letterTypes,
@@ -234,11 +232,6 @@ export default function CorrespondenceTable({
       width: 150,
       render: (_: any, record: CorrespondenceLetter) => (
           <Space size="middle">
-            {onView && (
-              <Tooltip title="Просмотр">
-                <Button type="text" icon={<EyeOutlined />} onClick={() => onView(record.id)} />
-              </Tooltip>
-            )}
             <Button type="text" icon={<PlusOutlined />} onClick={() => onAddChild(record)} />
             {/* Только для связанных писем — показать кнопку "исключить" */}
             {record.parent_id && (
@@ -270,7 +263,7 @@ export default function CorrespondenceTable({
       ),
     },
   ],
-    [onAddChild, onUnlink, onDelete, onView],
+    [onAddChild, onUnlink, onDelete],
   );
 
   const columns = columnsProp ?? defaultColumns;
