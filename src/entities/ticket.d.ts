@@ -24,11 +24,10 @@ export interface Ticket {
   parentId: number | null;
   projectId: number;
   unitIds: number[];
-  typeId: number | null;
   statusId: number | null;
   projectName: string;
   unitNames: string;
-  typeName: string;
+  defectIds: number[];
   statusName: string;
   statusColor: string | null;
   title: string;

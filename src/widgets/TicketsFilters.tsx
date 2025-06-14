@@ -108,9 +108,6 @@ export default function TicketsFilters({ options, onChange, initialValues = {} }
       <Form.Item name="status" label="Статусы">
         <Select allowClear options={options.statuses} />
       </Form.Item>
-      <Form.Item name="type" label="Тип замечания">
-        <Select allowClear options={options.types} />
-      </Form.Item>
       <Form.Item name="requestNo" label="№ заявки от Заказчика">
         <Input />
       </Form.Item>
