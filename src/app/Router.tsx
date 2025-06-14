@@ -12,6 +12,7 @@ import TicketsPage from "@/pages/TicketsPage/TicketsPage";
 import TicketFormPage from "@/pages/TicketsPage/TicketFormPage";
 import CourtCasesPage from "@/pages/CourtCasesPage/CourtCasesPage";
 import CorrespondencePage from "@/pages/CorrespondencePage/CorrespondencePage";
+import DefectsPage from "@/pages/DefectsPage/DefectsPage";
 import LoginPage from "@/pages/UnitsPage/LoginPage"; // ← CHANGE
 import RegisterPage from "@/pages/UnitsPage/RegisterPage"; // ← CHANGE
 import AdminPage from "@/pages/UnitsPage/AdminPage";
@@ -76,6 +77,15 @@ export default function AppRouter() {
           </RequireAuth>
         }
         data-oid="41m4r4h"
+      />
+
+      <Route
+        path="/defects"
+        element={
+          <RequireAuth>
+            <DefectsPage />
+          </RequireAuth>
+        }
       />
 
       <Route

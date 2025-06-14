@@ -520,6 +520,26 @@ export function useAllTicketsSimple() {
 }
 
 // -----------------------------------------------------------------------------
+// Получить список замечаний текущего проекта (минимальный набор полей)
+// -----------------------------------------------------------------------------
+export function useTicketsSimple() {
+  const projectId = useProjectId();
+  return useQuery({
+    queryKey: ["tickets-simple", projectId],
+    enabled: !!projectId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tickets")
+        .select("id, project_id, unit_ids, defect_ids")
+        .eq("project_id", projectId);
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
+// -----------------------------------------------------------------------------
 // Обновить статус замечания
 // -----------------------------------------------------------------------------
 export function useUpdateTicketStatus() {
