@@ -61,7 +61,7 @@ export default function TicketsPage() {
   const [initialFilters, setInitialFilters] = useState({});
   const [viewId, setViewId] = useState<number | null>(null);
   const [linkFor, setLinkFor] = useState<any | null>(null);
-  const [showAddForm, setShowAddForm] = useState(() => searchParams.get('add') === '1');
+  const [showAddForm, setShowAddForm] = useState(false);
   const hideOnScroll = React.useRef(false);
   const deleteTicketMutation = useDeleteTicket();
 
