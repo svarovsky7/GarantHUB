@@ -150,11 +150,10 @@ function mapTicket(r) {
     parentId: r.parent_id ?? null,
     projectId: r.project_id,
     unitIds: r.unit_ids || [],
-    typeId: r.type_id,
     statusId: r.status_id,
     projectName: r.projects?.name ?? "—",
     unitNames: [],
-    typeName: r.ticket_types?.name ?? "—",
+    defectIds: r.defect_ids || [],
     statusName: r.ticket_statuses?.name ?? "—",
     statusColor: r.ticket_statuses?.color ?? null,
     title: r.title,
@@ -184,12 +183,12 @@ export function useTickets() {
         .from("tickets")
         .select(
           `
-          id, project_id, unit_ids, type_id, status_id, title, description,
+          id, project_id, unit_ids, defect_ids, status_id, title, description,
           customer_request_no, customer_request_date, responsible_engineer_id,
           created_by, is_warranty, is_closed, created_at, received_at, fixed_at,
           attachment_ids,
           projects (id, name),
-          ticket_types (id, name), ticket_statuses (id, name, color)
+          ticket_statuses (id, name, color)
         `,
         )
         .eq("project_id", projectId)
@@ -320,12 +319,12 @@ export function useTicket(ticketId) {
         .from("tickets")
         .select(
           `
-          id, project_id, unit_ids, type_id, status_id, title, description,
+          id, project_id, unit_ids, defect_ids, status_id, title, description,
           customer_request_no, customer_request_date, responsible_engineer_id,
           created_by, is_warranty, is_closed, created_at, received_at, fixed_at,
           attachment_ids,
           projects (id, name),
-          ticket_types (id, name), ticket_statuses (id, name, color)
+          ticket_statuses (id, name, color)
         `,
         )
         .eq("id", id)
