@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import dayjs, { Dayjs } from 'dayjs';
 import { Form, Input, Select, DatePicker, Switch, Button, Row, Col } from 'antd';
-import { useTicketTypes } from '@/entities/ticketType';
+import { PlusOutlined } from '@ant-design/icons';
+import { useDefectTypes } from '@/entities/defectType';
 import { useTicketStatuses } from '@/entities/ticketStatus';
 import { useUnitsByProject } from '@/entities/unit';
 import { useUsers } from '@/entities/user';
 import { useProjects } from '@/entities/project';
 import { useCreateTicket } from '@/entities/ticket';
-import { useDefectDeadlines } from '@/entities/defectDeadline';
 import { useAttachmentTypes } from '@/entities/attachmentType';
 import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useAuthStore } from '@/shared/store/authStore';
@@ -31,7 +31,6 @@ export interface TicketFormAntdProps {
 export interface TicketFormAntdValues {
   project_id: number | null;
   unit_ids: number[];
-  type_id: number | null;
   status_id: number | null;
   title: string;
   description: string | null;
@@ -41,6 +40,7 @@ export interface TicketFormAntdValues {
   is_warranty: boolean;
   received_at: Dayjs;
   fixed_at: Dayjs | null;
+  defects?: Array<{ type_id: number | null; fixed_at: Dayjs | null; fix_by: string }>;
   /** Дополнительные данные разметки, не отправляются на сервер */
   pins?: unknown;
 }
@@ -50,25 +50,16 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
   const globalProjectId = useProjectId();
   const projectId = Form.useWatch('project_id', form) ?? globalProjectId;
 
-  const { data: types = [] } = useTicketTypes();
+  const { data: defectTypes = [] } = useDefectTypes();
   const { data: statuses = [] } = useTicketStatuses();
   const { data: projects = [] } = useProjects();
   const { data: units = [] } = useUnitsByProject(projectId);
   const { data: users = [] } = useUsers();
   const { data: attachmentTypes = [] } = useAttachmentTypes();
-  const { data: deadlines = [] } = useDefectDeadlines();
   const create = useCreateTicket();
   const notify = useNotify();
   const [files, setFiles] = useState<{ file: File; type_id: number | null }[]>([]);
   const profileId = useAuthStore((s) => s.profile?.id);
-  const typeId = Form.useWatch('type_id', form);
-  const deadlineDays = React.useMemo(() => {
-    if (!projectId || !typeId) return null;
-    const rec = deadlines.find(
-      (d) => d.project_id === projectId && d.ticket_type_id === typeId,
-    );
-    return rec?.fix_days ?? null;
-  }, [projectId, typeId, deadlines]);
 
   useEffect(() => {
     if (initialValues.project_id != null) {
@@ -122,6 +113,11 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
         ...rest,
         project_id: values.project_id ?? globalProjectId,
         attachments: files,
+        defects: (values.defects || []).map((d) => ({
+          type_id: d.type_id ?? null,
+          fixed_at: d.fixed_at ? d.fixed_at.format('YYYY-MM-DD') : null,
+          fix_by: d.fix_by,
+        })),
         received_at: values.received_at.format('YYYY-MM-DD'),
         fixed_at: values.fixed_at ? values.fixed_at.format('YYYY-MM-DD') : null,
         customer_request_date: values.customer_request_date
@@ -179,15 +175,6 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
           </Form.Item>
         </Col>
         <Col span={8}>
-          <Form.Item
-            name="type_id"
-            label={`Тип${deadlineDays ? ` (${deadlineDays} дн.)` : ''}`}
-            rules={[{ required: true }]}
-          >
-            <Select options={types.map((t) => ({ value: t.id, label: t.name }))} />
-          </Form.Item>
-        </Col>
-        <Col span={8}>
           <Form.Item name="is_warranty" label="Гарантия" valuePropName="checked">
             <Switch />
           </Form.Item>
@@ -205,6 +192,60 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
           </Form.Item>
         </Col>
       </Row>
+      <Form.List name="defects">
+        {(fields, { add, remove }) => (
+          <>
+            <table style={{ width: '100%', marginBottom: 16 }}>
+              <thead>
+                <tr>
+                  <th style={{ width: 40 }}>#</th>
+                  <th>Наименование дефекта</th>
+                  <th style={{ width: 160 }}>Дата устранения</th>
+                  <th style={{ width: 180 }}>Кем устраняется</th>
+                  <th style={{ width: 40 }}></th>
+                </tr>
+              </thead>
+              <tbody>
+                {fields.map((field, index) => (
+                  <tr key={field.key}>
+                    <td>{index + 1}</td>
+                    <td>
+                      <Form.Item name={[field.name, 'type_id']} noStyle>
+                        <Select
+                          placeholder="Тип дефекта"
+                          options={defectTypes.map((d) => ({ value: d.id, label: d.name }))}
+                          style={{ width: '100%' }}
+                        />
+                      </Form.Item>
+                    </td>
+                    <td>
+                      <Form.Item name={[field.name, 'fixed_at']} noStyle>
+                        <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
+                      </Form.Item>
+                    </td>
+                    <td>
+                      <Form.Item name={[field.name, 'fix_by']} noStyle initialValue="own">
+                        <Select
+                          options={[
+                            { value: 'own', label: 'Собственные силы' },
+                            { value: 'contractor', label: 'Подрядчик' },
+                          ]}
+                        />
+                      </Form.Item>
+                    </td>
+                    <td>
+                      <Button type="text" danger onClick={() => remove(field.name)}>
+                        Удалить
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <Button type="dashed" onClick={() => add()} icon={<PlusOutlined />}>Добавить дефект</Button>
+          </>
+        )}
+      </Form.List>
       <Row gutter={16}>
         <Col span={8}>
           <Form.Item name="received_at" label="Дата получения" rules={[{ required: true }]}>
@@ -233,22 +274,6 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
             </Button>
           </Col>
         ))}
-        {deadlineDays && (
-          <Col>
-            <Button
-              size="small"
-              style={{ background: '#2e7d32', color: '#fff' }}
-              onClick={() => {
-                const rec = form.getFieldValue('received_at');
-                if (rec) {
-                  form.setFieldValue('fixed_at', dayjs(rec).add(deadlineDays, 'day'));
-                }
-              }}
-            >
-              +{deadlineDays} дней
-            </Button>
-          </Col>
-        )}
       </Row>
       <Form.Item name="title" label="Краткое описание" rules={[{ required: true }]}> 
         <Input />
