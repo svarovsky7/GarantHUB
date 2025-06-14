@@ -83,19 +83,22 @@ export default function CorrespondencePage() {
   const linkLetters = useLinkLetters();
   const unlinkLetter = useUnlinkLetter();
   const notify = useNotify();
+  const [searchParams] = useSearchParams();
   const [filters, setFilters] = useState<Filters>(() => {
     let hideClosed = false;
     try {
       const saved = localStorage.getItem(LS_HIDE_CLOSED_KEY);
       hideClosed = saved ? JSON.parse(saved) : false;
     } catch {}
+    const prj = searchParams.get('project_id');
+    const unit = searchParams.get('unit_id');
     return {
       period: null,
       type: '',
       id: [],
       category: '',
-      project: '',
-      unit: '',
+      project: prj ? Number(prj) : '',
+      unit: unit ? Number(unit) : '',
       sender: '',
       receiver: '',
       subject: '',
@@ -103,9 +106,8 @@ export default function CorrespondencePage() {
       status: '',
       responsible: '',
       hideClosed,
-    };
+    } as Filters;
   });
-  const [searchParams] = useSearchParams();
   const [form] = Form.useForm();
   const initialValues = {
     project_id: searchParams.get('project_id')
@@ -161,6 +163,17 @@ export default function CorrespondencePage() {
       setFilters((f) => ({ ...f, id: valid }));
       form.setFieldValue('id', valid);
     }
+    const letterId = searchParams.get('letter_id');
+    if (letterId) {
+      setViewId(letterId);
+    }
+    const prj = searchParams.get('project_id');
+    const unit = searchParams.get('unit_id');
+    setFilters((f) => ({
+      ...f,
+      project: prj ? Number(prj) : f.project,
+      unit: unit ? Number(unit) : f.unit,
+    }));
   }, [searchParams, letters]);
 
 
