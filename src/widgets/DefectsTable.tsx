@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react';
 import dayjs from 'dayjs';
-import { Table, Button, Tooltip, Skeleton } from 'antd';
-import { EyeOutlined } from '@ant-design/icons';
+import { Table, Button, Tooltip, Skeleton, Popconfirm, message } from 'antd';
+import { EyeOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import { useDeleteDefect } from '@/entities/defect';
 import type { DefectWithInfo } from '@/shared/types/defect';
 import type { DefectFilters } from '@/shared/types/defectFilters';
 
@@ -13,10 +14,13 @@ interface Props {
   defects: DefectWithInfo[];
   filters: DefectFilters;
   loading?: boolean;
+  /** Колонки таблицы. Если не переданы, используется набор по умолчанию */
+  columns?: ColumnsType<DefectWithInfo>;
   onView?: (id: number) => void;
 }
 
-export default function DefectsTable({ defects, filters, loading, onView }: Props) {
+export default function DefectsTable({ defects, filters, loading, columns: columnsProp, onView }: Props) {
+  const { mutateAsync: remove, isPending } = useDeleteDefect();
   const filtered = useMemo(() => {
     return defects.filter((d) => {
       if (filters.id && !filters.id.includes(d.id)) return false;
@@ -31,7 +35,7 @@ export default function DefectsTable({ defects, filters, loading, onView }: Prop
     });
   }, [defects, filters]);
 
-  const columns: ColumnsType<DefectWithInfo> = [
+  const defaultColumns: ColumnsType<DefectWithInfo> = [
     { title: 'ID', dataIndex: 'id', width: 80 },
     { title: '№ замечания', dataIndex: 'ticketIds', render: (v) => v.join(', ') },
     { title: 'Объекты', dataIndex: 'unitNames' },
@@ -43,14 +47,30 @@ export default function DefectsTable({ defects, filters, loading, onView }: Prop
     {
       title: 'Действия',
       key: 'actions',
-      width: 80,
+      width: 100,
       render: (_, row) => (
-        <Tooltip title="Просмотр">
-          <Button size="small" type="text" icon={<EyeOutlined />} onClick={() => onView && onView(row.id)} />
-        </Tooltip>
+        <>
+          <Tooltip title="Просмотр">
+            <Button size="small" type="text" icon={<EyeOutlined />} onClick={() => onView && onView(row.id)} />
+          </Tooltip>
+          <Popconfirm
+            title="Удалить дефект?"
+            okText="Да"
+            cancelText="Нет"
+            onConfirm={async () => {
+              await remove(row.id);
+              message.success('Удалено');
+            }}
+            disabled={isPending}
+          >
+            <Button size="small" type="text" danger icon={<DeleteOutlined />} loading={isPending} />
+          </Popconfirm>
+        </>
       ),
     },
   ];
+
+  const columns = columnsProp ?? defaultColumns;
 
   if (loading) return <Skeleton active paragraph={{ rows: 6 }} />;
 
