@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import dayjs from 'dayjs';
-import { ConfigProvider, Card, Button } from 'antd';
+import { ConfigProvider, Card, Button, Typography } from 'antd';
 import { SettingOutlined } from '@ant-design/icons';
 import ruRU from 'antd/locale/ru_RU';
 import { useDefects } from '@/entities/defect';
@@ -11,6 +11,8 @@ import DefectsFilters from '@/widgets/DefectsFilters';
 import TableColumnsDrawer from '@/widgets/TableColumnsDrawer';
 import type { TableColumnSetting } from '@/shared/types/tableColumnSetting';
 import DefectViewModal from '@/features/defect/DefectViewModal';
+import ExportDefectsButton from '@/features/defect/ExportDefectsButton';
+import { filterDefects } from '@/shared/utils/defectFilter';
 import type { DefectWithInfo } from '@/shared/types/defect';
 import type { DefectFilters } from '@/shared/types/defectFilters';
 
@@ -83,24 +85,57 @@ export default function DefectsPage() {
 
   const baseColumns = useMemo(() => {
     return {
-      id: { title: 'ID', dataIndex: 'id', width: 80 },
+      id: {
+        title: 'ID',
+        dataIndex: 'id',
+        width: 80,
+        sorter: (a: DefectWithInfo, b: DefectWithInfo) => a.id - b.id,
+      },
       tickets: {
         title: '№ замечания',
         dataIndex: 'ticketIds',
+        sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
+          a.ticketIds.join(',').localeCompare(b.ticketIds.join(',')),
         render: (v: number[]) => v.join(', '),
       },
-      units: { title: 'Объекты', dataIndex: 'unitNames' },
-      description: { title: 'Описание', dataIndex: 'description' },
-      type: { title: 'Тип', dataIndex: 'defectTypeName' },
-      status: { title: 'Статус', dataIndex: 'defectStatusName' },
+      units: {
+        title: 'Объекты',
+        dataIndex: 'unitNames',
+        sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
+          (a.unitNames || '').localeCompare(b.unitNames || ''),
+      },
+      description: {
+        title: 'Описание',
+        dataIndex: 'description',
+        sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
+          a.description.localeCompare(b.description),
+      },
+      type: {
+        title: 'Тип',
+        dataIndex: 'defectTypeName',
+        sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
+          (a.defectTypeName || '').localeCompare(b.defectTypeName || ''),
+      },
+      status: {
+        title: 'Статус',
+        dataIndex: 'defectStatusName',
+        sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
+          (a.defectStatusName || '').localeCompare(b.defectStatusName || ''),
+      },
       received: {
         title: 'Дата получения',
         dataIndex: 'received_at',
+        sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
+          (a.received_at ? dayjs(a.received_at).valueOf() : 0) -
+          (b.received_at ? dayjs(b.received_at).valueOf() : 0),
         render: fmt,
       },
       created: {
         title: 'Дата создания',
         dataIndex: 'created_at',
+        sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
+          (a.created_at ? dayjs(a.created_at).valueOf() : 0) -
+          (b.created_at ? dayjs(b.created_at).valueOf() : 0),
         render: fmt,
       },
       actions: {
@@ -158,6 +193,17 @@ export default function DefectsPage() {
 
   const [showColumnsDrawer, setShowColumnsDrawer] = useState(false);
 
+  const total = data.length;
+  const closedCount = useMemo(
+    () => data.filter((d) => d.defectStatusName?.toLowerCase().includes('закры')).length,
+    [data],
+  );
+  const openCount = total - closedCount;
+  const readyToExport = useMemo(
+    () => filterDefects(data, filters).length,
+    [data, filters],
+  );
+
   return (
     <ConfigProvider locale={ruRU}>
       <>
@@ -169,6 +215,9 @@ export default function DefectsPage() {
           style={{ marginTop: 16, marginLeft: 8 }}
           onClick={() => setShowColumnsDrawer(true)}
         />
+        <span style={{ marginTop: 16, marginLeft: 8, display: 'inline-block' }}>
+          <ExportDefectsButton defects={data} filters={filters} />
+        </span>
         {showFilters && (
           <Card style={{ marginTop: 16, marginBottom: 24 }}>
             <DefectsFilters options={options} onChange={setFilters} />
@@ -188,6 +237,12 @@ export default function DefectsPage() {
           onClose={() => setShowColumnsDrawer(false)}
           onReset={handleResetColumns}
         />
+        <Typography.Text style={{ display: 'block', marginTop: 8 }}>
+          Всего дефектов: {total}, из них закрытых: {closedCount} и не закрытых: {openCount}
+        </Typography.Text>
+        <Typography.Text style={{ display: 'block', marginTop: 4 }}>
+          Готовых дефектов к выгрузке: {readyToExport}
+        </Typography.Text>
         <DefectViewModal
           open={viewId !== null}
           defectId={viewId}

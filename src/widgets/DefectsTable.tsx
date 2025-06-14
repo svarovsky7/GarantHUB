@@ -36,14 +36,57 @@ export default function DefectsTable({ defects, filters, loading, columns: colum
   }, [defects, filters]);
 
   const defaultColumns: ColumnsType<DefectWithInfo> = [
-    { title: 'ID', dataIndex: 'id', width: 80 },
-    { title: '№ замечания', dataIndex: 'ticketIds', render: (v) => v.join(', ') },
-    { title: 'Объекты', dataIndex: 'unitNames' },
-    { title: 'Описание', dataIndex: 'description' },
-    { title: 'Тип', dataIndex: 'defectTypeName' },
-    { title: 'Статус', dataIndex: 'defectStatusName' },
-    { title: 'Дата получения', dataIndex: 'received_at', render: fmt },
-    { title: 'Дата создания', dataIndex: 'created_at', render: fmt },
+    {
+      title: 'ID',
+      dataIndex: 'id',
+      width: 80,
+      sorter: (a, b) => a.id - b.id,
+    },
+    {
+      title: '№ замечания',
+      dataIndex: 'ticketIds',
+      sorter: (a, b) =>
+        a.ticketIds.join(',').localeCompare(b.ticketIds.join(',')),
+      render: (v: number[]) => v.join(', '),
+    },
+    {
+      title: 'Объекты',
+      dataIndex: 'unitNames',
+      sorter: (a, b) => (a.unitNames || '').localeCompare(b.unitNames || ''),
+    },
+    {
+      title: 'Описание',
+      dataIndex: 'description',
+      sorter: (a, b) => a.description.localeCompare(b.description),
+    },
+    {
+      title: 'Тип',
+      dataIndex: 'defectTypeName',
+      sorter: (a, b) =>
+        (a.defectTypeName || '').localeCompare(b.defectTypeName || ''),
+    },
+    {
+      title: 'Статус',
+      dataIndex: 'defectStatusName',
+      sorter: (a, b) =>
+        (a.defectStatusName || '').localeCompare(b.defectStatusName || ''),
+    },
+    {
+      title: 'Дата получения',
+      dataIndex: 'received_at',
+      sorter: (a, b) =>
+        (a.received_at ? dayjs(a.received_at).valueOf() : 0) -
+        (b.received_at ? dayjs(b.received_at).valueOf() : 0),
+      render: fmt,
+    },
+    {
+      title: 'Дата создания',
+      dataIndex: 'created_at',
+      sorter: (a, b) =>
+        (a.created_at ? dayjs(a.created_at).valueOf() : 0) -
+        (b.created_at ? dayjs(b.created_at).valueOf() : 0),
+      render: fmt,
+    },
     {
       title: 'Действия',
       key: 'actions',
@@ -74,5 +117,13 @@ export default function DefectsTable({ defects, filters, loading, columns: colum
 
   if (loading) return <Skeleton active paragraph={{ rows: 6 }} />;
 
-  return <Table rowKey="id" columns={columns} dataSource={filtered} pagination={{ pageSize: 25 }} />;
+  return (
+    <Table
+      rowKey="id"
+      columns={columns}
+      dataSource={filtered}
+      pagination={{ pageSize: 25 }}
+      style={{ background: '#fff' }}
+    />
+  );
 }
