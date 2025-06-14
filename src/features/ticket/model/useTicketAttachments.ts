@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { AttachmentType } from '@/shared/types/attachmentType';
 import type { Ticket } from '@/shared/types/ticket';
 import type { RemoteTicketFile, NewTicketFile } from '@/shared/types/ticketFile';
@@ -48,19 +48,35 @@ export function useTicketAttachments(options: {
     setInitialTypes(map);
   }, [ticket, attachmentTypes]);
 
-  const addFiles = (files: File[]) =>
-    setNewFiles((p) => [...p, ...files.map((f) => ({ file: f, type_id: null }))]);
-  const removeNew = (idx: number) => setNewFiles((p) => p.filter((_, i) => i !== idx));
-  const removeRemote = (id: string) => {
+  const addFiles = useCallback(
+    (files: File[]) =>
+      setNewFiles((p) => [...p, ...files.map((f) => ({ file: f, type_id: null }))]),
+    [],
+  );
+
+  const removeNew = useCallback(
+    (idx: number) => setNewFiles((p) => p.filter((_, i) => i !== idx)),
+    [],
+  );
+
+  const removeRemote = useCallback((id: string) => {
     setRemoteFiles((p) => p.filter((f) => String(f.id) !== String(id)));
     setRemovedIds((p) => [...p, id]);
-  };
-  const changeRemoteType = (id: string, type: number | null) =>
-    setChangedTypes((p) => ({ ...p, [id]: type }));
-  const changeNewType = (idx: number, type: number | null) =>
-    setNewFiles((p) => p.map((f, i) => (i === idx ? { ...f, type_id: type } : f)));
+  }, []);
 
-  const appendRemote = (files: RemoteTicketFile[]) => {
+  const changeRemoteType = useCallback(
+    (id: string, type: number | null) =>
+      setChangedTypes((p) => ({ ...p, [id]: type })),
+    [],
+  );
+
+  const changeNewType = useCallback(
+    (idx: number, type: number | null) =>
+      setNewFiles((p) => p.map((f, i) => (i === idx ? { ...f, type_id: type } : f))),
+    [],
+  );
+
+  const appendRemote = useCallback((files: RemoteTicketFile[]) => {
     setRemoteFiles((p) => [...p, ...files]);
     setChangedTypes((prev) => {
       const copy = { ...prev };
@@ -76,26 +92,26 @@ export function useTicketAttachments(options: {
       });
       return copy;
     });
-  };
+  }, []);
 
-  const markPersisted = () => {
+  const markPersisted = useCallback(() => {
     setNewFiles([]);
     setRemovedIds([]);
     setInitialTypes((prev) => ({ ...prev, ...changedTypes }));
-  };
+  }, [changedTypes]);
 
   const attachmentsChanged =
     newFiles.length > 0 ||
     removedIds.length > 0 ||
     Object.keys(changedTypes).some((id) => changedTypes[id] !== initialTypes[id]);
 
-  const resetAll = () => {
+  const resetAll = useCallback(() => {
     setNewFiles([]);
     setRemoteFiles([]);
     setChangedTypes({});
     setInitialTypes({});
     setRemovedIds([]);
-  };
+  }, []);
 
   return {
     remoteFiles,
