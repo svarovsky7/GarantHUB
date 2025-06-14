@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import dayjs, { Dayjs } from 'dayjs';
+import minMax from 'dayjs/plugin/minMax';
+
+dayjs.extend(minMax);
 import { Form, Input, Select, DatePicker, Switch, Button, Row, Col } from 'antd';
 import { useTicketStatuses } from '@/entities/ticketStatus';
 import { useUnitsByProject } from '@/entities/unit';
