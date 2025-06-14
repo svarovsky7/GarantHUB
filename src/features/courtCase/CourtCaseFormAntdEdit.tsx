@@ -15,6 +15,7 @@ import { useCaseAttachments } from './model/useCaseAttachments';
 import { useNotify } from '@/shared/hooks/useNotify';
 import { downloadZip } from '@/shared/utils/downloadZip';
 import { signedUrl } from '@/entities/courtCase';
+import { useChangedFields } from '@/shared/hooks/useChangedFields';
 
 export interface CourtCaseFormAntdEditProps {
   caseId: string;
@@ -42,6 +43,15 @@ export default function CourtCaseFormAntdEdit({
   const update = useUpdateCourtCaseFull();
   const notify = useNotify();
   const attachments = useCaseAttachments({ courtCase, attachmentTypes });
+  const { changedFields, handleValuesChange: handleChanged } = useChangedFields(
+    form,
+    [courtCase],
+  );
+
+  const highlight = (name: string) =>
+    changedFields[name]
+      ? { background: '#fffbe6', padding: 4, borderRadius: 2 }
+      : {};
 
   useEffect(() => {
     if (!courtCase) return;
@@ -141,46 +151,82 @@ export default function CourtCaseFormAntdEdit({
       form={form}
       layout="vertical"
       onFinish={onFinish}
+      onValuesChange={handleChanged}
       style={{ maxWidth: embedded ? 'none' : 640 }}
       autoComplete="off"
     >
       <Row gutter={16}>
         <Col span={8}>
-          <Form.Item name="project_id" label="Проект" rules={[{ required: true }]}> 
+          <Form.Item
+            name="project_id"
+            label="Проект"
+            rules={[{ required: true }]}
+            style={highlight('project_id')}
+          >
             <Select options={projects.map((p) => ({ value: p.id, label: p.name }))} />
           </Form.Item>
         </Col>
         <Col span={8}>
-          <Form.Item name="unit_ids" label="Объекты" rules={[{ required: true }]}> 
+          <Form.Item
+            name="unit_ids"
+            label="Объекты"
+            rules={[{ required: true }]}
+            style={highlight('unit_ids')}
+          >
             <Select mode="multiple" options={units.map((u) => ({ value: u.id, label: u.name }))} disabled={!projectId} />
           </Form.Item>
         </Col>
         <Col span={8}>
-          <Form.Item name="responsible_lawyer_id" label="Ответственный юрист" rules={[{ required: true }]}> 
+          <Form.Item
+            name="responsible_lawyer_id"
+            label="Ответственный юрист"
+            rules={[{ required: true }]}
+            style={highlight('responsible_lawyer_id')}
+          >
             <Select options={users.map((u) => ({ value: u.id, label: u.name }))} />
           </Form.Item>
         </Col>
       </Row>
       <Row gutter={16}>
         <Col span={8}>
-          <Form.Item name="number" label="Номер дела" rules={[{ required: true }]}> 
+          <Form.Item
+            name="number"
+            label="Номер дела"
+            rules={[{ required: true }]}
+            style={highlight('number')}
+          >
             <Input />
           </Form.Item>
         </Col>
         <Col span={8}>
-          <Form.Item name="date" label="Дата" rules={[{ required: true }]}> 
+          <Form.Item
+            name="date"
+            label="Дата"
+            rules={[{ required: true }]}
+            style={highlight('date')}
+          >
             <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
           </Form.Item>
         </Col>
         <Col span={8}>
-          <Form.Item name="status" label="Статус" rules={[{ required: true }]}> 
+          <Form.Item
+            name="status"
+            label="Статус"
+            rules={[{ required: true }]}
+            style={highlight('status')}
+          >
             <Select options={stages.map((s) => ({ value: s.id, label: s.name }))} />
           </Form.Item>
         </Col>
       </Row>
       <Row gutter={16}>
         <Col span={12}>
-          <Form.Item name="plaintiff_id" label="Истец" rules={[{ required: true }]}> 
+          <Form.Item
+            name="plaintiff_id"
+            label="Истец"
+            rules={[{ required: true }]}
+            style={highlight('plaintiff_id')}
+          >
             <Select
               showSearch
               optionFilterProp="label"
@@ -192,7 +238,12 @@ export default function CourtCaseFormAntdEdit({
           </Form.Item>
         </Col>
         <Col span={12}>
-          <Form.Item name="defendant_id" label="Ответчик" rules={[{ required: true }]}> 
+          <Form.Item
+            name="defendant_id"
+            label="Ответчик"
+            rules={[{ required: true }]}
+            style={highlight('defendant_id')}
+          >
             <Select
               showSearch
               optionFilterProp="label"
@@ -206,7 +257,11 @@ export default function CourtCaseFormAntdEdit({
       </Row>
       <Row gutter={16}>
         <Col span={12}>
-          <Form.Item name="fix_start_date" label="Дата начала устранения">
+          <Form.Item
+            name="fix_start_date"
+            label="Дата начала устранения"
+            style={highlight('fix_start_date')}
+          >
             <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
           </Form.Item>
         </Col>
@@ -226,6 +281,7 @@ export default function CourtCaseFormAntdEdit({
                 },
               }),
             ]}
+            style={highlight('fix_end_date')}
           >
             <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
           </Form.Item>
@@ -233,12 +289,12 @@ export default function CourtCaseFormAntdEdit({
       </Row>
       <Row gutter={16}>
         <Col span={24}>
-          <Form.Item name="description" label="Описание">
+          <Form.Item name="description" label="Описание" style={highlight('description')}>
             <Input.TextArea rows={1} />
           </Form.Item>
         </Col>
       </Row>
-      <Form.Item label="Файлы">
+      <Form.Item label="Файлы" style={attachments.attachmentsChanged ? { background: '#fffbe6', padding: 4, borderRadius: 2 } : {}}>
         <FileDropZone onFiles={handleFiles} />
         <Button
           size="small"
