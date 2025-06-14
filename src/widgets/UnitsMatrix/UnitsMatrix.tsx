@@ -9,8 +9,14 @@ import {
   Button,
   TextField,
   Typography,
-  Tooltip,
 } from "@mui/material";
+import { Button as AntButton, Tooltip as AntTooltip } from 'antd';
+import {
+  FileTextOutlined,
+  BookOutlined,
+  MailOutlined,
+  HistoryOutlined,
+} from '@ant-design/icons';
 import AddIcon from "@mui/icons-material/Add";
 import FloorCell from "@/entities/floor/FloorCell";
 import useUnitsMatrix from "@/shared/hooks/useUnitsMatrix";
@@ -321,28 +327,25 @@ export default function UnitsMatrix({
           Квартира {actionDialog.unit?.name}
         </DialogTitle>
         {!actionDialog.action && (
-          <DialogContent
-            sx={{ display: "flex", flexDirection: "column", gap: 2 }}
-          >
-            <Button
-              variant="contained"
-              color="primary"
-              fullWidth
+          <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <AntButton
+              type="primary"
+              icon={<FileTextOutlined />}
+              block
               onClick={() => {
                 const id = actionDialog.unit?.id;
                 navigate(
-                  `/tickets?project_id=${projectId}&unit_id=${id}&responsible_engineer_id=${profileId ?? ''}`,
+                  `/tickets?project_id=${projectId}&unit_id=${id}&responsible_engineer_id=${profileId ?? ''}&add=1`,
                 );
                 setActionDialog({ open: false, unit: null, action: '' });
               }}
             >
               Добавить замечание
-            </Button>
-            <Tooltip title="Добавить судебное дело" arrow>
-              <Button
-                variant="outlined"
-                color="secondary"
-                fullWidth
+            </AntButton>
+            <AntTooltip title="Добавить судебное дело" placement="top">
+              <AntButton
+                icon={<BookOutlined />}
+                block
                 onClick={() => {
                   const id = actionDialog.unit?.id;
                   const search = createSearchParams({
@@ -355,12 +358,11 @@ export default function UnitsMatrix({
                 }}
               >
                 Добавить судебное дело
-              </Button>
-            </Tooltip>
-            <Button
-              variant="outlined"
-              color="inherit"
-              fullWidth
+              </AntButton>
+            </AntTooltip>
+            <AntButton
+              icon={<MailOutlined />}
+              block
               onClick={() => {
                 const id = actionDialog.unit?.id;
                 navigate(
@@ -370,17 +372,16 @@ export default function UnitsMatrix({
               }}
             >
               Добавить письмо
-            </Button>
-            <Button
-              variant="text"
-              color="info"
-              fullWidth
+            </AntButton>
+            <AntButton
+              icon={<HistoryOutlined />}
+              block
               onClick={() =>
-                setActionDialog((ad) => ({ ...ad, action: "history" }))
+                setActionDialog((ad) => ({ ...ad, action: 'history' }))
               }
             >
               Показать историю
-            </Button>
+            </AntButton>
           </DialogContent>
         )}
       </Dialog>
