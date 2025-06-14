@@ -79,7 +79,14 @@ export default function CourtCasesPage() {
       ? [Number(searchParams.get('unit_id')!)]
       : undefined,
     responsible_lawyer_id: searchParams.get('responsible_lawyer_id') || undefined,
+    status: searchParams.get('status') ? Number(searchParams.get('status')!) : undefined,
   };
+
+  React.useEffect(() => {
+    if (searchParams.get('open_form') === '1') {
+      setShowAddForm(true);
+    }
+  }, [searchParams]);
 
   const { data: projects = [] } = useProjects();
   const { data: contractors = [] } = useContractors();

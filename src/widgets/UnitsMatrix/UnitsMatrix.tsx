@@ -348,6 +348,7 @@ export default function UnitsMatrix({
                   project_id: String(projectId),
                   unit_id: String(id ?? ''),
                   responsible_lawyer_id: String(profileId ?? ''),
+                  open_form: '1',
                 }).toString();
                 navigate(`/court-cases?${search}`);
                 setActionDialog({ open: false, unit: null, action: '' });
