@@ -2,8 +2,6 @@
 export interface DefectRecord {
   /** Уникальный идентификатор */
   id: number;
-  /** Проект, к которому относится дефект */
-  project_id: number;
   /** Описание дефекта */
   description: string;
   /** Тип дефекта */
@@ -22,6 +20,8 @@ export interface DefectWithInfo extends DefectRecord {
   ticketIds: number[];
   /** Идентификаторы объектов, связанные с замечаниями */
   unitIds: number[];
+  /** Идентификаторы проектов, связанные с замечаниями */
+  projectIds?: number[];
   /** Название проекта */
   projectName?: string;
   /** Названия объектов, объединённые в строку */

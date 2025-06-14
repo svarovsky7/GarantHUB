@@ -21,7 +21,7 @@ export default function DefectsTable({ defects, filters, loading, onView }: Prop
     return defects.filter((d) => {
       if (filters.id && !filters.id.includes(d.id)) return false;
       if (filters.ticketId && !d.ticketIds.some((t) => filters.ticketId!.includes(t))) return false;
-      if (filters.project && d.project_id !== filters.project) return false;
+      if (filters.project && !d.projectIds?.includes(filters.project)) return false;
       if (filters.units && filters.units.length && !d.unitIds.some((u) => filters.units!.includes(u))) return false;
       if (filters.period) {
         const [from, to] = filters.period;

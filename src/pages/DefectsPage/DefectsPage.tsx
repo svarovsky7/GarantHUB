@@ -24,26 +24,32 @@ export default function DefectsPage() {
   const data: DefectWithInfo[] = useMemo(() => {
     const projectMap = new Map(projects.map((p) => [p.id, p.name]));
     const unitMap = new Map(units.map((u) => [u.id, u.name]));
-    const ticketsMap = new Map<number, { id: number; unit_ids: number[] }[]>();
+    const ticketsMap = new Map<number, { id: number; unit_ids: number[]; project_id: number }[]>();
     tickets.forEach((t: any) => {
       (t.defect_ids || []).forEach((id: number) => {
         const arr = ticketsMap.get(id) || [];
-        arr.push({ id: t.id, unit_ids: t.unit_ids || [] });
+        arr.push({ id: t.id, unit_ids: t.unit_ids || [], project_id: t.project_id });
         ticketsMap.set(id, arr);
       });
     });
     return defects.map((d) => {
       const linked = ticketsMap.get(d.id) || [];
       const unitIds = Array.from(new Set(linked.flatMap((l) => l.unit_ids)));
+      const projectIds = Array.from(new Set(linked.map((l) => l.project_id)));
       const unitNames = unitIds
         .map((id) => unitMap.get(id))
+        .filter(Boolean)
+        .join(', ');
+      const projectName = projectIds
+        .map((id) => projectMap.get(id))
         .filter(Boolean)
         .join(', ');
       return {
         ...d,
         ticketIds: linked.map((l) => l.id),
         unitIds,
-        projectName: projectMap.get(d.project_id) || '',
+        projectIds,
+        projectName,
         unitNames,
       } as DefectWithInfo;
     });
