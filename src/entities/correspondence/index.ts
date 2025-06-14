@@ -313,7 +313,11 @@ export function useLetter(letterId: number | string | undefined) {
         )
         .eq('id', id)
         .single();
-      if (error) throw error;
+      if (error) {
+        console.error('useLetter query error:', error);
+        throw error;
+      }
+      console.debug('useLetter fetched data:', data);
       const { data: link } = await supabase
         .from(LINKS_TABLE)
         .select('parent_id')
@@ -326,7 +330,7 @@ export function useLetter(letterId: number | string | undefined) {
       if (data?.attachment_ids?.length) {
         attachments = await getAttachmentsByIds(data.attachment_ids);
       }
-      return {
+      const result = {
         id: String(data!.id),
         type,
         parent_id: link?.parent_id != null ? String(link.parent_id) : null,
@@ -344,6 +348,8 @@ export function useLetter(letterId: number | string | undefined) {
         content: data?.content ?? '',
         attachments,
       } as CorrespondenceLetter & { attachments: any[] };
+      console.debug('useLetter normalized result:', result);
+      return result;
     },
     staleTime: 5 * 60_000,
   });

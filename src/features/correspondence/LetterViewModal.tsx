@@ -11,7 +11,9 @@ interface Props {
 
 /** Модальное окно просмотра письма */
 export default function LetterViewModal({ open, letterId, onClose }: Props) {
+  console.debug('LetterViewModal open:', open, 'letterId:', letterId);
   const { data: letter } = useLetter(letterId || undefined);
+  console.debug('LetterViewModal fetched letter:', letter);
   const titleText = letter ? `Письмо №${letter.number}` : 'Письмо';
 
   if (!letterId) return null;

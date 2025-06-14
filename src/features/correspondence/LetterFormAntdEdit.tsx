@@ -38,6 +38,8 @@ export interface LetterFormValues {
 export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedded = false }: LetterFormAntdEditProps) {
   const [form] = Form.useForm<LetterFormValues>();
   const { data: letter } = useLetter(letterId);
+  console.debug('LetterFormAntdEdit letterId:', letterId);
+  console.debug('LetterFormAntdEdit fetched letter:', letter);
   const update = useUpdateLetter();
   const notify = useNotify();
 
@@ -52,12 +54,14 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
 
   // Сбрасываем форму при смене письма
   useEffect(() => {
+    console.debug('LetterFormAntdEdit resetting form for letterId', letterId);
     form.resetFields();
   }, [letterId]);
 
   // Заполняем поля данными письма
   useEffect(() => {
     if (!letter) return;
+    console.debug('LetterFormAntdEdit setFields with letter:', letter);
     form.setFieldsValue({
       type: letter.type,
       number: letter.number,

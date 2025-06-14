@@ -11,7 +11,9 @@ interface Props {
 
 /** Модальное окно просмотра судебного дела */
 export default function CourtCaseViewModal({ open, caseId, onClose }: Props) {
+  console.debug('CourtCaseViewModal open:', open, 'caseId:', caseId);
   const { data: courtCase } = useCourtCase(caseId || undefined);
+  console.debug('CourtCaseViewModal fetched case:', courtCase);
   const titleText = courtCase ? `Дело №${courtCase.id}` : 'Дело';
 
   if (!caseId) return null;

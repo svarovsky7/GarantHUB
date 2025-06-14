@@ -272,13 +272,19 @@ export function useCourtCase(caseId: number | string | undefined) {
         .select('*')
         .eq('id', id)
         .single();
-      if (error) throw error;
+      if (error) {
+        console.error('useCourtCase query error:', error);
+        throw error;
+      }
+      console.debug('useCourtCase fetched data:', data);
       let attachments: any[] = [];
       if (data?.attachment_ids?.length) {
         const files = await getAttachmentsByIds(data.attachment_ids);
         attachments = files;
       }
-      return { ...(data as any), attachments } as CourtCase & { attachments: any[] };
+      const result = { ...(data as any), attachments } as CourtCase & { attachments: any[] };
+      console.debug('useCourtCase normalized result:', result);
+      return result;
     },
     staleTime: 5 * 60_000,
   });

@@ -41,6 +41,8 @@ export default function CourtCaseFormAntdEdit({ caseId, caseData, onCancel, onSa
   const [form] = Form.useForm<CourtCaseFormValues>();
   const { data: fetchedCase } = useCourtCase(caseData ? undefined : caseId);
   const courtCase = caseData ?? fetchedCase;
+  console.debug('CourtCaseFormAntdEdit caseId:', caseId);
+  console.debug('CourtCaseFormAntdEdit fetched case:', courtCase);
   const update = useUpdateCourtCaseFull();
   const notify = useNotify();
 
@@ -55,6 +57,7 @@ export default function CourtCaseFormAntdEdit({ caseId, caseData, onCancel, onSa
 
   useEffect(() => {
     if (!courtCase) return;
+    console.debug('CourtCaseFormAntdEdit setFields with case:', courtCase);
     form.setFieldsValue({
       project_id: courtCase.project_id,
       unit_ids: courtCase.unit_ids,
