@@ -423,11 +423,3 @@ export function useUpdateLetter() {
     },
   });
 }
-
-export async function signedUrl(path: string, filename = ''): Promise<string> {
-  const { data, error } = await supabase.storage
-    .from(ATTACH_BUCKET)
-    .createSignedUrl(path, 60, { download: filename || undefined });
-  if (error) throw error;
-  return data.signedUrl;
-}
