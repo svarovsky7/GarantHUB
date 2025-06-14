@@ -43,9 +43,9 @@ export default function DefectDeadlinesAdmin({
         ...row,
         project_name:
           row.project?.name || projects.find((p) => p.id === row.project_id)?.name || '',
-        ticket_type_name:
-          row.ticket_type?.name ||
-          defectTypes.find((t) => t.id === row.ticket_type_id)?.name || '',
+        defect_type_name:
+          row.defect_type?.name ||
+          defectTypes.find((t) => t.id === row.defect_type_id)?.name || '',
       })),
     [data, projects, defectTypes]
   );
@@ -62,7 +62,7 @@ export default function DefectDeadlinesAdmin({
       flex: 1,
     },
     {
-      field: 'ticket_type_name',
+      field: 'defect_type_name',
       headerName: 'Тип дефекта',
       flex: 1,
     },
@@ -114,7 +114,7 @@ export default function DefectDeadlinesAdmin({
                 const exists = data.some(
                   (r) =>
                     r.project_id === d.project_id &&
-                    r.ticket_type_id === d.ticket_type_id &&
+                    r.defect_type_id === d.defect_type_id &&
                     (modal.mode !== 'edit' || r.id !== modal.data.id),
                 );
 
