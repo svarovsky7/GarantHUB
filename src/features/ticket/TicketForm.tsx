@@ -18,7 +18,7 @@ import {
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs, { Dayjs } from "dayjs";
 
-import { useDefectTypes } from "@/entities/defectType";
+import { useTicketTypes } from "@/entities/ticketType";
 import { useTicketStatuses } from "@/entities/ticketStatus";
 import { useUnitsByProject } from "@/entities/unit";
 import { useUsers } from "@/entities/user";
@@ -113,7 +113,7 @@ export default function TicketForm({
   });
 
   const { data: projects = [] } = useProjects();
-  const { data: types = [] } = useDefectTypes();
+  const { data: types = [] } = useTicketTypes();
   const { data: statuses = [] } = useTicketStatuses();
   const { data: users = [] } = useUsers();
   const { data: attachmentTypes = [] } = useAttachmentTypes();
@@ -127,7 +127,7 @@ export default function TicketForm({
     const rec = deadlines.find(
       (d) =>
         d.project_id === projectIdWatch &&
-        d.defect_type_id === typeIdWatch,
+        d.ticket_type_id === typeIdWatch,
     );
     return rec?.fix_days ?? null;
   }, [deadlines, projectIdWatch, typeIdWatch]);
@@ -160,6 +160,7 @@ export default function TicketForm({
         unit_ids: ticket.unitIds,
         responsible_engineer_id: ticket.responsibleEngineerId,
         status_id: ticket.statusId,
+        type_id: ticket.typeId,
         is_warranty: ticket.isWarranty,
         customer_request_no: ticket.customerRequestNo || "",
         customer_request_date: ticket.customerRequestDate,

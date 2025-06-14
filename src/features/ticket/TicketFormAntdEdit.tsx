@@ -11,12 +11,13 @@ import {
   Col,
   Skeleton,
 } from 'antd';
-import { useDefectTypes } from '@/entities/defectType';
+import { useTicketTypes } from '@/entities/ticketType';
 import { useTicketStatuses } from '@/entities/ticketStatus';
 import { useUnitsByProject } from '@/entities/unit';
 import { useUsers } from '@/entities/user';
 import { useProjects } from '@/entities/project';
 import { useCreateTicket, useTicket } from '@/entities/ticket';
+import { useDefectDeadlines } from '@/entities/defectDeadline';
 import { useAttachmentTypes } from '@/entities/attachmentType';
 import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useAuthStore } from '@/shared/store/authStore';
@@ -40,6 +41,7 @@ export interface TicketFormAntdEditProps {
 export interface TicketFormAntdEditValues {
   project_id: number | null;
   unit_ids: number[];
+  type_id: number | null;
   status_id: number | null;
   title: string;
   description: string | null;
@@ -63,13 +65,14 @@ export default function TicketFormAntdEdit({
   const { data: ticket, updating, updateAsync } = useTicket(ticketId);
   const isEdit = Boolean(ticketId);
 
-  const { data: types = [] } = useDefectTypes();
+  const { data: types = [] } = useTicketTypes();
   const { data: statuses = [] } = useTicketStatuses();
   const { data: projects = [] } = useProjects();
   const { data: users = [] } = useUsers();
   const projectId = Form.useWatch('project_id', form) ?? globalProjectId;
   const { data: units = [] } = useUnitsByProject(projectId);
   const { data: attachmentTypes = [] } = useAttachmentTypes();
+  const { data: deadlines = [] } = useDefectDeadlines();
   const create = useCreateTicket();
   const notify = useNotify();
   const profileId = useAuthStore((s) => s.profile?.id);
@@ -101,6 +104,14 @@ export default function TicketFormAntdEdit({
       ? { background: '#fffbe6', padding: 4, borderRadius: 2 }
       : {};
 
+  const typeId = Form.useWatch('type_id', form);
+  const deadlineDays = React.useMemo(() => {
+    if (!projectId || !typeId) return null;
+    const rec = deadlines.find(
+      (d) => d.project_id === projectId && d.ticket_type_id === typeId,
+    );
+    return rec?.fix_days ?? null;
+  }, [projectId, typeId, deadlines]);
 
   useEffect(() => {
     if (ticket) {
@@ -109,6 +120,7 @@ export default function TicketFormAntdEdit({
         unit_ids: ticket.unitIds,
         responsible_engineer_id: ticket.responsibleEngineerId ?? undefined,
         status_id: ticket.statusId ?? undefined,
+        type_id: ticket.typeId ?? undefined,
         is_warranty: ticket.isWarranty,
         customer_request_no: ticket.customerRequestNo ?? undefined,
         customer_request_date: ticket.customerRequestDate ?? null,
@@ -164,6 +176,7 @@ export default function TicketFormAntdEdit({
     const payload = {
       project_id: values.project_id ?? globalProjectId,
       unit_ids: values.unit_ids,
+      type_id: values.type_id,
       status_id: values.status_id,
       title: values.title,
       description: values.description || null,
@@ -294,6 +307,16 @@ export default function TicketFormAntdEdit({
       <Row gutter={16}>
         <Col span={12}>
           <Form.Item
+            name="type_id"
+            label={`Тип${deadlineDays ? ` (${deadlineDays} дн.)` : ''}`}
+            rules={[{ required: true }]}
+            style={highlight('type_id')}
+          >
+            <Select options={types.map((t) => ({ value: t.id, label: t.name }))} />
+          </Form.Item>
+        </Col>
+        <Col span={12}>
+          <Form.Item
             name="is_warranty"
             label="Гарантия"
             valuePropName="checked"
@@ -358,6 +381,20 @@ export default function TicketFormAntdEdit({
             </Button>
           </Col>
         ))}
+        {deadlineDays && (
+          <Col>
+            <Button
+              size="small"
+              style={{ background: '#2e7d32', color: '#fff' }}
+              onClick={() => {
+                const rec = form.getFieldValue('received_at');
+                if (rec) form.setFieldValue('fixed_at', dayjs(rec).add(deadlineDays, 'day'));
+              }}
+            >
+              +{deadlineDays} дней
+            </Button>
+          </Col>
+        )}
       </Row>
       <Form.Item
         name="title"
