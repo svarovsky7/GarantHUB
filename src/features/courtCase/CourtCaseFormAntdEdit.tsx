@@ -7,7 +7,6 @@ import { useUsers } from '@/entities/user';
 import { useLitigationStages } from '@/entities/litigationStage';
 import { useAttachmentTypes } from '@/entities/attachmentType';
 import { useCourtCase, useUpdateCourtCaseFull } from '@/entities/courtCase';
-import type { CourtCase } from '@/shared/types/courtCase';
 import FileDropZone from '@/shared/ui/FileDropZone';
 import AttachmentEditorTable from '@/shared/ui/AttachmentEditorTable';
 import { useCaseAttachments } from './model/useCaseAttachments';
@@ -15,8 +14,6 @@ import { useNotify } from '@/shared/hooks/useNotify';
 
 export interface CourtCaseFormAntdEditProps {
   caseId: string;
-  /** Данные дела, если уже загружены */
-  caseData?: CourtCase;
   onCancel?: () => void;
   onSaved?: () => void;
   embedded?: boolean;
@@ -37,10 +34,9 @@ export interface CourtCaseFormValues {
 }
 
 /** Форма редактирования судебного дела */
-export default function CourtCaseFormAntdEdit({ caseId, caseData, onCancel, onSaved, embedded = false }: CourtCaseFormAntdEditProps) {
+export default function CourtCaseFormAntdEdit({ caseId, onCancel, onSaved, embedded = false }: CourtCaseFormAntdEditProps) {
   const [form] = Form.useForm<CourtCaseFormValues>();
-  const { data: fetchedCase } = useCourtCase(caseData ? undefined : caseId);
-  const courtCase = caseData ?? fetchedCase;
+  const { data: courtCase } = useCourtCase(caseId);
   const update = useUpdateCourtCaseFull();
   const notify = useNotify();
 
