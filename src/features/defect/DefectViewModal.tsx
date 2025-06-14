@@ -23,7 +23,14 @@ export default function DefectViewModal({ open, defectId, onClose }: Props) {
         <div style={{ display: 'grid', gap: 8 }}>
           <Typography.Text><b>Описание:</b> {defect.description}</Typography.Text>
           <Typography.Text>
-            <b>Стоимость устранения:</b> {defect.fix_cost ?? '—'}
+            <b>Тип дефекта:</b> {defect.defect_type?.name ?? '—'}
+          </Typography.Text>
+          <Typography.Text>
+            <b>Статус:</b> {defect.defect_status?.name ?? '—'}
+          </Typography.Text>
+          <Typography.Text>
+            <b>Дата получения:</b>{' '}
+            {defect.received_at ? dayjs(defect.received_at).format('DD.MM.YYYY') : '—'}
           </Typography.Text>
           <Typography.Text>
             <b>Дата создания:</b>{' '}

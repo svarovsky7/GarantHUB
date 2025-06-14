@@ -3,8 +3,14 @@ export interface Defect {
   id: number;
   /** Наименование недостатка */
   description: string;
-  /** Стоимость устранения */
-  cost: number;
+  /** Тип дефекта */
+  defect_type_id: number | null;
+  /** Статус дефекта */
+  defect_status_id: number | null;
+  /** Дата получения */
+  received_at: string | null;
+  /** Дата устранения */
+  fixed_at: string | null;
 }
 
 export type CaseStatus = 'active' | 'won' | 'lost' | 'settled';
