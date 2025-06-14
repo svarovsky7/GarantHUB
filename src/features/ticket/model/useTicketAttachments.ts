@@ -38,7 +38,7 @@ export function useTicketAttachments(options: {
         url: fileUrl,
         type: fileType,
         attachment_type_id: file.attachment_type_id ?? null,
-        attachment_type_name: typeObj?.name || fileType || '—',
+        attachment_type_name: typeObj?.name || fileType || '',
       } as RemoteTicketFile;
     });
     setRemoteFiles(attachmentsWithType);
