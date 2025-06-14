@@ -38,7 +38,9 @@ export default function DefectsTable({ defects, filters, loading, onView }: Prop
     { title: 'Проект', dataIndex: 'projectName' },
     { title: 'Объекты', dataIndex: 'unitNames' },
     { title: 'Описание', dataIndex: 'description' },
-    { title: 'Стоимость', dataIndex: 'fix_cost' },
+    { title: 'Тип', dataIndex: 'defectTypeName' },
+    { title: 'Статус', dataIndex: 'defectStatusName' },
+    { title: 'Дата получения', dataIndex: 'received_at', render: fmt },
     { title: 'Дата создания', dataIndex: 'created_at', render: fmt },
     {
       title: 'Действия',

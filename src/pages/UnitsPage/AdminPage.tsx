@@ -5,6 +5,7 @@ import ProjectsTable from "../../widgets/ProjectsTable";
 import ContractorAdmin from "../../widgets/ContractorAdmin";
 import TicketStatusesAdmin from "../../widgets/TicketStatusesAdmin";
 import DefectTypesAdmin from "../../widgets/DefectTypesAdmin";
+import DefectStatusesAdmin from "../../widgets/DefectStatusesAdmin";
 import DefectDeadlinesAdmin from "../../widgets/DefectDeadlinesAdmin";
 import UsersTable from "../../widgets/UsersTable";
 import LitigationStagesAdmin from "../../widgets/LitigationStagesAdmin";
@@ -26,6 +27,11 @@ export default function AdminPage() {
         />
 
         <DefectTypesAdmin
+          pageSize={25}
+          rowsPerPageOptions={[10, 25, 50, 100]}
+        />
+
+        <DefectStatusesAdmin
           pageSize={25}
           rowsPerPageOptions={[10, 25, 50, 100]}
         />

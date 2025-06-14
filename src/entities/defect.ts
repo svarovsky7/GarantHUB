@@ -14,7 +14,10 @@ export function useDefects() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from(TABLE)
-        .select('id, project_id, description, fix_cost, created_at')
+        .select(
+          'id, project_id, description, defect_type_id, defect_status_id, received_at, created_at,' +
+          ' defect_type:defect_types(id,name), defect_status:defect_statuses(id,name)'
+        )
         .eq('project_id', projectId)
         .order('id');
       if (error) throw error;
@@ -33,7 +36,10 @@ export function useDefect(id?: number) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from(TABLE)
-        .select('id, project_id, description, fix_cost, created_at')
+        .select(
+          'id, project_id, description, defect_type_id, defect_status_id, received_at, created_at,' +
+          ' defect_type:defect_types(id,name), defect_status:defect_statuses(id,name)'
+        )
         .eq('id', id as number)
         .eq('project_id', projectId)
         .single();

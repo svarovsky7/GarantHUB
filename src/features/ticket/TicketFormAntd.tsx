@@ -3,6 +3,7 @@ import dayjs, { Dayjs } from 'dayjs';
 import { Form, Input, Select, DatePicker, Switch, Button, Row, Col } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { useDefectTypes } from '@/entities/defectType';
+import { useDefectStatuses } from '@/entities/defectStatus';
 import { useTicketStatuses } from '@/entities/ticketStatus';
 import { useUnitsByProject } from '@/entities/unit';
 import { useUsers } from '@/entities/user';
@@ -51,6 +52,7 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
   const projectId = Form.useWatch('project_id', form) ?? globalProjectId;
 
   const { data: defectTypes = [] } = useDefectTypes();
+  const { data: defectStatuses = [] } = useDefectStatuses();
   const { data: statuses = [] } = useTicketStatuses();
   const { data: projects = [] } = useProjects();
   const { data: units = [] } = useUnitsByProject(projectId);
@@ -108,12 +110,12 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
       return;
     }
     try {
-      const { pins, ...rest } = values;
+      const { pins, defects: _defects, ...rest } = values;
       const payload = {
         ...rest,
         project_id: values.project_id ?? globalProjectId,
         attachments: files,
-        defect_ids: (values.defects || [])
+        defect_ids: (_defects || [])
           .map((d) => d.type_id ?? null)
           .filter((id): id is number => id != null),
         received_at: values.received_at.format('YYYY-MM-DD'),
@@ -196,9 +198,12 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
             <table style={{ width: '100%', marginBottom: 16 }}>
               <thead>
                 <tr>
-                  <th style={{ width: 40 }}>#</th>
-                  <th>Наименование дефекта</th>
-                  <th style={{ width: 160 }}>Дата устранения</th>
+                  <th style={{ width: 40 }}>ID</th>
+                  <th>Описание дефекта</th>
+                  <th style={{ width: 140 }}>Статус</th>
+                  <th style={{ width: 140 }}>Тип</th>
+                  <th style={{ width: 140 }}>Дата получения</th>
+                  <th style={{ width: 140 }}>Дата устранения</th>
                   <th style={{ width: 180 }}>Кем устраняется</th>
                   <th style={{ width: 40 }}></th>
                 </tr>
@@ -208,12 +213,29 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
                   <tr key={field.key}>
                     <td>{index + 1}</td>
                     <td>
+                      <Form.Item name={[field.name, 'description']} noStyle>
+                        <Input placeholder="Описание" />
+                      </Form.Item>
+                    </td>
+                    <td>
+                      <Form.Item name={[field.name, 'status_id']} noStyle initialValue={defectStatuses[0]?.id}>
+                        <Select
+                          placeholder="Статус"
+                          options={defectStatuses.map((s) => ({ value: s.id, label: s.name }))}
+                        />
+                      </Form.Item>
+                    </td>
+                    <td>
                       <Form.Item name={[field.name, 'type_id']} noStyle>
                         <Select
-                          placeholder="Тип дефекта"
+                          placeholder="Тип"
                           options={defectTypes.map((d) => ({ value: d.id, label: d.name }))}
-                          style={{ width: '100%' }}
                         />
+                      </Form.Item>
+                    </td>
+                    <td>
+                      <Form.Item name={[field.name, 'received_at']} noStyle initialValue={dayjs()}>
+                        <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
                       </Form.Item>
                     </td>
                     <td>

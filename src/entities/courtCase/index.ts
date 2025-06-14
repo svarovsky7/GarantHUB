@@ -113,14 +113,19 @@ export function useCaseDefects(caseId: number) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from(CASE_DEFECTS_TABLE)
-        .select('defect_id, defects(id, description, fix_cost)')
+        .select(
+          'defect_id, defects(id, description, defect_type_id, defect_status_id, received_at, fixed_at)'
+        )
         .eq('case_id', caseId);
       if (error) throw error;
       const rows = data ?? [];
       return rows.map((r: any) => ({
         id: r.defects.id,
         description: r.defects.description,
-        cost: r.defects.fix_cost ?? 0,
+        defect_type_id: r.defects.defect_type_id,
+        defect_status_id: r.defects.defect_status_id,
+        received_at: r.defects.received_at,
+        fixed_at: r.defects.fixed_at,
         case_id: caseId,
       })) as Defect[];
     },
@@ -144,7 +149,10 @@ export function useAddDefect() {
         .insert({
           project_id: payload.project_id,
           description: payload.description,
-          fix_cost: payload.cost,
+          defect_type_id: payload.defect_type_id,
+          defect_status_id: payload.defect_status_id,
+          received_at: payload.received_at,
+          fixed_at: payload.fixed_at,
         })
         .select('id')
         .single();
@@ -155,7 +163,14 @@ export function useAddDefect() {
         .insert({ case_id: payload.case_id, defect_id: defId });
       if (linkErr) throw linkErr;
       qc.invalidateQueries({ queryKey: [CASE_DEFECTS_TABLE, payload.case_id] });
-      return { id: defId, description: payload.description, cost: payload.cost } as Defect;
+      return {
+        id: defId,
+        description: payload.description,
+        defect_type_id: payload.defect_type_id,
+        defect_status_id: payload.defect_status_id,
+        received_at: payload.received_at,
+        fixed_at: payload.fixed_at,
+      } as Defect;
     },
   });
 }
@@ -188,13 +203,19 @@ export function useUpdateDefect() {
     }: {
       id: number;
       case_id: number;
-      updates: Pick<Defect, 'description' | 'cost'>;
+      updates: Pick<
+        Defect,
+        'description' | 'defect_type_id' | 'defect_status_id' | 'received_at' | 'fixed_at'
+      >;
     }) => {
       const { error } = await supabase
         .from(DEFECTS_TABLE)
         .update({
           description: updates.description,
-          fix_cost: updates.cost,
+          defect_type_id: updates.defect_type_id,
+          defect_status_id: updates.defect_status_id,
+          received_at: updates.received_at,
+          fixed_at: updates.fixed_at,
         })
         .eq('id', id);
       if (error) throw error;

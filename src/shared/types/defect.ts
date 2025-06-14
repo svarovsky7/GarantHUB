@@ -6,8 +6,12 @@ export interface DefectRecord {
   project_id: number;
   /** Описание дефекта */
   description: string;
-  /** Стоимость устранения */
-  fix_cost: number | null;
+  /** Тип дефекта */
+  defect_type_id: number | null;
+  /** Статус дефекта */
+  defect_status_id: number | null;
+  /** Дата получения */
+  received_at: string | null;
   /** Дата создания */
   created_at: string | null;
 }
@@ -22,4 +26,8 @@ export interface DefectWithInfo extends DefectRecord {
   projectName?: string;
   /** Названия объектов, объединённые в строку */
   unitNames?: string;
+  /** Название типа дефекта */
+  defectTypeName?: string;
+  /** Название статуса дефекта */
+  defectStatusName?: string;
 }
