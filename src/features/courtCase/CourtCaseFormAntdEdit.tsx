@@ -62,8 +62,7 @@ export default function CourtCaseFormAntdEdit({ caseId, caseData, onCancel, onSa
 
   useEffect(() => {
     if (!courtCase) return;
-    console.log('[CourtCaseFormAntdEdit] setFieldsValue', courtCase);
-    form.setFieldsValue({
+    const values: CourtCaseFormValues = {
       project_id: courtCase.project_id,
       unit_ids: courtCase.unit_ids,
       number: courtCase.number,
@@ -75,8 +74,27 @@ export default function CourtCaseFormAntdEdit({ caseId, caseData, onCancel, onSa
       fix_start_date: courtCase.fix_start_date ? dayjs(courtCase.fix_start_date) : null,
       fix_end_date: courtCase.fix_end_date ? dayjs(courtCase.fix_end_date) : null,
       description: courtCase.description,
-    });
+    };
+    console.log('[CourtCaseFormAntdEdit] setFieldsValue', values);
+    form.setFieldsValue(values);
     console.log('[CourtCaseFormAntdEdit] after setFieldsValue', form.getFieldsValue());
+  }, [courtCase, form]);
+
+  const initialValues = React.useMemo(() => {
+    if (!courtCase) return undefined;
+    return {
+      project_id: courtCase.project_id,
+      unit_ids: courtCase.unit_ids,
+      number: courtCase.number,
+      date: courtCase.date ? dayjs(courtCase.date) : null,
+      plaintiff_id: courtCase.plaintiff_id ?? null,
+      defendant_id: courtCase.defendant_id ?? null,
+      responsible_lawyer_id: courtCase.responsible_lawyer_id ?? null,
+      status: courtCase.status,
+      fix_start_date: courtCase.fix_start_date ? dayjs(courtCase.fix_start_date) : null,
+      fix_end_date: courtCase.fix_end_date ? dayjs(courtCase.fix_end_date) : null,
+      description: courtCase.description,
+    } as CourtCaseFormValues;
   }, [courtCase]);
 
   const handleFiles = (files: File[]) => attachments.addFiles(files);
@@ -117,7 +135,15 @@ export default function CourtCaseFormAntdEdit({ caseId, caseData, onCancel, onSa
   if (!courtCase) return <Skeleton active />;
 
   return (
-    <Form form={form} layout="vertical" onFinish={onFinish} style={{ maxWidth: embedded ? 'none' : 640 }} autoComplete="off">
+    <Form
+      key={courtCase.id}
+      form={form}
+      initialValues={initialValues}
+      layout="vertical"
+      onFinish={onFinish}
+      style={{ maxWidth: embedded ? 'none' : 640 }}
+      autoComplete="off"
+    >
       <Row gutter={16}>
         <Col span={12}>
           <Form.Item name="project_id" label="Проект" rules={[{ required: true }]}> 
