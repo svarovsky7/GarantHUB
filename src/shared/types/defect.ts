@@ -2,6 +2,8 @@
 export interface DefectRecord {
   /** Уникальный идентификатор */
   id: number;
+  /** Проект, к которому относится дефект */
+  project_id: number;
   /** Описание дефекта */
   description: string;
   /** Тип дефекта */
@@ -28,13 +30,4 @@ export interface DefectWithInfo extends DefectRecord {
   defectTypeName?: string;
   /** Название статуса дефекта */
   defectStatusName?: string;
-}
-
-/** Данные для создания нового дефекта */
-export interface NewDefect {
-  description: string;
-  defect_type_id: number | null;
-  defect_status_id: number | null;
-  received_at: string | null;
-  fixed_at: string | null;
 }
