@@ -139,15 +139,13 @@ export function useAddDefect() {
   return useMutation({
     /**
      * Creates a defect record and links it to a court case.
-     * `project_id` is required by DB constraints, so it must be provided.
      */
     mutationFn: async (
-      payload: { case_id: number; project_id: number } & Omit<Defect, 'id' | 'case_id'>,
+      payload: { case_id: number } & Omit<Defect, 'id' | 'case_id'>,
     ) => {
       const { data, error } = await supabase
         .from(DEFECTS_TABLE)
         .insert({
-          project_id: payload.project_id,
           description: payload.description,
           defect_type_id: payload.defect_type_id,
           defect_status_id: payload.defect_status_id,
