@@ -94,18 +94,6 @@ export default function TicketsPage() {
     if (id) {
       setViewId(Number(id));
     }
-    const project = searchParams.get('project_id');
-    if (project) {
-      const val = Number(project);
-      setInitialFilters((f) => ({ ...f, project: val }));
-      setFilters((f) => ({ ...f, project: val }));
-    }
-    const unit = searchParams.get('unit_id');
-    if (unit) {
-      const val = Number(unit);
-      setInitialFilters((f) => ({ ...f, units: [val] }));
-      setFilters((f) => ({ ...f, units: [val] }));
-    }
     const ids = searchParams.get('ids');
     if (ids) {
       const arr = ids
