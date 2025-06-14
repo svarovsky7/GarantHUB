@@ -373,9 +373,16 @@ export default function CorrespondencePage() {
       actions: {
         title: 'Действия',
         key: 'actions',
-        width: 130,
+        width: 150,
         render: (_: any, record: CorrespondenceLetter) => (
           <Space size="middle">
+            <Tooltip title="Просмотр">
+              <Button
+                type="text"
+                icon={<EyeOutlined />}
+                onClick={() => setViewId(String(record.id))}
+              />
+            </Tooltip>
             <Button type="text" icon={<PlusOutlined />} onClick={() => setLinkFor(record)} />
             {record.parent_id && (
               <Tooltip title="Исключить из связи">
