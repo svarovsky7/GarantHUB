@@ -25,7 +25,6 @@ import CorrespondenceTable from '@/widgets/CorrespondenceTable';
 import CorrespondenceFilters from '@/widgets/CorrespondenceFilters';
 import TableColumnsDrawer from '@/widgets/TableColumnsDrawer';
 import LetterStatusSelect from '@/features/correspondence/LetterStatusSelect';
-import LetterViewModal from '@/features/correspondence/LetterViewModal';
 import type { TableColumnSetting } from '@/shared/types/tableColumnSetting';
 import type { ColumnsType } from 'antd/es/table';
 import {
@@ -116,7 +115,6 @@ export default function CorrespondencePage() {
     responsible_user_id: searchParams.get('responsible_user_id') || undefined,
   };
   const [linkFor, setLinkFor] = useState<CorrespondenceLetter | null>(null);
-  const [viewLetterId, setViewLetterId] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const hideOnScroll = useRef(false);
   const LS_FILTERS_VISIBLE_KEY = 'correspondenceFiltersVisible';
@@ -556,11 +554,6 @@ export default function CorrespondencePage() {
           onClose={() => setShowColumnsDrawer(false)}
           onReset={handleResetColumns}
         />
-        <LetterViewModal
-          open={!!viewLetterId}
-          letterId={viewLetterId}
-          onClose={() => setViewLetterId(null)}
-        />
 
         <div
           style={{ marginTop: 24 }}
@@ -593,7 +586,6 @@ export default function CorrespondencePage() {
             onDelete={handleDelete}
             onAddChild={setLinkFor}
             onUnlink={handleUnlink}
-            onView={(l) => setViewLetterId(l.id)}
             users={users}
             letterTypes={letterTypes}
             projects={projects}
