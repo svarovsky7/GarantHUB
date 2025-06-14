@@ -56,7 +56,7 @@ export default function TicketsPage() {
   );
   const { data: units = [] } = useUnitsByIds(unitIds);
   const qc = useQueryClient();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [filters, setFilters] = useState({});
   const [initialFilters, setInitialFilters] = useState({});
   const [viewId, setViewId] = useState<number | null>(null);
@@ -93,6 +93,18 @@ export default function TicketsPage() {
     const id = searchParams.get('ticket_id');
     if (id) {
       setViewId(Number(id));
+    }
+    const project = searchParams.get('project_id');
+    if (project) {
+      const val = Number(project);
+      setInitialFilters((f) => ({ ...f, project: val }));
+      setFilters((f) => ({ ...f, project: val }));
+    }
+    const unit = searchParams.get('unit_id');
+    if (unit) {
+      const val = Number(unit);
+      setInitialFilters((f) => ({ ...f, units: [val] }));
+      setFilters((f) => ({ ...f, units: [val] }));
     }
     const ids = searchParams.get('ids');
     if (ids) {
@@ -498,7 +510,12 @@ export default function TicketsPage() {
         <TicketViewModal
           open={viewId !== null}
           ticketId={viewId}
-          onClose={() => setViewId(null)}
+          onClose={() => {
+            setViewId(null);
+            const params = new URLSearchParams(searchParams);
+            params.delete('ticket_id');
+            setSearchParams(params, { replace: true });
+          }}
         />
       </>
     </ConfigProvider>

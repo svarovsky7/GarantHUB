@@ -1,7 +1,7 @@
 import React from 'react';
 import dayjs from 'dayjs';
 import { Modal, Table, Tag, ConfigProvider, Button, Switch, Space } from 'antd';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, createSearchParams } from 'react-router-dom';
 import ruRU from 'antd/locale/ru_RU';
 import type { ColumnsType } from 'antd/es/table';
 import { useUnitHistory } from '@/entities/history';
@@ -9,9 +9,10 @@ import type { HistoryEventWithUser } from '@/shared/types/history';
 
 interface HistoryDialogProps {
   open: boolean;
-  unit: { id: number; name: string } | null;
+  unit: { id: number; name: string; project_id?: number } | null;
   onClose: () => void;
-  onOpenCourtCase?: (caseId: number) => void; // <-- добавьте если нужно открывать дело в модалке
+  /** Открыть модальное окно дела, если страница не обрабатывает case_id */
+  onOpenCourtCase?: (caseId: number) => void;
 }
 
 /** Диалог отображения истории объекта */
@@ -148,7 +149,15 @@ export default function HistoryDialog({ open, unit, onClose, onOpenCourtCase }: 
             <Button
               disabled={!ticketIds.length}
               onClick={() => {
-                navigate(`/tickets?ids=${ticketIds.join(',')}`);
+                if (unit) {
+                  const search = createSearchParams({
+                    project_id: String(unit.project_id ?? ''),
+                    unit_id: String(unit.id),
+                  }).toString();
+                  navigate(`/tickets?${search}`);
+                } else {
+                  navigate('/tickets');
+                }
                 onClose();
               }}
             >
@@ -157,7 +166,15 @@ export default function HistoryDialog({ open, unit, onClose, onOpenCourtCase }: 
             <Button
               disabled={!caseIds.length}
               onClick={() => {
-                navigate(`/court-cases?ids=${caseIds.join(',')}`);
+                if (unit) {
+                  const search = createSearchParams({
+                    project_id: String(unit.project_id ?? ''),
+                    unit_id: String(unit.id),
+                  }).toString();
+                  navigate(`/court-cases?${search}`);
+                } else {
+                  navigate('/court-cases');
+                }
                 onClose();
               }}
             >
@@ -166,7 +183,15 @@ export default function HistoryDialog({ open, unit, onClose, onOpenCourtCase }: 
             <Button
               disabled={!letterIds.length}
               onClick={() => {
-                navigate(`/correspondence?ids=${letterIds.join(',')}`);
+                if (unit) {
+                  const search = createSearchParams({
+                    project_id: String(unit.project_id ?? ''),
+                    unit_id: String(unit.id),
+                  }).toString();
+                  navigate(`/correspondence?${search}`);
+                } else {
+                  navigate('/correspondence');
+                }
                 onClose();
               }}
             >
