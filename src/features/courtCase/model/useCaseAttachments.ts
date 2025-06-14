@@ -41,7 +41,10 @@ export function useCaseAttachments(options: {
         attachment_type_name: typeObj?.name || fileType || '',
       } as RemoteCaseFile;
     }).filter(Boolean) as RemoteCaseFile[];
+    console.log('[useCaseAttachments] parsed attachments', attachmentsWithType);
     setRemoteFiles(attachmentsWithType);
+    console.log('[useCaseAttachments] setRemoteFiles', attachmentsWithType);
+    console.log('[useCaseAttachments] remoteFiles state', attachmentsWithType);
     const map: Record<string, number | null> = {};
     attachmentsWithType.forEach((f) => {
       map[String(f.id)] = f.attachment_type_id ?? null;
@@ -51,17 +54,23 @@ export function useCaseAttachments(options: {
   }, [courtCase, attachmentTypes]);
 
   const addFiles = useCallback(
-    (files: File[]) =>
-      setNewFiles((p) => [...p, ...files.map((f) => ({ file: f, type_id: null }))]),
+    (files: File[]) => {
+      console.log('[useCaseAttachments] addFiles', files);
+      setNewFiles((p) => [...p, ...files.map((f) => ({ file: f, type_id: null }))]);
+    },
     [],
   );
   const removeNew = useCallback(
-    (idx: number) => setNewFiles((p) => p.filter((_, i) => i !== idx)),
+    (idx: number) => {
+      setNewFiles((p) => p.filter((_, i) => i !== idx));
+      console.log('[useCaseAttachments] removeNew', idx);
+    },
     [],
   );
   const removeRemote = useCallback((id: string) => {
     setRemoteFiles((p) => p.filter((f) => String(f.id) !== String(id)));
     setRemovedIds((p) => [...p, id]);
+    console.log('[useCaseAttachments] removeRemote', id);
   }, []);
   const changeRemoteType = useCallback(
     (id: string, type: number | null) =>
@@ -74,6 +83,7 @@ export function useCaseAttachments(options: {
     [],
   );
   const appendRemote = useCallback((files: RemoteCaseFile[]) => {
+    console.log('[useCaseAttachments] appendRemote', files);
     setRemoteFiles((p) => [...p, ...files]);
     setChangedTypes((prev) => {
       const copy = { ...prev };
@@ -91,6 +101,7 @@ export function useCaseAttachments(options: {
     });
   }, []);
   const markPersisted = useCallback(() => {
+    console.log('[useCaseAttachments] markPersisted');
     setNewFiles([]);
     setRemovedIds([]);
     setInitialTypes((prev) => ({ ...prev, ...changedTypes }));
@@ -100,6 +111,7 @@ export function useCaseAttachments(options: {
     removedIds.length > 0 ||
     Object.keys(changedTypes).some((id) => changedTypes[id] !== initialTypes[id]);
   const resetAll = useCallback(() => {
+    console.log('[useCaseAttachments] resetAll');
     setNewFiles([]);
     setRemoteFiles([]);
     setChangedTypes({});
