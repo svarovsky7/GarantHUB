@@ -1,9 +1,17 @@
 import React, { useMemo, useState } from 'react';
 import dayjs from 'dayjs';
-import { ConfigProvider, Card, Button, Typography } from 'antd';
-import { SettingOutlined } from '@ant-design/icons';
+import {
+  ConfigProvider,
+  Card,
+  Button,
+  Typography,
+  Tooltip,
+  Popconfirm,
+  message,
+} from 'antd';
+import { SettingOutlined, EyeOutlined, DeleteOutlined } from '@ant-design/icons';
 import ruRU from 'antd/locale/ru_RU';
-import { useDefects } from '@/entities/defect';
+import { useDefects, useDeleteDefect } from '@/entities/defect';
 import { useTicketsSimple } from '@/entities/ticket';
 import { useUnitsByIds } from '@/entities/unit';
 import DefectsTable from '@/widgets/DefectsTable';
@@ -15,6 +23,7 @@ import ExportDefectsButton from '@/features/defect/ExportDefectsButton';
 import { filterDefects } from '@/shared/utils/defectFilter';
 import type { DefectWithInfo } from '@/shared/types/defect';
 import type { DefectFilters } from '@/shared/types/defectFilters';
+import type { ColumnsType } from 'antd/es/table';
 
 const fmt = (v: string | null) => (v ? dayjs(v).format('DD.MM.YYYY') : '—');
 
@@ -70,6 +79,7 @@ export default function DefectsPage() {
 
   const [filters, setFilters] = useState<DefectFilters>({});
   const [viewId, setViewId] = useState<number | null>(null);
+  const { mutateAsync: removeDefect, isPending: removing } = useDeleteDefect();
 
   const LS_FILTERS_VISIBLE_KEY = 'defectsFiltersVisible';
   const LS_COLUMNS_KEY = 'defectsColumns';
@@ -141,9 +151,40 @@ export default function DefectsPage() {
       actions: {
         title: 'Действия',
         key: 'actions',
+        width: 100,
+        render: (_: unknown, row: DefectWithInfo) => (
+          <>
+            <Tooltip title="Просмотр">
+              <Button
+                size="small"
+                type="text"
+                icon={<EyeOutlined />}
+                onClick={() => setViewId(row.id)}
+              />
+            </Tooltip>
+            <Popconfirm
+              title="Удалить дефект?"
+              okText="Да"
+              cancelText="Нет"
+              onConfirm={async () => {
+                await removeDefect(row.id);
+                message.success('Удалено');
+              }}
+              disabled={removing}
+            >
+              <Button
+                size="small"
+                type="text"
+                danger
+                icon={<DeleteOutlined />}
+                loading={removing}
+              />
+            </Popconfirm>
+          </>
+        ),
       } as any,
     } as Record<string, ColumnsType<DefectWithInfo>[number]>;
-  }, []);
+  }, [removeDefect, removing]);
 
   const [columnsState, setColumnsState] = useState<TableColumnSetting[]>(() => {
     const base = baseColumns;
