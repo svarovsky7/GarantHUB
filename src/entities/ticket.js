@@ -135,6 +135,7 @@ function mapTicket(r) {
     return {
       id: a.id,
       path: a.storage_path,
+      original_name: a.original_name ?? null,
       name,
       url: a.file_url,
       type: a.file_type,

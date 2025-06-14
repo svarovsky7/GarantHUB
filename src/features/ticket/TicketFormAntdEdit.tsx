@@ -367,6 +367,7 @@ export default function TicketFormAntdEdit({
           onRemoveNew={removeNew}
           onChangeRemoteType={changeRemoteType}
           onChangeNewType={changeNewType}
+          getSignedUrl={(path, name) => signedUrl(path, name)}
         />
       </Form.Item>
       <Form.Item style={{ textAlign: 'right' }}>
