@@ -1,29 +1,29 @@
-// src/widgets/TicketTypesAdmin.js
+// src/widgets/DefectTypesAdmin.tsx
 import React from 'react';
 import {
-    useTicketTypes,
-    useAddTicketType,
-    useUpdateTicketType,
-    useDeleteTicketType,
-} from '@/entities/ticketType';
+    useDefectTypes,
+    useAddDefectType,
+    useUpdateDefectType,
+    useDeleteDefectType,
+} from '@/entities/defectType';
 import { Button, Stack, Dialog, DialogTitle, DialogContent, IconButton } from '@mui/material';
 import AdminDataGrid from '@/shared/ui/AdminDataGrid';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import TicketTypeForm from '@/features/ticketType/TicketTypeForm'; // без ProjectForm!
+import DefectTypeForm from '@/features/defectType/DefectTypeForm';
 
-interface TicketTypesAdminProps {
+interface DefectTypesAdminProps {
     pageSize?: number;
     rowsPerPageOptions?: number[];
 }
-export default function TicketTypesAdmin({
+export default function DefectTypesAdmin({
     pageSize = 25,
     rowsPerPageOptions = [10, 25, 50, 100],
-}: TicketTypesAdminProps) {
-    const { data = [], isLoading } = useTicketTypes();
-    const addMutation = useAddTicketType();
-    const updateMutation = useUpdateTicketType();
-    const deleteMutation = useDeleteTicketType();
+}: DefectTypesAdminProps) {
+    const { data = [], isLoading } = useDefectTypes();
+    const addMutation = useAddDefectType();
+    const updateMutation = useUpdateDefectType();
+    const deleteMutation = useDeleteDefectType();
 
     const [open, setOpen] = React.useState(false);
     const [editRow, setEditRow] = React.useState(null);
@@ -79,7 +79,7 @@ export default function TicketTypesAdmin({
             <Dialog open={open} onClose={() => setOpen(false)} maxWidth="xs" fullWidth>
                 <DialogTitle>{editRow ? 'Редактировать тип' : 'Добавить тип'}</DialogTitle>
                 <DialogContent>
-                    <TicketTypeForm
+                    <DefectTypeForm
                         initialData={editRow}
                         onSubmit={(values) => handleSubmit(values)}
                         onCancel={() => setOpen(false)}
@@ -88,7 +88,7 @@ export default function TicketTypesAdmin({
             </Dialog>
 
             <AdminDataGrid
-                title="Типы замечаний"
+                title="Типы дефектов"
                 rows={data}
                 columns={columns}
                 loading={isLoading}
