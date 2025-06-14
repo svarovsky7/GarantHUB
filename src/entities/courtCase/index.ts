@@ -267,18 +267,23 @@ export function useCourtCase(caseId: number | string | undefined) {
     queryKey: ['court_case', id],
     enabled: !!id,
     queryFn: async () => {
+      console.log('[useCourtCase] fetch start', id);
       const { data, error } = await supabase
         .from(CASES_TABLE)
         .select('*')
         .eq('id', id)
         .single();
+      console.log('[useCourtCase] fetch result', data, error);
       if (error) throw error;
       let attachments: any[] = [];
       if (data?.attachment_ids?.length) {
         const files = await getAttachmentsByIds(data.attachment_ids);
         attachments = files;
+        console.log('[useCourtCase] attachments', files);
       }
-      return { ...(data as any), attachments } as CourtCase & { attachments: any[] };
+      const result = { ...(data as any), attachments } as CourtCase & { attachments: any[] };
+      console.log('[useCourtCase] final', result);
+      return result;
     },
     staleTime: 5 * 60_000,
   });
