@@ -4,7 +4,8 @@ import {
   CorrespondenceAttachment,
   LetterLink,
 } from '@/shared/types/correspondence';
-import { addLetterAttachments, ATTACH_BUCKET } from '../attachment';
+import type { NewLetterFile } from '@/shared/types/letterFile';
+import { addLetterAttachments, getAttachmentsByIds, ATTACH_BUCKET } from '../attachment';
 import { supabase } from '@/shared/api/supabaseClient';
 import { useNotify } from '@/shared/hooks/useNotify';
 
@@ -296,5 +297,102 @@ export function useUpdateLetterStatus() {
       notify.success('Статус письма обновлён');
     },
     onError: (e: any) => notify.error(`Ошибка обновления статуса: ${e.message}`),
+  });
+}
+
+export function useLetter(letterId: number | string | undefined) {
+  const id = Number(letterId);
+  return useQuery({
+    queryKey: ['letter', id],
+    enabled: !!id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from(LETTERS_TABLE)
+        .select('*')
+        .eq('id', id)
+        .single();
+      if (error) throw error;
+      let attachments: any[] = [];
+      if (data?.attachment_ids?.length) {
+        attachments = await getAttachmentsByIds(data.attachment_ids);
+      }
+      return { ...(data as any), attachments } as CorrespondenceLetter & { attachments: any[] };
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
+export function useUpdateLetter() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      newAttachments = [],
+      removedAttachmentIds = [],
+      updatedAttachments = [],
+      updates = {},
+    }: {
+      id: number;
+      newAttachments?: NewLetterFile[];
+      removedAttachmentIds?: number[];
+      updatedAttachments?: { id: number; type_id: number | null }[];
+      updates?: Partial<CorrespondenceLetter>;
+    }) => {
+      const { data: current } = await supabase
+        .from(LETTERS_TABLE)
+        .select('attachment_ids')
+        .eq('id', id)
+        .single();
+      let ids: number[] = current?.attachment_ids ?? [];
+      if (removedAttachmentIds.length) {
+        const { data: atts } = await supabase
+          .from(ATTACH_TABLE)
+          .select('storage_path')
+          .in('id', removedAttachmentIds);
+        if (atts?.length)
+          await supabase.storage
+            .from(ATTACH_BUCKET)
+            .remove(atts.map((a) => a.storage_path));
+        await supabase.from(ATTACH_TABLE).delete().in('id', removedAttachmentIds);
+        ids = ids.filter((i) => !removedAttachmentIds.includes(Number(i)));
+      }
+      if (Object.keys(updates).length) {
+        const { error } = await supabase
+          .from(LETTERS_TABLE)
+          .update(updates)
+          .eq('id', id);
+        if (error) throw error;
+      }
+      if (updatedAttachments.length) {
+        for (const a of updatedAttachments) {
+          await supabase
+            .from(ATTACH_TABLE)
+            .update({ attachment_type_id: a.type_id })
+            .eq('id', a.id);
+        }
+      }
+      let uploaded: any[] = [];
+      if (newAttachments.length) {
+        uploaded = await addLetterAttachments(newAttachments, id);
+        ids = ids.concat(uploaded.map((u) => u.id));
+      }
+      if (
+        Object.keys(updates).length ||
+        removedAttachmentIds.length ||
+        newAttachments.length ||
+        updatedAttachments.length
+      ) {
+        const { error } = await supabase
+          .from(LETTERS_TABLE)
+          .update({ attachment_ids: ids })
+          .eq('id', id);
+        if (error) throw error;
+      }
+      return uploaded;
+    },
+    onSuccess: (_res, vars) => {
+      qc.invalidateQueries({ queryKey: [LETTERS_TABLE] });
+      qc.invalidateQueries({ queryKey: ['letter', vars.id] });
+    },
   });
 }

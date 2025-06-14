@@ -2,7 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/shared/api/supabaseClient';
 import { useProjectId } from '@/shared/hooks/useProjectId';
 import type { CourtCase, Defect } from '@/shared/types/courtCase';
-import { getAttachmentsByIds, ATTACH_BUCKET } from '../attachment';
+import type { NewCaseFile } from '@/shared/types/caseFile';
+import { addCaseAttachments, getAttachmentsByIds, ATTACH_BUCKET } from '../attachment';
 
 const CASES_TABLE = 'court_cases';
 const DEFECTS_TABLE = 'defects';
@@ -255,6 +256,105 @@ export function useUnlinkCase() {
       await supabase.from(CASE_LINKS_TABLE).delete().eq('child_id', childId);
       qc.invalidateQueries({ queryKey: [CASE_LINKS_TABLE] });
       qc.invalidateQueries({ queryKey: [CASES_TABLE] });
+    },
+  });
+}
+
+export function useCourtCase(caseId: number | string | undefined) {
+  const id = Number(caseId);
+  const qc = useQueryClient();
+  return useQuery({
+    queryKey: ['court_case', id],
+    enabled: !!id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from(CASES_TABLE)
+        .select('*')
+        .eq('id', id)
+        .single();
+      if (error) throw error;
+      let attachments: any[] = [];
+      if (data?.attachment_ids?.length) {
+        const files = await getAttachmentsByIds(data.attachment_ids);
+        attachments = files;
+      }
+      return { ...(data as any), attachments } as CourtCase & { attachments: any[] };
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
+export function useUpdateCourtCaseFull() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      newAttachments = [],
+      removedAttachmentIds = [],
+      updatedAttachments = [],
+      updates = {},
+    }: {
+      id: number;
+      newAttachments?: NewCaseFile[];
+      removedAttachmentIds?: number[];
+      updatedAttachments?: { id: number; type_id: number | null }[];
+      updates?: Partial<CourtCase>;
+    }) => {
+      const { data: current } = await supabase
+        .from(CASES_TABLE)
+        .select('attachment_ids')
+        .eq('id', id)
+        .single();
+      let ids: number[] = current?.attachment_ids ?? [];
+      if (removedAttachmentIds.length) {
+        const { data: atts } = await supabase
+          .from('attachments')
+          .select('storage_path')
+          .in('id', removedAttachmentIds);
+        if (atts?.length)
+          await supabase.storage
+            .from(ATTACH_BUCKET)
+            .remove(atts.map((a) => a.storage_path));
+        await supabase.from('attachments').delete().in('id', removedAttachmentIds);
+        ids = ids.filter((i) => !removedAttachmentIds.includes(Number(i)));
+      }
+      if (Object.keys(updates).length) {
+        const { error } = await supabase
+          .from(CASES_TABLE)
+          .update(updates)
+          .eq('id', id);
+        if (error) throw error;
+      }
+      if (updatedAttachments.length) {
+        for (const a of updatedAttachments) {
+          await supabase
+            .from('attachments')
+            .update({ attachment_type_id: a.type_id })
+            .eq('id', a.id);
+        }
+      }
+      let uploaded: any[] = [];
+      if (newAttachments.length) {
+        uploaded = await addCaseAttachments(newAttachments, id);
+        ids = ids.concat(uploaded.map((u) => u.id));
+      }
+      if (
+        Object.keys(updates).length ||
+        removedAttachmentIds.length ||
+        newAttachments.length ||
+        updatedAttachments.length
+      ) {
+        const { error } = await supabase
+          .from(CASES_TABLE)
+          .update({ attachment_ids: ids })
+          .eq('id', id);
+        if (error) throw error;
+      }
+      return uploaded;
+    },
+    onSuccess: (_res, vars) => {
+      qc.invalidateQueries({ queryKey: [CASES_TABLE] });
+      qc.invalidateQueries({ queryKey: ['court_case', vars.id] });
     },
   });
 }

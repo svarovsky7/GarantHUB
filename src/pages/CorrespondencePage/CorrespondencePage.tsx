@@ -25,6 +25,7 @@ import CorrespondenceTable from '@/widgets/CorrespondenceTable';
 import CorrespondenceFilters from '@/widgets/CorrespondenceFilters';
 import TableColumnsDrawer from '@/widgets/TableColumnsDrawer';
 import LetterStatusSelect from '@/features/correspondence/LetterStatusSelect';
+import LetterViewModal from '@/features/correspondence/LetterViewModal';
 import type { TableColumnSetting } from '@/shared/types/tableColumnSetting';
 import type { ColumnsType } from 'antd/es/table';
 import {
@@ -116,6 +117,7 @@ export default function CorrespondencePage() {
   };
   const [linkFor, setLinkFor] = useState<CorrespondenceLetter | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [viewId, setViewId] = useState<string | null>(null);
   const hideOnScroll = useRef(false);
   const LS_FILTERS_VISIBLE_KEY = 'correspondenceFiltersVisible';
   const LS_COLUMNS_KEY = 'correspondenceColumns';
@@ -586,6 +588,7 @@ export default function CorrespondencePage() {
             onDelete={handleDelete}
             onAddChild={setLinkFor}
             onUnlink={handleUnlink}
+            onView={(id) => setViewId(String(id))}
             users={users}
             letterTypes={letterTypes}
             projects={projects}
@@ -600,7 +603,7 @@ export default function CorrespondencePage() {
             Готовых писем к выгрузке: {readyToExport}
           </Typography.Text>
         </div>
-
+        <LetterViewModal open={viewId !== null} letterId={viewId} onClose={() => setViewId(null)} />
       </>
     </ConfigProvider>
   );
