@@ -21,6 +21,7 @@ import {
   FileTextOutlined,
   BranchesOutlined,
   SettingOutlined,
+  EyeOutlined,
 } from '@ant-design/icons';
 import {
   useCourtCases,
@@ -36,6 +37,7 @@ import CourtCaseClosedSelect from '@/features/courtCase/CourtCaseClosedSelect';
 import LinkCasesDialog from '@/features/courtCase/LinkCasesDialog';
 import ExportCourtCasesButton from '@/features/courtCase/ExportCourtCasesButton';
 import AddCourtCaseFormAntd from '@/features/courtCase/AddCourtCaseFormAntd';
+import CourtCaseViewModal from '@/features/courtCase/CourtCaseViewModal';
 import CourtCasesFilters, { CourtCasesFiltersValues } from '@/widgets/CourtCasesFilters';
 import TableColumnsDrawer from '@/widgets/TableColumnsDrawer';
 import type { TableColumnSetting } from '@/shared/types/tableColumnSetting';
@@ -65,6 +67,7 @@ export default function CourtCasesPage() {
     }
   });
   const [showColumnsDrawer, setShowColumnsDrawer] = useState(false);
+  const [viewId, setViewId] = useState<number | null>(null);
   const hideOnScroll = useRef(false);
 
   const [searchParams] = useSearchParams();
@@ -315,6 +318,9 @@ export default function CourtCasesPage() {
       width: 140,
       render: (_: any, record) => (
         <Space size="middle">
+          <Tooltip title="Просмотр">
+            <Button type="text" icon={<EyeOutlined />} onClick={() => setViewId(record.id)} />
+          </Tooltip>
           <Button type="text" icon={<PlusOutlined />} onClick={() => setLinkFor(record)} />
           {record.parent_id && (
             <Tooltip title="Исключить из связи">
@@ -471,6 +477,11 @@ export default function CourtCasesPage() {
           Готовых дел к выгрузке: {readyToExport}
         </Typography.Text>
       </div>
+      <CourtCaseViewModal
+        open={viewId !== null}
+        caseId={viewId}
+        onClose={() => setViewId(null)}
+      />
       </>
     </ConfigProvider>
   );
