@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import dayjs, { Dayjs } from 'dayjs';
 import {
   Form,
@@ -27,6 +27,9 @@ import FileDropZone from '@/shared/ui/FileDropZone';
 import AttachmentEditorTable from '@/shared/ui/AttachmentEditorTable';
 import { useNotify } from '@/shared/hooks/useNotify';
 import { useTicketAttachments } from './model/useTicketAttachments';
+import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
+import { downloadZip } from '@/shared/utils/downloadZip';
+import { signedUrl } from '@/entities/ticket';
 
 export interface TicketFormAntdEditProps {
   ticketId?: string;
@@ -75,6 +78,8 @@ export default function TicketFormAntdEdit({
   const notify = useNotify();
   const profileId = useAuthStore((s) => s.profile?.id);
 
+  const [formTouched, setFormTouched] = useState(false);
+
   const {
     remoteFiles,
     newFiles,
@@ -117,6 +122,7 @@ export default function TicketFormAntdEdit({
         description: ticket.description ?? undefined,
       });
       appendRemote(ticket.attachments || []);
+      setFormTouched(false);
     } else {
       form.setFieldsValue({
         project_id: globalProjectId ?? null,
@@ -124,10 +130,29 @@ export default function TicketFormAntdEdit({
         responsible_engineer_id: profileId ?? undefined,
         received_at: dayjs(),
       });
+      setFormTouched(false);
     }
   }, [ticket, form, globalProjectId, profileId, initialUnitId, appendRemote]);
 
   const handleFiles = (files: File[]) => addFiles(files);
+  const handleValuesChange = () => setFormTouched(true);
+
+  const handleDownloadArchive = async () => {
+    const files = [
+      ...remoteFiles.map((f) => ({
+        name: f.name,
+        getFile: async () => {
+          const url = await signedUrl(f.path, f.name);
+          const res = await fetch(url);
+          return res.blob();
+        },
+      })),
+      ...newFiles.map((f) => ({ name: f.file.name, getFile: async () => f.file })),
+    ];
+    if (files.length) {
+      await downloadZip(files, `ticket-${ticketId ?? 'new'}-files.zip`);
+    }
+  };
 
   const handleSubmit = async (values: TicketFormAntdEditValues) => {
     if (
@@ -182,6 +207,7 @@ export default function TicketFormAntdEdit({
           );
         }
         markPersisted();
+        setFormTouched(false);
         onCreated?.();
       } else {
         await create.mutateAsync({
@@ -191,11 +217,22 @@ export default function TicketFormAntdEdit({
         onCreated?.();
         form.resetFields();
         resetAttachments();
+        setFormTouched(false);
       }
     } catch (e: unknown) {
       console.error(e);
     }
   };
+
+  const handleCancel = () => {
+    if (hasChanges && !window.confirm('Изменения будут потеряны. Покинуть форму?')) {
+      return;
+    }
+    onCancel?.();
+  };
+
+  const hasChanges = formTouched || attachmentsChanged;
+  useUnsavedChangesWarning(hasChanges);
 
   if (isEdit && !ticket) return <Skeleton active />;
 
@@ -204,17 +241,18 @@ export default function TicketFormAntdEdit({
       form={form}
       layout="vertical"
       onFinish={handleSubmit}
+      onValuesChange={handleValuesChange}
       style={{ maxWidth: embedded ? 'none' : 640 }}
       autoComplete="off"
     >
       <Row gutter={16}>
-        <Col span={8}>
-          <Form.Item name="project_id" label="Проект" rules={[{ required: true }]}> 
+        <Col span={12}>
+          <Form.Item name="project_id" label="Проект" rules={[{ required: true }]}>
             <Select allowClear options={projects.map((p) => ({ value: p.id, label: p.name }))} />
           </Form.Item>
         </Col>
-        <Col span={8}>
-          <Form.Item name="unit_ids" label="Объекты" rules={[{ required: true }]}> 
+        <Col span={12}>
+          <Form.Item name="unit_ids" label="Объекты" rules={[{ required: true }]}>
             <Select
               mode="multiple"
               disabled={!projectId}
@@ -222,24 +260,26 @@ export default function TicketFormAntdEdit({
             />
           </Form.Item>
         </Col>
-        <Col span={8}>
-          <Form.Item name="responsible_engineer_id" label="Ответственный инженер" rules={[{ required: true }]}> 
+      </Row>
+      <Row gutter={16}>
+        <Col span={12}>
+          <Form.Item name="responsible_engineer_id" label="Ответственный инженер" rules={[{ required: true }]}>
             <Select allowClear options={users.map((u) => ({ value: u.id, label: u.name }))} />
+          </Form.Item>
+        </Col>
+        <Col span={12}>
+          <Form.Item name="status_id" label="Статус" rules={[{ required: true }]}>
+            <Select options={statuses.map((s) => ({ value: s.id, label: s.name }))} />
           </Form.Item>
         </Col>
       </Row>
       <Row gutter={16}>
-        <Col span={8}>
-          <Form.Item name="status_id" label="Статус" rules={[{ required: true }]}> 
-            <Select options={statuses.map((s) => ({ value: s.id, label: s.name }))} />
-          </Form.Item>
-        </Col>
-        <Col span={8}>
-          <Form.Item name="type_id" label={`Тип${deadlineDays ? ` (${deadlineDays} дн.)` : ''}`} rules={[{ required: true }]}> 
+        <Col span={12}>
+          <Form.Item name="type_id" label={`Тип${deadlineDays ? ` (${deadlineDays} дн.)` : ''}`} rules={[{ required: true }]}>
             <Select options={types.map((t) => ({ value: t.id, label: t.name }))} />
           </Form.Item>
         </Col>
-        <Col span={8}>
+        <Col span={12}>
           <Form.Item name="is_warranty" label="Гарантия" valuePropName="checked">
             <Switch />
           </Form.Item>
@@ -258,12 +298,12 @@ export default function TicketFormAntdEdit({
         </Col>
       </Row>
       <Row gutter={16}>
-        <Col span={8}>
-          <Form.Item name="received_at" label="Дата получения" rules={[{ required: true }]}> 
+        <Col span={12}>
+          <Form.Item name="received_at" label="Дата получения" rules={[{ required: true }]}>
             <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
           </Form.Item>
         </Col>
-        <Col span={8}>
+        <Col span={12}>
           <Form.Item name="fixed_at" label="Дата устранения">
             <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
           </Form.Item>
@@ -306,6 +346,14 @@ export default function TicketFormAntdEdit({
       </Form.Item>
       <Form.Item label="Файлы">
         <FileDropZone onFiles={handleFiles} />
+        <Button
+          size="small"
+          style={{ marginTop: 8, marginBottom: 8 }}
+          onClick={handleDownloadArchive}
+          disabled={!remoteFiles.length && !newFiles.length}
+        >
+          Скачать архив
+        </Button>
         <AttachmentEditorTable
           remoteFiles={remoteFiles.map((f) => ({
             id: String(f.id),
@@ -325,7 +373,7 @@ export default function TicketFormAntdEdit({
       </Form.Item>
       <Form.Item style={{ textAlign: 'right' }}>
         {onCancel && (
-          <Button style={{ marginRight: 8 }} onClick={onCancel} disabled={create.isPending || updating}>
+          <Button style={{ marginRight: 8 }} onClick={handleCancel} disabled={create.isPending || updating}>
             Отмена
           </Button>
         )}
