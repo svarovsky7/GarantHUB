@@ -11,6 +11,5 @@ export interface TicketFilters {
   units?: string[];
   warranty?: 'yes' | 'no';
   status?: string;
-  type?: string;
   responsible?: string;
 }
