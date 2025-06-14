@@ -20,6 +20,7 @@ import {
   LinkOutlined,
   FileTextOutlined,
   BranchesOutlined,
+  EyeOutlined,
   SettingOutlined,
 } from '@ant-design/icons';
 import {
@@ -36,6 +37,7 @@ import CourtCaseClosedSelect from '@/features/courtCase/CourtCaseClosedSelect';
 import LinkCasesDialog from '@/features/courtCase/LinkCasesDialog';
 import ExportCourtCasesButton from '@/features/courtCase/ExportCourtCasesButton';
 import AddCourtCaseFormAntd from '@/features/courtCase/AddCourtCaseFormAntd';
+import CourtCaseViewModal from '@/features/courtCase/CourtCaseViewModal';
 import CourtCasesFilters, { CourtCasesFiltersValues } from '@/widgets/CourtCasesFilters';
 import TableColumnsDrawer from '@/widgets/TableColumnsDrawer';
 import type { TableColumnSetting } from '@/shared/types/tableColumnSetting';
@@ -56,6 +58,7 @@ export default function CourtCasesPage() {
   const unlinkCase = useUnlinkCase();
   const [linkFor, setLinkFor] = useState<CourtCase | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [viewId, setViewId] = useState<number | null>(null);
   const [showFilters, setShowFilters] = useState(() => {
     try {
       const saved = localStorage.getItem(LS_FILTERS_VISIBLE_KEY);
@@ -312,9 +315,12 @@ export default function CourtCasesPage() {
     actions: {
       title: 'Действия',
       key: 'actions',
-      width: 120,
+      width: 140,
       render: (_: any, record) => (
         <Space size="middle">
+          <Tooltip title="Просмотр">
+            <Button size="small" type="text" icon={<EyeOutlined />} onClick={() => setViewId(record.id)} />
+          </Tooltip>
           <Button type="text" icon={<PlusOutlined />} onClick={() => setLinkFor(record)} />
           {record.parent_id && (
             <Tooltip title="Исключить из связи">
@@ -467,10 +473,11 @@ export default function CourtCasesPage() {
           <Typography.Text style={{ display: 'block', marginTop: 8 }}>
             Всего дел: {total}, из них закрытых: {closedCount} и не закрытых: {openCount}
           </Typography.Text>
-          <Typography.Text style={{ display: 'block', marginTop: 4 }}>
-            Готовых дел к выгрузке: {readyToExport}
-          </Typography.Text>
-        </div>
+        <Typography.Text style={{ display: 'block', marginTop: 4 }}>
+          Готовых дел к выгрузке: {readyToExport}
+        </Typography.Text>
+      </div>
+      <CourtCaseViewModal open={viewId !== null} caseId={viewId} onClose={() => setViewId(null)} />
       </>
     </ConfigProvider>
   );
