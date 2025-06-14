@@ -20,7 +20,7 @@ export function filterTickets<T extends {
   unitNames?: string;
   isWarranty?: boolean;
   statusName?: string;
-  defectIds?: number[];
+  typeName?: string;
   responsibleEngineerName?: string | null;
 }>(rows: T[], f: TicketFilters): T[] {
   const pass = (r: T): boolean => {
@@ -57,6 +57,7 @@ export function filterTickets<T extends {
       if (r.isWarranty !== want) return false;
     }
     if (f.status && r.statusName !== f.status) return false;
+    if (f.type && r.typeName !== f.type) return false;
     if (f.responsible && r.responsibleEngineerName !== f.responsible) {
       return false;
     }

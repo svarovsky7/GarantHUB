@@ -13,7 +13,7 @@ import AdminDataGrid from '@/shared/ui/AdminDataGrid';
 import { Dialog, DialogTitle, DialogContent } from '@mui/material';
 import { useNotify } from '@/shared/hooks/useNotify';
 import { useProjects } from '@/entities/project';
-import { useDefectTypes } from '@/entities/defectType';
+import { useTicketTypes } from '@/entities/ticketType';
 
 /** Props for {@link DefectDeadlinesAdmin} */
 interface Props {
@@ -35,7 +35,7 @@ export default function DefectDeadlinesAdmin({
   const notify = useNotify();
   const { data = [], isPending } = useDefectDeadlines();
   const { data: projects = [] } = useProjects();
-  const { data: defectTypes = [] } = useDefectTypes();
+  const { data: ticketTypes = [] } = useTicketTypes();
 
   const rows = useMemo(
     () =>
@@ -45,9 +45,9 @@ export default function DefectDeadlinesAdmin({
           row.project?.name || projects.find((p) => p.id === row.project_id)?.name || '',
         ticket_type_name:
           row.ticket_type?.name ||
-          defectTypes.find((t) => t.id === row.ticket_type_id)?.name || '',
+          ticketTypes.find((t) => t.id === row.ticket_type_id)?.name || '',
       })),
-    [data, projects, defectTypes]
+    [data, projects, ticketTypes]
   );
   const add = useAddDefectDeadline();
   const update = useUpdateDefectDeadline();

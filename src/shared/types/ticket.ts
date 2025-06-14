@@ -5,6 +5,7 @@ export interface Ticket {
   project_id: number;
   /** массив ID объектов, к которым относится замечание */
   unit_ids: number[];
+  type_id: number | null;
   status_id: number | null;
   title: string;
   description: string | null;
@@ -17,7 +18,6 @@ export interface Ticket {
   received_at: string;
   fixed_at: string | null;
   attachment_ids?: number[];
-  defect_ids?: number[];
 }
 
 /** Связь замечаний: parent_id - родительское замечание, child_id - дочернее */

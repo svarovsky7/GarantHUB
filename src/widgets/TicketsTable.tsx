@@ -156,6 +156,12 @@ export default function TicketsTable({
         ),
       },
       {
+        title: "Тип замечания",
+        dataIndex: "typeName",
+        width: 160,
+        sorter: (a, b) => a.typeName.localeCompare(b.typeName),
+      },
+      {
         title: "Прошло дней с Даты получения",
         dataIndex: "days",
         width: 120,
