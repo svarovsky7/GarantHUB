@@ -70,10 +70,14 @@ export default function CourtCasesPage() {
   const [viewId, setViewId] = useState<number | null>(null);
   const hideOnScroll = useRef(false);
 
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const initialValues = {
-    project_id: searchParams.get('project_id') ? Number(searchParams.get('project_id')!) : undefined,
-    unit_ids: searchParams.get('unit_id') ? [Number(searchParams.get('unit_id')!)] : undefined,
+    project_id: searchParams.get('project_id')
+      ? Number(searchParams.get('project_id')!)
+      : undefined,
+    unit_ids: searchParams.get('unit_id')
+      ? [Number(searchParams.get('unit_id')!)]
+      : undefined,
     responsible_lawyer_id: searchParams.get('responsible_lawyer_id') || undefined,
   };
 
@@ -96,13 +100,29 @@ export default function CourtCasesPage() {
   });
 
   const [filters, setFilters] = useState<CourtCasesFiltersValues>(() => {
+    let hideClosed = false;
     try {
       const saved = localStorage.getItem(LS_KEY);
-      return { hideClosed: saved ? JSON.parse(saved) : false } as CourtCasesFiltersValues;
-    } catch {
-      return {} as CourtCasesFiltersValues;
-    }
+      hideClosed = saved ? JSON.parse(saved) : false;
+    } catch {}
+    return {
+      hideClosed,
+      projectId: initialValues.project_id,
+      objectId: initialValues.unit_ids ? initialValues.unit_ids[0] : undefined,
+    } as CourtCasesFiltersValues;
   });
+
+  useEffect(() => {
+    const caseId = searchParams.get('case_id');
+    if (caseId) setViewId(Number(caseId));
+    const prj = searchParams.get('project_id');
+    const obj = searchParams.get('unit_id');
+    setFilters((f) => ({
+      ...f,
+      projectId: prj ? Number(prj) : f.projectId,
+      objectId: obj ? Number(obj) : f.objectId,
+    }));
+  }, [searchParams]);
 
   useEffect(() => {
     const handler = (e: StorageEvent) => {
@@ -435,7 +455,16 @@ export default function CourtCasesPage() {
           onClose={() => setShowColumnsDrawer(false)}
           onReset={handleResetColumns}
         />
-        <CourtCaseViewModal open={viewId !== null} caseId={viewId} onClose={() => setViewId(null)} />
+        <CourtCaseViewModal
+          open={viewId !== null}
+          caseId={viewId}
+          onClose={() => {
+            setViewId(null);
+            const params = new URLSearchParams(searchParams);
+            params.delete('case_id');
+            setSearchParams(params, { replace: true });
+          }}
+        />
         <div
           style={{ marginTop: 24 }}
           onWheel={() => {
