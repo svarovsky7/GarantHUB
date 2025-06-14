@@ -138,7 +138,7 @@ export default function HistoryDialog({ open, unit, onClose, onOpenCourtCase }: 
             title={unit ? `История объекта ${unit.name}` : 'История'}
             width={700}
             zIndex={1400}
-            destroyOnClose
+            destroyOnHidden
         >
           <Space style={{ marginBottom: 12 }}>
             <Switch checked={primaryOnly} onChange={setPrimaryOnly} />
