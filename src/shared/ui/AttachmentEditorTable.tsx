@@ -112,21 +112,25 @@ export default function AttachmentEditorTable({
                 displayEmpty
                 sx={{ minWidth: 120 }}
               >
-                <MenuItem value="">
+                <MenuItem value="" sx={{ textDecoration: 'none' }}>
                   <em>Тип не указан</em>
                 </MenuItem>
                 {attachmentTypes.map((t) => (
-                  <MenuItem key={t.id} value={t.id}>
+                  <MenuItem key={t.id} value={t.id} sx={{ textDecoration: 'none' }}>
                     {t.name}
                   </MenuItem>
                 ))}
               </Select>
               {!onChangeRemoteType && (
                 f.typeName ? (
-                  <span style={{ marginLeft: 8, fontSize: '0.8em' }}>{f.typeName}</span>
+                  <span style={{ marginLeft: 8, fontSize: '0.8em', textDecoration: 'none' }}>
+                    {f.typeName}
+                  </span>
                 ) : (
                   f.mime && (
-                    <span style={{ marginLeft: 8, fontSize: '0.8em' }}>{f.mime}</span>
+                    <span style={{ marginLeft: 8, fontSize: '0.8em', textDecoration: 'none' }}>
+                      {f.mime}
+                    </span>
                   )
                 )
               )}
@@ -164,18 +168,20 @@ export default function AttachmentEditorTable({
                 displayEmpty
                 sx={{ minWidth: 120 }}
               >
-                <MenuItem value="">
+                <MenuItem value="" sx={{ textDecoration: 'none' }}>
                   <em>Тип не указан</em>
                 </MenuItem>
                 {attachmentTypes.map((t) => (
-                  <MenuItem key={t.id} value={t.id}>
+                  <MenuItem key={t.id} value={t.id} sx={{ textDecoration: 'none' }}>
                     {t.name}
                   </MenuItem>
                 ))}
               </Select>
               {!onChangeNewType &&
                 f.mime && (
-                  <span style={{ marginLeft: 8, fontSize: '0.8em' }}>{f.mime}</span>
+                  <span style={{ marginLeft: 8, fontSize: '0.8em', textDecoration: 'none' }}>
+                    {f.mime}
+                  </span>
                 )}
             </TableCell>
             <TableCell align="right">

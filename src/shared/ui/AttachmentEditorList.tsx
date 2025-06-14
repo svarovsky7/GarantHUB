@@ -96,14 +96,14 @@ export default function AttachmentEditorList({
             displayEmpty
             sx={{ mr: 1, minWidth: 120 }}
           >
-            <MenuItem value="">
-              <em>Тип не указан</em>
+          <MenuItem value="" sx={{ textDecoration: 'none' }}>
+            <em>Тип не указан</em>
+          </MenuItem>
+          {attachmentTypes.map((t) => (
+            <MenuItem key={t.id} value={t.id} sx={{ textDecoration: 'none' }}>
+              {t.name}
             </MenuItem>
-            {attachmentTypes.map((t) => (
-              <MenuItem key={t.id} value={t.id}>
-                {t.name}
-              </MenuItem>
-            ))}
+          ))}
           </Select>
           <Tooltip title="Скачать">
             <IconButton onClick={() => forceDownload(f)}>
@@ -138,14 +138,14 @@ export default function AttachmentEditorList({
             displayEmpty
             sx={{ mr: 1, minWidth: 120 }}
           >
-            <MenuItem value="">
-              <em>Тип не указан</em>
+          <MenuItem value="" sx={{ textDecoration: 'none' }}>
+            <em>Тип не указан</em>
+          </MenuItem>
+          {attachmentTypes.map((t) => (
+            <MenuItem key={t.id} value={t.id} sx={{ textDecoration: 'none' }}>
+              {t.name}
             </MenuItem>
-            {attachmentTypes.map((t) => (
-              <MenuItem key={t.id} value={t.id}>
-                {t.name}
-              </MenuItem>
-            ))}
+          ))}
           </Select>
           <Tooltip title="Скачать">
             <IconButton component="a" href={objUrls[i]} download={f.file.name}>
