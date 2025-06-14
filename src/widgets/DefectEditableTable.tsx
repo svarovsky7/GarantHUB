@@ -15,6 +15,7 @@ import {
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useDefectTypes } from '@/entities/defectType';
 import { useDefectStatuses } from '@/entities/defectStatus';
+import { useDefectDeadlines } from '@/entities/defectDeadline';
 import type { ColumnsType } from 'antd/es/table';
 
 /**
@@ -24,16 +25,27 @@ interface Props {
   fields: any[];
   add: () => void;
   remove: (index: number) => void;
+  /** ID выбранного проекта, используется для сроков устранения */
+  projectId?: number | null;
 }
 
 /**
  * Editable table for adding defects inside ticket form.
  * Shows skeleton until defect types and statuses are loaded.
  */
-export default function DefectEditableTable({ fields, add, remove }: Props) {
+export default function DefectEditableTable({ fields, add, remove, projectId }: Props) {
   const { data: defectTypes = [], isPending: loadingTypes } = useDefectTypes();
   const { data: defectStatuses = [], isPending: loadingStatuses } = useDefectStatuses();
+  const { data: deadlines = [] } = useDefectDeadlines();
   const form = Form.useFormInstance();
+
+  const getFixDays = (typeId: number | null | undefined) => {
+    if (!projectId || !typeId) return null;
+    const rec = deadlines.find(
+      (d) => d.project_id === projectId && d.defect_type_id === typeId,
+    );
+    return rec?.fix_days ?? null;
+  };
 
   const columns: ColumnsType<any> = useMemo(
     () => [
@@ -136,6 +148,27 @@ export default function DefectEditableTable({ fields, add, remove }: Props) {
                   +{d}
                 </Tag>
               ))}
+              {(() => {
+                const t = form.getFieldValue(['defects', field.name, 'type_id']);
+                const fd = getFixDays(t);
+                return fd ? (
+                  <Tag
+                    color="green"
+                    onClick={() => {
+                      const rec = form.getFieldValue(['defects', field.name, 'received_at']);
+                      if (rec) {
+                        form.setFieldValue(
+                          ['defects', field.name, 'fixed_at'],
+                          dayjs(rec).add(fd, 'day'),
+                        );
+                      }
+                    }}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    +{fd}
+                  </Tag>
+                ) : null;
+              })()}
             </Space>
           </Space>
         ),
@@ -165,7 +198,6 @@ export default function DefectEditableTable({ fields, add, remove }: Props) {
             name={[field.name, 'fix_by']}
             noStyle
             rules={[{ required: true, message: 'Выберите исполнителя' }]}
-            initialValue="own"
           >
             <Select
               size="small"
@@ -215,7 +247,7 @@ export default function DefectEditableTable({ fields, add, remove }: Props) {
               type_id: defectTypes[0]?.id ?? null,
               received_at: dayjs(),
               fixed_at: null,
-              fix_by: 'own',
+              fix_by: null,
             })
           }
         >

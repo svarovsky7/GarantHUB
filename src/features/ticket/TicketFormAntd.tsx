@@ -60,6 +60,21 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
   const notify = useNotify();
   const [files, setFiles] = useState<{ file: File; type_id: number | null }[]>([]);
   const profileId = useAuthStore((s) => s.profile?.id);
+  const [fixedAtManual, setFixedAtManual] = useState(false);
+  const defectsWatch = Form.useWatch('defects', form);
+
+  useEffect(() => {
+    if (fixedAtManual) return;
+    const dates = (defectsWatch || [])
+      .map((d) => d?.fixed_at)
+      .filter(Boolean) as Dayjs[];
+    if (!dates.length) return;
+    const max = dayjs.max(dates);
+    const current = form.getFieldValue('fixed_at');
+    if (!current || !dayjs(current).isSame(max, 'day')) {
+      form.setFieldValue('fixed_at', max);
+    }
+  }, [defectsWatch, fixedAtManual, form]);
 
   useEffect(() => {
     if (initialValues.project_id != null) {
@@ -130,6 +145,7 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
       await create.mutateAsync(payload as any);
       form.resetFields();
       setFiles([]);
+      setFixedAtManual(false);
       onCreated?.();
     } catch (e: unknown) {
       // antd message already handled in mutation
@@ -197,7 +213,12 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
       </Row>
       <Form.List name="defects">
         {(fields, { add, remove }) => (
-          <DefectEditableTable fields={fields} add={add} remove={remove} />
+          <DefectEditableTable
+            fields={fields}
+            add={add}
+            remove={remove}
+            projectId={projectId}
+          />
         )}
       </Form.List>
       <Row gutter={16}>
@@ -208,7 +229,14 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
         </Col>
         <Col span={8}>
           <Form.Item name="fixed_at" label="Дата устранения" rules={[{ required: true }]}>
-            <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
+            <DatePicker
+              format="DD.MM.YYYY"
+              style={{ width: '100%' }}
+              onChange={(v) => {
+                setFixedAtManual(true);
+                form.setFieldValue('fixed_at', v);
+              }}
+            />
           </Form.Item>
         </Col>
       </Row>
