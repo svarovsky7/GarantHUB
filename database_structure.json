@@ -336,6 +336,20 @@
     "column_default": null
   },
   {
+    "table_name": "defect_types",
+    "column_name": "id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": "nextval('defect_types_id_seq'::regclass)"
+  },
+  {
+    "table_name": "defect_types",
+    "column_name": "name",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
     "table_name": "defects",
     "column_name": "id",
     "data_type": "bigint",
@@ -714,20 +728,6 @@
     "column_default": null
   },
   {
-    "table_name": "defect_types",
-    "column_name": "id",
-    "data_type": "integer",
-    "is_nullable": "NO",
-    "column_default": "nextval('defect_types_id_seq'::regclass)"
-  },
-  {
-    "table_name": "defect_types",
-    "column_name": "name",
-    "data_type": "text",
-    "is_nullable": "NO",
-    "column_default": null
-  },
-  {
     "table_name": "tickets",
     "column_name": "id",
     "data_type": "integer",
@@ -752,13 +752,6 @@
     "table_name": "tickets",
     "column_name": "description",
     "data_type": "text",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
-    "table_name": "tickets",
-    "column_name": "defect_ids",
-    "data_type": "ARRAY",
     "is_nullable": "YES",
     "column_default": null
   },
@@ -845,6 +838,13 @@
     "data_type": "boolean",
     "is_nullable": "NO",
     "column_default": "false"
+  },
+  {
+    "table_name": "tickets",
+    "column_name": "defect_ids",
+    "data_type": "ARRAY",
+    "is_nullable": "YES",
+    "column_default": "ARRAY[]::integer[]"
   },
   {
     "table_name": "unit_history",
