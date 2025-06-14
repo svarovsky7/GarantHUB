@@ -1,4 +1,5 @@
 import React from 'react';
+import dayjs from 'dayjs';
 import { Modal, Typography, Skeleton } from 'antd';
 import { useLetter } from '@/entities/correspondence';
 import LetterFormAntdEdit from './LetterFormAntdEdit';
@@ -13,7 +14,11 @@ interface Props {
 export default function LetterViewModal({ open, letterId, onClose }: Props) {
   if (!letterId) return null;
   const { data: letter } = useLetter(letterId);
-  const titleText = letter ? `Письмо №${letter.number}` : 'Письмо';
+  const titleText = letter
+    ? `Письмо №${letter.number} от ${dayjs(letter.date).format('DD.MM.YYYY')} (${
+        letter.type === 'incoming' ? 'входящее' : 'исходящее'
+      })`
+    : 'Письмо';
 
   return (
     <Modal

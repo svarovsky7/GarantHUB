@@ -11,6 +11,7 @@ import FileDropZone from '@/shared/ui/FileDropZone';
 import AttachmentEditorTable from '@/shared/ui/AttachmentEditorTable';
 import { useLetterAttachments } from './model/useLetterAttachments';
 import { useNotify } from '@/shared/hooks/useNotify';
+import { downloadZip } from '@/shared/utils/downloadZip';
 
 export interface LetterFormAntdEditProps {
   letterId: string;
@@ -49,6 +50,23 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
   }, [letter, form]);
 
   const handleFiles = (files: File[]) => attachments.addFiles(files);
+
+  const handleDownloadArchive = async () => {
+    const files = [
+      ...attachments.remoteFiles.map((f) => ({
+        name: f.original_name ?? f.name,
+        getFile: async () => {
+          const url = await signedUrl(f.path, f.original_name ?? f.name);
+          const res = await fetch(url);
+          return res.blob();
+        },
+      })),
+      ...attachments.newFiles.map((f) => ({ name: f.file.name, getFile: async () => f.file })),
+    ];
+    if (files.length) {
+      await downloadZip(files, `letter-${letterId}-files.zip`);
+    }
+  };
 
   const onFinish = async (values: any) => {
     if (
@@ -159,6 +177,14 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
       </Form.Item>
       <Form.Item label="Файлы">
         <FileDropZone onFiles={handleFiles} />
+        <Button
+          size="small"
+          style={{ marginTop: 8, marginBottom: 8 }}
+          onClick={handleDownloadArchive}
+          disabled={!attachments.remoteFiles.length && !attachments.newFiles.length}
+        >
+          Скачать архив
+        </Button>
         <AttachmentEditorTable
           remoteFiles={attachments.remoteFiles.map((f) => ({
             id: String(f.id),
