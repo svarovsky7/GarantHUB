@@ -20,7 +20,6 @@ import dayjs from 'dayjs';
 import { AddLetterFormData } from '@/features/correspondence/AddLetterForm';
 import AddLetterForm from '@/features/correspondence/AddLetterForm';
 import LinkLettersDialog from '@/features/correspondence/LinkLettersDialog';
-import EditLetterDialog from '@/features/correspondence/EditLetterDialog';
 import ExportLettersButton from '@/features/correspondence/ExportLettersButton';
 import CorrespondenceTable from '@/widgets/CorrespondenceTable';
 import CorrespondenceFilters from '@/widgets/CorrespondenceFilters';
@@ -49,7 +48,6 @@ import { useContractors } from '@/entities/contractor';
 import { usePersons } from '@/entities/person';
 import {
   SettingOutlined,
-  EyeOutlined,
   DeleteOutlined,
   PlusOutlined,
   MailOutlined,
@@ -116,7 +114,6 @@ export default function CorrespondencePage() {
       : [],
     responsible_user_id: searchParams.get('responsible_user_id') || undefined,
   };
-  const [view, setView] = useState<CorrespondenceLetter | null>(null);
   const [linkFor, setLinkFor] = useState<CorrespondenceLetter | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const hideOnScroll = useRef(false);
@@ -151,11 +148,6 @@ export default function CorrespondencePage() {
   }, [form]);
 
   React.useEffect(() => {
-    const id = searchParams.get('letter_id');
-    if (id && letters.length) {
-      const letter = letters.find((l) => String(l.id) === id);
-      if (letter) setView(letter);
-    }
     const ids = searchParams.get('ids');
     if (ids) {
       const arr = ids
@@ -177,7 +169,7 @@ export default function CorrespondencePage() {
   const { data: projects = [] } = useProjects();
   const { data: attachmentTypes = [] } = useAttachmentTypes();
   const { data: projectUnits = [] } = useUnitsByProject(
-      view?.project_id ?? (filters.project ? Number(filters.project) : null),
+    filters.project ? Number(filters.project) : null,
   );
 
   const unitIds = React.useMemo(
@@ -382,7 +374,6 @@ export default function CorrespondencePage() {
         width: 130,
         render: (_: any, record: CorrespondenceLetter) => (
           <Space size="middle">
-            <Button type="text" icon={<EyeOutlined />} onClick={() => setView(record)} />
             <Button type="text" icon={<PlusOutlined />} onClick={() => setLinkFor(record)} />
             {record.parent_id && (
               <Tooltip title="Исключить из связи">
@@ -592,7 +583,6 @@ export default function CorrespondencePage() {
           )}
           <CorrespondenceTable
             letters={filtered}
-            onView={setView}
             onDelete={handleDelete}
             onAddChild={setLinkFor}
             onUnlink={handleUnlink}
@@ -611,14 +601,6 @@ export default function CorrespondencePage() {
           </Typography.Text>
         </div>
 
-        <EditLetterDialog
-            open={!!view}
-            letter={view}
-            onClose={() => setView(null)}
-            projects={projects}
-            letterTypes={letterTypes}
-            attachmentTypes={attachmentTypes}
-        />
       </>
     </ConfigProvider>
   );

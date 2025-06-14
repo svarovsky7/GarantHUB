@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import dayjs from 'dayjs';
 import { Table, Space, Button, Popconfirm, Tag, Tooltip } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { EyeOutlined, DeleteOutlined, PlusOutlined, MailOutlined, BranchesOutlined, LinkOutlined } from '@ant-design/icons';
+import { DeleteOutlined, PlusOutlined, MailOutlined, BranchesOutlined, LinkOutlined } from '@ant-design/icons';
 import { CorrespondenceLetter } from '@/shared/types/correspondence';
 import LetterStatusSelect from '@/features/correspondence/LetterStatusSelect';
 
@@ -10,7 +10,6 @@ interface Option { id: number | string; name: string; }
 
 interface CorrespondenceTableProps {
   letters: CorrespondenceLetter[];
-  onView: (letter: CorrespondenceLetter) => void;
   onDelete: (id: string) => void;
   onAddChild: (parent: CorrespondenceLetter) => void;
   onUnlink: (letterId: string) => void; // <--- новый проп
@@ -29,7 +28,6 @@ const LS_EXPANDED_KEY = 'correspondenceExpandedRows';
 /** Таблица писем с иерархией и кнопкой "исключить из связи" */
 export default function CorrespondenceTable({
                                               letters,
-                                              onView,
                                               onDelete,
                                               onAddChild,
                                               onUnlink,
@@ -236,11 +234,6 @@ export default function CorrespondenceTable({
           <Space size="middle">
             <Button
                 type="text"
-                icon={<EyeOutlined />}
-                onClick={() => onView(record)}
-            />
-            <Button
-                type="text"
                 icon={<PlusOutlined />}
                 onClick={() => onAddChild(record)}
             />
@@ -274,7 +267,7 @@ export default function CorrespondenceTable({
       ),
     },
   ],
-    [onView, onAddChild, onUnlink, onDelete],
+    [onAddChild, onUnlink, onDelete],
   );
 
   const columns = columnsProp ?? defaultColumns;
