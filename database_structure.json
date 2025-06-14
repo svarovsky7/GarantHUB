@@ -336,6 +336,20 @@
     "column_default": null
   },
   {
+    "table_name": "defect_statuses",
+    "column_name": "id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "defect_statuses",
+    "column_name": "name",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
     "table_name": "defect_types",
     "column_name": "id",
     "data_type": "integer",
@@ -350,20 +364,6 @@
     "column_default": null
   },
   {
-    "table_name": "defect_statuses",
-    "column_name": "id",
-    "data_type": "integer",
-    "is_nullable": "NO",
-    "column_default": "nextval('defect_statuses_id_seq'::regclass)"
-  },
-  {
-    "table_name": "defect_statuses",
-    "column_name": "name",
-    "data_type": "text",
-    "is_nullable": "NO",
-    "column_default": null
-  },
-  {
     "table_name": "defects",
     "column_name": "id",
     "data_type": "bigint",
@@ -372,17 +372,17 @@
   },
   {
     "table_name": "defects",
-    "column_name": "project_id",
-    "data_type": "integer",
+    "column_name": "description",
+    "data_type": "text",
     "is_nullable": "NO",
     "column_default": null
   },
   {
     "table_name": "defects",
-    "column_name": "description",
-    "data_type": "text",
-    "is_nullable": "NO",
-    "column_default": null
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
   },
   {
     "table_name": "defects",
@@ -404,13 +404,6 @@
     "data_type": "date",
     "is_nullable": "YES",
     "column_default": null
-  },
-  {
-    "table_name": "defects",
-    "column_name": "created_at",
-    "data_type": "timestamp with time zone",
-    "is_nullable": "YES",
-    "column_default": "now()"
   },
   {
     "table_name": "letter_links",
