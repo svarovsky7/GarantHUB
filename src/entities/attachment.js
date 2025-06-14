@@ -188,4 +188,17 @@ export async function getAttachmentsByIds(ids) {
     return data ?? [];
 }
 
+/**
+ * Сформировать временную ссылку на скачивание файла.
+ * @param {string} path путь к файлу в хранилище
+ * @param {string} [filename] имя скачиваемого файла
+ */
+export async function signedUrl(path, filename = '') {
+    const { data, error } = await supabase.storage
+        .from(ATTACH_BUCKET)
+        .createSignedUrl(path, 60, { download: filename || undefined });
+    if (error) throw error;
+    return data.signedUrl;
+}
+
 export { ATTACH_BUCKET };
