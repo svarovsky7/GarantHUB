@@ -64,7 +64,6 @@ export default function CourtCaseFormAntdEdit({ caseId, onCancel, onSaved, embed
       fix_end_date: courtCase.fix_end_date ? dayjs(courtCase.fix_end_date) : null,
       description: courtCase.description,
     });
-    attachments.reset();
   }, [courtCase]);
 
   const handleFiles = (files: File[]) => attachments.addFiles(files);
