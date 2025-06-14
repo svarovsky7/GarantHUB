@@ -17,7 +17,14 @@ export default function LetterViewModal({ open, letterId, onClose }: Props) {
   if (!letterId) return null;
 
   return (
-    <Modal open={open} onCancel={onClose} footer={null} width="80%" title={<Typography.Title level={4} style={{ margin: 0 }}>{titleText}</Typography.Title>}>
+    <Modal
+      open={open}
+      onCancel={onClose}
+      footer={null}
+      width="80%"
+      destroyOnClose
+      title={<Typography.Title level={4} style={{ margin: 0 }}>{titleText}</Typography.Title>}
+    >
       {letter ? (
         <LetterFormAntdEdit letterId={String(letterId)} onCancel={onClose} onSaved={onClose} embedded />
       ) : null}
