@@ -11,10 +11,8 @@ import {
   Col,
   Skeleton,
 } from 'antd';
-import {
-  useTicketTypes,
-  useTicketStatuses,
-} from '@/entities/ticketType';
+import { useTicketTypes } from '@/entities/ticketType';
+import { useTicketStatuses } from '@/entities/ticketStatus';
 import { useUnitsByProject } from '@/entities/unit';
 import { useUsers } from '@/entities/user';
 import { useProjects } from '@/entities/project';
