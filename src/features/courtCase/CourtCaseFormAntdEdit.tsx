@@ -38,9 +38,13 @@ export interface CourtCaseFormValues {
 
 /** Форма редактирования судебного дела */
 export default function CourtCaseFormAntdEdit({ caseId, caseData, onCancel, onSaved, embedded = false }: CourtCaseFormAntdEditProps) {
+  console.log('[CourtCaseFormAntdEdit] init', { caseId, caseData });
   const [form] = Form.useForm<CourtCaseFormValues>();
   const { data: fetchedCase } = useCourtCase(caseData ? undefined : caseId);
   const courtCase = caseData ?? fetchedCase;
+  useEffect(() => {
+    console.log('[CourtCaseFormAntdEdit] courtCase', courtCase);
+  }, [courtCase]);
   const update = useUpdateCourtCaseFull();
   const notify = useNotify();
 
@@ -52,9 +56,13 @@ export default function CourtCaseFormAntdEdit({ caseId, caseData, onCancel, onSa
   const { data: attachmentTypes = [] } = useAttachmentTypes();
 
   const attachments = useCaseAttachments({ courtCase, attachmentTypes });
+  useEffect(() => {
+    console.log('[CourtCaseFormAntdEdit] attachments', attachments);
+  }, [attachments.remoteFiles, attachments.newFiles]);
 
   useEffect(() => {
     if (!courtCase) return;
+    console.log('[CourtCaseFormAntdEdit] setFieldsValue', courtCase);
     form.setFieldsValue({
       project_id: courtCase.project_id,
       unit_ids: courtCase.unit_ids,
@@ -68,6 +76,7 @@ export default function CourtCaseFormAntdEdit({ caseId, caseData, onCancel, onSa
       fix_end_date: courtCase.fix_end_date ? dayjs(courtCase.fix_end_date) : null,
       description: courtCase.description,
     });
+    console.log('[CourtCaseFormAntdEdit] after setFieldsValue', form.getFieldsValue());
   }, [courtCase]);
 
   const handleFiles = (files: File[]) => attachments.addFiles(files);
