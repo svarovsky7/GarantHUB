@@ -50,6 +50,12 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
 
   const attachments = useLetterAttachments({ letter, attachmentTypes });
 
+  // Сбрасываем форму при смене письма
+  useEffect(() => {
+    form.resetFields();
+  }, [letterId]);
+
+  // Заполняем поля данными письма
   useEffect(() => {
     if (!letter) return;
     form.setFieldsValue({
@@ -67,7 +73,7 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
       status_id: letter.status_id ?? null,
     });
     attachments.reset();
-  }, [letter]);
+  }, [letterId, letter]);
 
   const handleFiles = (files: File[]) => attachments.addFiles(files);
 
