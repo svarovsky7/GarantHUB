@@ -362,9 +362,13 @@ export default function UnitsMatrix({
               fullWidth
               onClick={() => {
                 const id = actionDialog.unit?.id;
-                navigate(
-                  `/correspondence?project_id=${projectId}&unit_id=${id}&responsible_user_id=${profileId ?? ''}`,
-                );
+                const search = createSearchParams({
+                  project_id: String(projectId),
+                  unit_id: String(id ?? ''),
+                  responsible_user_id: String(profileId ?? ''),
+                  open_form: '1',
+                }).toString();
+                navigate(`/correspondence?${search}`);
                 setActionDialog({ open: false, unit: null, action: '' });
               }}
             >
