@@ -121,6 +121,12 @@ export default function CorrespondencePage() {
   const [linkFor, setLinkFor] = useState<CorrespondenceLetter | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const hideOnScroll = useRef(false);
+  // Показываем форму автоматически, если передан параметр ?open_form=1
+  React.useEffect(() => {
+    if (searchParams.get('open_form') === '1') {
+      setShowAddForm(true);
+    }
+  }, [searchParams]);
   const LS_FILTERS_VISIBLE_KEY = 'correspondenceFiltersVisible';
   const LS_COLUMNS_KEY = 'correspondenceColumns';
   const [showFilters, setShowFilters] = useState(() => {
