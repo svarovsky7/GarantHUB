@@ -76,3 +76,8 @@ body {
     border-left: 3px solid #722ed1;
 }
 /* Skeleton эффекты были выше (оставил без изменений) */
+.changed-field {
+    background-color: #fffbe6;
+    padding: 4px;
+    border-radius: 2px;
+}

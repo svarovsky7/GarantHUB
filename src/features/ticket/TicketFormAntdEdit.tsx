@@ -28,6 +28,7 @@ import { useTicketAttachments } from './model/useTicketAttachments';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
 import { downloadZip } from '@/shared/utils/downloadZip';
 import { signedUrl } from '@/entities/ticket';
+import { useChangedFields } from '@/shared/hooks/useChangedFields';
 
 export interface TicketFormAntdEditProps {
   ticketId?: string;
@@ -77,6 +78,10 @@ export default function TicketFormAntdEdit({
   const profileId = useAuthStore((s) => s.profile?.id);
 
   const [formTouched, setFormTouched] = useState(false);
+  const { changedFields, handleValuesChange: handleChanged } = useChangedFields(
+    form,
+    [ticket],
+  );
 
   const {
     remoteFiles,
@@ -93,6 +98,11 @@ export default function TicketFormAntdEdit({
     attachmentsChanged,
     reset: resetAttachments,
   } = useTicketAttachments({ ticket, attachmentTypes });
+
+  const highlight = (name: keyof TicketFormAntdEditValues) =>
+    changedFields[name as string]
+      ? { background: '#fffbe6', padding: 4, borderRadius: 2 }
+      : {};
 
   const typeId = Form.useWatch('type_id', form);
   const deadlineDays = React.useMemo(() => {
@@ -132,7 +142,10 @@ export default function TicketFormAntdEdit({
   }, [ticket, form, globalProjectId, profileId, initialUnitId]);
 
   const handleFiles = (files: File[]) => addFiles(files);
-  const handleValuesChange = () => setFormTouched(true);
+  const handleValuesChange = () => {
+    setFormTouched(true);
+    handleChanged();
+  };
 
   const handleDownloadArchive = async () => {
     const files = [
@@ -245,12 +258,22 @@ export default function TicketFormAntdEdit({
     >
       <Row gutter={16}>
         <Col span={12}>
-          <Form.Item name="project_id" label="Проект" rules={[{ required: true }]}>
-            <Select allowClear options={projects.map((p) => ({ value: p.id, label: p.name }))} />
-          </Form.Item>
+      <Form.Item
+        name="project_id"
+        label="Проект"
+        rules={[{ required: true }]}
+        style={highlight('project_id')}
+      >
+        <Select allowClear options={projects.map((p) => ({ value: p.id, label: p.name }))} />
+      </Form.Item>
         </Col>
         <Col span={12}>
-          <Form.Item name="unit_ids" label="Объекты" rules={[{ required: true }]}>
+          <Form.Item
+            name="unit_ids"
+            label="Объекты"
+            rules={[{ required: true }]}
+            style={highlight('unit_ids')}
+          >
             <Select
               mode="multiple"
               disabled={!projectId}
@@ -261,48 +284,85 @@ export default function TicketFormAntdEdit({
       </Row>
       <Row gutter={16}>
         <Col span={12}>
-          <Form.Item name="responsible_engineer_id" label="Ответственный инженер" rules={[{ required: true }]}>
+          <Form.Item
+            name="responsible_engineer_id"
+            label="Ответственный инженер"
+            rules={[{ required: true }]}
+            style={highlight('responsible_engineer_id')}
+          >
             <Select allowClear options={users.map((u) => ({ value: u.id, label: u.name }))} />
           </Form.Item>
         </Col>
         <Col span={12}>
-          <Form.Item name="status_id" label="Статус" rules={[{ required: true }]}>
+          <Form.Item
+            name="status_id"
+            label="Статус"
+            rules={[{ required: true }]}
+            style={highlight('status_id')}
+          >
             <Select options={statuses.map((s) => ({ value: s.id, label: s.name }))} />
           </Form.Item>
         </Col>
       </Row>
       <Row gutter={16}>
         <Col span={12}>
-          <Form.Item name="type_id" label={`Тип${deadlineDays ? ` (${deadlineDays} дн.)` : ''}`} rules={[{ required: true }]}>
+          <Form.Item
+            name="type_id"
+            label={`Тип${deadlineDays ? ` (${deadlineDays} дн.)` : ''}`}
+            rules={[{ required: true }]}
+            style={highlight('type_id')}
+          >
             <Select options={types.map((t) => ({ value: t.id, label: t.name }))} />
           </Form.Item>
         </Col>
         <Col span={12}>
-          <Form.Item name="is_warranty" label="Гарантия" valuePropName="checked">
+          <Form.Item
+            name="is_warranty"
+            label="Гарантия"
+            valuePropName="checked"
+            style={highlight('is_warranty')}
+          >
             <Switch />
           </Form.Item>
         </Col>
       </Row>
       <Row gutter={16}>
         <Col span={12}>
-          <Form.Item name="customer_request_no" label="№ заявки от Заказчика">
+          <Form.Item
+            name="customer_request_no"
+            label="№ заявки от Заказчика"
+            style={highlight('customer_request_no')}
+          >
             <Input />
           </Form.Item>
         </Col>
         <Col span={12}>
-          <Form.Item name="customer_request_date" label="Дата заявки Заказчика">
+          <Form.Item
+            name="customer_request_date"
+            label="Дата заявки Заказчика"
+            style={highlight('customer_request_date')}
+          >
             <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
           </Form.Item>
         </Col>
       </Row>
       <Row gutter={16}>
         <Col span={12}>
-          <Form.Item name="received_at" label="Дата получения" rules={[{ required: true }]}>
+          <Form.Item
+            name="received_at"
+            label="Дата получения"
+            rules={[{ required: true }]}
+            style={highlight('received_at')}
+          >
             <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
           </Form.Item>
         </Col>
         <Col span={12}>
-          <Form.Item name="fixed_at" label="Дата устранения">
+          <Form.Item
+            name="fixed_at"
+            label="Дата устранения"
+            style={highlight('fixed_at')}
+          >
             <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
           </Form.Item>
         </Col>
@@ -336,13 +396,22 @@ export default function TicketFormAntdEdit({
           </Col>
         )}
       </Row>
-      <Form.Item name="title" label="Краткое описание" rules={[{ required: true }]}> 
+      <Form.Item
+        name="title"
+        label="Краткое описание"
+        rules={[{ required: true }]}
+        style={highlight('title')}
+      >
         <Input />
       </Form.Item>
-      <Form.Item name="description" label="Подробное описание">
+      <Form.Item
+        name="description"
+        label="Подробное описание"
+        style={highlight('description')}
+      >
         <Input.TextArea rows={2} />
       </Form.Item>
-      <Form.Item label="Файлы">
+      <Form.Item label="Файлы" style={attachmentsChanged ? { background: '#fffbe6', padding: 4, borderRadius: 2 } : {}}>
         <FileDropZone onFiles={handleFiles} />
         <Button
           size="small"

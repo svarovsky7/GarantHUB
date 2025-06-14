@@ -30,6 +30,7 @@ import { useNotify } from '@/shared/hooks/useNotify';
 import { downloadZip } from '@/shared/utils/downloadZip';
 import PersonModal from '@/features/person/PersonModal';
 import ContractorModal from '@/features/contractor/ContractorModal';
+import { useChangedFields } from '@/shared/hooks/useChangedFields';
 
 export interface LetterFormAntdEditProps {
   letterId: string;
@@ -54,6 +55,15 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
   const update = useUpdateLetter();
   const notify = useNotify();
   const attachments = useLetterAttachments({ letter, attachmentTypes });
+  const { changedFields, handleValuesChange: handleChanged } = useChangedFields(
+    form,
+    [letter],
+  );
+
+  const highlight = (name: string) =>
+    changedFields[name]
+      ? { background: '#fffbe6', padding: 4, borderRadius: 2 }
+      : {};
 
   const senderValue = Form.useWatch('sender', form);
   const receiverValue = Form.useWatch('receiver', form);
@@ -174,44 +184,61 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
   if (!letter) return <Skeleton active />;
 
   return (
-    <Form form={form} layout="vertical" onFinish={onFinish} style={{ maxWidth: embedded ? 'none' : 640 }} autoComplete="off">
+    <Form
+      form={form}
+      layout="vertical"
+      onFinish={onFinish}
+      onValuesChange={handleChanged}
+      style={{ maxWidth: embedded ? 'none' : 640 }}
+      autoComplete="off"
+    >
       <Row gutter={16}>
         <Col span={8}>
-          <Form.Item name="project_id" label="Проект" rules={[{ required: true }]}> 
+          <Form.Item
+            name="project_id"
+            label="Проект"
+            rules={[{ required: true }]}
+            style={highlight('project_id')}
+          >
             <Select options={projects.map((p) => ({ value: p.id, label: p.name }))} />
           </Form.Item>
         </Col>
         <Col span={8}>
-          <Form.Item name="unit_ids" label="Объекты">
+          <Form.Item name="unit_ids" label="Объекты" style={highlight('unit_ids')}>
             <Select mode="multiple" options={units.map((u) => ({ value: u.id, label: u.name }))} disabled={!projectId} />
           </Form.Item>
         </Col>
         <Col span={8}>
-          <Form.Item name="responsible_user_id" label="Ответственный">
+          <Form.Item name="responsible_user_id" label="Ответственный" style={highlight('responsible_user_id')}>
             <Select allowClear options={users.map((u) => ({ value: u.id, label: u.name }))} />
           </Form.Item>
         </Col>
       </Row>
       <Row gutter={16}>
         <Col span={8}>
-          <Form.Item name="number" label="Номер" rules={[{ required: true }]}> 
+          <Form.Item
+            name="number"
+            label="Номер"
+            rules={[{ required: true }]}
+            style={highlight('number')}
+          >
             <Input />
           </Form.Item>
         </Col>
         <Col span={8}>
-          <Form.Item name="date" label="Дата" rules={[{ required: true }]}> 
+          <Form.Item name="date" label="Дата" rules={[{ required: true }]} style={highlight('date')}>
             <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
           </Form.Item>
         </Col>
         <Col span={8}>
-          <Form.Item name="letter_type_id" label="Категория">
+          <Form.Item name="letter_type_id" label="Категория" style={highlight('letter_type_id')}>
             <Select allowClear options={letterTypes.map((t) => ({ value: t.id, label: t.name }))} />
           </Form.Item>
         </Col>
       </Row>
       <Row gutter={16}>
         <Col span={12}>
-          <Form.Item label="Отправитель" style={{ marginBottom: 0 }}>
+          <Form.Item label="Отправитель" style={{ marginBottom: 0, ...highlight('sender') }}>
             <Space direction="vertical" style={{ width: '100%' }}>
               <Radio.Group value={senderType} onChange={(e) => setSenderType(e.target.value)}>
                 <Radio.Button value="person">Физлицо</Radio.Button>
@@ -282,7 +309,7 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
           </Form.Item>
         </Col>
         <Col span={12}>
-          <Form.Item label="Получатель" style={{ marginBottom: 0 }}>
+          <Form.Item label="Получатель" style={{ marginBottom: 0, ...highlight('receiver') }}>
             <Space direction="vertical" style={{ width: '100%' }}>
               <Radio.Group value={receiverType} onChange={(e) => setReceiverType(e.target.value)}>
                 <Radio.Button value="person">Физлицо</Radio.Button>
@@ -353,13 +380,13 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
           </Form.Item>
         </Col>
       </Row>
-      <Form.Item name="subject" label="Тема">
+      <Form.Item name="subject" label="Тема" style={highlight('subject')}>
         <Input />
       </Form.Item>
-      <Form.Item name="content" label="Содержание">
+      <Form.Item name="content" label="Содержание" style={highlight('content')}>
         <Input.TextArea rows={2} />
       </Form.Item>
-      <Form.Item label="Файлы">
+      <Form.Item label="Файлы" style={attachments.attachmentsChanged ? { background: '#fffbe6', padding: 4, borderRadius: 2 } : {}}>
         <FileDropZone onFiles={handleFiles} />
         <Button
           size="small"
