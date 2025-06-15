@@ -30,4 +30,7 @@ VITE_ATTACH_BUCKET=<название корзины для вложений>
 
 Описание таблиц и полей находится в файле [`database_structure.json`](database_structure.json).
 
+Дополнительная инструкция по обновлению существующей базы данных находится в
+файле [`MIGRATION.md`](MIGRATION.md).
+
 

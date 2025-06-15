@@ -40,7 +40,7 @@ export default function CourtCaseStatusesAdmin({
     /* -------- колонки -------- */
     const columns = [
         { field: 'id', headerName: 'ID', width: 80 },
-        { field: 'name', headerName: 'Название стадии', flex: 1 },
+        { field: 'name', headerName: 'Название статуса', flex: 1 },
         {
             field: 'actions',
             type: 'actions',
@@ -57,9 +57,9 @@ export default function CourtCaseStatusesAdmin({
                     icon={<DeleteIcon color="error" />}
                     label="Удалить"
                     onClick={() => {
-                        if (!window.confirm('Удалить стадию?')) return;
+                        if (!window.confirm('Удалить статус?')) return;
                         remove.mutate(row.id, {
-                            onSuccess: () => notify.success('Стадия удалена'),
+                            onSuccess: () => notify.success('Статус удалён'),
                             onError: (e) => notify.error(e.message),
                         });
                     }}
@@ -78,7 +78,7 @@ export default function CourtCaseStatusesAdmin({
             {modal && (
                 <Dialog open onClose={close} maxWidth="xs" fullWidth>
                     <DialogTitle>
-                        {modal.mode === 'add' ? 'Новая стадия' : 'Редактировать стадию'}
+                        {modal.mode === 'add' ? 'Новый статус' : 'Редактировать статус'}
                     </DialogTitle>
                     <DialogContent dividers>
                         <CourtCaseStatusForm
@@ -86,13 +86,13 @@ export default function CourtCaseStatusesAdmin({
                             onSubmit={(d) =>
                                 (modal.mode === 'add'
                                     ? add.mutate(d, {
-                                          onSuccess: () => ok('Стадия создана'),
+                                          onSuccess: () => ok('Статус создан'),
                                           onError: (e) => notify.error(e.message),
                                       })
                                     : update.mutate(
                                           { id: modal.data.id, updates: d },
                                           {
-                                              onSuccess: () => ok('Стадия обновлена'),
+                                              onSuccess: () => ok('Статус обновлён'),
                                               onError: (e) => notify.error(e.message),
                                           },
                                       ))
@@ -104,7 +104,7 @@ export default function CourtCaseStatusesAdmin({
             )}
 
             <AdminDataGrid
-                title="Стадии судебного дела"
+                title="Статусы судебного дела"
                 rows={stages}
                 columns={columns}
                 loading={isPending}

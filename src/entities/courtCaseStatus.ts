@@ -1,6 +1,6 @@
 // src/entities/courtCaseStatus.ts
 // -----------------------------------------------------------------------------
-// Справочник стадий судебного дела (глобальный, без project_id)
+// Справочник статусов судебного дела (глобальный, без project_id)
 // -----------------------------------------------------------------------------
 import { supabase } from '@/shared/api/supabaseClient';
 import {
@@ -33,12 +33,12 @@ export const useCourtCaseStatuses = () =>
 const invalidate = (qc: ReturnType<typeof useQueryClient>) =>
     qc.invalidateQueries({ queryKey: KEY });
 
-/** Добавить стадию */
+/** Добавить статус */
 export const useAddCourtCaseStatus = () => {
     const qc = useQueryClient();
     return useMutation<CourtCaseStatus, Error, { name: string; color: string }>({
         mutationFn: async ({ name, color }): Promise<CourtCaseStatus> => {
-            if (!name?.trim()) throw new Error('Название стадии обязательно');
+            if (!name?.trim()) throw new Error('Название статуса обязательно');
             const { data, error } = await supabase
                 .from(TABLE)
                 .insert({ name: name.trim(), color })
@@ -51,7 +51,7 @@ export const useAddCourtCaseStatus = () => {
     });
 };
 
-/** Обновить стадию */
+/** Обновить статус */
 export const useUpdateCourtCaseStatus = () => {
     const qc = useQueryClient();
     return useMutation<CourtCaseStatus, Error, { id: number; updates: Partial<Omit<CourtCaseStatus, 'id'>> }>({
@@ -64,7 +64,7 @@ export const useUpdateCourtCaseStatus = () => {
     });
 };
 
-/** Удалить стадию */
+/** Удалить статус */
 export const useDeleteCourtCaseStatus = () => {
     const qc = useQueryClient();
     return useMutation<number, Error, number>({

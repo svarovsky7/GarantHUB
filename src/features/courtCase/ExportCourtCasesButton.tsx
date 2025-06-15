@@ -11,7 +11,7 @@ import { getAttachmentsByIds } from '@/entities/attachment';
 export interface ExportCourtCasesButtonProps {
   /** Список дел для выгрузки. */
   cases: (CourtCase & Record<string, any>)[];
-  /** Словарь названий стадий по идентификатору. */
+  /** Словарь названий статусов по идентификатору. */
   stages: Record<number, string>;
 }
 

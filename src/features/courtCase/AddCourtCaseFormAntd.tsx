@@ -105,7 +105,7 @@ export default function AddCourtCaseFormAntd({
   const notify = useNotify();
   const qc = useQueryClient();
 
-  // Set default litigation stage when loaded
+  // Set default case status when loaded
   useEffect(() => {
     if (stages.length && !form.getFieldValue('status')) {
       form.setFieldValue('status', stages[0].id);
