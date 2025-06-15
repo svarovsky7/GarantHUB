@@ -43,7 +43,15 @@ export interface TicketFormAntdValues {
   is_warranty: boolean;
   received_at: Dayjs;
   fixed_at: Dayjs | null;
-  defects?: Array<{ type_id: number | null; fixed_at: Dayjs | null; fix_by: string }>;
+  defects?: Array<{
+    type_id: number | null;
+    fixed_at: Dayjs | null;
+    brigade_id: number | null;
+    contractor_id: number | null;
+    description?: string;
+    status_id?: number | null;
+    received_at?: Dayjs | null;
+  }>;
   /** Дополнительные данные разметки, не отправляются на сервер */
   pins?: unknown;
 }
@@ -131,7 +139,8 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
         description: d.description || '',
         defect_type_id: d.type_id ?? null,
         defect_status_id: d.status_id ?? null,
-        fix_by: d.fix_by || null,
+        brigade_id: d.brigade_id ?? null,
+        contractor_id: d.contractor_id ?? null,
         received_at: d.received_at ? d.received_at.format('YYYY-MM-DD') : null,
         fixed_at: d.fixed_at ? d.fixed_at.format('YYYY-MM-DD') : null,
       }));

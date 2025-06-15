@@ -68,14 +68,10 @@ export default function DefectsPage() {
         .filter(Boolean)
         .join(', ');
       let fixByName = '—';
-      if (d.fix_by?.startsWith('b:')) {
-        const id = Number(d.fix_by.slice(2));
-        fixByName = brigades.find((b) => b.id === id)?.name || 'Бригада';
-      } else if (d.fix_by?.startsWith('c:')) {
-        const id = Number(d.fix_by.slice(2));
-        fixByName = contractors.find((c) => c.id === id)?.name || 'Подрядчик';
-      } else if (d.fix_by) {
-        fixByName = d.fix_by === 'contractor' ? 'Подрядчик' : 'Собственные силы';
+      if (d.brigade_id) {
+        fixByName = brigades.find((b) => b.id === d.brigade_id)?.name || 'Бригада';
+      } else if (d.contractor_id) {
+        fixByName = contractors.find((c) => c.id === d.contractor_id)?.name || 'Подрядчик';
       }
       return {
         ...d,

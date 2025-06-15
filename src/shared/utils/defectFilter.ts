@@ -14,8 +14,8 @@ export function filterDefects<T extends {
   projectIds?: number[];
   defect_type_id: number | null;
   defect_status_id: number | null;
-  fix_by: string | null;
   defectStatusName?: string;
+  fixByName?: string;
 }>(rows: T[], f: DefectFilters): T[] {
   return rows.filter((d) => {
     if (Array.isArray(f.id) && f.id.length > 0 && !f.id.includes(d.id)) {
@@ -59,7 +59,7 @@ export function filterDefects<T extends {
     if (
       Array.isArray(f.fixBy) &&
       f.fixBy.length > 0 &&
-      (!d.fix_by || !f.fixBy.includes(d.fix_by))
+      (!d.fixByName || !f.fixBy.includes(d.fixByName))
     ) {
       return false;
     }

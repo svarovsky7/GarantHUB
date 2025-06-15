@@ -442,8 +442,15 @@
   },
   {
     "table_name": "defects",
-    "column_name": "fix_by",
-    "data_type": "text",
+    "column_name": "brigade_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "defects",
+    "column_name": "contractor_id",
+    "data_type": "integer",
     "is_nullable": "YES",
     "column_default": null
   },
