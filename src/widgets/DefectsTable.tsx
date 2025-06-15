@@ -105,6 +105,7 @@ export default function DefectsTable({
           defectId={row.id}
           statusId={row.defect_status_id}
           statusName={row.defectStatusName}
+          statusColor={row.defectStatusColor}
         />
       ),
     },

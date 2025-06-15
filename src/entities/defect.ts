@@ -28,7 +28,7 @@ export function useDefects() {
         .from(TABLE)
         .select(
           'id, description, defect_type_id, defect_status_id, brigade_id, contractor_id, received_at, fixed_at, fixed_by, attachment_ids, created_at,' +
-          ' defect_type:defect_types(id,name), defect_status:defect_statuses(id,name), fixed_by_user:profiles(id,name)'
+          ' defect_type:defect_types(id,name), defect_status:defect_statuses(id,name,color), fixed_by_user:profiles(id,name)'
         )
         .order('id');
       if (error) throw error;
@@ -52,7 +52,7 @@ export function useDefect(id?: number) {
         .from(TABLE)
         .select(
           'id, description, defect_type_id, defect_status_id, brigade_id, contractor_id, received_at, fixed_at, fixed_by, attachment_ids, created_at,' +
-          ' defect_type:defect_types(id,name), defect_status:defect_statuses(id,name), fixed_by_user:profiles(id,name)'
+          ' defect_type:defect_types(id,name), defect_status:defect_statuses(id,name,color), fixed_by_user:profiles(id,name)'
         )
         .eq('id', id as number)
         .single();
@@ -102,7 +102,7 @@ export function useDefectsWithNames(ids?: number[]) {
       const { data, error } = await supabase
         .from(TABLE)
         .select(
-          'id, description, defect_type_id, defect_status_id, brigade_id, contractor_id, received_at, fixed_at, fixed_by, defect_type:defect_types(id,name), defect_status:defect_statuses(id,name), fixed_by_user:profiles(id,name)'
+          'id, description, defect_type_id, defect_status_id, brigade_id, contractor_id, received_at, fixed_at, fixed_by, defect_type:defect_types(id,name), defect_status:defect_statuses(id,name,color), fixed_by_user:profiles(id,name)'
         )
         .in('id', ids as number[]);
       if (error) throw error;
@@ -118,6 +118,7 @@ export function useDefectsWithNames(ids?: number[]) {
         fixed_by: d.fixed_by,
         defectTypeName: d.defect_type?.name ?? null,
         defectStatusName: d.defect_status?.name ?? null,
+        defectStatusColor: d.defect_status?.color ?? null,
         fixedByUserName: d.fixed_by_user?.name ?? null,
       })) as DefectWithNames[];
     },

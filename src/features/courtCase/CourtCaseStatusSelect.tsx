@@ -1,6 +1,6 @@
 import React from 'react';
-import { Select } from 'antd';
-import { useLitigationStages } from '@/entities/litigationStage';
+import { Select, Tag } from 'antd';
+import { useCourtCaseStatuses } from '@/entities/courtCaseStatus';
 import { useUpdateCourtCase } from '@/entities/courtCase';
 
 interface Props {
@@ -12,7 +12,7 @@ interface Props {
  * Выпадающий список для смены статуса судебного дела непосредственно из таблицы.
  */
 export default function CourtCaseStatusSelect({ caseId, status }: Props) {
-  const { data: stages = [] } = useLitigationStages();
+  const { data: stages = [] } = useCourtCaseStatuses();
   const update = useUpdateCourtCase();
 
   const handleChange = (value: number) => {
@@ -25,7 +25,11 @@ export default function CourtCaseStatusSelect({ caseId, status }: Props) {
       value={status}
       onChange={handleChange}
       loading={update.isPending}
-      options={stages.map((s) => ({ label: s.name, value: s.id }))}
+      optionLabelProp="label"
+      options={stages.map((s) => ({
+        label: <Tag color={s.color ?? undefined}>{s.name}</Tag>,
+        value: s.id,
+      }))}
       style={{ width: '100%' }}
     />
   );

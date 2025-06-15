@@ -1,4 +1,4 @@
-// src/widgets/LitigationStagesAdmin.tsx
+// src/widgets/CourtCaseStatusesAdmin.tsx
 
 import React, { useState } from 'react';
 import { GridActionsCellItem } from '@mui/x-data-grid';
@@ -6,34 +6,34 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 import {
-    useLitigationStages,
-    useAddLitigationStage,
-    useUpdateLitigationStage,
-    useDeleteLitigationStage,
-} from '@/entities/litigationStage';
+    useCourtCaseStatuses,
+    useAddCourtCaseStatus,
+    useUpdateCourtCaseStatus,
+    useDeleteCourtCaseStatus,
+} from '@/entities/courtCaseStatus';
 
-import LitigationStageForm from '@/features/litigationStage/LitigationStageForm';
+import CourtCaseStatusForm from '@/features/courtCaseStatus/CourtCaseStatusForm';
 import AdminDataGrid from '@/shared/ui/AdminDataGrid';
 import { Dialog, DialogTitle, DialogContent } from '@mui/material';
 import { useNotify } from '@/shared/hooks/useNotify';
 
 // Интерфейс пропсов для поддержки пагинации
-interface LitigationStagesAdminProps {
+interface CourtCaseStatusesAdminProps {
     pageSize?: number;
     rowsPerPageOptions?: number[];
 }
 
-export default function LitigationStagesAdmin({
+export default function CourtCaseStatusesAdmin({
                                                   pageSize = 25,
                                                   rowsPerPageOptions = [10, 25, 50, 100],
-                                              }: LitigationStagesAdminProps) {
+                                              }: CourtCaseStatusesAdminProps) {
     const notify = useNotify();
 
     /* -------- данные -------- */
-    const { data: stages = [], isPending } = useLitigationStages();
-    const add = useAddLitigationStage();
-    const update = useUpdateLitigationStage();
-    const remove = useDeleteLitigationStage();
+    const { data: stages = [], isPending } = useCourtCaseStatuses();
+    const add = useAddCourtCaseStatus();
+    const update = useUpdateCourtCaseStatus();
+    const remove = useDeleteCourtCaseStatus();
 
     const [modal, setModal] = useState<null | { mode: 'add' | 'edit'; data?: any }>(null);
 
@@ -81,7 +81,7 @@ export default function LitigationStagesAdmin({
                         {modal.mode === 'add' ? 'Новая стадия' : 'Редактировать стадию'}
                     </DialogTitle>
                     <DialogContent dividers>
-                        <LitigationStageForm
+                        <CourtCaseStatusForm
                             initialData={modal.mode === 'edit' ? modal.data : undefined}
                             onSubmit={(d) =>
                                 (modal.mode === 'add'

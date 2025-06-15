@@ -12,7 +12,7 @@ import { useProjects } from '@/entities/project';
 import { useUnitsByIds } from '@/entities/unit';
 import { useContractors } from '@/entities/contractor';
 import { useUsers } from '@/entities/user';
-import { useLitigationStages } from '@/entities/litigationStage';
+import { useCourtCaseStatuses } from '@/entities/courtCaseStatus';
 import { usePersons } from '@/entities/person';
 import {
   PlusOutlined,
@@ -91,7 +91,7 @@ export default function CourtCasesPage() {
   const { data: projects = [] } = useProjects();
   const { data: contractors = [] } = useContractors();
   const { data: users = [] } = useUsers();
-  const { data: stages = [] } = useLitigationStages();
+  const { data: stages = [] } = useCourtCaseStatuses();
   const { data: personsList = [] } = usePersons();
 
   const unitIds = React.useMemo(() => Array.from(new Set(cases.flatMap((c) => c.unit_ids).filter(Boolean))), [cases]);

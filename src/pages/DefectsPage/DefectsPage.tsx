@@ -104,6 +104,7 @@ export default function DefectsPage() {
           : null,
         defectTypeName: d.defect_type?.name ?? "",
         defectStatusName: d.defect_status?.name ?? "",
+        defectStatusColor: d.defect_status?.color ?? null,
       } as DefectWithInfo;
     });
   }, [defects, tickets, units, projects]);
@@ -219,6 +220,7 @@ export default function DefectsPage() {
             defectId={row.id}
             statusId={row.defect_status_id}
             statusName={row.defectStatusName}
+            statusColor={row.defectStatusColor}
           />
         ),
       },

@@ -3,14 +3,21 @@ import { useForm, Controller } from 'react-hook-form';
 import { Stack, TextField, Button, DialogActions } from '@mui/material';
 
 interface Props {
-  initialData?: { id?: number; name?: string };
-  onSubmit: (values: { name: string }) => void;
+  initialData?: { id?: number; name?: string; color?: string | null };
+  onSubmit: (values: { name: string; color: string }) => void;
   onCancel: () => void;
 }
 
 export default function DefectStatusForm({ initialData, onSubmit, onCancel }: Props) {
-  const { control, handleSubmit, formState: { isSubmitting } } = useForm({
-    defaultValues: { name: initialData?.name ?? '' },
+  const {
+    control,
+    handleSubmit,
+    formState: { isSubmitting },
+  } = useForm({
+    defaultValues: {
+      name: initialData?.name ?? '',
+      color: initialData?.color ?? '#1976d2',
+    },
   });
 
   return (
@@ -29,6 +36,20 @@ export default function DefectStatusForm({ initialData, onSubmit, onCancel }: Pr
               error={!!fieldState.error}
               helperText={fieldState.error?.message}
               autoFocus
+            />
+          )}
+        />
+        <Controller
+          name="color"
+          control={control}
+          rules={{ required: 'Цвет обязателен' }}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              label="Цвет статуса"
+              type="color"
+              fullWidth
+              inputProps={{ style: { height: 48, padding: 0 } }}
             />
           )}
         />

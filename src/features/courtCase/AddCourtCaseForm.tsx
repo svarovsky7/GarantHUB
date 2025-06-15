@@ -15,7 +15,7 @@ import dayjs, { Dayjs } from 'dayjs';
 import { useProjects } from '@/entities/project';
 import { useUnitsByProject } from '@/entities/unit';
 import { useUsers } from '@/entities/user';
-import { useLitigationStages } from '@/entities/litigationStage';
+import { useCourtCaseStatuses } from '@/entities/courtCaseStatus';
 import { useAddCourtCase } from '@/entities/courtCase';
 import { useAuthStore } from '@/shared/store/authStore';
 import { useNotify } from '@/shared/hooks/useNotify';
@@ -64,7 +64,7 @@ export default function AddCourtCaseForm({
   const { data: projects = [] } = useProjects();
   const { data: units = [] } = useUnitsByProject(projectId);
   const { data: users = [] } = useUsers();
-  const { data: stages = [] } = useLitigationStages();
+  const { data: stages = [] } = useCourtCaseStatuses();
 
   useEffect(() => {
     setValue('unit_ids', initialUnitId != null ? [initialUnitId] : []);

@@ -20,7 +20,7 @@ import {
   useDeleteContractor,
 } from '@/entities/contractor';
 import { useUsers } from '@/entities/user';
-import { useLitigationStages } from '@/entities/litigationStage';
+import { useCourtCaseStatuses } from '@/entities/courtCaseStatus';
 import { usePersons, useDeletePerson } from '@/entities/person';
 import { useAddCourtCase, useUpdateCourtCase } from '@/entities/courtCase';
 import { useAttachmentTypes } from '@/entities/attachmentType';
@@ -95,7 +95,7 @@ export default function AddCourtCaseFormAntd({
   const { data: units = [], isPending: unitsLoading } = useUnitsByProject(projectId);
   const { data: contractors = [], isPending: contractorsLoading } = useContractors();
   const { data: users = [], isPending: usersLoading } = useUsers();
-  const { data: stages = [], isPending: stagesLoading } = useLitigationStages();
+  const { data: stages = [], isPending: stagesLoading } = useCourtCaseStatuses();
   const { data: personsList = [] } = usePersons();
   const { data: attachmentTypes = [] } = useAttachmentTypes();
   const addCaseMutation = useAddCourtCase();

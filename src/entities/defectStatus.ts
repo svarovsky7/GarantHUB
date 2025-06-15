@@ -8,7 +8,10 @@ export const useDefectStatuses = () =>
   useQuery<DefectStatus[]>({
     queryKey: [TABLE],
     queryFn: async () => {
-      const { data, error } = await supabase.from(TABLE).select('*').order('id');
+      const { data, error } = await supabase
+        .from(TABLE)
+        .select('id, name, color')
+        .order('id');
       if (error) throw error;
       return (data ?? []) as unknown as DefectStatus[];
     },
@@ -22,7 +25,7 @@ export const useAddDefectStatus = () => {
       const { data, error } = await supabase
         .from(TABLE)
         .insert(payload)
-        .select('*')
+        .select('id, name, color')
         .single();
       if (error) throw error;
       return data as unknown as DefectStatus;
@@ -39,7 +42,7 @@ export const useUpdateDefectStatus = () => {
         .from(TABLE)
         .update(updates)
         .eq('id', id)
-        .select('*')
+        .select('id, name, color')
         .single();
       if (error) throw error;
       return data as unknown as DefectStatus;
