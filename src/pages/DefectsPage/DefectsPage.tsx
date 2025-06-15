@@ -58,10 +58,10 @@ export default function DefectsPage() {
     return defects.map((d: any) => {
       const linked = ticketsMap.get(d.id) || [];
       const unitIds = Array.from(new Set(linked.flatMap((l) => l.unit_ids)));
-      const unitNames = unitIds
+      const unitNamesList = unitIds
         .map((id) => unitMap.get(id))
-        .filter(Boolean)
-        .join(', ');
+        .filter(Boolean);
+      const unitNames = unitNamesList.join(', ');
       const projectIds = Array.from(new Set(linked.map((l) => l.project_id)));
       const projectNames = projectIds
         .map((id) => projectMap.get(id))
@@ -78,6 +78,7 @@ export default function DefectsPage() {
         ticketIds: linked.map((l) => l.id),
         unitIds,
         unitNames,
+        unitNamesList,
         projectIds,
         projectNames,
         fixByName,
@@ -142,9 +143,18 @@ export default function DefectsPage() {
       },
       units: {
         title: 'Объекты',
-        dataIndex: 'unitNames',
+        dataIndex: 'unitNamesList',
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           (a.unitNames || '').localeCompare(b.unitNames || ''),
+        render: (_: string[], row: DefectWithInfo) => (
+          <>
+            {row.unitNamesList?.map((n, i) => (
+              <div key={i} style={{ whiteSpace: 'nowrap' }}>
+                {n}
+              </div>
+            ))}
+          </>
+        ),
       },
       description: {
         title: 'Описание',
