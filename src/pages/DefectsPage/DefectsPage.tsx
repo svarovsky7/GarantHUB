@@ -168,6 +168,22 @@ export default function DefectsPage() {
           a.ticketIds.join(",").localeCompare(b.ticketIds.join(",")),
         render: (v: number[]) => v.join(", "),
       },
+      fixed: {
+        title: "Устранён",
+        dataIndex: "is_fixed",
+        sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
+          Number(a.is_fixed) - Number(b.is_fixed),
+        render: (v: boolean) =>
+          v ? (
+            <Tag icon={<CheckCircleTwoTone twoToneColor="#52c41a" />} color="success">
+              Да
+            </Tag>
+          ) : (
+            <Tag icon={<CloseCircleTwoTone twoToneColor="#eb2f96" />} color="default">
+              Нет
+            </Tag>
+          ),
+      },
       days: {
         title: (
           <span>
@@ -230,28 +246,6 @@ export default function DefectsPage() {
         dataIndex: "fixByName",
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           (a.fixByName || "").localeCompare(b.fixByName || ""),
-      },
-      fixed: {
-        title: "Устранён",
-        dataIndex: "is_fixed",
-        sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
-          Number(a.is_fixed) - Number(b.is_fixed),
-        render: (v: boolean) =>
-          v ? (
-            <Tag
-              icon={<CheckCircleTwoTone twoToneColor="#52c41a" />}
-              color="success"
-            >
-              Да
-            </Tag>
-          ) : (
-            <Tag
-              icon={<CloseCircleTwoTone twoToneColor="#eb2f96" />}
-              color="default"
-            >
-              Нет
-            </Tag>
-          ),
       },
       received: {
         title: "Дата получения",

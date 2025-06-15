@@ -61,6 +61,21 @@ export default function DefectsTable({
       render: (v: number[]) => v.join(", "),
     },
     {
+      title: "Устранён",
+      dataIndex: "is_fixed",
+      sorter: (a, b) => Number(a.is_fixed) - Number(b.is_fixed),
+      render: (v: boolean) =>
+        v ? (
+          <Tag icon={<CheckCircleTwoTone twoToneColor="#52c41a" />} color="success">
+            Да
+          </Tag>
+        ) : (
+          <Tag icon={<CloseCircleTwoTone twoToneColor="#eb2f96" />} color="default">
+            Нет
+          </Tag>
+        ),
+    },
+    {
       title: (
         <span>
           Прошло дней
@@ -118,27 +133,6 @@ export default function DefectsTable({
       title: "Кем устраняется",
       dataIndex: "fixByName",
       sorter: (a, b) => (a.fixByName || "").localeCompare(b.fixByName || ""),
-    },
-    {
-      title: "Устранён",
-      dataIndex: "is_fixed",
-      sorter: (a, b) => Number(a.is_fixed) - Number(b.is_fixed),
-      render: (v: boolean) =>
-        v ? (
-          <Tag
-            icon={<CheckCircleTwoTone twoToneColor="#52c41a" />}
-            color="success"
-          >
-            Да
-          </Tag>
-        ) : (
-          <Tag
-            icon={<CloseCircleTwoTone twoToneColor="#eb2f96" />}
-            color="default"
-          >
-            Нет
-          </Tag>
-        ),
     },
     {
       title: "Дата получения",
