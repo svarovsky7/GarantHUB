@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/shared/api/supabaseClient';
 import { useNotify } from '@/shared/hooks/useNotify';
-import { addDefectAttachments } from '@/entities/attachment';
+import { addDefectAttachments, getAttachmentsByIds, ATTACH_BUCKET } from '@/entities/attachment';
 import type { DefectRecord } from '@/shared/types/defect';
 
 export interface NewDefect {
@@ -37,8 +37,12 @@ export function useDefects() {
 }
 
 /** Получить дефект по ID */
+export interface DefectWithFiles extends DefectRecord {
+  attachments: any[];
+}
+
 export function useDefect(id?: number) {
-  return useQuery<DefectRecord | null>({
+  return useQuery<DefectWithFiles | null>({
     queryKey: ['defect', id],
     enabled: !!id,
     queryFn: async () => {
@@ -51,7 +55,11 @@ export function useDefect(id?: number) {
         .eq('id', id as number)
         .single();
       if (error) throw error;
-      return data as DefectRecord;
+      let attachments: any[] = [];
+      if (data?.attachment_ids?.length) {
+        attachments = await getAttachmentsByIds(data.attachment_ids);
+      }
+      return { ...(data as DefectRecord), attachments } as DefectWithFiles;
     },
     staleTime: 5 * 60_000,
   });
@@ -153,4 +161,12 @@ export function useFixDefect() {
     },
     onError: (e: any) => notify.error(`Ошибка обновления: ${e.message}`),
   });
+}
+
+export async function signedUrl(path: string, filename = ''): Promise<string> {
+  const { data, error } = await supabase.storage
+    .from(ATTACH_BUCKET)
+    .createSignedUrl(path, 60, { download: filename || undefined });
+  if (error) throw error;
+  return data.signedUrl;
 }

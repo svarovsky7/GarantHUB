@@ -9,6 +9,8 @@ export interface DefectFilters {
   typeId?: number[];
   statusId?: number[];
   fixBy?: string[];
+  /** Дефект устранён */
+  fixed?: 'yes' | 'no';
   period?: [Dayjs, Dayjs];
   hideClosed?: boolean;
 }

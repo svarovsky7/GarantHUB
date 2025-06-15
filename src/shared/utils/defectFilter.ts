@@ -16,6 +16,7 @@ export function filterDefects<T extends {
   defect_status_id: number | null;
   defectStatusName?: string;
   fixByName?: string;
+  is_fixed?: boolean;
 }>(rows: T[], f: DefectFilters): T[] {
   return rows.filter((d) => {
     if (Array.isArray(f.id) && f.id.length > 0 && !f.id.includes(d.id)) {
@@ -62,6 +63,10 @@ export function filterDefects<T extends {
       (!d.fixByName || !f.fixBy.includes(d.fixByName))
     ) {
       return false;
+    }
+    if (f.fixed) {
+      const want = f.fixed === 'yes';
+      if (d.is_fixed !== want) return false;
     }
     if (f.period && f.period.length === 2) {
       const [from, to] = f.period;

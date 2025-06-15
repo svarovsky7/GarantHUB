@@ -69,7 +69,15 @@ export default function DefectFixModal({ defectId, open, onClose }: Props) {
       onCancel={onClose}
       onOk={handleOk}
       confirmLoading={fix.isPending}
-      title="Устранение дефекта"
+      title={
+        defect
+          ? `Устранение дефекта с ID №${defect.id} от ${
+              defect.received_at
+                ? dayjs(defect.received_at).format('DD.MM.YYYY')
+                : dayjs(defect.created_at).format('DD.MM.YYYY')
+            }`
+          : 'Устранение дефекта'
+      }
     >
       <Form layout="vertical">
         <Form.Item label="Исполнитель">

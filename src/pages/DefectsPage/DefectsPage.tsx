@@ -9,7 +9,8 @@ import {
   Popconfirm,
   message,
 } from 'antd';
-import { SettingOutlined, EyeOutlined, DeleteOutlined, CheckOutlined } from '@ant-design/icons';
+import { SettingOutlined, EyeOutlined, DeleteOutlined, CheckOutlined, CheckCircleTwoTone, CloseCircleTwoTone } from '@ant-design/icons';
+import { Tag } from 'antd';
 import ruRU from 'antd/locale/ru_RU';
 import { useDefects, useDeleteDefect } from '@/entities/defect';
 import { useTicketsSimple } from '@/entities/ticket';
@@ -140,7 +141,12 @@ export default function DefectsPage() {
         render: (v: number[]) => v.join(', '),
       },
       days: {
-        title: 'Прошло дней с даты получения',
+        title: (
+          <span>
+            Прошло дней
+            <br />с даты получения
+          </span>
+        ),
         dataIndex: 'days',
         sorter: (a: DefectWithInfo, b: DefectWithInfo) => (a.days ?? -1) - (b.days ?? -1),
       },
@@ -195,6 +201,17 @@ export default function DefectsPage() {
         dataIndex: 'fixByName',
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           (a.fixByName || '').localeCompare(b.fixByName || ''),
+      },
+      fixed: {
+        title: 'Устранён',
+        dataIndex: 'is_fixed',
+        sorter: (a: DefectWithInfo, b: DefectWithInfo) => Number(a.is_fixed) - Number(b.is_fixed),
+        render: (v: boolean) =>
+          v ? (
+            <Tag icon={<CheckCircleTwoTone twoToneColor="#52c41a" />} color="success">Да</Tag>
+          ) : (
+            <Tag icon={<CloseCircleTwoTone twoToneColor="#eb2f96" />} color="default">Нет</Tag>
+          ),
       },
       received: {
         title: 'Дата получения',
@@ -268,6 +285,7 @@ export default function DefectsPage() {
     'type',
     'status',
     'fixBy',
+    'fixed',
     'received',
     'created',
     'actions',
