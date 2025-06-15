@@ -55,9 +55,10 @@ export default function DefectEditableTable({ fields, add, remove, projectId }: 
   const FixByField = ({ field }: { field: any }) => {
     const brigadePath = [field.name, 'brigade_id'];
     const contractorPath = [field.name, 'contractor_id'];
-    const [mode, setMode] = React.useState<'brigade' | 'contractor'>(() =>
-      form.getFieldValue(contractorPath) ? 'contractor' : 'brigade',
-    );
+    const brigadeVal: number | undefined = Form.useWatch(brigadePath, form);
+    const contractorVal: number | undefined = Form.useWatch(contractorPath, form);
+    const initialMode = contractorVal ? 'contractor' : 'brigade';
+    const [mode, setMode] = React.useState<'brigade' | 'contractor'>(initialMode as any);
 
     React.useEffect(() => {
       if (mode === 'brigade') {
