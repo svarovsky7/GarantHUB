@@ -8,8 +8,10 @@ export interface DefectRecord {
   defect_type_id: number | null;
   /** Статус дефекта */
   defect_status_id: number | null;
-  /** Кем устраняется (own|contractor) */
-  fix_by: string | null;
+  /** Исполнитель - бригада */
+  brigade_id: number | null;
+  /** Исполнитель - подрядчик */
+  contractor_id: number | null;
   /** Дата получения */
   received_at: string | null;
   /** Дата устранения */
@@ -30,7 +32,7 @@ export interface DefectWithInfo extends DefectRecord {
   defectTypeName?: string;
   /** Название статуса дефекта */
   defectStatusName?: string;
-  /** Текстовое значение поля fix_by */
+  /** Название исполнителя */
   fixByName?: string;
   /** Идентификаторы проектов, связанные с замечаниями */
   projectIds?: number[];

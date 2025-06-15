@@ -53,30 +53,26 @@ export default function DefectEditableTable({ fields, add, remove, projectId }: 
   };
 
   const FixByField = ({ field }: { field: any }) => {
-    const namePath = [field.name, 'fix_by'];
-    const value: string | undefined = Form.useWatch(namePath, form);
-    const initialMode = value?.startsWith('c:') ? 'contractor' : 'brigade';
+    const brigadePath = [field.name, 'brigade_id'];
+    const contractorPath = [field.name, 'contractor_id'];
+    const brigadeVal: number | undefined = Form.useWatch(brigadePath, form);
+    const contractorVal: number | undefined = Form.useWatch(contractorPath, form);
+    const initialMode = contractorVal ? 'contractor' : 'brigade';
     const [mode, setMode] = React.useState<'brigade' | 'contractor'>(initialMode as any);
-    const options = (mode === 'brigade' ? brigades : contractors).map((b: any) => ({
-      value: `${mode === 'brigade' ? 'b' : 'c'}:${b.id}`,
-      label: b.name,
-    }));
 
     React.useEffect(() => {
-      if (!value) return;
-      const nextMode = value.startsWith('c:') ? 'contractor' : 'brigade';
-      if (nextMode !== mode) {
-        setMode(nextMode);
-      }
-    }, [value]);
-
-    React.useEffect(() => {
-      const current: string | undefined = form.getFieldValue(namePath);
-      const prefix = mode === 'brigade' ? 'b:' : 'c:';
-      if (current && !current.startsWith(prefix)) {
-        form.setFieldValue(namePath, undefined);
+      if (mode === 'brigade') {
+        form.setFieldValue(contractorPath, null);
+      } else {
+        form.setFieldValue(brigadePath, null);
       }
     }, [mode]);
+
+    const namePath = mode === 'brigade' ? brigadePath : contractorPath;
+    const options = (mode === 'brigade' ? brigades : contractors).map((b: any) => ({
+      value: b.id,
+      label: b.name,
+    }));
 
     return (
       <Space direction="vertical" style={{ width: '100%' }}>
@@ -269,7 +265,7 @@ export default function DefectEditableTable({ fields, add, remove, projectId }: 
             Кем устраняется<span style={{ color: 'red' }}>*</span>
           </span>
         ),
-        dataIndex: 'fix_by',
+        dataIndex: 'executor',
         width: 180,
         ellipsis: true,
         render: (_: any, field: any) => <FixByField field={field} />, 
@@ -312,7 +308,8 @@ export default function DefectEditableTable({ fields, add, remove, projectId }: 
               type_id: null,
               received_at: dayjs(),
               fixed_at: null,
-              fix_by: null,
+              brigade_id: null,
+              contractor_id: null,
             })
           }
         >

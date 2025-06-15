@@ -7,7 +7,8 @@ export interface NewDefect {
   description: string;
   defect_type_id: number | null;
   defect_status_id: number | null;
-  fix_by: string | null;
+  brigade_id: number | null;
+  contractor_id: number | null;
   received_at: string | null;
   fixed_at: string | null;
 }
@@ -22,7 +23,7 @@ export function useDefects() {
       const { data, error } = await supabase
         .from(TABLE)
         .select(
-          'id, description, defect_type_id, defect_status_id, fix_by, received_at, fixed_at, created_at,' +
+          'id, description, defect_type_id, defect_status_id, brigade_id, contractor_id, received_at, fixed_at, created_at,' +
           ' defect_type:defect_types(id,name), defect_status:defect_statuses(id,name)'
         )
         .order('id');
@@ -42,7 +43,7 @@ export function useDefect(id?: number) {
       const { data, error } = await supabase
         .from(TABLE)
         .select(
-          'id, description, defect_type_id, defect_status_id, fix_by, received_at, fixed_at, created_at,' +
+          'id, description, defect_type_id, defect_status_id, brigade_id, contractor_id, received_at, fixed_at, created_at,' +
           ' defect_type:defect_types(id,name), defect_status:defect_statuses(id,name)'
         )
         .eq('id', id as number)
