@@ -38,6 +38,11 @@ export default function DefectsTable({ defects, filters, loading, columns: colum
       render: (v: number[]) => v.join(', '),
     },
     {
+      title: 'Прошло дней с даты получения',
+      dataIndex: 'days',
+      sorter: (a, b) => (a.days ?? -1) - (b.days ?? -1),
+    },
+    {
       title: 'Проект',
       dataIndex: 'projectNames',
       sorter: (a, b) => (a.projectNames || '').localeCompare(b.projectNames || ''),
