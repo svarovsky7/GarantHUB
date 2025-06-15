@@ -26,6 +26,11 @@ export default function DefectsTable({ defects, filters, loading, columns: colum
 
   const defaultColumns: ColumnsType<DefectWithInfo> = [
     {
+      title: 'ID дефекта',
+      dataIndex: 'id',
+      sorter: (a, b) => a.id - b.id,
+    },
+    {
       title: 'ID замечание',
       dataIndex: 'ticketIds',
       sorter: (a, b) => a.ticketIds.join(',').localeCompare(b.ticketIds.join(',')),

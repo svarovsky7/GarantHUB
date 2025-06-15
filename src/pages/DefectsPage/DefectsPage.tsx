@@ -22,6 +22,7 @@ import type { TableColumnSetting } from '@/shared/types/tableColumnSetting';
 import DefectViewModal from '@/features/defect/DefectViewModal';
 import ExportDefectsButton from '@/features/defect/ExportDefectsButton';
 import { filterDefects } from '@/shared/utils/defectFilter';
+import formatUnitName from '@/shared/utils/formatUnitName';
 import type { DefectWithInfo } from '@/shared/types/defect';
 import type { DefectFilters } from '@/shared/types/defectFilters';
 import type { ColumnsType } from 'antd/es/table';
@@ -39,7 +40,7 @@ export default function DefectsPage() {
   const { data: projects = [] } = useProjects();
 
   const data: DefectWithInfo[] = useMemo(() => {
-    const unitMap = new Map(units.map((u) => [u.id, u.name]));
+    const unitMap = new Map(units.map((u) => [u.id, formatUnitName(u)]));
     const projectMap = new Map(projects.map((p) => [p.id, p.name]));
     const ticketsMap = new Map<number, { id: number; unit_ids: number[]; project_id: number }[]>();
     tickets.forEach((t: any) => {
@@ -111,6 +112,11 @@ export default function DefectsPage() {
 
   const baseColumns = useMemo(() => {
     return {
+      id: {
+        title: 'ID дефекта',
+        dataIndex: 'id',
+        sorter: (a: DefectWithInfo, b: DefectWithInfo) => a.id - b.id,
+      },
       tickets: {
         title: 'ID замечание',
         dataIndex: 'ticketIds',

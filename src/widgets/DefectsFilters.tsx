@@ -38,11 +38,8 @@ export default function DefectsFilters({
 
   return (
     <Form form={form} layout="vertical" onValuesChange={handleValuesChange} className="filter-grid">
-      <Form.Item name="id" label="ID">
+      <Form.Item name="id" label="ID дефекта">
         <Select mode="multiple" allowClear options={options.ids} showSearch optionFilterProp="label" />
-      </Form.Item>
-      <Form.Item name="ticketId" label="ID замечание">
-        <Select mode="multiple" allowClear options={options.tickets} showSearch optionFilterProp="label" />
       </Form.Item>
       <Form.Item name="projectId" label="Проекты">
         <Select mode="multiple" allowClear options={options.projects} showSearch optionFilterProp="label" />
@@ -50,17 +47,20 @@ export default function DefectsFilters({
       <Form.Item name="units" label="Объекты">
         <Select mode="multiple" allowClear options={options.units} showSearch optionFilterProp="label" />
       </Form.Item>
+      <Form.Item name="statusId" label="Статус">
+        <Select mode="multiple" allowClear options={options.statuses} showSearch optionFilterProp="label" />
+      </Form.Item>
       <Form.Item name="typeId" label="Тип">
         <Select mode="multiple" allowClear options={options.types} showSearch optionFilterProp="label" />
       </Form.Item>
-      <Form.Item name="statusId" label="Статус">
-        <Select mode="multiple" allowClear options={options.statuses} showSearch optionFilterProp="label" />
+      <Form.Item name="period" label="Дата получения">
+        <RangePicker style={{ width: '100%' }} format="DD.MM.YYYY" />
       </Form.Item>
       <Form.Item name="fixBy" label="Кем устраняется">
         <Select mode="multiple" allowClear options={options.fixBy} showSearch optionFilterProp="label" />
       </Form.Item>
-      <Form.Item name="period" label="Дата получения">
-        <RangePicker style={{ width: '100%' }} format="DD.MM.YYYY" />
+      <Form.Item name="ticketId" label="ID замечание">
+        <Select mode="multiple" allowClear options={options.tickets} showSearch optionFilterProp="label" />
       </Form.Item>
       <Form.Item name="hideClosed" label="Скрыть закрытые" valuePropName="checked">
         <Switch />

@@ -80,7 +80,7 @@ export const useUnitsByIds = (ids) =>
         queryFn : async () => {
             const { data, error } = await supabase
                 .from('units')
-                .select('id, name')
+                .select('id, name, building, section, floor')
                 .in('id', ids);
             if (error) throw error;
             return data ?? [];
