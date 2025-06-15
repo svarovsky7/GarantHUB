@@ -9,7 +9,7 @@ import {
   Popconfirm,
   message,
 } from 'antd';
-import { SettingOutlined, EyeOutlined, DeleteOutlined } from '@ant-design/icons';
+import { SettingOutlined, EyeOutlined, DeleteOutlined, CheckOutlined } from '@ant-design/icons';
 import ruRU from 'antd/locale/ru_RU';
 import { useDefects, useDeleteDefect } from '@/entities/defect';
 import { useTicketsSimple } from '@/entities/ticket';
@@ -24,6 +24,7 @@ import type { TableColumnSetting } from '@/shared/types/tableColumnSetting';
 import DefectViewModal from '@/features/defect/DefectViewModal';
 import DefectStatusSelect from '@/features/defect/DefectStatusSelect';
 import ExportDefectsButton from '@/features/defect/ExportDefectsButton';
+import DefectFixModal from '@/features/defect/DefectFixModal';
 import { filterDefects } from '@/shared/utils/defectFilter';
 import formatUnitName from '@/shared/utils/formatUnitName';
 import type { DefectWithInfo } from '@/shared/types/defect';
@@ -108,6 +109,7 @@ export default function DefectsPage() {
 
   const [filters, setFilters] = useState<DefectFilters>({});
   const [viewId, setViewId] = useState<number | null>(null);
+  const [fixId, setFixId] = useState<number | null>(null);
   const { mutateAsync: removeDefect, isPending: removing } = useDeleteDefect();
 
   const LS_FILTERS_VISIBLE_KEY = 'defectsFiltersVisible';
@@ -221,6 +223,14 @@ export default function DefectsPage() {
                 type="text"
                 icon={<EyeOutlined />}
                 onClick={() => setViewId(row.id)}
+              />
+            </Tooltip>
+            <Tooltip title="Устранён">
+              <Button
+                size="small"
+                type="text"
+                icon={<CheckOutlined />}
+                onClick={() => setFixId(row.id)}
               />
             </Tooltip>
             <Popconfirm
@@ -351,6 +361,11 @@ export default function DefectsPage() {
           open={viewId !== null}
           defectId={viewId}
           onClose={() => setViewId(null)}
+        />
+        <DefectFixModal
+          open={fixId !== null}
+          defectId={fixId}
+          onClose={() => setFixId(null)}
         />
       </>
     </ConfigProvider>
