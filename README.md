@@ -31,3 +31,8 @@ VITE_ATTACH_BUCKET=<название корзины для вложений>
 Описание таблиц и полей находится в файле [`database_structure.json`](database_structure.json).
 
 
+
+## Миграции
+
+Файл `sql/20250615_defect_fix_update.sql` содержит SQL-скрипт для обновления таблицы `defects` и статусов.
+
