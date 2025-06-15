@@ -1,17 +1,17 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap");
 
 body {
-    font-family: 'Inter', system-ui, sans-serif;
-    background-color: #f5f7ff;
-    margin: 0;
-    font-size: 14px;
+  font-family: "Inter", system-ui, sans-serif;
+  background-color: #f5f7ff;
+  margin: 0;
+  font-size: 14px;
 }
 
 /* === ФИЛЬТРЫ ================================================================= */
 .filter-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
 }
 
 .filter-grid .MuiTextField-root,
@@ -19,70 +19,94 @@ body {
 .filter-grid .ant-input,
 .filter-grid .ant-select,
 .filter-grid button {
-    width: 100%;
+  width: 100%;
 }
 
 /* === ТАБЛИЦА ================================================================= */
-.MuiTable-root { width: 100%; table-layout: fixed; border-collapse: separate; }
-.MuiTableHead-root th  { position: sticky; top: 0; background: #f5f5f5; white-space: pre-line; }
-.MuiTableCell-root      { padding: 12px 16px; overflow: hidden; text-overflow: ellipsis; }
-.MuiTableBody-root tr:nth-child(even) { background: #fafafa; }
-.MuiTableBody-root tr:hover           { background: #e5edff; }
+.MuiTable-root {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+}
+.MuiTableHead-root th {
+  position: sticky;
+  top: 0;
+  background: #f5f5f5;
+  white-space: pre-line;
+}
+.MuiTableCell-root {
+  padding: 12px 16px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.MuiTableBody-root tr:nth-child(even) {
+  background: #fafafa;
+}
+.MuiTableBody-root tr:hover {
+  background: #e5edff;
+}
 
 .root-letter-row .ant-table-cell {
-    font-weight: 600;
+  font-weight: 600;
 }
 
 .child-letter-row {
-    background-color: #fafcff;
+  background-color: #fafcff;
 }
 
 .child-letter-number::before {
-    content: '↳';
-    margin-right: 4px;
+  content: "↳";
+  margin-right: 4px;
 }
 .main-letter-row {
-    background: #eaf4ff !important;
-    font-weight: 600;
-    box-shadow: 0 1px 0 #b5d3f7;
+  background: #eaf4ff !important;
+  font-weight: 600;
+  box-shadow: 0 1px 0 #b5d3f7;
 }
 .child-letter-row {
-    background: #f8fafb !important;
-    color: #888;
-    font-style: italic;
-    border-left: 3px solid #52c41a;
+  background: #f8fafb !important;
+  color: #888;
+  font-style: italic;
+  border-left: 3px solid #52c41a;
 }
 
 .main-ticket-row {
-    background: #eaf4ff !important;
-    font-weight: 600;
-    box-shadow: 0 1px 0 #b5d3f7;
+  background: #eaf4ff !important;
+  font-weight: 600;
+  box-shadow: 0 1px 0 #b5d3f7;
 }
 .child-ticket-row {
-    background: #f8fafb !important;
-    color: #888;
-    font-style: italic;
-    border-left: 3px solid #1890ff;
+  background: #f8fafb !important;
+  color: #888;
+  font-style: italic;
+  border-left: 3px solid #1890ff;
 }
 .main-case-row {
-    background: #eaf4ff !important;
-    font-weight: 600;
-    box-shadow: 0 1px 0 #b5d3f7;
+  background: #eaf4ff !important;
+  font-weight: 600;
+  box-shadow: 0 1px 0 #b5d3f7;
 }
 .child-case-row {
-    background: #f8fafb !important;
-    color: #888;
-    font-style: italic;
-    border-left: 3px solid #722ed1;
+  background: #f8fafb !important;
+  color: #888;
+  font-style: italic;
+  border-left: 3px solid #722ed1;
 }
 .main-defect-row {
-    background: #eaf4ff !important;
-    font-weight: 600;
-    box-shadow: 0 1px 0 #b5d3f7;
+  background: #eaf4ff !important;
+  font-weight: 600;
+  box-shadow: 0 1px 0 #b5d3f7;
+}
+.defect-confirmed-row {
+  background: #f6ffed !important;
+}
+.defect-closed-row {
+  color: #aaa;
+  background: inherit !important;
 }
 /* Skeleton эффекты были выше (оставил без изменений) */
 .changed-field {
-    background-color: #fffbe6;
-    padding: 4px;
-    border-radius: 2px;
+  background-color: #fffbe6;
+  padding: 4px;
+  border-radius: 2px;
 }

@@ -1,14 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import dayjs from 'dayjs';
-import { Modal, Form, DatePicker } from 'antd';
-import FileDropZone from '@/shared/ui/FileDropZone';
-import AttachmentEditorTable from '@/shared/ui/AttachmentEditorTable';
-import { useBrigades } from '@/entities/brigade';
-import { useContractors } from '@/entities/contractor';
-import { useAttachmentTypes } from '@/entities/attachmentType';
-import { useFixDefect, useDefect } from '@/entities/defect';
-import type { NewDefectFile } from '@/shared/types/defectFile';
-import FixBySelector, { FixByValue } from '@/shared/ui/FixBySelector';
+import React, { useState, useEffect } from "react";
+import dayjs from "dayjs";
+import { Modal, Form, DatePicker } from "antd";
+import FileDropZone from "@/shared/ui/FileDropZone";
+import AttachmentEditorTable from "@/shared/ui/AttachmentEditorTable";
+import { useBrigades } from "@/entities/brigade";
+import { useContractors } from "@/entities/contractor";
+import { useAttachmentTypes } from "@/entities/attachmentType";
+import { useFixDefect, useDefect, signedUrl } from "@/entities/defect";
+import type {
+  NewDefectFile,
+  RemoteDefectFile,
+} from "@/shared/types/defectFile";
+import FixBySelector, { FixByValue } from "@/shared/ui/FixBySelector";
 
 interface Props {
   defectId: number | null;
@@ -24,15 +27,33 @@ export default function DefectFixModal({ defectId, open, onClose }: Props) {
   const { data: defect } = useDefect(defectId ?? undefined);
   const fix = useFixDefect();
 
-  const [fixBy, setFixBy] = useState<FixByValue>({ brigade_id: null, contractor_id: null });
+  const [fixBy, setFixBy] = useState<FixByValue>({
+    brigade_id: null,
+    contractor_id: null,
+  });
   const [fixedAt, setFixedAt] = useState<dayjs.Dayjs | null>(null);
   const [files, setFiles] = useState<NewDefectFile[]>([]);
+  const [remoteFiles, setRemoteFiles] = useState<RemoteDefectFile[]>([]);
 
   useEffect(() => {
     if (defect && open) {
-      setFixBy({ brigade_id: defect.brigade_id, contractor_id: defect.contractor_id });
+      setFixBy({
+        brigade_id: defect.brigade_id,
+        contractor_id: defect.contractor_id,
+      });
       const baseDate = defect.fixed_at ? dayjs(defect.fixed_at) : dayjs();
-      setFixedAt(baseDate.isBefore(dayjs(), 'day') ? dayjs() : baseDate);
+      setFixedAt(baseDate.isBefore(dayjs(), "day") ? dayjs() : baseDate);
+      setRemoteFiles(
+        defect.attachments?.map((f: any) => ({
+          id: String(f.id),
+          name: f.original_name ?? f.storage_path.split("/").pop(),
+          path: f.storage_path,
+          url: f.file_url,
+          type: f.file_type,
+          attachment_type_id: f.attachment_type_id ?? null,
+          attachment_type_name: f.attachment_type_name,
+        })) ?? [],
+      );
     }
   }, [defect, open]);
 
@@ -50,13 +71,25 @@ export default function DefectFixModal({ defectId, open, onClose }: Props) {
 
   const handleOk = async () => {
     if (!defectId) return;
-    await fix.mutateAsync({
+    const uploaded = await fix.mutateAsync({
       id: defectId,
       brigade_id: fixBy.brigade_id,
       contractor_id: fixBy.contractor_id,
-      fixed_at: fixedAt ? fixedAt.format('YYYY-MM-DD') : null,
+      fixed_at: fixedAt ? fixedAt.format("YYYY-MM-DD") : null,
       attachments: files,
     });
+    setRemoteFiles((p) => [
+      ...p,
+      ...uploaded.map((u: any) => ({
+        id: String(u.id),
+        name: u.original_name ?? u.storage_path.split("/").pop(),
+        path: u.storage_path,
+        url: u.file_url,
+        type: u.file_type,
+        attachment_type_id: u.attachment_type_id ?? null,
+        attachment_type_name: u.attachment_type_name,
+      })),
+    ]);
     setFiles([]);
     setFixBy({ brigade_id: null, contractor_id: null });
     setFixedAt(null);
@@ -73,10 +106,10 @@ export default function DefectFixModal({ defectId, open, onClose }: Props) {
         defect
           ? `Устранение дефекта с ID №${defect.id} от ${
               defect.received_at
-                ? dayjs(defect.received_at).format('DD.MM.YYYY')
-                : dayjs(defect.created_at).format('DD.MM.YYYY')
+                ? dayjs(defect.received_at).format("DD.MM.YYYY")
+                : dayjs(defect.created_at).format("DD.MM.YYYY")
             }`
-          : 'Устранение дефекта'
+          : "Устранение дефекта"
       }
     >
       <Form layout="vertical">
@@ -93,16 +126,22 @@ export default function DefectFixModal({ defectId, open, onClose }: Props) {
             format="DD.MM.YYYY"
             value={fixedAt ?? undefined}
             onChange={(d) => setFixedAt(d)}
-            style={{ width: '100%' }}
+            style={{ width: "100%" }}
           />
         </Form.Item>
         <Form.Item label="Файлы">
           <FileDropZone onFiles={handleFiles} />
           <AttachmentEditorTable
-            newFiles={files.map((f) => ({ file: f.file, typeId: f.type_id, mime: f.file.type }))}
+            remoteFiles={remoteFiles}
+            newFiles={files.map((f) => ({
+              file: f.file,
+              typeId: f.type_id,
+              mime: f.file.type,
+            }))}
             attachmentTypes={attachmentTypes}
             onRemoveNew={removeFile}
             onChangeNewType={changeType}
+            getSignedUrl={(p, n) => signedUrl(p, n)}
           />
         </Form.Item>
       </Form>

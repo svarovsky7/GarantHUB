@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import dayjs from 'dayjs';
+import React, { useMemo, useState } from "react";
+import dayjs from "dayjs";
 import {
   ConfigProvider,
   Card,
@@ -8,31 +8,38 @@ import {
   Tooltip,
   Popconfirm,
   message,
-} from 'antd';
-import { SettingOutlined, EyeOutlined, DeleteOutlined, CheckOutlined, CheckCircleTwoTone, CloseCircleTwoTone } from '@ant-design/icons';
-import { Tag } from 'antd';
-import ruRU from 'antd/locale/ru_RU';
-import { useDefects, useDeleteDefect } from '@/entities/defect';
-import { useTicketsSimple } from '@/entities/ticket';
-import { useUnitsByIds } from '@/entities/unit';
-import { useProjects } from '@/entities/project';
-import { useBrigades } from '@/entities/brigade';
-import { useContractors } from '@/entities/contractor';
-import DefectsTable from '@/widgets/DefectsTable';
-import DefectsFilters from '@/widgets/DefectsFilters';
-import TableColumnsDrawer from '@/widgets/TableColumnsDrawer';
-import type { TableColumnSetting } from '@/shared/types/tableColumnSetting';
-import DefectViewModal from '@/features/defect/DefectViewModal';
-import DefectStatusSelect from '@/features/defect/DefectStatusSelect';
-import ExportDefectsButton from '@/features/defect/ExportDefectsButton';
-import DefectFixModal from '@/features/defect/DefectFixModal';
-import { filterDefects } from '@/shared/utils/defectFilter';
-import formatUnitName from '@/shared/utils/formatUnitName';
-import type { DefectWithInfo } from '@/shared/types/defect';
-import type { DefectFilters } from '@/shared/types/defectFilters';
-import type { ColumnsType } from 'antd/es/table';
+} from "antd";
+import {
+  SettingOutlined,
+  EyeOutlined,
+  DeleteOutlined,
+  CheckOutlined,
+  CheckCircleTwoTone,
+  CloseCircleTwoTone,
+} from "@ant-design/icons";
+import { Tag } from "antd";
+import ruRU from "antd/locale/ru_RU";
+import { useDefects, useDeleteDefect } from "@/entities/defect";
+import { useTicketsSimple } from "@/entities/ticket";
+import { useUnitsByIds } from "@/entities/unit";
+import { useProjects } from "@/entities/project";
+import { useBrigades } from "@/entities/brigade";
+import { useContractors } from "@/entities/contractor";
+import DefectsTable from "@/widgets/DefectsTable";
+import DefectsFilters from "@/widgets/DefectsFilters";
+import TableColumnsDrawer from "@/widgets/TableColumnsDrawer";
+import type { TableColumnSetting } from "@/shared/types/tableColumnSetting";
+import DefectViewModal from "@/features/defect/DefectViewModal";
+import DefectStatusSelect from "@/features/defect/DefectStatusSelect";
+import ExportDefectsButton from "@/features/defect/ExportDefectsButton";
+import DefectFixModal from "@/features/defect/DefectFixModal";
+import { filterDefects } from "@/shared/utils/defectFilter";
+import formatUnitName from "@/shared/utils/formatUnitName";
+import type { DefectWithInfo } from "@/shared/types/defect";
+import type { DefectFilters } from "@/shared/types/defectFilters";
+import type { ColumnsType } from "antd/es/table";
 
-const fmt = (v: string | null) => (v ? dayjs(v).format('DD.MM.YYYY') : '—');
+const fmt = (v: string | null) => (v ? dayjs(v).format("DD.MM.YYYY") : "—");
 
 export default function DefectsPage() {
   const { data: defects = [], isPending } = useDefects();
@@ -49,11 +56,18 @@ export default function DefectsPage() {
   const data: DefectWithInfo[] = useMemo(() => {
     const unitMap = new Map(units.map((u) => [u.id, formatUnitName(u)]));
     const projectMap = new Map(projects.map((p) => [p.id, p.name]));
-    const ticketsMap = new Map<number, { id: number; unit_ids: number[]; project_id: number }[]>();
+    const ticketsMap = new Map<
+      number,
+      { id: number; unit_ids: number[]; project_id: number }[]
+    >();
     tickets.forEach((t: any) => {
       (t.defect_ids || []).forEach((id: number) => {
         const arr = ticketsMap.get(id) || [];
-        arr.push({ id: t.id, unit_ids: t.unit_ids || [], project_id: t.project_id });
+        arr.push({
+          id: t.id,
+          unit_ids: t.unit_ids || [],
+          project_id: t.project_id,
+        });
         ticketsMap.set(id, arr);
       });
     });
@@ -63,17 +77,20 @@ export default function DefectsPage() {
       const unitNamesList = unitIds
         .map((id) => unitMap.get(id))
         .filter(Boolean);
-      const unitNames = unitNamesList.join(', ');
+      const unitNames = unitNamesList.join(", ");
       const projectIds = Array.from(new Set(linked.map((l) => l.project_id)));
       const projectNames = projectIds
         .map((id) => projectMap.get(id))
         .filter(Boolean)
-        .join(', ');
-      let fixByName = '—';
+        .join(", ");
+      let fixByName = "—";
       if (d.brigade_id) {
-        fixByName = brigades.find((b) => b.id === d.brigade_id)?.name || 'Бригада';
+        fixByName =
+          brigades.find((b) => b.id === d.brigade_id)?.name || "Бригада";
       } else if (d.contractor_id) {
-        fixByName = contractors.find((c) => c.id === d.contractor_id)?.name || 'Подрядчик';
+        fixByName =
+          contractors.find((c) => c.id === d.contractor_id)?.name ||
+          "Подрядчик";
       }
       return {
         ...d,
@@ -85,9 +102,11 @@ export default function DefectsPage() {
         projectNames,
         fixByName,
         is_fixed: d.is_fixed,
-        days: d.received_at ? dayjs().diff(dayjs(d.received_at), 'day') + 1 : null,
-        defectTypeName: d.defect_type?.name ?? '',
-        defectStatusName: d.defect_status?.name ?? '',
+        days: d.received_at
+          ? dayjs().diff(dayjs(d.received_at), "day") + 1
+          : null,
+        defectTypeName: d.defect_type?.name ?? "",
+        defectStatusName: d.defect_status?.name ?? "",
       } as DefectWithInfo;
     });
   }, [defects, tickets, units, projects]);
@@ -99,13 +118,16 @@ export default function DefectsPage() {
         value: v,
       }));
     return {
-      ids: uniq(data, 'id'),
-      tickets: uniq(data.flatMap((d) => d.ticketIds.map((t) => ({ ticket: t }))), 'ticket').map((o) => ({ label: o.label, value: Number(o.label) })),
+      ids: uniq(data, "id"),
+      tickets: uniq(
+        data.flatMap((d) => d.ticketIds.map((t) => ({ ticket: t }))),
+        "ticket",
+      ).map((o) => ({ label: o.label, value: Number(o.label) })),
       units: units.map((u) => ({ label: u.name, value: u.id })),
-      projects: uniq(data, 'projectNames'),
-      types: uniq(data, 'defectTypeName'),
-      statuses: uniq(data, 'defectStatusName'),
-      fixBy: uniq(data, 'fixByName'),
+      projects: uniq(data, "projectNames"),
+      types: uniq(data, "defectTypeName"),
+      statuses: uniq(data, "defectStatusName"),
+      fixBy: uniq(data, "fixByName"),
     };
   }, [data, units]);
 
@@ -114,8 +136,8 @@ export default function DefectsPage() {
   const [fixId, setFixId] = useState<number | null>(null);
   const { mutateAsync: removeDefect, isPending: removing } = useDeleteDefect();
 
-  const LS_FILTERS_VISIBLE_KEY = 'defectsFiltersVisible';
-  const LS_COLUMNS_KEY = 'defectsColumns';
+  const LS_FILTERS_VISIBLE_KEY = "defectsFiltersVisible";
+  const LS_COLUMNS_KEY = "defectsColumns";
 
   const [showFilters, setShowFilters] = useState(() => {
     try {
@@ -129,16 +151,16 @@ export default function DefectsPage() {
   const baseColumns = useMemo(() => {
     return {
       id: {
-        title: 'ID дефекта',
-        dataIndex: 'id',
+        title: "ID дефекта",
+        dataIndex: "id",
         sorter: (a: DefectWithInfo, b: DefectWithInfo) => a.id - b.id,
       },
       tickets: {
-        title: 'ID замечание',
-        dataIndex: 'ticketIds',
+        title: "ID замечание",
+        dataIndex: "ticketIds",
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
-          a.ticketIds.join(',').localeCompare(b.ticketIds.join(',')),
-        render: (v: number[]) => v.join(', '),
+          a.ticketIds.join(",").localeCompare(b.ticketIds.join(",")),
+        render: (v: number[]) => v.join(", "),
       },
       days: {
         title: (
@@ -147,24 +169,25 @@ export default function DefectsPage() {
             <br />с даты получения
           </span>
         ),
-        dataIndex: 'days',
-        sorter: (a: DefectWithInfo, b: DefectWithInfo) => (a.days ?? -1) - (b.days ?? -1),
+        dataIndex: "days",
+        sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
+          (a.days ?? -1) - (b.days ?? -1),
       },
       project: {
-        title: 'Проект',
-        dataIndex: 'projectNames',
+        title: "Проект",
+        dataIndex: "projectNames",
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
-          (a.projectNames || '').localeCompare(b.projectNames || ''),
+          (a.projectNames || "").localeCompare(b.projectNames || ""),
       },
       units: {
-        title: 'Объекты',
-        dataIndex: 'unitNamesList',
+        title: "Объекты",
+        dataIndex: "unitNamesList",
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
-          (a.unitNames || '').localeCompare(b.unitNames || ''),
+          (a.unitNames || "").localeCompare(b.unitNames || ""),
         render: (_: string[], row: DefectWithInfo) => (
           <>
             {row.unitNamesList?.map((n, i) => (
-              <div key={i} style={{ whiteSpace: 'nowrap' }}>
+              <div key={i} style={{ whiteSpace: "nowrap" }}>
                 {n}
               </div>
             ))}
@@ -172,22 +195,22 @@ export default function DefectsPage() {
         ),
       },
       description: {
-        title: 'Описание',
-        dataIndex: 'description',
+        title: "Описание",
+        dataIndex: "description",
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           a.description.localeCompare(b.description),
       },
       type: {
-        title: 'Тип',
-        dataIndex: 'defectTypeName',
+        title: "Тип",
+        dataIndex: "defectTypeName",
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
-          (a.defectTypeName || '').localeCompare(b.defectTypeName || ''),
+          (a.defectTypeName || "").localeCompare(b.defectTypeName || ""),
       },
       status: {
-        title: 'Статус',
-        dataIndex: 'defect_status_id',
+        title: "Статус",
+        dataIndex: "defect_status_id",
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
-          (a.defectStatusName || '').localeCompare(b.defectStatusName || ''),
+          (a.defectStatusName || "").localeCompare(b.defectStatusName || ""),
         render: (_: number, row: DefectWithInfo) => (
           <DefectStatusSelect
             defectId={row.id}
@@ -197,41 +220,52 @@ export default function DefectsPage() {
         ),
       },
       fixBy: {
-        title: 'Кем устраняется',
-        dataIndex: 'fixByName',
+        title: "Кем устраняется",
+        dataIndex: "fixByName",
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
-          (a.fixByName || '').localeCompare(b.fixByName || ''),
+          (a.fixByName || "").localeCompare(b.fixByName || ""),
       },
       fixed: {
-        title: 'Устранён',
-        dataIndex: 'is_fixed',
-        sorter: (a: DefectWithInfo, b: DefectWithInfo) => Number(a.is_fixed) - Number(b.is_fixed),
+        title: "Устранён",
+        dataIndex: "is_fixed",
+        sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
+          Number(a.is_fixed) - Number(b.is_fixed),
         render: (v: boolean) =>
           v ? (
-            <Tag icon={<CheckCircleTwoTone twoToneColor="#52c41a" />} color="success">Да</Tag>
+            <Tag
+              icon={<CheckCircleTwoTone twoToneColor="#52c41a" />}
+              color="success"
+            >
+              Да
+            </Tag>
           ) : (
-            <Tag icon={<CloseCircleTwoTone twoToneColor="#eb2f96" />} color="default">Нет</Tag>
+            <Tag
+              icon={<CloseCircleTwoTone twoToneColor="#eb2f96" />}
+              color="default"
+            >
+              Нет
+            </Tag>
           ),
       },
       received: {
-        title: 'Дата получения',
-        dataIndex: 'received_at',
+        title: "Дата получения",
+        dataIndex: "received_at",
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           (a.received_at ? dayjs(a.received_at).valueOf() : 0) -
           (b.received_at ? dayjs(b.received_at).valueOf() : 0),
         render: fmt,
       },
       created: {
-        title: 'Дата устранения',
-        dataIndex: 'fixed_at',
+        title: "Дата устранения",
+        dataIndex: "fixed_at",
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           (a.fixed_at ? dayjs(a.fixed_at).valueOf() : 0) -
           (b.fixed_at ? dayjs(b.fixed_at).valueOf() : 0),
         render: fmt,
       },
       actions: {
-        title: 'Действия',
-        key: 'actions',
+        title: "Действия",
+        key: "actions",
         width: 100,
         render: (_: unknown, row: DefectWithInfo) => (
           <>
@@ -247,7 +281,9 @@ export default function DefectsPage() {
               <Button
                 size="small"
                 type="text"
-                icon={<CheckOutlined style={{ color: '#52c41a', fontSize: 16 }} />}
+                icon={
+                  <CheckOutlined style={{ color: "#52c41a", fontSize: 16 }} />
+                }
                 onClick={() => setFixId(row.id)}
               />
             </Tooltip>
@@ -257,7 +293,7 @@ export default function DefectsPage() {
               cancelText="Нет"
               onConfirm={async () => {
                 await removeDefect(row.id);
-                message.success('Удалено');
+                message.success("Удалено");
               }}
               disabled={removing}
             >
@@ -276,19 +312,19 @@ export default function DefectsPage() {
   }, [removeDefect, removing]);
 
   const columnOrder = [
-    'id',
-    'tickets',
-    'days',
-    'project',
-    'units',
-    'description',
-    'type',
-    'status',
-    'fixBy',
-    'fixed',
-    'received',
-    'created',
-    'actions',
+    "id",
+    "tickets",
+    "fixed",
+    "days",
+    "project",
+    "units",
+    "description",
+    "type",
+    "status",
+    "fixBy",
+    "received",
+    "created",
+    "actions",
   ] as const;
 
   const [columnsState, setColumnsState] = useState<TableColumnSetting[]>(() => {
@@ -303,7 +339,9 @@ export default function DefectsPage() {
       if (saved) {
         const parsed = JSON.parse(saved) as TableColumnSetting[];
         const filtered = parsed.filter((c) => base[c.key]);
-        const missing = defaults.filter((d) => !filtered.some((f) => f.key === d.key));
+        const missing = defaults.filter(
+          (d) => !filtered.some((f) => f.key === d.key),
+        );
         return [...filtered, ...missing];
       }
     } catch {}
@@ -334,16 +372,16 @@ export default function DefectsPage() {
 
   const columns = useMemo(() => {
     const base = baseColumns;
-    return columnsState
-      .filter((c) => c.visible)
-      .map((c) => base[c.key]);
+    return columnsState.filter((c) => c.visible).map((c) => base[c.key]);
   }, [columnsState, baseColumns]);
 
   const [showColumnsDrawer, setShowColumnsDrawer] = useState(false);
 
   const total = data.length;
   const closedCount = useMemo(
-    () => data.filter((d) => d.defectStatusName?.toLowerCase().includes('закры')).length,
+    () =>
+      data.filter((d) => d.defectStatusName?.toLowerCase().includes("закры"))
+        .length,
     [data],
   );
   const openCount = total - closedCount;
@@ -355,15 +393,18 @@ export default function DefectsPage() {
   return (
     <ConfigProvider locale={ruRU}>
       <>
-        <Button onClick={() => setShowFilters((p) => !p)} style={{ marginTop: 16 }}>
-          {showFilters ? 'Скрыть фильтры' : 'Показать фильтры'}
+        <Button
+          onClick={() => setShowFilters((p) => !p)}
+          style={{ marginTop: 16 }}
+        >
+          {showFilters ? "Скрыть фильтры" : "Показать фильтры"}
         </Button>
         <Button
           icon={<SettingOutlined />}
           style={{ marginTop: 16, marginLeft: 8 }}
           onClick={() => setShowColumnsDrawer(true)}
         />
-        <span style={{ marginTop: 16, marginLeft: 8, display: 'inline-block' }}>
+        <span style={{ marginTop: 16, marginLeft: 8, display: "inline-block" }}>
           <ExportDefectsButton defects={data} filters={filters} />
         </span>
         {showFilters && (
@@ -385,10 +426,11 @@ export default function DefectsPage() {
           onClose={() => setShowColumnsDrawer(false)}
           onReset={handleResetColumns}
         />
-        <Typography.Text style={{ display: 'block', marginTop: 8 }}>
-          Всего дефектов: {total}, из них закрытых: {closedCount} и не закрытых: {openCount}
+        <Typography.Text style={{ display: "block", marginTop: 8 }}>
+          Всего дефектов: {total}, из них закрытых: {closedCount} и не закрытых:{" "}
+          {openCount}
         </Typography.Text>
-        <Typography.Text style={{ display: 'block', marginTop: 4 }}>
+        <Typography.Text style={{ display: "block", marginTop: 4 }}>
           Готовых дефектов к выгрузке: {readyToExport}
         </Typography.Text>
         <DefectViewModal
