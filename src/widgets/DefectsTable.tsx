@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import dayjs from 'dayjs';
-import { Table, Button, Tooltip, Skeleton, Popconfirm, message, Space } from 'antd';
-import { EyeOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Table, Button, Tooltip, Skeleton, Popconfirm, message, Space, Tag } from 'antd';
+import { EyeOutlined, DeleteOutlined, CheckCircleTwoTone, CloseCircleTwoTone } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useDeleteDefect } from '@/entities/defect';
 import DefectStatusSelect from '@/features/defect/DefectStatusSelect';
@@ -38,7 +38,12 @@ export default function DefectsTable({ defects, filters, loading, columns: colum
       render: (v: number[]) => v.join(', '),
     },
     {
-      title: 'Прошло дней с даты получения',
+      title: (
+        <span>
+          Прошло дней
+          <br />с даты получения
+        </span>
+      ),
       dataIndex: 'days',
       sorter: (a, b) => (a.days ?? -1) - (b.days ?? -1),
     },
@@ -89,6 +94,17 @@ export default function DefectsTable({ defects, filters, loading, columns: colum
       title: 'Кем устраняется',
       dataIndex: 'fixByName',
       sorter: (a, b) => (a.fixByName || '').localeCompare(b.fixByName || ''),
+    },
+    {
+      title: 'Устранён',
+      dataIndex: 'is_fixed',
+      sorter: (a, b) => Number(a.is_fixed) - Number(b.is_fixed),
+      render: (v: boolean) =>
+        v ? (
+          <Tag icon={<CheckCircleTwoTone twoToneColor="#52c41a" />} color="success">Да</Tag>
+        ) : (
+          <Tag icon={<CloseCircleTwoTone twoToneColor="#eb2f96" />} color="default">Нет</Tag>
+        ),
     },
     {
       title: 'Дата получения',

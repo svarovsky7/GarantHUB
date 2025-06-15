@@ -1,7 +1,7 @@
 import React from 'react';
 import dayjs from 'dayjs';
 import { Modal, Typography, Skeleton } from 'antd';
-import { useDefect } from '@/entities/defect';
+import { useDefect, signedUrl } from '@/entities/defect';
 
 interface Props {
   open: boolean;
@@ -36,6 +36,32 @@ export default function DefectViewModal({ open, defectId, onClose }: Props) {
             <b>Дата создания:</b>{' '}
             {defect.created_at ? dayjs(defect.created_at).format('DD.MM.YYYY') : '—'}
           </Typography.Text>
+          {defect.attachments?.length ? (
+            <div>
+              <b>Файлы:</b>
+              <ul style={{ paddingLeft: 20 }}>
+                {defect.attachments.map((f: any) => (
+                  <li key={f.id}>
+                    <a
+                      onClick={async (e) => {
+                        e.preventDefault();
+                        const url = await signedUrl(f.storage_path, f.original_name ?? 'file');
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = f.original_name ?? 'file';
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                      }}
+                      href="#"
+                    >
+                      {f.original_name ?? f.storage_path.split('/').pop()}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
         </div>
       )}
     </Modal>
