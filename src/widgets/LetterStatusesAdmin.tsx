@@ -10,6 +10,7 @@ import {
   useDeleteLetterStatus,
 } from '@/entities/letterStatus';
 import LetterStatusForm from '@/features/letterStatus/LetterStatusForm';
+import { useNotify } from '@/shared/hooks/useNotify';
 
 interface LetterStatusesAdminProps {
   pageSize?: number;
@@ -24,20 +25,33 @@ export default function LetterStatusesAdmin({
   const add = useAddLetterStatus();
   const update = useUpdateLetterStatus();
   const remove = useDeleteLetterStatus();
+  const notify = useNotify();
 
   const [open, setOpen] = React.useState(false);
   const [editRow, setEditRow] = React.useState<any>(null);
 
   const handleAdd = () => { setEditRow(null); setOpen(true); };
   const handleEdit = (row: any) => { setEditRow(row); setOpen(true); };
-  const handleDelete = (id: number) => { if (window.confirm('Удалить статус?')) remove.mutate(id); };
+  const handleDelete = (id: number) => {
+    if (!window.confirm('Удалить статус?')) return;
+    remove.mutate(id, {
+      onSuccess: () => notify.success('Статус удалён'),
+      onError: (e) => notify.error(e.message),
+    });
+  };
   const handleSubmit = async (values: { name: string; color: string }) => {
-    if (editRow) {
-      await update.mutateAsync({ id: editRow.id, updates: values });
-    } else {
-      await add.mutateAsync(values);
+    try {
+      if (editRow) {
+        await update.mutateAsync({ id: editRow.id, updates: values });
+        notify.success('Статус обновлён');
+      } else {
+        await add.mutateAsync(values);
+        notify.success('Статус создан');
+      }
+      setOpen(false);
+    } catch (e: any) {
+      notify.error(e.message);
     }
-    setOpen(false);
   };
 
   const columns = [
