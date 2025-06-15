@@ -115,9 +115,9 @@ export default function DefectsPage() {
   const [showFilters, setShowFilters] = useState(() => {
     try {
       const saved = localStorage.getItem(LS_FILTERS_VISIBLE_KEY);
-      return saved ? JSON.parse(saved) : true;
+      return saved ? JSON.parse(saved) : false;
     } catch {
-      return true;
+      return false;
     }
   });
 
