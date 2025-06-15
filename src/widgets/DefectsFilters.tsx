@@ -5,6 +5,9 @@ import type { DefectFilters } from '@/shared/types/defectFilters';
 
 const { RangePicker } = DatePicker;
 
+/** Ключ в localStorage для флага скрытия закрытых дефектов */
+const LS_HIDE_CLOSED_KEY = 'defectsHideClosed';
+
 interface Options {
   ids: { label: string; value: number }[];
   tickets: { label: string; value: number }[];
@@ -30,7 +33,41 @@ export default function DefectsFilters({
     form.setFieldsValue(initialValues);
   }, [initialValues, form]);
 
-  const handleValuesChange = (_: any, values: DefectFilters) => onChange(values);
+  useEffect(() => {
+    try {
+      const hideClosed = JSON.parse(
+        localStorage.getItem(LS_HIDE_CLOSED_KEY) || 'false',
+      );
+      form.setFieldValue('hideClosed', hideClosed);
+    } catch {}
+    onChange(form.getFieldsValue());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const handler = (e: StorageEvent) => {
+      if (e.key === LS_HIDE_CLOSED_KEY) {
+        try {
+          form.setFieldValue('hideClosed', JSON.parse(e.newValue || 'false'));
+          onChange(form.getFieldsValue());
+        } catch {}
+      }
+    };
+    window.addEventListener('storage', handler);
+    return () => window.removeEventListener('storage', handler);
+  }, [form, onChange]);
+
+  const handleValuesChange = (_: any, values: DefectFilters) => {
+    onChange(values);
+    if (Object.prototype.hasOwnProperty.call(values, 'hideClosed')) {
+      try {
+        localStorage.setItem(
+          LS_HIDE_CLOSED_KEY,
+          JSON.stringify(values.hideClosed),
+        );
+      } catch {}
+    }
+  };
 
   const reset = () => {
     form.resetFields();
