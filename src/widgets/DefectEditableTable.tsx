@@ -55,50 +55,34 @@ export default function DefectEditableTable({ fields, add, remove, projectId }: 
   const FixByField = ({ field }: { field: any }) => {
     const brigadePath = [field.name, 'brigade_id'];
     const contractorPath = [field.name, 'contractor_id'];
-    const modePath = [field.name, 'executor_type'];
-
+    const brigadeVal: number | undefined = Form.useWatch(brigadePath, form);
     const contractorVal: number | undefined = Form.useWatch(contractorPath, form);
-    const currentMode: 'brigade' | 'contractor' =
-      Form.useWatch(modePath, form) ?? (contractorVal ? 'contractor' : 'brigade');
+    const initialMode = contractorVal ? 'contractor' : 'brigade';
+    const [mode, setMode] = React.useState<'brigade' | 'contractor'>(initialMode as any);
 
     React.useEffect(() => {
-      if (form.getFieldValue(modePath) == null) {
-        form.setFieldValue(modePath, currentMode);
-      }
-    }, []);
-
-    const handleModeChange = (val: 'brigade' | 'contractor') => {
-      form.setFieldValue(modePath, val);
-      if (val === 'brigade') {
+      if (mode === 'brigade') {
         form.setFieldValue(contractorPath, null);
       } else {
         form.setFieldValue(brigadePath, null);
       }
-    };
+    }, [mode]);
 
-    const namePath = currentMode === 'brigade' ? brigadePath : contractorPath;
-    const options = (currentMode === 'brigade' ? brigades : contractors).map((b: any) => ({
+    const namePath = mode === 'brigade' ? brigadePath : contractorPath;
+    const options = (mode === 'brigade' ? brigades : contractors).map((b: any) => ({
       value: b.id,
       label: b.name,
     }));
 
     return (
       <Space direction="vertical" style={{ width: '100%' }}>
-        <Radio.Group
-          size="small"
-          value={currentMode}
-          onChange={(e) => handleModeChange(e.target.value)}
-        >
+        <Radio.Group size="small" value={mode} onChange={(e) => setMode(e.target.value)}>
           <Radio.Button value="brigade">Собст</Radio.Button>
           <Radio.Button value="contractor">Подряд</Radio.Button>
         </Radio.Group>
-        <Form.Item
-          name={namePath}
-          noStyle
-          rules={[{ required: true, message: 'Выберите исполнителя' }]}
-        >
+        <Form.Item name={namePath} noStyle rules={[{ required: true, message: 'Выберите исполнителя' }]}>
           <Select
-            key={currentMode}
+            key={mode}
             size="small"
             placeholder="Исполнитель"
             showSearch
