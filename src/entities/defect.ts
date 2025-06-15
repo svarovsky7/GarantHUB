@@ -174,6 +174,26 @@ export function useUpdateDefectStatus() {
   });
 }
 
+/** Обновить признак устранения дефекта */
+export function useUpdateDefectFixed() {
+  const qc = useQueryClient();
+  const notify = useNotify();
+  return useMutation<{ id: number; is_fixed: boolean }, Error, { id: number; isFixed: boolean }>({
+    mutationFn: async ({ id, isFixed }) => {
+      const { data, error } = await supabase
+        .from(TABLE)
+        .update({ is_fixed: isFixed })
+        .eq('id', id)
+        .select('id, is_fixed')
+        .single();
+      if (error) throw error;
+      return data as { id: number; is_fixed: boolean };
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: [TABLE] }),
+    onError: (e) => notify.error(`Ошибка обновления: ${e.message}`),
+  });
+}
+
 /** Обновить данные устранения дефекта */
 export function useFixDefect() {
   const qc = useQueryClient();

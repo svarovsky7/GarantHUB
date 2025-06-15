@@ -1,10 +1,11 @@
 import React from 'react';
 import dayjs from 'dayjs';
-import { Table, Tag, Button, Tooltip, Space, Popconfirm, message } from 'antd';
+import { Table, Button, Tooltip, Space, Popconfirm, message } from 'antd';
 import { EyeOutlined, CheckOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useDefectsWithNames, useDeleteDefect } from '@/entities/defect';
 import DefectStatusSelect from '@/features/defect/DefectStatusSelect';
+import DefectFixedSelect from '@/features/defect/DefectFixedSelect';
 import DefectViewModal from '@/features/defect/DefectViewModal';
 import DefectFixModal from '@/features/defect/DefectFixModal';
 import type { DefectWithNames } from '@/shared/types/defectWithNames';
@@ -40,8 +41,9 @@ export default function TicketDefectsTable({ defectIds }: Props) {
       title: 'Устранён',
       dataIndex: 'is_fixed',
       width: 100,
-      render: (v: boolean) =>
-        v ? <Tag color="green">Да</Tag> : <Tag color="default">Нет</Tag>,
+      render: (_: boolean, row) => (
+        <DefectFixedSelect defectId={row.id} isFixed={row.is_fixed} />
+      ),
     },
     {
       title: 'Дата получения',
