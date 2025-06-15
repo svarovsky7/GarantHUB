@@ -14,10 +14,8 @@ import {
   EyeOutlined,
   DeleteOutlined,
   CheckOutlined,
-  CheckCircleTwoTone,
-  CloseCircleTwoTone,
 } from "@ant-design/icons";
-import { Tag } from "antd";
+
 import ruRU from "antd/locale/ru_RU";
 import { useDefects, useDeleteDefect } from "@/entities/defect";
 import { useTicketsSimple } from "@/entities/ticket";
@@ -31,6 +29,7 @@ import TableColumnsDrawer from "@/widgets/TableColumnsDrawer";
 import type { TableColumnSetting } from "@/shared/types/tableColumnSetting";
 import DefectViewModal from "@/features/defect/DefectViewModal";
 import DefectStatusSelect from "@/features/defect/DefectStatusSelect";
+import DefectFixedSelect from "@/features/defect/DefectFixedSelect";
 import ExportDefectsButton from "@/features/defect/ExportDefectsButton";
 import DefectFixModal from "@/features/defect/DefectFixModal";
 import { filterDefects } from "@/shared/utils/defectFilter";
@@ -173,16 +172,9 @@ export default function DefectsPage() {
         dataIndex: "is_fixed",
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           Number(a.is_fixed) - Number(b.is_fixed),
-        render: (v: boolean) =>
-          v ? (
-            <Tag icon={<CheckCircleTwoTone twoToneColor="#52c41a" />} color="success">
-              Да
-            </Tag>
-          ) : (
-            <Tag icon={<CloseCircleTwoTone twoToneColor="#eb2f96" />} color="default">
-              Нет
-            </Tag>
-          ),
+        render: (_: boolean, row: DefectWithInfo) => (
+          <DefectFixedSelect defectId={row.id} isFixed={row.is_fixed} />
+        ),
       },
       days: {
         title: (

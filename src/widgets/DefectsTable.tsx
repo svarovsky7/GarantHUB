@@ -8,17 +8,12 @@ import {
   Popconfirm,
   message,
   Space,
-  Tag,
 } from "antd";
-import {
-  EyeOutlined,
-  DeleteOutlined,
-  CheckCircleTwoTone,
-  CloseCircleTwoTone,
-} from "@ant-design/icons";
+import { EyeOutlined, DeleteOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useDeleteDefect } from "@/entities/defect";
 import DefectStatusSelect from "@/features/defect/DefectStatusSelect";
+import DefectFixedSelect from "@/features/defect/DefectFixedSelect";
 import type { DefectWithInfo } from "@/shared/types/defect";
 import type { DefectFilters } from "@/shared/types/defectFilters";
 import { filterDefects } from "@/shared/utils/defectFilter";
@@ -64,16 +59,9 @@ export default function DefectsTable({
       title: "Устранён",
       dataIndex: "is_fixed",
       sorter: (a, b) => Number(a.is_fixed) - Number(b.is_fixed),
-      render: (v: boolean) =>
-        v ? (
-          <Tag icon={<CheckCircleTwoTone twoToneColor="#52c41a" />} color="success">
-            Да
-          </Tag>
-        ) : (
-          <Tag icon={<CloseCircleTwoTone twoToneColor="#eb2f96" />} color="default">
-            Нет
-          </Tag>
-        ),
+      render: (_: boolean, row) => (
+        <DefectFixedSelect defectId={row.id} isFixed={row.is_fixed} />
+      ),
     },
     {
       title: (
