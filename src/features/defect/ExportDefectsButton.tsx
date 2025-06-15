@@ -22,7 +22,7 @@ export default function ExportDefectsButton({
 }: ExportDefectsButtonProps) {
   const handleClick = React.useCallback(async () => {
     const rows = filterDefects(defects, filters).map((d) => ({
-      ID: d.id,
+      'ID дефекта': d.id,
       'ID замечание': d.ticketIds.join(', '),
       Проект: d.projectNames ?? '',
       Объекты: d.unitNames ?? '',
