@@ -82,6 +82,7 @@ export default function DefectsPage() {
         projectIds,
         projectNames,
         fixByName,
+        days: d.received_at ? dayjs().diff(dayjs(d.received_at), 'day') + 1 : null,
         defectTypeName: d.defect_type?.name ?? '',
         defectStatusName: d.defect_status?.name ?? '',
       } as DefectWithInfo;
@@ -134,6 +135,11 @@ export default function DefectsPage() {
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           a.ticketIds.join(',').localeCompare(b.ticketIds.join(',')),
         render: (v: number[]) => v.join(', '),
+      },
+      days: {
+        title: 'Прошло дней с даты получения',
+        dataIndex: 'days',
+        sorter: (a: DefectWithInfo, b: DefectWithInfo) => (a.days ?? -1) - (b.days ?? -1),
       },
       project: {
         title: 'Проект',
