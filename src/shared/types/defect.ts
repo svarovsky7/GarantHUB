@@ -16,8 +16,6 @@ export interface DefectRecord {
   received_at: string | null;
   /** Дата устранения */
   fixed_at: string | null;
-  /** Массив идентификаторов вложений */
-  attachment_ids?: number[];
   /** Дата создания */
   created_at: string | null;
 }
