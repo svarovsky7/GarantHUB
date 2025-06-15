@@ -131,6 +131,7 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
         description: d.description || '',
         defect_type_id: d.type_id ?? null,
         defect_status_id: d.status_id ?? null,
+        fix_by: d.fix_by || null,
         received_at: d.received_at ? d.received_at.format('YYYY-MM-DD') : null,
         fixed_at: d.fixed_at ? d.fixed_at.format('YYYY-MM-DD') : null,
       }));

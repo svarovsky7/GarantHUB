@@ -23,11 +23,13 @@ export default function ExportDefectsButton({
   const handleClick = React.useCallback(async () => {
     const rows = filterDefects(defects, filters).map((d) => ({
       ID: d.id,
-      '№ замечания': d.ticketIds.join(', '),
+      'ID замечание': d.ticketIds.join(', '),
+      Проект: d.projectNames ?? '',
       Объекты: d.unitNames ?? '',
       Описание: d.description,
       Тип: d.defectTypeName ?? '',
       Статус: d.defectStatusName ?? '',
+      'Кем устраняется': d.fixByName ?? '',
       'Дата получения': d.received_at ? dayjs(d.received_at).format('DD.MM.YYYY') : '',
       'Дата создания': d.created_at ? dayjs(d.created_at).format('DD.MM.YYYY') : '',
     }));

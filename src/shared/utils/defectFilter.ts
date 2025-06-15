@@ -10,6 +10,12 @@ export function filterDefects<T extends {
   ticketIds: number[];
   unitIds: number[];
   created_at: string | null;
+  received_at: string | null;
+  projectIds?: number[];
+  defect_type_id: number | null;
+  defect_status_id: number | null;
+  fix_by: string | null;
+  defectStatusName?: string;
 }>(rows: T[], f: DefectFilters): T[] {
   return rows.filter((d) => {
     if (Array.isArray(f.id) && f.id.length > 0 && !f.id.includes(d.id)) {
@@ -29,12 +35,43 @@ export function filterDefects<T extends {
     ) {
       return false;
     }
+    if (
+      Array.isArray(f.projectId) &&
+      f.projectId.length > 0 &&
+      !(d.projectIds || []).some((p) => f.projectId!.includes(p))
+    ) {
+      return false;
+    }
+    if (
+      Array.isArray(f.typeId) &&
+      f.typeId.length > 0 &&
+      (d.defect_type_id == null || !f.typeId.includes(d.defect_type_id))
+    ) {
+      return false;
+    }
+    if (
+      Array.isArray(f.statusId) &&
+      f.statusId.length > 0 &&
+      (d.defect_status_id == null || !f.statusId.includes(d.defect_status_id))
+    ) {
+      return false;
+    }
+    if (
+      Array.isArray(f.fixBy) &&
+      f.fixBy.length > 0 &&
+      (!d.fix_by || !f.fixBy.includes(d.fix_by))
+    ) {
+      return false;
+    }
     if (f.period && f.period.length === 2) {
       const [from, to] = f.period;
-      const created = dayjs(d.created_at);
-      if (!created.isSameOrAfter(from, 'day') || !created.isSameOrBefore(to, 'day')) {
+      const rec = dayjs(d.received_at);
+      if (!rec.isSameOrAfter(from, 'day') || !rec.isSameOrBefore(to, 'day')) {
         return false;
       }
+    }
+    if (f.hideClosed && d.defectStatusName?.toLowerCase().includes('закры')) {
+      return false;
     }
     return true;
   });

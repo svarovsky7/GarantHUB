@@ -14,6 +14,7 @@ import ruRU from 'antd/locale/ru_RU';
 import { useDefects, useDeleteDefect } from '@/entities/defect';
 import { useTicketsSimple } from '@/entities/ticket';
 import { useUnitsByIds } from '@/entities/unit';
+import { useProjects } from '@/entities/project';
 import DefectsTable from '@/widgets/DefectsTable';
 import DefectsFilters from '@/widgets/DefectsFilters';
 import TableColumnsDrawer from '@/widgets/TableColumnsDrawer';
@@ -35,14 +36,16 @@ export default function DefectsPage() {
     [tickets],
   );
   const { data: units = [] } = useUnitsByIds(unitIds);
+  const { data: projects = [] } = useProjects();
 
   const data: DefectWithInfo[] = useMemo(() => {
     const unitMap = new Map(units.map((u) => [u.id, u.name]));
-    const ticketsMap = new Map<number, { id: number; unit_ids: number[] }[]>();
+    const projectMap = new Map(projects.map((p) => [p.id, p.name]));
+    const ticketsMap = new Map<number, { id: number; unit_ids: number[]; project_id: number }[]>();
     tickets.forEach((t: any) => {
       (t.defect_ids || []).forEach((id: number) => {
         const arr = ticketsMap.get(id) || [];
-        arr.push({ id: t.id, unit_ids: t.unit_ids || [] });
+        arr.push({ id: t.id, unit_ids: t.unit_ids || [], project_id: t.project_id });
         ticketsMap.set(id, arr);
       });
     });
@@ -53,16 +56,25 @@ export default function DefectsPage() {
         .map((id) => unitMap.get(id))
         .filter(Boolean)
         .join(', ');
+      const projectIds = Array.from(new Set(linked.map((l) => l.project_id)));
+      const projectNames = projectIds
+        .map((id) => projectMap.get(id))
+        .filter(Boolean)
+        .join(', ');
+      const fixByName = d.fix_by === 'contractor' ? 'Подрядчик' : 'Собственные силы';
       return {
         ...d,
         ticketIds: linked.map((l) => l.id),
         unitIds,
         unitNames,
+        projectIds,
+        projectNames,
+        fixByName,
         defectTypeName: d.defect_type?.name ?? '',
         defectStatusName: d.defect_status?.name ?? '',
       } as DefectWithInfo;
     });
-  }, [defects, tickets, units]);
+  }, [defects, tickets, units, projects]);
 
   const options = useMemo(() => {
     const uniq = (arr: any[], key: string) =>
@@ -74,6 +86,10 @@ export default function DefectsPage() {
       ids: uniq(data, 'id'),
       tickets: uniq(data.flatMap((d) => d.ticketIds.map((t) => ({ ticket: t }))), 'ticket').map((o) => ({ label: o.label, value: Number(o.label) })),
       units: units.map((u) => ({ label: u.name, value: u.id })),
+      projects: uniq(data, 'projectNames'),
+      types: uniq(data, 'defectTypeName'),
+      statuses: uniq(data, 'defectStatusName'),
+      fixBy: uniq(data, 'fixByName'),
     };
   }, [data, units]);
 
@@ -95,18 +111,18 @@ export default function DefectsPage() {
 
   const baseColumns = useMemo(() => {
     return {
-      id: {
-        title: 'ID',
-        dataIndex: 'id',
-        width: 80,
-        sorter: (a: DefectWithInfo, b: DefectWithInfo) => a.id - b.id,
-      },
       tickets: {
-        title: '№ замечания',
+        title: 'ID замечание',
         dataIndex: 'ticketIds',
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           a.ticketIds.join(',').localeCompare(b.ticketIds.join(',')),
         render: (v: number[]) => v.join(', '),
+      },
+      project: {
+        title: 'Проект',
+        dataIndex: 'projectNames',
+        sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
+          (a.projectNames || '').localeCompare(b.projectNames || ''),
       },
       units: {
         title: 'Объекты',
@@ -131,6 +147,12 @@ export default function DefectsPage() {
         dataIndex: 'defectStatusName',
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           (a.defectStatusName || '').localeCompare(b.defectStatusName || ''),
+      },
+      fixBy: {
+        title: 'Кем устраняется',
+        dataIndex: 'fixByName',
+        sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
+          (a.fixByName || '').localeCompare(b.fixByName || ''),
       },
       received: {
         title: 'Дата получения',
