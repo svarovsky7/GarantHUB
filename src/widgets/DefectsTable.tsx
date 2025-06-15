@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import dayjs from 'dayjs';
-import { Table, Button, Tooltip, Skeleton, Popconfirm, message } from 'antd';
+import { Table, Button, Tooltip, Skeleton, Popconfirm, message, Space } from 'antd';
 import { EyeOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useDeleteDefect } from '@/entities/defect';
@@ -92,7 +92,7 @@ export default function DefectsTable({ defects, filters, loading, columns: colum
       key: 'actions',
       width: 100,
       render: (_, row) => (
-        <>
+        <Space size="middle">
           <Tooltip title="Просмотр">
             <Button size="small" type="text" icon={<EyeOutlined />} onClick={() => onView && onView(row.id)} />
           </Tooltip>
@@ -108,7 +108,7 @@ export default function DefectsTable({ defects, filters, loading, columns: colum
           >
             <Button size="small" type="text" danger icon={<DeleteOutlined />} loading={isPending} />
           </Popconfirm>
-        </>
+        </Space>
       ),
     },
   ];
@@ -117,13 +117,16 @@ export default function DefectsTable({ defects, filters, loading, columns: colum
 
   if (loading) return <Skeleton active paragraph={{ rows: 6 }} />;
 
-  return (
-    <Table
-      rowKey="id"
-      columns={columns}
-      dataSource={filtered}
-      pagination={{ pageSize: 25 }}
-      style={{ background: '#fff' }}
-    />
-  );
+    return (
+      <Table
+        rowKey="id"
+        columns={columns}
+        dataSource={filtered}
+        pagination={{ pageSize: 25, showSizeChanger: true }}
+        size="middle"
+        /** Стилизуем строки аналогично таблице писем */
+        rowClassName={() => 'main-defect-row'}
+        style={{ background: '#fff' }}
+      />
+    );
 }

@@ -75,6 +75,11 @@ body {
     font-style: italic;
     border-left: 3px solid #722ed1;
 }
+.main-defect-row {
+    background: #eaf4ff !important;
+    font-weight: 600;
+    box-shadow: 0 1px 0 #b5d3f7;
+}
 /* Skeleton эффекты были выше (оставил без изменений) */
 .changed-field {
     background-color: #fffbe6;
