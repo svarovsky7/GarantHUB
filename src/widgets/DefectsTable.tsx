@@ -13,7 +13,6 @@ import { EyeOutlined, DeleteOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useDeleteDefect } from "@/entities/defect";
 import DefectStatusSelect from "@/features/defect/DefectStatusSelect";
-import DefectFixedSelect from "@/features/defect/DefectFixedSelect";
 import type { DefectWithInfo } from "@/shared/types/defect";
 import type { DefectFilters } from "@/shared/types/defectFilters";
 import { filterDefects } from "@/shared/utils/defectFilter";
@@ -54,14 +53,6 @@ export default function DefectsTable({
       sorter: (a, b) =>
         a.ticketIds.join(",").localeCompare(b.ticketIds.join(",")),
       render: (v: number[]) => v.join(", "),
-    },
-    {
-      title: "Устранён",
-      dataIndex: "is_fixed",
-      sorter: (a, b) => Number(a.is_fixed) - Number(b.is_fixed),
-      render: (_: boolean, row) => (
-        <DefectFixedSelect defectId={row.id} isFixed={row.is_fixed} />
-      ),
     },
     {
       title: (
@@ -181,8 +172,9 @@ export default function DefectsTable({
 
   const rowClassName = (row: DefectWithInfo) => {
     const closed = row.defectStatusName?.toLowerCase().includes("закры");
+    const checking = row.defectStatusName?.toLowerCase().includes("провер");
     if (closed) return "main-defect-row defect-closed-row";
-    if (row.is_fixed) return "main-defect-row defect-confirmed-row";
+    if (checking) return "main-defect-row defect-confirmed-row";
     return "main-defect-row";
   };
 

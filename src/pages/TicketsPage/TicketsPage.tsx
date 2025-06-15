@@ -62,7 +62,10 @@ export default function TicketsPage() {
   const { data: defectsInfo = [] } = useDefectsByIds(defectIds);
   const defectMap = useMemo(() => {
     const map = new Map<number, boolean>();
-    defectsInfo.forEach((d) => map.set(d.id, d.is_fixed));
+    defectsInfo.forEach((d) => {
+      const name = d.statusName?.toLowerCase() || '';
+      map.set(d.id, /закры|провер/.test(name));
+    });
     return map;
   }, [defectsInfo]);
   const qc = useQueryClient();

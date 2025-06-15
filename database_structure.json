@@ -463,10 +463,10 @@
   },
   {
     "table_name": "defects",
-    "column_name": "is_fixed",
-    "data_type": "boolean",
-    "is_nullable": "NO",
-    "column_default": "false"
+    "column_name": "fixed_by",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
   },
   {
     "table_name": "letter_links",
