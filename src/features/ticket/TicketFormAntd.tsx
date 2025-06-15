@@ -166,13 +166,24 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
             label="Проект"
             rules={[{ required: true }]}
           >
-            <Select allowClear options={projects.map((p) => ({ value: p.id, label: p.name }))} />
+            <Select
+              allowClear
+              showSearch
+              filterOption={(i, o) =>
+                (o?.label ?? '').toLowerCase().includes(i.toLowerCase())
+              }
+              options={projects.map((p) => ({ value: p.id, label: p.name }))}
+            />
           </Form.Item>
         </Col>
         <Col span={8}>
           <Form.Item name="unit_ids" label="Объекты" rules={[{ required: true }]}> 
             <Select
               mode="multiple"
+              showSearch
+              filterOption={(i, o) =>
+                (o?.label ?? '').toLowerCase().includes(i.toLowerCase())
+              }
               options={units.map((u) => ({ value: u.id, label: u.name }))}
               disabled={!projectId}
               onChange={(vals) => {
@@ -187,14 +198,27 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
             label="Ответственный инженер"
             rules={[{ required: true }]}
           >
-            <Select allowClear options={users.map((u) => ({ value: u.id, label: u.name }))} />
+            <Select
+              allowClear
+              showSearch
+              filterOption={(i, o) =>
+                (o?.label ?? '').toLowerCase().includes(i.toLowerCase())
+              }
+              options={users.map((u) => ({ value: u.id, label: u.name }))}
+            />
           </Form.Item>
         </Col>
       </Row>
       <Row gutter={16}>
         <Col span={8}>
           <Form.Item name="status_id" label="Статус" rules={[{ required: true }]}>
-            <Select options={statuses.map((s) => ({ value: s.id, label: s.name }))} />
+            <Select
+              showSearch
+              filterOption={(i, o) =>
+                (o?.label ?? '').toLowerCase().includes(i.toLowerCase())
+              }
+              options={statuses.map((s) => ({ value: s.id, label: s.name }))}
+            />
           </Form.Item>
         </Col>
         <Col span={8}>
