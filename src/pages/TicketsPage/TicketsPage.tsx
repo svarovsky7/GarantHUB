@@ -31,7 +31,6 @@ import TicketViewModal from "@/features/ticket/TicketViewModal";
 import LinkTicketsDialog from "@/features/ticket/LinkTicketsDialog";
 import ExportTicketsButton from "@/features/ticket/ExportTicketsButton";
 import TicketStatusSelect from "@/features/ticket/TicketStatusSelect";
-import TicketClosedSelect from "@/features/ticket/TicketClosedSelect";
 import TableColumnsDrawer from "@/widgets/TableColumnsDrawer";
 import type { TableColumnSetting } from "@/shared/types/tableColumnSetting";
 import type { ColumnsType } from "antd/es/table";
@@ -283,13 +282,6 @@ export default function TicketsPage() {
           />
         ),
       },
-      isClosed: {
-        title: 'Замечание закрыто',
-        dataIndex: 'isClosed',
-        width: 160,
-        sorter: (a: any, b: any) => Number(a.isClosed) - Number(b.isClosed),
-        render: (_: any, row: any) => <TicketClosedSelect ticketId={row.id} isClosed={row.isClosed} />,
-      },
       days: {
         title: 'Прошло дней с Даты получения',
         dataIndex: 'days',
@@ -427,7 +419,10 @@ export default function TicketsPage() {
   );
 
   const total = tickets.length;
-  const closedCount = useMemo(() => tickets.filter((t) => t.isClosed).length, [tickets]);
+  const closedCount = useMemo(
+    () => tickets.filter((t) => /закры/i.test(t.statusName ?? '')).length,
+    [tickets],
+  );
   const openCount = total - closedCount;
   const readyToExport = useMemo(
     () => filterTickets(ticketsWithNames, filters).length,
