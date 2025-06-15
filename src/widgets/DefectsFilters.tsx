@@ -9,9 +9,9 @@ interface Options {
   ids: { label: string; value: number }[];
   tickets: { label: string; value: number }[];
   units: { label: string; value: number }[];
-  projects: { label: string; value: string }[];
-  types: { label: string; value: string }[];
-  statuses: { label: string; value: string }[];
+  projects: { label: string; value: number }[];
+  types: { label: string; value: number }[];
+  statuses: { label: string; value: number }[];
   fixBy: { label: string; value: string }[];
 }
 
