@@ -84,9 +84,6 @@ export default function DefectsPage() {
         fixByName,
         defectTypeName: d.defect_type?.name ?? '',
         defectStatusName: d.defect_status?.name ?? '',
-        daysSinceFix: d.fixed_at
-          ? dayjs().diff(dayjs(d.fixed_at), 'day') + 1
-          : null,
       } as DefectWithInfo;
     });
   }, [defects, tickets, units, projects]);
@@ -205,12 +202,6 @@ export default function DefectsPage() {
           (a.fixed_at ? dayjs(a.fixed_at).valueOf() : 0) -
           (b.fixed_at ? dayjs(b.fixed_at).valueOf() : 0),
         render: fmt,
-      },
-      daysSinceFix: {
-        title: 'Прошло дней с даты устранения',
-        dataIndex: 'daysSinceFix',
-        sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
-          (a.daysSinceFix ?? -1) - (b.daysSinceFix ?? -1),
       },
       actions: {
         title: 'Действия',

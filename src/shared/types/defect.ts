@@ -40,6 +40,4 @@ export interface DefectWithInfo extends DefectRecord {
   projectIds?: number[];
   /** Названия проектов, объединённые в строку */
   projectNames?: string;
-  /** Прошло дней с даты устранения */
-  daysSinceFix?: number | null;
 }
