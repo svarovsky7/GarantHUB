@@ -33,6 +33,7 @@ export default function TicketDefectsTable({ defectIds }: Props) {
           defectId={row.id}
           statusId={row.defect_status_id}
           statusName={row.defectStatusName ?? undefined}
+          statusColor={row.defectStatusColor ?? undefined}
         />
       ),
     },

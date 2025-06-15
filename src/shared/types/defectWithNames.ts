@@ -10,5 +10,6 @@ export interface DefectWithNames {
   fixed_by: string | null;
   defectTypeName: string | null;
   defectStatusName: string | null;
+  defectStatusColor: string | null;
   fixedByUserName?: string | null;
 }

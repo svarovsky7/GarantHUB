@@ -2,7 +2,7 @@ import React from 'react';
 import { Form, Select, Input, DatePicker, Switch, Button } from 'antd';
 import { Project } from '@/shared/types/project';
 import { Unit } from '@/shared/types/unit';
-import { LitigationStage } from '@/shared/types/litigationStage';
+import { CourtCaseStatus } from '@/shared/types/courtCaseStatus';
 import { User } from '@/shared/types/user';
 import dayjs from 'dayjs';
 
@@ -26,7 +26,7 @@ export interface CourtCasesFiltersProps {
   onReset: () => void;
   projects: Project[];
   units: Unit[];
-  stages: LitigationStage[];
+  stages: CourtCaseStatus[];
   users: User[];
   idOptions: { value: number; label: string }[];
 }

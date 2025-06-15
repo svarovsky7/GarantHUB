@@ -378,6 +378,13 @@
     "column_default": null
   },
   {
+    "table_name": "defect_statuses",
+    "column_name": "color",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
     "table_name": "defect_types",
     "column_name": "id",
     "data_type": "integer",
@@ -630,17 +637,24 @@
     "column_default": null
   },
   {
-    "table_name": "litigation_stages",
+    "table_name": "court_cases_statuses",
     "column_name": "id",
     "data_type": "integer",
     "is_nullable": "NO",
-    "column_default": "nextval('litigation_stages_id_seq'::regclass)"
+    "column_default": "nextval('court_cases_statuses_id_seq'::regclass)"
   },
   {
-    "table_name": "litigation_stages",
+    "table_name": "court_cases_statuses",
     "column_name": "name",
     "data_type": "text",
     "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "court_cases_statuses",
+    "column_name": "color",
+    "data_type": "character varying",
+    "is_nullable": "YES",
     "column_default": null
   },
   {

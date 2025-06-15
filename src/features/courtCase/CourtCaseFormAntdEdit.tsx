@@ -5,7 +5,7 @@ import { useProjects } from '@/entities/project';
 import { useUnitsByProject } from '@/entities/unit';
 import { useContractors } from '@/entities/contractor';
 import { useUsers } from '@/entities/user';
-import { useLitigationStages } from '@/entities/litigationStage';
+import { useCourtCaseStatuses } from '@/entities/courtCaseStatus';
 import { usePersons } from '@/entities/person';
 import { useAttachmentTypes } from '@/entities/attachmentType';
 import { useCourtCase, useUpdateCourtCaseFull } from '@/entities/courtCase';
@@ -37,7 +37,7 @@ export default function CourtCaseFormAntdEdit({
   const { data: units = [] } = useUnitsByProject(projectId);
   const { data: contractors = [] } = useContractors();
   const { data: users = [] } = useUsers();
-  const { data: stages = [] } = useLitigationStages();
+  const { data: stages = [] } = useCourtCaseStatuses();
   const { data: personsList = [] } = usePersons();
   const { data: attachmentTypes = [] } = useAttachmentTypes();
   const update = useUpdateCourtCaseFull();

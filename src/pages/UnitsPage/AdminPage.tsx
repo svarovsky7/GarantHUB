@@ -9,7 +9,7 @@ import DefectTypesAdmin from "../../widgets/DefectTypesAdmin";
 import DefectStatusesAdmin from "../../widgets/DefectStatusesAdmin";
 import DefectDeadlinesAdmin from "../../widgets/DefectDeadlinesAdmin";
 import UsersTable from "../../widgets/UsersTable";
-import LitigationStagesAdmin from "../../widgets/LitigationStagesAdmin";
+import CourtCaseStatusesAdmin from "../../widgets/CourtCaseStatusesAdmin";
 import LetterTypesAdmin from "../../widgets/LetterTypesAdmin";
 import AttachmentTypesAdmin from "../../widgets/AttachmentTypesAdmin";
 import LetterStatusesAdmin from "../../widgets/LetterStatusesAdmin";
@@ -43,7 +43,7 @@ export default function AdminPage() {
           rowsPerPageOptions={[10, 25, 50, 100]}
         />
 
-        <LitigationStagesAdmin
+        <CourtCaseStatusesAdmin
           pageSize={25}
           rowsPerPageOptions={[10, 25, 50, 100]}
         />

@@ -1,4 +1,4 @@
-// src/features/litigationStage/LitigationStageForm.js
+// src/features/courtCaseStatus/CourtCaseStatusForm.tsx
 // -----------------------------------------------------------------------------
 // Модальная форма добавления / редактирования стадии судебного дела
 // -----------------------------------------------------------------------------
@@ -6,19 +6,20 @@
 import React, { useState } from 'react';
 import { Stack, TextField, Button, DialogActions } from '@mui/material';
 
-interface LitigationStageFormProps {
-    initialData?: { id?: number; name?: string };
-    onSubmit: (values: { name: string }) => void;
+interface CourtCaseStatusFormProps {
+    initialData?: { id?: number; name?: string; color?: string | null };
+    onSubmit: (values: { name: string; color: string }) => void;
     onCancel: () => void;
 }
 
-export default function LitigationStageForm({ initialData, onSubmit, onCancel }: LitigationStageFormProps) {
+export default function CourtCaseStatusForm({ initialData, onSubmit, onCancel }: CourtCaseStatusFormProps) {
     const [name, setName] = useState(initialData?.name ?? '');
+    const [color, setColor] = useState(initialData?.color ?? '#1976d2');
 
     const handleSave = (e) => {
         e.preventDefault();
         if (!name.trim()) return;
-        onSubmit({ name: name.trim() });
+        onSubmit({ name: name.trim(), color });
     };
 
     return (
@@ -32,6 +33,15 @@ export default function LitigationStageForm({ initialData, onSubmit, onCancel }:
                     required
                     size="small"
                     fullWidth
+                />
+                <TextField
+                    label="Цвет"
+                    type="color"
+                    value={color}
+                    onChange={(e) => setColor(e.target.value)}
+                    required
+                    fullWidth
+                    inputProps={{ style: { height: 48, padding: 0 } }}
                 />
                 <DialogActions sx={{ px: 0 }}>
                     <Button onClick={onCancel}>Отмена</Button>
