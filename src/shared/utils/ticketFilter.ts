@@ -12,7 +12,6 @@ import { TicketFilters } from '@/shared/types/ticketFilters';
 export function filterTickets<T extends {
   id: number;
   parentId?: number | null;
-  isClosed?: boolean;
   receivedAt?: Dayjs | null;
   customerRequestDate?: Dayjs | null;
   customerRequestNo?: string | null;
@@ -27,7 +26,7 @@ export function filterTickets<T extends {
     if (Array.isArray(f.id) && f.id.length > 0 && !f.id.includes(r.id)) {
       return false;
     }
-    if (f.hideClosed && r.isClosed) return false;
+    if (f.hideClosed && /закры/i.test(r.statusName ?? '')) return false;
     if (f.period && f.period.length === 2) {
       const [from, to] = f.period;
       if (!r.receivedAt) return false;

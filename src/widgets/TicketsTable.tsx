@@ -26,7 +26,6 @@ import {
 
 import { useDeleteTicket } from "@/entities/ticket";
 import TicketStatusSelect from "@/features/ticket/TicketStatusSelect";
-import TicketClosedSelect from "@/features/ticket/TicketClosedSelect";
 import { filterTickets } from "@/shared/utils/ticketFilter";
 import type { TicketFilters } from "@/shared/types/ticketFilters";
 import type { TicketWithNames } from "@/shared/types/ticketWithNames";
@@ -144,15 +143,6 @@ export default function TicketsTable({
             statusColor={row.statusColor}
             statusName={row.statusName}
           />
-        ),
-      },
-      {
-        title: "Замечание закрыто",
-        dataIndex: "isClosed",
-        width: 160,
-        sorter: (a, b) => Number(a.isClosed) - Number(b.isClosed),
-        render: (_, row) => (
-          <TicketClosedSelect ticketId={row.id} isClosed={row.isClosed} />
         ),
       },
       {
@@ -318,7 +308,7 @@ export default function TicketsTable({
   const rowClassName = (record: any) => {
     const classes = [record.parentId ? 'child-ticket-row' : 'main-ticket-row'];
     if (record.allDefectsFixed) classes.push('ticket-fixed-row');
-    if (record.isClosed) classes.push('ticket-closed-row');
+    if (/закры/i.test(record.statusName)) classes.push('ticket-closed-row');
     return classes.join(' ');
   };
 

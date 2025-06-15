@@ -37,7 +37,6 @@ export interface Ticket {
   responsibleEngineerId: string | null;
   createdBy: string | null;
   isWarranty: boolean;
-  isClosed: boolean;
   hasAttachments: boolean;
   attachments: TicketAttachment[];
   createdAt: Dayjs | null;
@@ -62,7 +61,6 @@ export function useDeleteTicket(): UseMutationResult<void, Error, number>;
 export function useAllTicketsSimple(): UseQueryResult<Array<{ id: number; status_id: number }>>;
 export function useUpdateTicket(): UseMutationResult<any, Error, { id: number; updates: object }>;
 export function useUpdateTicketStatus(): UseMutationResult<any, Error, { id: number; statusId: number }>;
-export function useUpdateTicketClosed(): UseMutationResult<any, Error, { id: number; isClosed: boolean }>;
 
 export function useTicketLinks(): UseQueryResult<TicketLink[]>;
 

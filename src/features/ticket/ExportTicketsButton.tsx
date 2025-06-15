@@ -29,7 +29,7 @@ export default function ExportTicketsButton({
       Объекты: t.unitNames,
       Гарантия: t.isWarranty ? 'Да' : 'Нет',
       Статус: t.statusName,
-      'Замечание закрыто': t.isClosed ? 'Да' : 'Нет',
+      'Замечание закрыто': /закры/i.test(t.statusName ?? '') ? 'Да' : 'Нет',
       'Дата получения': t.receivedAt ? t.receivedAt.format('DD.MM.YYYY') : '',
       'Прошло дней с Даты получения': t.receivedAt
         ? today.diff(t.receivedAt, 'day') + 1
