@@ -624,6 +624,7 @@ export function useUpdateTicketClosed() {
           : { is_fixed: true };
         await supabase.from('defects').update(update).in('id', data.defect_ids);
         qc.invalidateQueries({ queryKey: ['defects'] });
+        qc.invalidateQueries({ queryKey: ['defects-by-ids'] });
       }
       return { id: data.id, is_closed: data.is_closed };
     },

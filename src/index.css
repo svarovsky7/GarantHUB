@@ -84,6 +84,10 @@ body {
 .ticket-fixed-row {
   background: #f6ffed !important;
 }
+.ticket-closed-row {
+  color: #aaa;
+  background: inherit !important;
+}
 .main-case-row {
   background: #eaf4ff !important;
   font-weight: 600;

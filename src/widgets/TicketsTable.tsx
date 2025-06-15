@@ -318,6 +318,7 @@ export default function TicketsTable({
   const rowClassName = (record: any) => {
     const classes = [record.parentId ? 'child-ticket-row' : 'main-ticket-row'];
     if (record.allDefectsFixed) classes.push('ticket-fixed-row');
+    if (record.isClosed) classes.push('ticket-closed-row');
     return classes.join(' ');
   };
 

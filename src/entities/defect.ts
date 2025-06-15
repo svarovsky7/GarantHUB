@@ -177,6 +177,7 @@ export function useFixDefect() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [TABLE] });
+      qc.invalidateQueries({ queryKey: ['defects-by-ids'] });
       notify.success('Дефект обновлён');
     },
     onError: (e: any) => notify.error(`Ошибка обновления: ${e.message}`),

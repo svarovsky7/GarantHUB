@@ -112,24 +112,30 @@ export default function DefectsPage() {
   }, [defects, tickets, units, projects]);
 
   const options = useMemo(() => {
-    const uniq = (arr: any[], key: string) =>
-      Array.from(new Set(arr.map((i) => i[key]).filter(Boolean))).map((v) => ({
-        label: String(v),
-        value: v,
-      }));
-    return {
-      ids: uniq(data, "id"),
-      tickets: uniq(
-        data.flatMap((d) => d.ticketIds.map((t) => ({ ticket: t }))),
-        "ticket",
-      ).map((o) => ({ label: o.label, value: Number(o.label) })),
-      units: units.map((u) => ({ label: u.name, value: u.id })),
-      projects: uniq(data, "projectNames"),
-      types: uniq(data, "defectTypeName"),
-      statuses: uniq(data, "defectStatusName"),
-      fixBy: uniq(data, "fixByName"),
+    const uniq = (entries: [number | null, string | null][]) => {
+      const map = new Map<number, string>();
+      entries.forEach(([id, name]) => {
+        if (id != null && name) map.set(id, name);
+      });
+      return Array.from(map.entries()).map(([value, label]) => ({ value, label }));
     };
-  }, [data, units]);
+    return {
+      ids: Array.from(new Set(data.map((d) => d.id))).map((id) => ({
+        label: String(id),
+        value: id,
+      })),
+      tickets: Array.from(
+        new Set(data.flatMap((d) => d.ticketIds))
+      ).map((id) => ({ label: String(id), value: id })),
+      units: units.map((u) => ({ label: u.name, value: u.id })),
+      projects: projects.map((p) => ({ label: p.name, value: p.id })),
+      types: uniq(data.map((d) => [d.defect_type_id, d.defectTypeName])),
+      statuses: uniq(data.map((d) => [d.defect_status_id, d.defectStatusName])),
+      fixBy: Array.from(new Set(data.map((d) => d.fixByName).filter(Boolean))).map(
+        (name) => ({ label: String(name), value: String(name) })
+      ),
+    };
+  }, [data, units, projects]);
 
   const [filters, setFilters] = useState<DefectFilters>({});
   const [viewId, setViewId] = useState<number | null>(null);
