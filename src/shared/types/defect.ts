@@ -10,6 +10,8 @@ export interface DefectRecord {
   defect_status_id: number | null;
   /** Дата получения */
   received_at: string | null;
+  /** Дата устранения */
+  fixed_at: string | null;
   /** Дата создания */
   created_at: string | null;
 }
