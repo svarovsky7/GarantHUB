@@ -3,6 +3,7 @@ import { supabase } from '@/shared/api/supabaseClient';
 import { useNotify } from '@/shared/hooks/useNotify';
 import { addDefectAttachments, getAttachmentsByIds, ATTACH_BUCKET } from '@/entities/attachment';
 import type { DefectRecord } from '@/shared/types/defect';
+import type { DefectWithNames } from '@/shared/types/defectWithNames';
 
 export interface NewDefect {
   description: string;
@@ -80,6 +81,40 @@ export function useDefectsByIds(ids?: number[]) {
         .in('id', ids as number[]);
       if (error) throw error;
       return (data ?? []) as { id: number; is_fixed: boolean }[];
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
+/**
+ * Получить дефекты по их идентификаторам со связанными названиями
+ * типа и статуса.
+ */
+export function useDefectsWithNames(ids?: number[]) {
+  return useQuery<DefectWithNames[]>({
+    queryKey: ['defects-with-names', (ids ?? []).join(',')],
+    enabled: Array.isArray(ids) && ids.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from(TABLE)
+        .select(
+          'id, description, defect_type_id, defect_status_id, brigade_id, contractor_id, received_at, fixed_at, is_fixed, defect_type:defect_types(id,name), defect_status:defect_statuses(id,name)'
+        )
+        .in('id', ids as number[]);
+      if (error) throw error;
+      return (data ?? []).map((d: any) => ({
+        id: d.id,
+        description: d.description,
+        defect_type_id: d.defect_type_id,
+        defect_status_id: d.defect_status_id,
+        brigade_id: d.brigade_id,
+        contractor_id: d.contractor_id,
+        received_at: d.received_at,
+        fixed_at: d.fixed_at,
+        is_fixed: d.is_fixed,
+        defectTypeName: d.defect_type?.name ?? null,
+        defectStatusName: d.defect_status?.name ?? null,
+      })) as DefectWithNames[];
     },
     staleTime: 5 * 60_000,
   });
