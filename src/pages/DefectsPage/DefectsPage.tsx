@@ -83,6 +83,7 @@ export default function DefectsPage() {
         projectIds,
         projectNames,
         fixByName,
+        is_fixed: d.is_fixed,
         days: d.received_at ? dayjs().diff(dayjs(d.received_at), 'day') + 1 : null,
         defectTypeName: d.defect_type?.name ?? '',
         defectStatusName: d.defect_status?.name ?? '',
@@ -229,7 +230,7 @@ export default function DefectsPage() {
               <Button
                 size="small"
                 type="text"
-                icon={<CheckOutlined />}
+                icon={<CheckOutlined style={{ color: '#52c41a', fontSize: 16 }} />}
                 onClick={() => setFixId(row.id)}
               />
             </Tooltip>

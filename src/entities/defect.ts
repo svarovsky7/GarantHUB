@@ -12,6 +12,7 @@ export interface NewDefect {
   contractor_id: number | null;
   received_at: string | null;
   fixed_at: string | null;
+  is_fixed: boolean;
 }
 
 const TABLE = 'defects';
@@ -24,7 +25,7 @@ export function useDefects() {
       const { data, error } = await supabase
         .from(TABLE)
         .select(
-          'id, description, defect_type_id, defect_status_id, brigade_id, contractor_id, received_at, fixed_at, attachment_ids, created_at,' +
+          'id, description, defect_type_id, defect_status_id, brigade_id, contractor_id, received_at, fixed_at, is_fixed, attachment_ids, created_at,' +
           ' defect_type:defect_types(id,name), defect_status:defect_statuses(id,name)'
         )
         .order('id');
@@ -44,7 +45,7 @@ export function useDefect(id?: number) {
       const { data, error } = await supabase
         .from(TABLE)
         .select(
-          'id, description, defect_type_id, defect_status_id, brigade_id, contractor_id, received_at, fixed_at, attachment_ids, created_at,' +
+          'id, description, defect_type_id, defect_status_id, brigade_id, contractor_id, received_at, fixed_at, is_fixed, attachment_ids, created_at,' +
           ' defect_type:defect_types(id,name), defect_status:defect_statuses(id,name)'
         )
         .eq('id', id as number)
@@ -65,7 +66,7 @@ export function useCreateDefects() {
       if (!defects.length) return [];
       const { data, error } = await supabase
         .from(TABLE)
-        .insert(defects)
+        .insert(defects.map((d) => ({ ...d, is_fixed: false })))
         .select('id');
       if (error) throw error;
       return (data as { id: number }[]).map((d) => d.id);
@@ -141,7 +142,7 @@ export function useFixDefect() {
       }
       const { error } = await supabase
         .from(TABLE)
-        .update({ brigade_id, contractor_id, fixed_at, attachment_ids: ids })
+        .update({ brigade_id, contractor_id, fixed_at, is_fixed: true, attachment_ids: ids })
         .eq('id', id);
       if (error) throw error;
       return uploaded;

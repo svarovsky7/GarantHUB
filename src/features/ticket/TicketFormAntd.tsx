@@ -143,6 +143,7 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
         contractor_id: d.contractor_id ?? null,
         received_at: d.received_at ? d.received_at.format('YYYY-MM-DD') : null,
         fixed_at: d.fixed_at ? d.fixed_at.format('YYYY-MM-DD') : null,
+        is_fixed: false,
       }));
       const defectIds = await createDefects.mutateAsync(newDefs);
       const payload = {
