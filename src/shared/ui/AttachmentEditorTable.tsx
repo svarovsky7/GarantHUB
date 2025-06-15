@@ -1,20 +1,11 @@
 import React from 'react';
+import { Table, Button, Space, Tooltip, Select } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 import {
-  Table,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableCell,
-  IconButton,
-  Tooltip,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-} from '@mui/material';
-import FileIcon from '@mui/icons-material/InsertDriveFileOutlined';
-import DeleteIcon from '@mui/icons-material/DeleteOutline';
-import DownloadIcon from '@mui/icons-material/DownloadOutlined';
+  FileOutlined,
+  DeleteOutlined,
+  DownloadOutlined,
+} from '@ant-design/icons';
 
 interface Option { id: number | string; name: string; }
 
@@ -86,126 +77,135 @@ export default function AttachmentEditorTable({
 
   if (!remoteFiles.length && !newFiles.length) return null;
 
-  return (
-      <Table size="small" sx={{ mt: 1 }}>
-        <TableHead>
-          <TableRow>
-            <TableCell width={32}></TableCell>
-            <TableCell>Название</TableCell>
-            <TableCell>Тип</TableCell>
-            <TableCell align="right">Действия</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {remoteFiles.map((f) => (
-              <TableRow key={`r-${f.id}`}>
-                <TableCell>
-                  <FileIcon />
-                </TableCell>
-                <TableCell>{f.name}</TableCell>
-                <TableCell>
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <FormControl size="small" sx={{ minWidth: 160 }}>
-                      <Select
-                          labelId={`remote-type-${f.id}`}
-                          value={f.typeId ?? ''}
-                          onChange={(e) =>
-                              onChangeRemoteType?.(
-                                  f.id,
-                                  e.target.value ? Number(e.target.value) : null,
-                              )
-                          }
-                          label="Тип"
-                          displayEmpty
-                      >
-                        <MenuItem value="">
-                          <em>Тип не указан</em>
-                        </MenuItem>
-                        {attachmentTypes.map((t) => (
-                            <MenuItem key={t.id} value={t.id}>
-                              {t.name}
-                            </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                    {!onChangeRemoteType && (
-                        f.typeName ? (
-                            <span style={{ marginLeft: 8, fontSize: '0.8em' }}>{f.typeName}</span>
-                        ) : (
-                            f.mime && (
-                                <span style={{ marginLeft: 8, fontSize: '0.8em' }}>{f.mime}</span>
-                            )
-                        )
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell align="right">
-                  <Tooltip title="Скачать">
-                    <IconButton onClick={() => forceDownload(f)}>
-                      <DownloadIcon />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Удалить">
-                    <IconButton onClick={() => onRemoveRemote?.(f.id)} sx={{ ml: 0.5 }}>
-                      <DeleteIcon />
-                    </IconButton>
-                  </Tooltip>
-                </TableCell>
-              </TableRow>
-          ))}
-          {newFiles.map((f, i) => (
-              <TableRow key={`n-${i}`}>
-                <TableCell>
-                  <FileIcon />
-                </TableCell>
-                <TableCell>{f.file.name}</TableCell>
-                <TableCell>
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <FormControl size="small" sx={{ minWidth: 160 }}>
-                      <InputLabel id={`new-type-${i}`}>Тип</InputLabel>
-                      <Select
-                          labelId={`new-type-${i}`}
-                          value={f.typeId ?? ''}
-                          onChange={(e) =>
-                              onChangeNewType?.(
-                                  i,
-                                  e.target.value ? Number(e.target.value) : null,
-                              )
-                          }
-                          label="Тип"
-                          displayEmpty
-                      >
-                        <MenuItem value="">
-                          <em>Тип не указан</em>
-                        </MenuItem>
-                        {attachmentTypes.map((t) => (
-                            <MenuItem key={t.id} value={t.id}>
-                              {t.name}
-                            </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                    {!onChangeNewType &&
-                        f.mime && (
-                            <span style={{ marginLeft: 8, fontSize: '0.8em' }}>{f.mime}</span>
-                        )}
-                  </div>
-                </TableCell>
-                <TableCell align="right">
-                  <Tooltip title="Скачать">
-                    <IconButton component="a" href={objUrls[i]} download={f.file.name}>
-                      <DownloadIcon />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Удалить">
-                    <IconButton onClick={() => onRemoveNew?.(i)} sx={{ ml: 0.5 }}>
-                      <DeleteIcon />
-                    </IconButton>
-                  </Tooltip>
-                </TableCell>
-              </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-  );
+  interface Row {
+    key: string;
+    id?: string;
+    name: string;
+    typeId: number | null;
+    typeName?: string;
+    mime?: string;
+    file?: File;
+    path?: string;
+    isRemote: boolean;
+  }
+
+  const data: Row[] = [
+    ...remoteFiles.map<Row>((f) => ({
+      key: `r-${f.id}`,
+      id: f.id,
+      name: f.name,
+      typeId: f.typeId,
+      typeName: f.typeName,
+      mime: f.mime,
+      path: f.path,
+      isRemote: true,
+    })),
+    ...newFiles.map<Row>((f, i) => ({
+      key: `n-${i}`,
+      name: f.file.name,
+      typeId: f.typeId,
+      mime: f.mime,
+      file: f.file,
+      isRemote: false,
+    })),
+  ];
+
+  const columns: ColumnsType<Row> = [
+    {
+      dataIndex: 'icon',
+      width: 32,
+      render: () => <FileOutlined />,
+    },
+    {
+      title: 'Название',
+      dataIndex: 'name',
+      width: 200,
+      ellipsis: true,
+    },
+    {
+      title: 'Тип',
+      dataIndex: 'typeId',
+      width: 160,
+      render: (_: number | null, row) => (
+        <Space size={4}>
+          {onChangeRemoteType && row.isRemote ? (
+            <Select
+              size="small"
+              style={{ width: 120 }}
+              value={row.typeId ?? undefined}
+              onChange={(v) => onChangeRemoteType(row.id as string, v ?? null)}
+              options={[{ value: undefined, label: 'Тип не указан' }, ...attachmentTypes.map((t) => ({ value: t.id, label: t.name }))]}
+            />
+          ) : onChangeNewType && !row.isRemote ? (
+            <Select
+              size="small"
+              style={{ width: 120 }}
+              value={row.typeId ?? undefined}
+              onChange={(v) => onChangeNewType(Number(row.key.split('-')[1]), v ?? null)}
+              options={[{ value: undefined, label: 'Тип не указан' }, ...attachmentTypes.map((t) => ({ value: t.id, label: t.name }))]}
+            />
+          ) : row.typeName ? (
+            row.typeName
+          ) : (
+            row.mime
+          )}
+        </Space>
+      ),
+    },
+    {
+      title: 'Действия',
+      dataIndex: 'actions',
+      width: 100,
+      render: (_: unknown, row) => {
+        const idx = row.isRemote ? null : Number(row.key.split('-')[1]);
+        return (
+          <Space>
+            <Tooltip title="Скачать">
+              {row.isRemote ? (
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<DownloadOutlined />}
+                  onClick={() =>
+                    row.id &&
+                    row.path &&
+                    forceDownload({
+                      id: row.id,
+                      name: row.name,
+                      path: row.path,
+                      typeId: row.typeId,
+                      typeName: row.typeName,
+                      mime: row.mime,
+                    })
+                  }
+                />
+              ) : (
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<DownloadOutlined />}
+                  href={objUrls[idx as number]}
+                  download={row.name}
+                />
+              )}
+            </Tooltip>
+            <Tooltip title="Удалить">
+              <Button
+                type="text"
+                size="small"
+                danger
+                icon={<DeleteOutlined />}
+                onClick={() => {
+                  if (row.isRemote && row.id) onRemoveRemote?.(row.id);
+                  else onRemoveNew?.(idx as number);
+                }}
+              />
+            </Tooltip>
+          </Space>
+        );
+      },
+    },
+  ];
+
+  return <Table rowKey="key" size="small" pagination={false} columns={columns} dataSource={data} />;
 }
