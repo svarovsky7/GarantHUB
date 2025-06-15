@@ -90,15 +90,6 @@ export function uploadTicketAttachment(file, projectId, ticketId) {
 }
 
 /**
- * Загружает файл дефекта в хранилище Supabase.
- * @param {File} file
- * @param {number} defectId
- */
-export function uploadDefectAttachment(file, defectId) {
-    return upload(file, `defects/${defectId}`);
-}
-
-/**
  * Загружает файлы дела и создаёт записи в таблице attachments
  * с возвратом созданных строк.
  * @param {{file: File, type_id: number | null}[]} files
@@ -183,34 +174,6 @@ export async function addTicketAttachments(files, projectId, ticketId) {
 }
 
 /**
- * Загружает файлы дефекта и создаёт записи в таблице attachments
- * с возвратом созданных строк.
- * @param {{file: File, type_id: number | null}[]} files
- * @param {number} defectId
- */
-export async function addDefectAttachments(files, defectId) {
-    const uploaded = await Promise.all(
-        files.map(({ file }) => uploadDefectAttachment(file, defectId)),
-    );
-
-    const rows = uploaded.map((u, idx) => ({
-        file_url: u.url,
-        file_type: u.type,
-        original_name: files[idx].file.name,
-        storage_path: u.path,
-        attachment_type_id: files[idx].type_id ?? null,
-    }));
-
-    const { data, error } = await supabase
-        .from('attachments')
-        .insert(rows)
-        .select('id, storage_path, file_url, file_type, attachment_type_id, original_name');
-
-    if (error) throw error;
-    return data ?? [];
-}
-
-/**
  * Возвращает вложения по указанным id
  * @param {number[]} ids
  */
@@ -225,4 +188,4 @@ export async function getAttachmentsByIds(ids) {
     return data ?? [];
 }
 
-export { ATTACH_BUCKET, uploadDefectAttachment, addDefectAttachments };
+export { ATTACH_BUCKET };
