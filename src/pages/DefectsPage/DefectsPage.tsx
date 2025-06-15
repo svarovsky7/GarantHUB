@@ -257,9 +257,24 @@ export default function DefectsPage() {
     } as Record<string, ColumnsType<DefectWithInfo>[number]>;
   }, [removeDefect, removing]);
 
+  const columnOrder = [
+    'id',
+    'tickets',
+    'days',
+    'project',
+    'units',
+    'description',
+    'type',
+    'status',
+    'fixBy',
+    'received',
+    'created',
+    'actions',
+  ] as const;
+
   const [columnsState, setColumnsState] = useState<TableColumnSetting[]>(() => {
     const base = baseColumns;
-    const defaults = Object.keys(base).map((key) => ({
+    const defaults = columnOrder.map((key) => ({
       key,
       title: base[key].title as string,
       visible: true,
@@ -278,7 +293,7 @@ export default function DefectsPage() {
 
   const handleResetColumns = () => {
     const base = baseColumns;
-    const defaults = Object.keys(base).map((key) => ({
+    const defaults = columnOrder.map((key) => ({
       key,
       title: base[key].title as string,
       visible: true,
