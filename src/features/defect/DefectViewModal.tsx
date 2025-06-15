@@ -16,12 +16,6 @@ export default function DefectViewModal({ open, defectId, onClose }: Props) {
   const { data: defect, isLoading } = useDefect(defectId ?? undefined);
   const { data: brigades = [] } = useBrigades();
   const { data: contractors = [] } = useContractors();
-  if (!defectId) return null;
-  const title = defect
-    ? `Дефект с ID №${defect.id} от ${dayjs(
-        defect.received_at ?? defect.created_at,
-      ).format("DD.MM.YYYY")}`
-    : "Дефект";
   const fixByName = React.useMemo(() => {
     if (!defect) return "—";
     if (defect.brigade_id)
@@ -35,6 +29,12 @@ export default function DefectViewModal({ open, defectId, onClose }: Props) {
       );
     return "—";
   }, [defect, brigades, contractors]);
+  if (!defectId) return null;
+  const title = defect
+    ? `Дефект с ID №${defect.id} от ${dayjs(
+        defect.received_at ?? defect.created_at,
+      ).format("DD.MM.YYYY")}`
+    : "Дефект";
   return (
     <Modal
       open={open}
