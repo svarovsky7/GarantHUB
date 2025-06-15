@@ -11,11 +11,14 @@ import {
   Tooltip,
   Tag,
   Space,
+  Radio,
 } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useDefectTypes } from '@/entities/defectType';
 import { useDefectStatuses } from '@/entities/defectStatus';
 import { useDefectDeadlines } from '@/entities/defectDeadline';
+import { useBrigades } from '@/entities/brigade';
+import { useContractors } from '@/entities/contractor';
 import type { ColumnsType } from 'antd/es/table';
 
 /**
@@ -37,6 +40,8 @@ export default function DefectEditableTable({ fields, add, remove, projectId }: 
   const { data: defectTypes = [], isPending: loadingTypes } = useDefectTypes();
   const { data: defectStatuses = [], isPending: loadingStatuses } = useDefectStatuses();
   const { data: deadlines = [] } = useDefectDeadlines();
+  const { data: brigades = [] } = useBrigades();
+  const { data: contractors = [] } = useContractors();
   const form = Form.useFormInstance();
 
   const getFixDays = (typeId: number | null | undefined) => {
@@ -45,6 +50,34 @@ export default function DefectEditableTable({ fields, add, remove, projectId }: 
       (d) => d.project_id === projectId && d.defect_type_id === typeId,
     );
     return rec?.fix_days ?? null;
+  };
+
+  const FixByField = ({ field }: { field: any }) => {
+    const namePath = [field.name, 'fix_by'];
+    const value: string | undefined = Form.useWatch(namePath, form);
+    const initialMode = value?.startsWith('c:') ? 'contractor' : 'brigade';
+    const [mode, setMode] = React.useState<'brigade' | 'contractor'>(initialMode as any);
+    const options = (mode === 'brigade' ? brigades : contractors).map((b: any) => ({
+      value: `${mode === 'brigade' ? 'b' : 'c'}:${b.id}`,
+      label: b.name,
+    }));
+    return (
+      <Space direction="vertical" style={{ width: '100%' }}>
+        <Radio.Group value={mode} onChange={(e) => setMode(e.target.value)}>
+          <Radio.Button value="brigade">Собственные силы</Radio.Button>
+          <Radio.Button value="contractor">Подрядчик</Radio.Button>
+        </Radio.Group>
+        <Form.Item name={namePath} noStyle rules={[{ required: true, message: 'Выберите исполнителя' }]}>
+          <Select
+            size="small"
+            placeholder="Исполнитель"
+            showSearch
+            options={options}
+            filterOption={(i, o) => (o?.label ?? '').toLowerCase().includes(i.toLowerCase())}
+          />
+        </Form.Item>
+      </Space>
+    );
   };
 
   const columns: ColumnsType<any> = useMemo(
@@ -220,26 +253,7 @@ export default function DefectEditableTable({ fields, add, remove, projectId }: 
         dataIndex: 'fix_by',
         width: 180,
         ellipsis: true,
-        render: (_: any, field: any) => (
-          <Form.Item
-            name={[field.name, 'fix_by']}
-            noStyle
-            rules={[{ required: true, message: 'Выберите исполнителя' }]}
-          >
-            <Select
-              size="small"
-              placeholder="Исполнитель"
-              showSearch
-              filterOption={(i, o) =>
-                (o?.label ?? '').toLowerCase().includes(i.toLowerCase())
-              }
-              options={[
-                { value: 'own', label: 'Собственные силы' },
-                { value: 'contractor', label: 'Подрядчик' },
-              ]}
-            />
-          </Form.Item>
-        ),
+        render: (_: any, field: any) => <FixByField field={field} />, 
       },
       {
         title: '',

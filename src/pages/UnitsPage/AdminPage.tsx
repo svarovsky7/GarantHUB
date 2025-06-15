@@ -3,6 +3,7 @@ import { Container, Stack } from "@mui/material";
 
 import ProjectsTable from "../../widgets/ProjectsTable";
 import ContractorAdmin from "../../widgets/ContractorAdmin";
+import BrigadesAdmin from "../../widgets/BrigadesAdmin";
 import TicketStatusesAdmin from "../../widgets/TicketStatusesAdmin";
 import DefectTypesAdmin from "../../widgets/DefectTypesAdmin";
 import DefectStatusesAdmin from "../../widgets/DefectStatusesAdmin";
@@ -20,6 +21,7 @@ export default function AdminPage() {
         <ProjectsTable pageSize={25} rowsPerPageOptions={[10, 25, 50, 100]} />
 
         <ContractorAdmin pageSize={25} rowsPerPageOptions={[10, 25, 50, 100]} />
+        <BrigadesAdmin pageSize={25} rowsPerPageOptions={[10, 25, 50, 100]} />
 
         <TicketStatusesAdmin
           pageSize={25}
