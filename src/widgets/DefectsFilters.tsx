@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import { Form, Select, Button, DatePicker, Switch } from 'antd';
-const { Option } = Select;
 import type { DefectFilters } from '@/shared/types/defectFilters';
 
 const { RangePicker } = DatePicker;
@@ -99,12 +98,6 @@ export default function DefectsFilters({
       </Form.Item>
       <Form.Item name="ticketId" label="ID замечание">
         <Select mode="multiple" allowClear options={options.tickets} showSearch optionFilterProp="label" />
-      </Form.Item>
-      <Form.Item name="fixed" label="Устранён">
-        <Select allowClear>
-          <Option value="yes">Да</Option>
-          <Option value="no">Нет</Option>
-        </Select>
       </Form.Item>
       <Form.Item name="hideClosed" label="Скрыть закрытые" valuePropName="checked">
         <Switch />

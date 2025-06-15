@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import dayjs from "dayjs";
-import { Modal, Form, DatePicker } from "antd";
+import { Modal, Form, DatePicker, Button } from "antd";
 import FileDropZone from "@/shared/ui/FileDropZone";
 import AttachmentEditorTable from "@/shared/ui/AttachmentEditorTable";
 import { useBrigades } from "@/entities/brigade";
@@ -100,8 +100,17 @@ export default function DefectFixModal({ defectId, open, onClose }: Props) {
     <Modal
       open={open}
       onCancel={onClose}
-      onOk={handleOk}
-      confirmLoading={fix.isPending}
+      footer={
+        <Button
+          type="primary"
+          size="large"
+          onClick={handleOk}
+          loading={fix.isPending}
+          block
+        >
+          Подтвердить, что дефект устранен
+        </Button>
+      }
       title={
         defect
           ? `Устранение дефекта с ID №${defect.id} от ${

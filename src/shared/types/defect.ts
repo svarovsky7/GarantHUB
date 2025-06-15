@@ -16,8 +16,8 @@ export interface DefectRecord {
   received_at: string | null;
   /** Дата устранения */
   fixed_at: string | null;
-  /** Дефект устранён */
-  is_fixed: boolean;
+  /** Пользователь, подтвердивший устранение */
+  fixed_by: string | null;
   /** Массив идентификаторов вложений */
   attachment_ids?: number[];
   /** Дата создания */
@@ -40,6 +40,8 @@ export interface DefectWithInfo extends DefectRecord {
   defectStatusName?: string;
   /** Название исполнителя */
   fixByName?: string;
+  /** Пользователь, подтвердивший устранение */
+  fixedByUserName?: string | null;
   /** Идентификаторы проектов, связанные с замечаниями */
   projectIds?: number[];
   /** Названия проектов, объединённые в строку */

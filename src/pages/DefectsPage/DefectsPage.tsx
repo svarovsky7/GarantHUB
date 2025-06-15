@@ -29,7 +29,6 @@ import TableColumnsDrawer from "@/widgets/TableColumnsDrawer";
 import type { TableColumnSetting } from "@/shared/types/tableColumnSetting";
 import DefectViewModal from "@/features/defect/DefectViewModal";
 import DefectStatusSelect from "@/features/defect/DefectStatusSelect";
-import DefectFixedSelect from "@/features/defect/DefectFixedSelect";
 import ExportDefectsButton from "@/features/defect/ExportDefectsButton";
 import DefectFixModal from "@/features/defect/DefectFixModal";
 import { filterDefects } from "@/shared/utils/defectFilter";
@@ -100,7 +99,6 @@ export default function DefectsPage() {
         projectIds,
         projectNames,
         fixByName,
-        is_fixed: d.is_fixed,
         days: d.received_at
           ? dayjs().diff(dayjs(d.received_at), "day") + 1
           : null,
@@ -166,15 +164,6 @@ export default function DefectsPage() {
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           a.ticketIds.join(",").localeCompare(b.ticketIds.join(",")),
         render: (v: number[]) => v.join(", "),
-      },
-      fixed: {
-        title: "Устранён",
-        dataIndex: "is_fixed",
-        sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
-          Number(a.is_fixed) - Number(b.is_fixed),
-        render: (_: boolean, row: DefectWithInfo) => (
-          <DefectFixedSelect defectId={row.id} isFixed={row.is_fixed} />
-        ),
       },
       days: {
         title: (
@@ -306,7 +295,6 @@ export default function DefectsPage() {
   const columnOrder = [
     "id",
     "tickets",
-    "fixed",
     "days",
     "project",
     "units",

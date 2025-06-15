@@ -1,6 +1,6 @@
 import React from "react";
 import dayjs from "dayjs";
-import { Modal, Typography, Skeleton, Tag } from "antd";
+import { Modal, Typography, Skeleton } from "antd";
 import { useDefect, signedUrl } from "@/entities/defect";
 import { useBrigades } from "@/entities/brigade";
 import { useContractors } from "@/entities/contractor";
@@ -59,14 +59,6 @@ export default function DefectViewModal({ open, defectId, onClose }: Props) {
           </Typography.Text>
           <Typography.Text>
             <b>Статус:</b> {defect.defect_status?.name ?? "—"}
-          </Typography.Text>
-          <Typography.Text>
-            <b>Устранён:</b>{" "}
-            {defect.is_fixed ? (
-              <Tag color="green">Да</Tag>
-            ) : (
-              <Tag color="default">Нет</Tag>
-            )}
           </Typography.Text>
           <Typography.Text>
             <b>Кем устраняется:</b> {fixByName}

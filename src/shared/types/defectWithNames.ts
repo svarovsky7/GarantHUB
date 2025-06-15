@@ -7,7 +7,8 @@ export interface DefectWithNames {
   contractor_id: number | null;
   received_at: string | null;
   fixed_at: string | null;
-  is_fixed: boolean;
+  fixed_by: string | null;
   defectTypeName: string | null;
   defectStatusName: string | null;
+  fixedByUserName?: string | null;
 }

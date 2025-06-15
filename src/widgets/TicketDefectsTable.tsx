@@ -5,7 +5,6 @@ import { EyeOutlined, CheckOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useDefectsWithNames, useDeleteDefect } from '@/entities/defect';
 import DefectStatusSelect from '@/features/defect/DefectStatusSelect';
-import DefectFixedSelect from '@/features/defect/DefectFixedSelect';
 import DefectViewModal from '@/features/defect/DefectViewModal';
 import DefectFixModal from '@/features/defect/DefectFixModal';
 import type { DefectWithNames } from '@/shared/types/defectWithNames';
@@ -35,14 +34,6 @@ export default function TicketDefectsTable({ defectIds }: Props) {
           statusId={row.defect_status_id}
           statusName={row.defectStatusName ?? undefined}
         />
-      ),
-    },
-    {
-      title: 'Устранён',
-      dataIndex: 'is_fixed',
-      width: 100,
-      render: (_: boolean, row) => (
-        <DefectFixedSelect defectId={row.id} isFixed={row.is_fixed} />
       ),
     },
     {

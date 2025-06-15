@@ -593,9 +593,7 @@ export function useUpdateTicketStatus() {
           .from('defect_statuses')
           .select('id, name');
         const closedId = statuses?.find((s) => /закры/i.test(s.name))?.id ?? null;
-        const update = closedId
-          ? { defect_status_id: closedId, is_fixed: true }
-          : { is_fixed: true };
+        const update = closedId ? { defect_status_id: closedId } : {};
         await supabase.from('defects').update(update).in('id', data.defect_ids);
         qc.invalidateQueries({ queryKey: ['defects'] });
         qc.invalidateQueries({ queryKey: ['defects-by-ids'] });
