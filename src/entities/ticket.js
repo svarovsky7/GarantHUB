@@ -471,7 +471,7 @@ export function useDeleteTicket() {
     mutationFn: async (ticketId) => {
       const { data: ticket } = await supabase
         .from("tickets")
-        .select("attachment_ids")
+        .select("attachment_ids, defect_ids")
         .eq("id", ticketId)
         .single();
       const ids = ticket?.attachment_ids || [];
@@ -483,6 +483,29 @@ export function useDeleteTicket() {
             .remove(files.map((f) => f.storage_path));
         }
         await supabase.from("attachments").delete().in("id", ids);
+      }
+
+      const defectIds = ticket?.defect_ids || [];
+      if (defectIds.length) {
+        const { data: defects } = await supabase
+          .from("defects")
+          .select("id, attachment_ids")
+          .in("id", defectIds);
+        const attIds = Array.from(
+          new Set(
+            (defects ?? []).flatMap((d) => d.attachment_ids || [])
+          ),
+        );
+        if (attIds.length) {
+          const files = await getAttachmentsByIds(attIds);
+          if (files?.length) {
+            await supabase.storage
+              .from(ATTACH_BUCKET)
+              .remove(files.map((f) => f.storage_path));
+          }
+          await supabase.from("attachments").delete().in("id", attIds);
+        }
+        await supabase.from("defects").delete().in("id", defectIds);
       }
 
       await supabase
@@ -587,10 +610,22 @@ export function useUpdateTicketClosed() {
         .update({ is_closed: isClosed })
         .eq("id", id)
         .eq("project_id", projectId)
-        .select("id, is_closed")
+        .select("id, is_closed, defect_ids")
         .single();
       if (error) throw error;
-      return data;
+
+      if (isClosed && data?.defect_ids?.length) {
+        const { data: statuses } = await supabase
+          .from('defect_statuses')
+          .select('id, name');
+        const closedId = statuses?.find((s) => /закры/i.test(s.name))?.id ?? null;
+        const update = closedId
+          ? { defect_status_id: closedId, is_fixed: true }
+          : { is_fixed: true };
+        await supabase.from('defects').update(update).in('id', data.defect_ids);
+        qc.invalidateQueries({ queryKey: ['defects'] });
+      }
+      return { id: data.id, is_closed: data.is_closed };
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ["tickets", projectId] });

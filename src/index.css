@@ -81,6 +81,9 @@ body {
   font-style: italic;
   border-left: 3px solid #1890ff;
 }
+.ticket-fixed-row {
+  background: #f6ffed !important;
+}
 .main-case-row {
   background: #eaf4ff !important;
   font-weight: 600;

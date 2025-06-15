@@ -316,8 +316,9 @@ export default function TicketsTable({
   if (loading) return <Skeleton active paragraph={{ rows: 6 }} />;
 
   const rowClassName = (record: any) => {
-    if (!record.parentId) return 'main-ticket-row';
-    return 'child-ticket-row';
+    const classes = [record.parentId ? 'child-ticket-row' : 'main-ticket-row'];
+    if (record.allDefectsFixed) classes.push('ticket-fixed-row');
+    return classes.join(' ');
   };
 
   return (
