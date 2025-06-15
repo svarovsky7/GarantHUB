@@ -406,6 +406,13 @@
     "column_default": null
   },
   {
+    "table_name": "defects",
+    "column_name": "fixed_at",
+    "data_type": "date",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
     "table_name": "letter_links",
     "column_name": "parent_id",
     "data_type": "bigint",
