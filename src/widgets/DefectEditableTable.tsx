@@ -63,6 +63,14 @@ export default function DefectEditableTable({ fields, add, remove, projectId }: 
     }));
 
     React.useEffect(() => {
+      if (!value) return;
+      const nextMode = value.startsWith('c:') ? 'contractor' : 'brigade';
+      if (nextMode !== mode) {
+        setMode(nextMode);
+      }
+    }, [value]);
+
+    React.useEffect(() => {
       const current: string | undefined = form.getFieldValue(namePath);
       const prefix = mode === 'brigade' ? 'b:' : 'c:';
       if (current && !current.startsWith(prefix)) {
