@@ -462,6 +462,13 @@
     "column_default": "ARRAY[]::integer[]"
   },
   {
+    "table_name": "defects",
+    "column_name": "is_fixed",
+    "data_type": "boolean",
+    "is_nullable": "NO",
+    "column_default": "false"
+  },
+  {
     "table_name": "letter_links",
     "column_name": "parent_id",
     "data_type": "bigint",
