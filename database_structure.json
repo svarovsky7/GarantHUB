@@ -413,6 +413,13 @@
     "column_default": null
   },
   {
+    "table_name": "defects",
+    "column_name": "fix_by",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
     "table_name": "letter_links",
     "column_name": "parent_id",
     "data_type": "bigint",
