@@ -61,17 +61,28 @@ export default function DefectEditableTable({ fields, add, remove, projectId }: 
       value: `${mode === 'brigade' ? 'b' : 'c'}:${b.id}`,
       label: b.name,
     }));
+
+    React.useEffect(() => {
+      const current: string | undefined = form.getFieldValue(namePath);
+      const prefix = mode === 'brigade' ? 'b:' : 'c:';
+      if (current && !current.startsWith(prefix)) {
+        form.setFieldValue(namePath, undefined);
+      }
+    }, [mode]);
+
     return (
       <Space direction="vertical" style={{ width: '100%' }}>
-        <Radio.Group value={mode} onChange={(e) => setMode(e.target.value)}>
-          <Radio.Button value="brigade">Собственные силы</Radio.Button>
-          <Radio.Button value="contractor">Подрядчик</Radio.Button>
+        <Radio.Group size="small" value={mode} onChange={(e) => setMode(e.target.value)}>
+          <Radio.Button value="brigade">Собст</Radio.Button>
+          <Radio.Button value="contractor">Подряд</Radio.Button>
         </Radio.Group>
         <Form.Item name={namePath} noStyle rules={[{ required: true, message: 'Выберите исполнителя' }]}>
           <Select
+            key={mode}
             size="small"
             placeholder="Исполнитель"
             showSearch
+            style={{ width: '100%' }}
             options={options}
             filterOption={(i, o) => (o?.label ?? '').toLowerCase().includes(i.toLowerCase())}
           />
@@ -155,7 +166,7 @@ export default function DefectEditableTable({ fields, add, remove, projectId }: 
               filterOption={(i, o) =>
                 (o?.label ?? '').toLowerCase().includes(i.toLowerCase())
               }
-              style={{ minWidth: 160 }}
+              style={{ minWidth: 160, width: '100%' }}
               dropdownMatchSelectWidth={false}
               options={defectTypes.map((d) => ({ value: d.id, label: d.name }))}
             />
