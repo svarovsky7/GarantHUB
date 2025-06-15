@@ -7,6 +7,7 @@ import { useBrigades } from "@/entities/brigade";
 import { useContractors } from "@/entities/contractor";
 import { useAttachmentTypes } from "@/entities/attachmentType";
 import { useFixDefect, useDefect, signedUrl } from "@/entities/defect";
+import { useNotify } from "@/shared/hooks/useNotify";
 import type {
   NewDefectFile,
   RemoteDefectFile,
@@ -26,6 +27,7 @@ export default function DefectFixModal({ defectId, open, onClose }: Props) {
   const { data: attachmentTypes = [] } = useAttachmentTypes();
   const { data: defect } = useDefect(defectId ?? undefined);
   const fix = useFixDefect();
+  const notify = useNotify();
 
   const [fixBy, setFixBy] = useState<FixByValue>({
     brigade_id: null,
@@ -34,6 +36,9 @@ export default function DefectFixModal({ defectId, open, onClose }: Props) {
   const [fixedAt, setFixedAt] = useState<dayjs.Dayjs | null>(null);
   const [files, setFiles] = useState<NewDefectFile[]>([]);
   const [remoteFiles, setRemoteFiles] = useState<RemoteDefectFile[]>([]);
+  const [changedTypes, setChangedTypes] = useState<Record<string, number | null>>({});
+  const [initialTypes, setInitialTypes] = useState<Record<string, number | null>>({});
+  const [removedIds, setRemovedIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (defect && open) {
@@ -43,7 +48,7 @@ export default function DefectFixModal({ defectId, open, onClose }: Props) {
       });
       const baseDate = defect.fixed_at ? dayjs(defect.fixed_at) : dayjs();
       setFixedAt(baseDate.isBefore(dayjs(), "day") ? dayjs() : baseDate);
-      setRemoteFiles(
+      const atts =
         defect.attachments?.map((f: any) => ({
           id: String(f.id),
           name: f.original_name ?? f.storage_path.split("/").pop(),
@@ -52,8 +57,15 @@ export default function DefectFixModal({ defectId, open, onClose }: Props) {
           type: f.file_type,
           attachment_type_id: f.attachment_type_id ?? null,
           attachment_type_name: f.attachment_type_name,
-        })) ?? [],
-      );
+        })) ?? [];
+      setRemoteFiles(atts);
+      const map: Record<string, number | null> = {};
+      atts.forEach((f) => {
+        map[f.id] = f.attachment_type_id ?? null;
+      });
+      setChangedTypes(map);
+      setInitialTypes(map);
+      setRemovedIds([]);
     }
   }, [defect, open]);
 
@@ -65,31 +77,37 @@ export default function DefectFixModal({ defectId, open, onClose }: Props) {
     setFiles((p) => p.map((f, i) => (i === idx ? { ...f, type_id: type } : f)));
   };
 
+  const changeRemoteType = (id: string, type: number | null) => {
+    setChangedTypes((p) => ({ ...p, [id]: type }));
+  };
+
   const removeFile = (idx: number) => {
     setFiles((p) => p.filter((_, i) => i !== idx));
   };
 
+  const removeRemote = (id: string) => {
+    setRemoteFiles((p) => p.filter((f) => f.id !== id));
+    setRemovedIds((p) => [...p, id]);
+  };
+
   const handleOk = async () => {
     if (!defectId) return;
+    if (files.some((f) => f.type_id == null)) {
+      notify.error("Укажите тип для всех файлов");
+      return;
+    }
+    const updated = Object.entries(changedTypes)
+      .filter(([id, t]) => initialTypes[id] !== t)
+      .map(([id, t]) => ({ id: Number(id), type_id: t }));
     const uploaded = await fix.mutateAsync({
       id: defectId,
       brigade_id: fixBy.brigade_id,
       contractor_id: fixBy.contractor_id,
       fixed_at: fixedAt ? fixedAt.format("YYYY-MM-DD") : null,
       attachments: files,
+      removedAttachmentIds: removedIds.map(Number),
+      updatedAttachments: updated,
     });
-    setRemoteFiles((p) => [
-      ...p,
-      ...uploaded.map((u: any) => ({
-        id: String(u.id),
-        name: u.original_name ?? u.storage_path.split("/").pop(),
-        path: u.storage_path,
-        url: u.file_url,
-        type: u.file_type,
-        attachment_type_id: u.attachment_type_id ?? null,
-        attachment_type_name: u.attachment_type_name,
-      })),
-    ]);
     setFiles([]);
     setFixBy({ brigade_id: null, contractor_id: null });
     setFixedAt(null);
@@ -141,14 +159,23 @@ export default function DefectFixModal({ defectId, open, onClose }: Props) {
         <Form.Item label="Файлы">
           <FileDropZone onFiles={handleFiles} />
           <AttachmentEditorTable
-            remoteFiles={remoteFiles}
+            remoteFiles={remoteFiles.map((f) => ({
+              id: f.id,
+              name: f.name,
+              path: f.path,
+              typeId: changedTypes[f.id] ?? f.attachment_type_id,
+              typeName: f.attachment_type_name,
+              mime: f.type,
+            }))}
             newFiles={files.map((f) => ({
               file: f.file,
               typeId: f.type_id,
               mime: f.file.type,
             }))}
             attachmentTypes={attachmentTypes}
+            onRemoveRemote={removeRemote}
             onRemoveNew={removeFile}
+            onChangeRemoteType={changeRemoteType}
             onChangeNewType={changeType}
             getSignedUrl={(p, n) => signedUrl(p, n)}
           />
