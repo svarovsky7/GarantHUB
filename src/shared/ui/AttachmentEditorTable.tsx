@@ -105,7 +105,7 @@ export default function AttachmentEditorTable({
                 <TableCell>{f.name}</TableCell>
                 <TableCell>
                   <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <FormControl size="small" sx={{ minWidth: 120 }}>
+                    <FormControl size="small" sx={{ minWidth: 160 }}>
                       <Select
                           labelId={`remote-type-${f.id}`}
                           value={f.typeId ?? ''}
@@ -161,7 +161,7 @@ export default function AttachmentEditorTable({
                 <TableCell>{f.file.name}</TableCell>
                 <TableCell>
                   <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <FormControl size="small" sx={{ minWidth: 120 }}>
+                    <FormControl size="small" sx={{ minWidth: 160 }}>
                       <InputLabel id={`new-type-${i}`}>Тип</InputLabel>
                       <Select
                           labelId={`new-type-${i}`}

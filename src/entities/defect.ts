@@ -192,12 +192,16 @@ export function useFixDefect() {
       contractor_id,
       fixed_at,
       attachments = [],
+      removedAttachmentIds = [],
+      updatedAttachments = [],
     }: {
       id: number;
       brigade_id: number | null;
       contractor_id: number | null;
       fixed_at: string | null;
       attachments: { file: File; type_id: number | null }[];
+      removedAttachmentIds?: number[];
+      updatedAttachments?: { id: number; type_id: number | null }[];
     }) => {
       const { data: current } = await supabase
         .from(TABLE)
@@ -205,10 +209,30 @@ export function useFixDefect() {
         .eq('id', id)
         .single();
       let ids: number[] = current?.attachment_ids ?? [];
+      if (removedAttachmentIds.length) {
+        const { data: atts } = await supabase
+          .from('attachments')
+          .select('storage_path')
+          .in('id', removedAttachmentIds);
+        if (atts?.length)
+          await supabase.storage
+            .from(ATTACH_BUCKET)
+            .remove(atts.map((a) => a.storage_path));
+        await supabase.from('attachments').delete().in('id', removedAttachmentIds);
+        ids = ids.filter((i) => !removedAttachmentIds.includes(Number(i)));
+      }
       let uploaded: any[] = [];
       if (attachments.length) {
         uploaded = await addDefectAttachments(attachments, id);
         ids = ids.concat(uploaded.map((u) => u.id));
+      }
+      if (updatedAttachments.length) {
+        for (const a of updatedAttachments) {
+          await supabase
+            .from('attachments')
+            .update({ attachment_type_id: a.type_id })
+            .eq('id', a.id);
+        }
       }
       const userId = useAuthStore.getState().profile?.id ?? null;
       const { data: st } = await supabase
@@ -231,8 +255,9 @@ export function useFixDefect() {
       if (error) throw error;
       return uploaded;
     },
-    onSuccess: () => {
+    onSuccess: (_res, vars) => {
       qc.invalidateQueries({ queryKey: [TABLE] });
+      qc.invalidateQueries({ queryKey: ['defect', vars.id] });
       qc.invalidateQueries({ queryKey: ['defects-by-ids'] });
       notify.success('Дефект обновлён');
     },
