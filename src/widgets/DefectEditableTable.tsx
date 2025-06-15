@@ -20,6 +20,7 @@ import { useDefectDeadlines } from '@/entities/defectDeadline';
 import { useBrigades } from '@/entities/brigade';
 import { useContractors } from '@/entities/contractor';
 import type { ColumnsType } from 'antd/es/table';
+import type { FormInstance } from 'antd/es/form';
 
 /**
  * Props for {@link DefectEditableTable}
@@ -31,6 +32,85 @@ interface Props {
   /** ID выбранного проекта, используется для сроков устранения */
   projectId?: number | null;
 }
+
+/**
+ * Поле выбора исполнителя дефекта: собственная бригада или подрядчик.
+ * Используется внутри таблицы редактирования дефектов.
+ */
+interface FixByFieldProps {
+  field: any;
+  /** Ссылка на форму дефекта */
+  form: FormInstance;
+  /** Список собственных бригад */
+  brigades: Array<{ id: number; name: string }>;
+  /** Список подрядчиков */
+  contractors: Array<{ id: number; name: string }>;
+}
+
+const FixByField: React.FC<FixByFieldProps> = React.memo(
+  ({ field, form, brigades, contractors }) => {
+    const brigadePath = [field.name, 'brigade_id'];
+    const contractorPath = [field.name, 'contractor_id'];
+    const brigadeVal: number | undefined = Form.useWatch(brigadePath, form);
+    const contractorVal: number | undefined = Form.useWatch(contractorPath, form);
+    const [mode, setMode] = React.useState<'brigade' | 'contractor'>(
+      contractorVal ? 'contractor' : 'brigade',
+    );
+
+    const handleModeChange = (value: 'brigade' | 'contractor') => {
+      setMode(value);
+      if (value === 'brigade') {
+        form.setFieldValue(contractorPath, null);
+      } else {
+        form.setFieldValue(brigadePath, null);
+      }
+    };
+
+    React.useEffect(() => {
+      if (contractorVal && mode !== 'contractor') {
+        setMode('contractor');
+      } else if (brigadeVal && mode !== 'brigade') {
+        setMode('brigade');
+      }
+    }, [brigadeVal, contractorVal]);
+
+    const namePath = mode === 'brigade' ? brigadePath : contractorPath;
+    const options = (mode === 'brigade' ? brigades : contractors).map((b) => ({
+      value: b.id,
+      label: b.name,
+    }));
+
+    return (
+      <Space direction="vertical" style={{ width: '100%' }}>
+        <Radio.Group
+          size="small"
+          value={mode}
+          onChange={(e) => handleModeChange(e.target.value)}
+        >
+          <Radio.Button value="brigade">Собст</Radio.Button>
+          <Radio.Button value="contractor">Подряд</Radio.Button>
+        </Radio.Group>
+        <Form.Item
+          name={namePath}
+          noStyle
+          rules={[{ required: true, message: 'Выберите исполнителя' }]}
+        >
+          <Select
+            key={mode}
+            size="small"
+            placeholder="Исполнитель"
+            showSearch
+            style={{ width: '100%' }}
+            options={options}
+            filterOption={(i, o) =>
+              (o?.label ?? '').toLowerCase().includes(i.toLowerCase())
+            }
+          />
+        </Form.Item>
+      </Space>
+    );
+  },
+);
 
 /**
  * Editable table for adding defects inside ticket form.
@@ -52,48 +132,6 @@ export default function DefectEditableTable({ fields, add, remove, projectId }: 
     return rec?.fix_days ?? null;
   };
 
-  const FixByField = ({ field }: { field: any }) => {
-    const brigadePath = [field.name, 'brigade_id'];
-    const contractorPath = [field.name, 'contractor_id'];
-    const brigadeVal: number | undefined = Form.useWatch(brigadePath, form);
-    const contractorVal: number | undefined = Form.useWatch(contractorPath, form);
-    const initialMode = contractorVal ? 'contractor' : 'brigade';
-    const [mode, setMode] = React.useState<'brigade' | 'contractor'>(initialMode as any);
-
-    React.useEffect(() => {
-      if (mode === 'brigade') {
-        form.setFieldValue(contractorPath, null);
-      } else {
-        form.setFieldValue(brigadePath, null);
-      }
-    }, [mode]);
-
-    const namePath = mode === 'brigade' ? brigadePath : contractorPath;
-    const options = (mode === 'brigade' ? brigades : contractors).map((b: any) => ({
-      value: b.id,
-      label: b.name,
-    }));
-
-    return (
-      <Space direction="vertical" style={{ width: '100%' }}>
-        <Radio.Group size="small" value={mode} onChange={(e) => setMode(e.target.value)}>
-          <Radio.Button value="brigade">Собст</Radio.Button>
-          <Radio.Button value="contractor">Подряд</Radio.Button>
-        </Radio.Group>
-        <Form.Item name={namePath} noStyle rules={[{ required: true, message: 'Выберите исполнителя' }]}>
-          <Select
-            key={mode}
-            size="small"
-            placeholder="Исполнитель"
-            showSearch
-            style={{ width: '100%' }}
-            options={options}
-            filterOption={(i, o) => (o?.label ?? '').toLowerCase().includes(i.toLowerCase())}
-          />
-        </Form.Item>
-      </Space>
-    );
-  };
 
   const columns: ColumnsType<any> = useMemo(
     () => [
@@ -268,7 +306,14 @@ export default function DefectEditableTable({ fields, add, remove, projectId }: 
         dataIndex: 'executor',
         width: 180,
         ellipsis: true,
-        render: (_: any, field: any) => <FixByField field={field} />, 
+        render: (_: any, field: any) => (
+          <FixByField
+            field={field}
+            form={form}
+            brigades={brigades}
+            contractors={contractors}
+          />
+        ),
       },
       {
         title: '',
