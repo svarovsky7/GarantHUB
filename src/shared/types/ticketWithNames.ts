@@ -6,4 +6,6 @@ export interface TicketWithNames extends Ticket {
   responsibleEngineerName: string | null;
   /** Имя автора замечания */
   createdByName: string | null;
+  /** Все дефекты по данному замечанию устранены */
+  allDefectsFixed?: boolean;
 }

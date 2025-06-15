@@ -135,6 +135,10 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
     }
     try {
       const { pins, defects: _defects, ...rest } = values;
+      if (!_defects || _defects.length === 0) {
+        notify.error('Добавьте хотя бы один дефект');
+        return;
+      }
       const newDefs: NewDefect[] = (_defects || []).map((d) => ({
         description: d.description || '',
         defect_type_id: d.type_id ?? null,

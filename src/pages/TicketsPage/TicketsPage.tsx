@@ -23,6 +23,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useTickets, useLinkTickets, useUnlinkTicket, useDeleteTicket } from "@/entities/ticket";
 import { useUsers } from "@/entities/user";
 import { useUnitsByIds } from "@/entities/unit";
+import { useDefectsByIds } from "@/entities/defect";
 import TicketsTable from "@/widgets/TicketsTable";
 import TicketsFilters from "@/widgets/TicketsFilters";
 import TicketFormAntd from "@/features/ticket/TicketFormAntd";
@@ -55,6 +56,16 @@ export default function TicketsPage() {
     [tickets],
   );
   const { data: units = [] } = useUnitsByIds(unitIds);
+  const defectIds = useMemo(
+    () => Array.from(new Set(tickets.flatMap((t) => t.defectIds || []))),
+    [tickets],
+  );
+  const { data: defectsInfo = [] } = useDefectsByIds(defectIds);
+  const defectMap = useMemo(() => {
+    const map = new Map<number, boolean>();
+    defectsInfo.forEach((d) => map.set(d.id, d.is_fixed));
+    return map;
+  }, [defectsInfo]);
   const qc = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const [filters, setFilters] = useState({});
@@ -165,8 +176,11 @@ export default function TicketsPage() {
           .join(', '),
         responsibleEngineerName: userMap[t.responsibleEngineerId] ?? null,
         createdByName: userMap[t.createdBy] ?? null,
+        allDefectsFixed:
+          (t.defectIds || []).length > 0 &&
+          (t.defectIds || []).every((id) => defectMap.get(id)),
       })),
-    [tickets, userMap, unitMap],
+    [tickets, userMap, unitMap, defectMap],
   );
 
   /* списки для <Select> (уникальные значения) */

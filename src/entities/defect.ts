@@ -65,6 +65,26 @@ export function useDefect(id?: number) {
   });
 }
 
+/**
+ * Получить информацию об устранении дефектов по их идентификаторам.
+ * Возвращает только поля `id` и `is_fixed`.
+ */
+export function useDefectsByIds(ids?: number[]) {
+  return useQuery<{ id: number; is_fixed: boolean }[]>({
+    queryKey: ['defects-by-ids', (ids ?? []).join(',')],
+    enabled: Array.isArray(ids) && ids.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from(TABLE)
+        .select('id, is_fixed')
+        .in('id', ids as number[]);
+      if (error) throw error;
+      return (data ?? []) as { id: number; is_fixed: boolean }[];
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
 /** Создать несколько дефектов и вернуть их ID */
 export function useCreateDefects() {
   const qc = useQueryClient();
