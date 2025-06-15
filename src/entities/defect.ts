@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/shared/api/supabaseClient';
 import { useNotify } from '@/shared/hooks/useNotify';
-import { addDefectAttachments } from '@/entities/attachment';
 import type { DefectRecord } from '@/shared/types/defect';
 
 export interface NewDefect {
@@ -24,7 +23,7 @@ export function useDefects() {
       const { data, error } = await supabase
         .from(TABLE)
         .select(
-          'id, description, defect_type_id, defect_status_id, brigade_id, contractor_id, received_at, fixed_at, attachment_ids, created_at,' +
+          'id, description, defect_type_id, defect_status_id, brigade_id, contractor_id, received_at, fixed_at, created_at,' +
           ' defect_type:defect_types(id,name), defect_status:defect_statuses(id,name)'
         )
         .order('id');
@@ -44,7 +43,7 @@ export function useDefect(id?: number) {
       const { data, error } = await supabase
         .from(TABLE)
         .select(
-          'id, description, defect_type_id, defect_status_id, brigade_id, contractor_id, received_at, fixed_at, attachment_ids, created_at,' +
+          'id, description, defect_type_id, defect_status_id, brigade_id, contractor_id, received_at, fixed_at, created_at,' +
           ' defect_type:defect_types(id,name), defect_status:defect_statuses(id,name)'
         )
         .eq('id', id as number)
@@ -108,50 +107,4 @@ export function useUpdateDefectStatus() {
     onSuccess: () => qc.invalidateQueries({ queryKey: [TABLE] }),
     onError: (e) => notify.error(`Ошибка обновления статуса: ${e.message}`),
   });
-}
-
-/** Обновить данные устранения дефекта */
-export function useFixDefect() {
-  const qc = useQueryClient();
-  const notify = useNotify();
-  return useMutation(
-    async ({
-      id,
-      brigade_id,
-      contractor_id,
-      fixed_at,
-      attachments = [],
-    }: {
-      id: number;
-      brigade_id: number | null;
-      contractor_id: number | null;
-      fixed_at: string | null;
-      attachments: { file: File; type_id: number | null }[];
-    }) => {
-      const { data: current } = await supabase
-        .from(TABLE)
-        .select('attachment_ids')
-        .eq('id', id)
-        .single();
-      let ids: number[] = current?.attachment_ids ?? [];
-      let uploaded: any[] = [];
-      if (attachments.length) {
-        uploaded = await addDefectAttachments(attachments, id);
-        ids = ids.concat(uploaded.map((u) => u.id));
-      }
-      const { error } = await supabase
-        .from(TABLE)
-        .update({ brigade_id, contractor_id, fixed_at, attachment_ids: ids })
-        .eq('id', id);
-      if (error) throw error;
-      return uploaded;
-    },
-    {
-      onSuccess: () => {
-        qc.invalidateQueries({ queryKey: [TABLE] });
-        notify.success('Дефект обновлён');
-      },
-      onError: (e: any) => notify.error(`Ошибка обновления: ${e.message}`),
-    },
-  );
 }
