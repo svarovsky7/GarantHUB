@@ -28,6 +28,8 @@ export interface DefectWithInfo extends DefectRecord {
   unitIds: number[];
   /** Названия объектов, объединённые в строку */
   unitNames?: string;
+  /** Названия объектов в виде массива */
+  unitNamesList?: string[];
   /** Название типа дефекта */
   defectTypeName?: string;
   /** Название статуса дефекта */

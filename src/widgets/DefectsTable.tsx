@@ -44,8 +44,17 @@ export default function DefectsTable({ defects, filters, loading, columns: colum
     },
     {
       title: 'Объекты',
-      dataIndex: 'unitNames',
+      dataIndex: 'unitNamesList',
       sorter: (a, b) => (a.unitNames || '').localeCompare(b.unitNames || ''),
+      render: (_: string[], row) => (
+        <>
+          {row.unitNamesList?.map((n, i) => (
+            <div key={i} style={{ whiteSpace: 'nowrap' }}>
+              {n}
+            </div>
+          ))}
+        </>
+      ),
     },
     {
       title: 'Описание',

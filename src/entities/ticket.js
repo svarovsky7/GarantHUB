@@ -298,6 +298,7 @@ export function useCreateTicket() {
     onSuccess: (_, vars) => {
       const pid = vars.project_id ?? projectId;
       qc.invalidateQueries({ queryKey: ["tickets", pid] });
+      qc.invalidateQueries({ queryKey: ["tickets-simple", pid] });
       notify.success("Замечание успешно создано");
     },
     onError: (e) => notify.error(`Ошибка создания замечания: ${e.message}`),
