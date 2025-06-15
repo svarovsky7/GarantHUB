@@ -6,6 +6,7 @@ import type { ColumnsType } from 'antd/es/table';
 import { useDeleteDefect } from '@/entities/defect';
 import type { DefectWithInfo } from '@/shared/types/defect';
 import type { DefectFilters } from '@/shared/types/defectFilters';
+import { filterDefects } from '@/shared/utils/defectFilter';
 
 const fmt = (v: string | null) =>
   v ? dayjs(v).format('DD.MM.YYYY') : '—';
@@ -21,33 +22,19 @@ interface Props {
 
 export default function DefectsTable({ defects, filters, loading, columns: columnsProp, onView }: Props) {
   const { mutateAsync: remove, isPending } = useDeleteDefect();
-  const filtered = useMemo(() => {
-    return defects.filter((d) => {
-      if (filters.id && !filters.id.includes(d.id)) return false;
-      if (filters.ticketId && !d.ticketIds.some((t) => filters.ticketId!.includes(t))) return false;
-      if (filters.units && filters.units.length && !d.unitIds.some((u) => filters.units!.includes(u))) return false;
-      if (filters.period) {
-        const [from, to] = filters.period;
-        const created = dayjs(d.created_at);
-        if (!created.isSameOrAfter(from, 'day') || !created.isSameOrBefore(to, 'day')) return false;
-      }
-      return true;
-    });
-  }, [defects, filters]);
+  const filtered = useMemo(() => filterDefects(defects, filters), [defects, filters]);
 
   const defaultColumns: ColumnsType<DefectWithInfo> = [
     {
-      title: 'ID',
-      dataIndex: 'id',
-      width: 80,
-      sorter: (a, b) => a.id - b.id,
+      title: 'ID замечание',
+      dataIndex: 'ticketIds',
+      sorter: (a, b) => a.ticketIds.join(',').localeCompare(b.ticketIds.join(',')),
+      render: (v: number[]) => v.join(', '),
     },
     {
-      title: '№ замечания',
-      dataIndex: 'ticketIds',
-      sorter: (a, b) =>
-        a.ticketIds.join(',').localeCompare(b.ticketIds.join(',')),
-      render: (v: number[]) => v.join(', '),
+      title: 'Проект',
+      dataIndex: 'projectNames',
+      sorter: (a, b) => (a.projectNames || '').localeCompare(b.projectNames || ''),
     },
     {
       title: 'Объекты',
@@ -70,6 +57,11 @@ export default function DefectsTable({ defects, filters, loading, columns: colum
       dataIndex: 'defectStatusName',
       sorter: (a, b) =>
         (a.defectStatusName || '').localeCompare(b.defectStatusName || ''),
+    },
+    {
+      title: 'Кем устраняется',
+      dataIndex: 'fixByName',
+      sorter: (a, b) => (a.fixByName || '').localeCompare(b.fixByName || ''),
     },
     {
       title: 'Дата получения',

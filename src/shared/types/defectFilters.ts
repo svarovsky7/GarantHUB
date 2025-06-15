@@ -5,5 +5,10 @@ export interface DefectFilters {
   id?: number[];
   ticketId?: number[];
   units?: number[];
+  projectId?: number[];
+  typeId?: number[];
+  statusId?: number[];
+  fixBy?: string[];
   period?: [Dayjs, Dayjs];
+  hideClosed?: boolean;
 }
