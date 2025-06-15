@@ -4,6 +4,7 @@ import { Table, Button, Tooltip, Skeleton, Popconfirm, message, Space } from 'an
 import { EyeOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useDeleteDefect } from '@/entities/defect';
+import DefectStatusSelect from '@/features/defect/DefectStatusSelect';
 import type { DefectWithInfo } from '@/shared/types/defect';
 import type { DefectFilters } from '@/shared/types/defectFilters';
 import { filterDefects } from '@/shared/utils/defectFilter';
@@ -59,9 +60,16 @@ export default function DefectsTable({ defects, filters, loading, columns: colum
     },
     {
       title: 'Статус',
-      dataIndex: 'defectStatusName',
+      dataIndex: 'defect_status_id',
       sorter: (a, b) =>
         (a.defectStatusName || '').localeCompare(b.defectStatusName || ''),
+      render: (_: number, row) => (
+        <DefectStatusSelect
+          defectId={row.id}
+          statusId={row.defect_status_id}
+          statusName={row.defectStatusName}
+        />
+      ),
     },
     {
       title: 'Кем устраняется',
@@ -77,11 +85,11 @@ export default function DefectsTable({ defects, filters, loading, columns: colum
       render: fmt,
     },
     {
-      title: 'Дата создания',
-      dataIndex: 'created_at',
+      title: 'Дата устранения',
+      dataIndex: 'fixed_at',
       sorter: (a, b) =>
-        (a.created_at ? dayjs(a.created_at).valueOf() : 0) -
-        (b.created_at ? dayjs(b.created_at).valueOf() : 0),
+        (a.fixed_at ? dayjs(a.fixed_at).valueOf() : 0) -
+        (b.fixed_at ? dayjs(b.fixed_at).valueOf() : 0),
       render: fmt,
     },
     {

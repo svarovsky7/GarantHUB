@@ -22,6 +22,7 @@ import DefectsFilters from '@/widgets/DefectsFilters';
 import TableColumnsDrawer from '@/widgets/TableColumnsDrawer';
 import type { TableColumnSetting } from '@/shared/types/tableColumnSetting';
 import DefectViewModal from '@/features/defect/DefectViewModal';
+import DefectStatusSelect from '@/features/defect/DefectStatusSelect';
 import ExportDefectsButton from '@/features/defect/ExportDefectsButton';
 import { filterDefects } from '@/shared/utils/defectFilter';
 import formatUnitName from '@/shared/utils/formatUnitName';
@@ -163,9 +164,16 @@ export default function DefectsPage() {
       },
       status: {
         title: 'Статус',
-        dataIndex: 'defectStatusName',
+        dataIndex: 'defect_status_id',
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           (a.defectStatusName || '').localeCompare(b.defectStatusName || ''),
+        render: (_: number, row: DefectWithInfo) => (
+          <DefectStatusSelect
+            defectId={row.id}
+            statusId={row.defect_status_id}
+            statusName={row.defectStatusName}
+          />
+        ),
       },
       fixBy: {
         title: 'Кем устраняется',
@@ -182,11 +190,11 @@ export default function DefectsPage() {
         render: fmt,
       },
       created: {
-        title: 'Дата создания',
-        dataIndex: 'created_at',
+        title: 'Дата устранения',
+        dataIndex: 'fixed_at',
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
-          (a.created_at ? dayjs(a.created_at).valueOf() : 0) -
-          (b.created_at ? dayjs(b.created_at).valueOf() : 0),
+          (a.fixed_at ? dayjs(a.fixed_at).valueOf() : 0) -
+          (b.fixed_at ? dayjs(b.fixed_at).valueOf() : 0),
         render: fmt,
       },
       actions: {
