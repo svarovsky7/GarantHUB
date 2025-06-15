@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import dayjs from 'dayjs';
-import { Modal, Form, Select, DatePicker, Button } from 'antd';
+import { Modal, Form, DatePicker } from 'antd';
 import FileDropZone from '@/shared/ui/FileDropZone';
 import AttachmentEditorTable from '@/shared/ui/AttachmentEditorTable';
 import { useBrigades } from '@/entities/brigade';
 import { useContractors } from '@/entities/contractor';
 import { useAttachmentTypes } from '@/entities/attachmentType';
-import { useFixDefect } from '@/entities/defect';
+import { useFixDefect, useDefect } from '@/entities/defect';
 import type { NewDefectFile } from '@/shared/types/defectFile';
+import FixBySelector, { FixByValue } from '@/shared/ui/FixBySelector';
 
 interface Props {
   defectId: number | null;
@@ -20,12 +21,20 @@ export default function DefectFixModal({ defectId, open, onClose }: Props) {
   const { data: brigades = [] } = useBrigades();
   const { data: contractors = [] } = useContractors();
   const { data: attachmentTypes = [] } = useAttachmentTypes();
+  const { data: defect } = useDefect(defectId ?? undefined);
   const fix = useFixDefect();
 
-  const [brigadeId, setBrigadeId] = useState<number | null>(null);
-  const [contractorId, setContractorId] = useState<number | null>(null);
+  const [fixBy, setFixBy] = useState<FixByValue>({ brigade_id: null, contractor_id: null });
   const [fixedAt, setFixedAt] = useState<dayjs.Dayjs | null>(null);
   const [files, setFiles] = useState<NewDefectFile[]>([]);
+
+  useEffect(() => {
+    if (defect && open) {
+      setFixBy({ brigade_id: defect.brigade_id, contractor_id: defect.contractor_id });
+      const baseDate = defect.fixed_at ? dayjs(defect.fixed_at) : dayjs();
+      setFixedAt(baseDate.isBefore(dayjs(), 'day') ? dayjs() : baseDate);
+    }
+  }, [defect, open]);
 
   const handleFiles = (f: File[]) => {
     setFiles((p) => [...p, ...f.map((file) => ({ file, type_id: null }))]);
@@ -43,14 +52,13 @@ export default function DefectFixModal({ defectId, open, onClose }: Props) {
     if (!defectId) return;
     await fix.mutateAsync({
       id: defectId,
-      brigade_id: brigadeId,
-      contractor_id: contractorId,
+      brigade_id: fixBy.brigade_id,
+      contractor_id: fixBy.contractor_id,
       fixed_at: fixedAt ? fixedAt.format('YYYY-MM-DD') : null,
       attachments: files,
     });
     setFiles([]);
-    setBrigadeId(null);
-    setContractorId(null);
+    setFixBy({ brigade_id: null, contractor_id: null });
     setFixedAt(null);
     onClose();
   };
@@ -64,26 +72,12 @@ export default function DefectFixModal({ defectId, open, onClose }: Props) {
       title="Устранение дефекта"
     >
       <Form layout="vertical">
-        <Form.Item label="Бригада">
-          <Select
-            allowClear
-            value={brigadeId ?? undefined}
-            options={brigades.map((b) => ({ value: b.id, label: b.name }))}
-            onChange={(v) => {
-              setBrigadeId(v ?? null);
-              if (v) setContractorId(null);
-            }}
-          />
-        </Form.Item>
-        <Form.Item label="Подрядчик">
-          <Select
-            allowClear
-            value={contractorId ?? undefined}
-            options={contractors.map((c) => ({ value: c.id, label: c.name }))}
-            onChange={(v) => {
-              setContractorId(v ?? null);
-              if (v) setBrigadeId(null);
-            }}
+        <Form.Item label="Исполнитель">
+          <FixBySelector
+            value={fixBy}
+            onChange={setFixBy}
+            brigades={brigades}
+            contractors={contractors}
           />
         </Form.Item>
         <Form.Item label="Дата устранения">
