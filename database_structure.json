@@ -63,6 +63,34 @@
     "column_default": null
   },
   {
+    "table_name": "brigades",
+    "column_name": "id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": "nextval('brigades_id_seq'::regclass)"
+  },
+  {
+    "table_name": "brigades",
+    "column_name": "name",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "brigades",
+    "column_name": "description",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "brigades",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
     "table_name": "contractors",
     "column_name": "id",
     "data_type": "integer",
@@ -106,34 +134,6 @@
   },
   {
     "table_name": "contractors",
-    "column_name": "created_at",
-    "data_type": "timestamp with time zone",
-    "is_nullable": "YES",
-    "column_default": "now()"
-  },
-  {
-    "table_name": "brigades",
-    "column_name": "id",
-    "data_type": "integer",
-    "is_nullable": "NO",
-    "column_default": "nextval('brigades_id_seq'::regclass)"
-  },
-  {
-    "table_name": "brigades",
-    "column_name": "name",
-    "data_type": "text",
-    "is_nullable": "NO",
-    "column_default": null
-  },
-  {
-    "table_name": "brigades",
-    "column_name": "description",
-    "data_type": "text",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
-    "table_name": "brigades",
     "column_name": "created_at",
     "data_type": "timestamp with time zone",
     "is_nullable": "YES",
