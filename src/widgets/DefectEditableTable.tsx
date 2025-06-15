@@ -56,7 +56,11 @@ export default function DefectEditableTable({ fields, add, remove, projectId }: 
         render: (_: any, __: any, i: number) => i + 1,
       },
       {
-        title: 'Описание дефекта',
+        title: (
+          <span>
+            Описание дефекта<span style={{ color: 'red' }}>*</span>
+          </span>
+        ),
         dataIndex: 'description',
         width: 240,
         ellipsis: true,
@@ -71,7 +75,11 @@ export default function DefectEditableTable({ fields, add, remove, projectId }: 
         ),
       },
       {
-        title: 'Статус',
+        title: (
+          <span>
+            Статус<span style={{ color: 'red' }}>*</span>
+          </span>
+        ),
         dataIndex: 'status_id',
         width: 180,
         ellipsis: true,
@@ -93,7 +101,11 @@ export default function DefectEditableTable({ fields, add, remove, projectId }: 
         ),
       },
       {
-        title: 'Тип',
+        title: (
+          <span>
+            Тип<span style={{ color: 'red' }}>*</span>
+          </span>
+        ),
         dataIndex: 'type_id',
         width: 200,
         ellipsis: true,
@@ -102,11 +114,14 @@ export default function DefectEditableTable({ fields, add, remove, projectId }: 
             name={[field.name, 'type_id']}
             noStyle
             rules={[{ required: true, message: 'Выберите тип' }]}
-            initialValue={defectTypes[0]?.id}
           >
             <Select
               size="small"
               placeholder="Тип"
+              showSearch
+              filterOption={(i, o) =>
+                (o?.label ?? '').toLowerCase().includes(i.toLowerCase())
+              }
               style={{ minWidth: 160 }}
               dropdownMatchSelectWidth={false}
               options={defectTypes.map((d) => ({ value: d.id, label: d.name }))}
@@ -115,7 +130,11 @@ export default function DefectEditableTable({ fields, add, remove, projectId }: 
         ),
       },
       {
-        title: 'Дата получения',
+        title: (
+          <span>
+            Дата получения<span style={{ color: 'red' }}>*</span>
+          </span>
+        ),
         dataIndex: 'received_at',
         width: 200,
         ellipsis: true,
@@ -174,7 +193,11 @@ export default function DefectEditableTable({ fields, add, remove, projectId }: 
         ),
       },
       {
-        title: 'Дата устранения',
+        title: (
+          <span>
+            Дата устранения<span style={{ color: 'red' }}>*</span>
+          </span>
+        ),
         dataIndex: 'fixed_at',
         width: 180,
         ellipsis: true,
@@ -189,7 +212,11 @@ export default function DefectEditableTable({ fields, add, remove, projectId }: 
         ),
       },
       {
-        title: 'Кем устраняется',
+        title: (
+          <span>
+            Кем устраняется<span style={{ color: 'red' }}>*</span>
+          </span>
+        ),
         dataIndex: 'fix_by',
         width: 180,
         ellipsis: true,
@@ -201,6 +228,11 @@ export default function DefectEditableTable({ fields, add, remove, projectId }: 
           >
             <Select
               size="small"
+              placeholder="Исполнитель"
+              showSearch
+              filterOption={(i, o) =>
+                (o?.label ?? '').toLowerCase().includes(i.toLowerCase())
+              }
               options={[
                 { value: 'own', label: 'Собственные силы' },
                 { value: 'contractor', label: 'Подрядчик' },
@@ -244,7 +276,7 @@ export default function DefectEditableTable({ fields, add, remove, projectId }: 
             add({
               description: '',
               status_id: defectStatuses[0]?.id ?? null,
-              type_id: defectTypes[0]?.id ?? null,
+              type_id: null,
               received_at: dayjs(),
               fixed_at: null,
               fix_by: null,
