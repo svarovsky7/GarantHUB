@@ -57,16 +57,16 @@ export default function DefectEditableTable({ fields, add, remove, projectId }: 
     const contractorPath = [field.name, 'contractor_id'];
     const brigadeVal: number | undefined = Form.useWatch(brigadePath, form);
     const contractorVal: number | undefined = Form.useWatch(contractorPath, form);
-    const initialMode = contractorVal ? 'contractor' : 'brigade';
-    const [mode, setMode] = React.useState<'brigade' | 'contractor'>(initialMode as any);
 
-    React.useEffect(() => {
-      if (mode === 'brigade') {
+    const mode: 'brigade' | 'contractor' = contractorVal ? 'contractor' : 'brigade';
+
+    const handleModeChange = (val: 'brigade' | 'contractor') => {
+      if (val === 'brigade') {
         form.setFieldValue(contractorPath, null);
       } else {
         form.setFieldValue(brigadePath, null);
       }
-    }, [mode]);
+    };
 
     const namePath = mode === 'brigade' ? brigadePath : contractorPath;
     const options = (mode === 'brigade' ? brigades : contractors).map((b: any) => ({
@@ -76,7 +76,11 @@ export default function DefectEditableTable({ fields, add, remove, projectId }: 
 
     return (
       <Space direction="vertical" style={{ width: '100%' }}>
-        <Radio.Group size="small" value={mode} onChange={(e) => setMode(e.target.value)}>
+        <Radio.Group
+          size="small"
+          value={mode}
+          onChange={(e) => handleModeChange(e.target.value)}
+        >
           <Radio.Button value="brigade">Собст</Radio.Button>
           <Radio.Button value="contractor">Подряд</Radio.Button>
         </Radio.Group>
