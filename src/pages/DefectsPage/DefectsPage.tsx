@@ -15,6 +15,8 @@ import { useDefects, useDeleteDefect } from '@/entities/defect';
 import { useTicketsSimple } from '@/entities/ticket';
 import { useUnitsByIds } from '@/entities/unit';
 import { useProjects } from '@/entities/project';
+import { useBrigades } from '@/entities/brigade';
+import { useContractors } from '@/entities/contractor';
 import DefectsTable from '@/widgets/DefectsTable';
 import DefectsFilters from '@/widgets/DefectsFilters';
 import TableColumnsDrawer from '@/widgets/TableColumnsDrawer';
@@ -38,6 +40,8 @@ export default function DefectsPage() {
   );
   const { data: units = [] } = useUnitsByIds(unitIds);
   const { data: projects = [] } = useProjects();
+  const { data: brigades = [] } = useBrigades();
+  const { data: contractors = [] } = useContractors();
 
   const data: DefectWithInfo[] = useMemo(() => {
     const unitMap = new Map(units.map((u) => [u.id, formatUnitName(u)]));
@@ -62,7 +66,16 @@ export default function DefectsPage() {
         .map((id) => projectMap.get(id))
         .filter(Boolean)
         .join(', ');
-      const fixByName = d.fix_by === 'contractor' ? 'Подрядчик' : 'Собственные силы';
+      let fixByName = '—';
+      if (d.fix_by?.startsWith('b:')) {
+        const id = Number(d.fix_by.slice(2));
+        fixByName = brigades.find((b) => b.id === id)?.name || 'Бригада';
+      } else if (d.fix_by?.startsWith('c:')) {
+        const id = Number(d.fix_by.slice(2));
+        fixByName = contractors.find((c) => c.id === id)?.name || 'Подрядчик';
+      } else if (d.fix_by) {
+        fixByName = d.fix_by === 'contractor' ? 'Подрядчик' : 'Собственные силы';
+      }
       return {
         ...d,
         ticketIds: linked.map((l) => l.id),
