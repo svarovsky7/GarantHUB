@@ -28,6 +28,7 @@ import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarnin
 import { downloadZip } from '@/shared/utils/downloadZip';
 import { signedUrl } from '@/entities/ticket';
 import { useChangedFields } from '@/shared/hooks/useChangedFields';
+import TicketDefectsTable from '@/widgets/TicketDefectsTable';
 
 export interface TicketFormAntdEditProps {
   ticketId?: string;
@@ -374,6 +375,11 @@ export default function TicketFormAntdEdit({
       >
         <Input.TextArea rows={2} />
       </Form.Item>
+      {isEdit && ticket?.defectIds?.length ? (
+        <div style={{ marginBottom: 16 }}>
+          <TicketDefectsTable defectIds={ticket.defectIds} />
+        </div>
+      ) : null}
       <Form.Item label="Файлы" style={attachmentsChanged ? { background: '#fffbe6', padding: 4, borderRadius: 2 } : {}}>
         <FileDropZone onFiles={handleFiles} />
         <Button
