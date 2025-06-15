@@ -12,6 +12,7 @@ import { filterDefects } from '@/shared/utils/defectFilter';
 const fmt = (v: string | null) =>
   v ? dayjs(v).format('DD.MM.YYYY') : '—';
 
+
 interface Props {
   defects: DefectWithInfo[];
   filters: DefectFilters;
@@ -100,6 +101,11 @@ export default function DefectsTable({ defects, filters, loading, columns: colum
         (a.fixed_at ? dayjs(a.fixed_at).valueOf() : 0) -
         (b.fixed_at ? dayjs(b.fixed_at).valueOf() : 0),
       render: fmt,
+    },
+    {
+      title: 'Прошло дней с даты устранения',
+      dataIndex: 'daysSinceFix',
+      sorter: (a, b) => (a.daysSinceFix ?? -1) - (b.daysSinceFix ?? -1),
     },
     {
       title: 'Действия',
