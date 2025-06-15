@@ -87,3 +87,23 @@ export function useDeleteDefect() {
     onError: (e) => notify.error(e.message),
   });
 }
+
+/** Обновить статус дефекта */
+export function useUpdateDefectStatus() {
+  const qc = useQueryClient();
+  const notify = useNotify();
+  return useMutation<{ id: number; defect_status_id: number | null }, Error, { id: number; statusId: number | null }>({
+    mutationFn: async ({ id, statusId }) => {
+      const { data, error } = await supabase
+        .from(TABLE)
+        .update({ defect_status_id: statusId })
+        .eq('id', id)
+        .select('id, defect_status_id')
+        .single();
+      if (error) throw error;
+      return data as { id: number; defect_status_id: number | null };
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: [TABLE] }),
+    onError: (e) => notify.error(`Ошибка обновления статуса: ${e.message}`),
+  });
+}

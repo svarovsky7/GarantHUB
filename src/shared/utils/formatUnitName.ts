@@ -14,11 +14,21 @@ export default function formatUnitName(
   },
 ): string {
   const parts: string[] = [];
-  if (unit.building) parts.push(`Корпус ${unit.building}`);
-  if (unit.section) parts.push(`Секция ${unit.section}`);
+
+  if (unit.building) {
+    const b = unit.building.trim();
+    parts.push(/^\s*корпус/i.test(b) ? b : `Корпус ${b}`);
+  }
+
   if (unit.floor !== undefined && unit.floor !== null) {
     parts.push(`Этаж ${unit.floor}`);
   }
-  parts.push(unit.name);
+
+  if (unit.section) {
+    const s = unit.section.trim();
+    parts.push(/^\s*секция/i.test(s) ? s : `Секция ${s}`);
+  }
+
+  parts.push(`Объект ${unit.name}`);
   return parts.join(', ');
 }
