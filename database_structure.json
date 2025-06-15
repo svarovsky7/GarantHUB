@@ -455,13 +455,6 @@
     "column_default": null
   },
   {
-    "table_name": "defects",
-    "column_name": "attachment_ids",
-    "data_type": "ARRAY",
-    "is_nullable": "YES",
-    "column_default": "ARRAY[]::integer[]"
-  },
-  {
     "table_name": "letter_links",
     "column_name": "parent_id",
     "data_type": "bigint",
