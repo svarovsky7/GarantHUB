@@ -183,6 +183,8 @@ export default function CourtCasesPage() {
       c.defendant,
     responsibleLawyer: users.find((u) => u.id === c.responsible_lawyer_id)?.name ?? c.responsibleLawyer,
     daysSinceFixStart: c.fix_start_date ? dayjs(c.fix_end_date ?? dayjs()).diff(dayjs(c.fix_start_date), 'day') : null,
+    statusName: stages.find((s) => s.id === c.status)?.name ?? null,
+    statusColor: stages.find((s) => s.id === c.status)?.color ?? null,
   }));
 
   const idOptions = React.useMemo(
@@ -299,7 +301,14 @@ export default function CourtCasesPage() {
       title: 'Статус',
       dataIndex: 'status',
       sorter: (a, b) => a.status - b.status,
-      render: (_: number, row) => <CourtCaseStatusSelect caseId={row.id} status={row.status} />,
+      render: (_: number, row) => (
+        <CourtCaseStatusSelect
+          caseId={row.id}
+          statusId={row.status}
+          statusName={row.statusName}
+          statusColor={row.statusColor}
+        />
+      ),
     },
     daysSinceFixStart: {
       title: 'Прошло дней с начала устранения',
