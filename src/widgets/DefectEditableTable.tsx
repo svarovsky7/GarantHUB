@@ -27,7 +27,7 @@ import type { FormInstance } from 'antd/es/form';
  */
 interface Props {
   fields: any[];
-  add: () => void;
+  add: (defaultValue?: any) => void;
   remove: (index: number) => void;
   /** ID выбранного проекта, используется для сроков устранения */
   projectId?: number | null;

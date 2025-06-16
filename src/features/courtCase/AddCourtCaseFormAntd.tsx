@@ -57,8 +57,9 @@ export default function AddCourtCaseFormAntd({
   initialValues = {},
 }: AddCourtCaseFormAntdProps) {
   const [form] = Form.useForm();
-  const projectId = Form.useWatch('project_id', form);
+  const projectIdStr = Form.useWatch('project_id', form);
   const globalProjectId = useProjectId();
+  const projectId = projectIdStr != null ? Number(projectIdStr) : null;
   const profileId = useAuthStore((s) => s.profile?.id);
   const prevProjectIdRef = useRef<number | null>(null);
 
@@ -67,8 +68,8 @@ export default function AddCourtCaseFormAntd({
       form.setFieldValue('project_id', initialValues.project_id);
       prevProjectIdRef.current = initialValues.project_id;
     } else if (globalProjectId) {
-      form.setFieldValue('project_id', globalProjectId);
-      prevProjectIdRef.current = globalProjectId;
+      form.setFieldValue('project_id', Number(globalProjectId));
+      prevProjectIdRef.current = Number(globalProjectId);
     }
     if (initialValues.unit_ids) {
       form.setFieldValue('unit_ids', initialValues.unit_ids);

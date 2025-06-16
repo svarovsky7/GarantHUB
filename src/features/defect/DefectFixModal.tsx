@@ -161,7 +161,7 @@ export default function DefectFixModal({ defectId, open, onClose }: Props) {
           <FileDropZone onFiles={handleFiles} />
           <AttachmentEditorTable
             remoteFiles={remoteFiles.map((f) => ({
-              id: f.id,
+              id: String(f.id),
               name: f.name,
               path: f.path,
               typeId: changedTypes[f.id] ?? f.attachment_type_id,

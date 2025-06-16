@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { AttachmentType } from '@/shared/types/attachmentType';
-import type { Ticket } from '@/shared/types/ticket';
+import type { Ticket } from '@/entities/ticket';
 import type { RemoteTicketFile, NewTicketFile } from '@/shared/types/ticketFile';
 
 /**

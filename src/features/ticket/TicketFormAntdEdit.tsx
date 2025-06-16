@@ -68,7 +68,8 @@ export default function TicketFormAntdEdit({
   const { data: statuses = [] } = useTicketStatuses();
   const { data: projects = [] } = useProjects();
   const { data: users = [] } = useUsers();
-  const projectId = Form.useWatch('project_id', form) ?? globalProjectId;
+  const projectIdWatch = Form.useWatch('project_id', form) ?? globalProjectId;
+  const projectId = projectIdWatch != null ? Number(projectIdWatch) : null;
   const { data: units = [] } = useUnitsByProject(projectId);
   const { data: attachmentTypes = [] } = useAttachmentTypes();
   const create = useCreateTicket();
@@ -121,7 +122,7 @@ export default function TicketFormAntdEdit({
       setFormTouched(false);
     } else {
       form.setFieldsValue({
-        project_id: globalProjectId ?? null,
+        project_id: globalProjectId != null ? Number(globalProjectId) : null,
         unit_ids: initialUnitId != null ? [initialUnitId] : [],
         responsible_engineer_id: profileId ?? undefined,
         received_at: dayjs(),

@@ -32,7 +32,7 @@ export function useDefects() {
         )
         .order('id');
       if (error) throw error;
-      return data as DefectRecord[];
+      return data as unknown as DefectRecord[];
     },
     staleTime: 5 * 60_000,
   });
@@ -41,6 +41,8 @@ export function useDefects() {
 /** Получить дефект по ID */
 export interface DefectWithFiles extends DefectRecord {
   attachments: any[];
+  defect_type?: { id: number; name: string } | null;
+  defect_status?: { id: number; name: string; color: string | null } | null;
 }
 
 export function useDefect(id?: number) {
@@ -58,10 +60,11 @@ export function useDefect(id?: number) {
         .single();
       if (error) throw error;
       let attachments: any[] = [];
-      if (data?.attachment_ids?.length) {
-        attachments = await getAttachmentsByIds(data.attachment_ids);
+      const record = data as unknown as DefectRecord;
+      if ((record as any)?.attachment_ids?.length) {
+        attachments = await getAttachmentsByIds((record as any).attachment_ids);
       }
-      return { ...(data as DefectRecord), attachments } as DefectWithFiles;
+      return { ...record, attachments } as DefectWithFiles;
     },
     staleTime: 5 * 60_000,
   });

@@ -59,7 +59,8 @@ export interface TicketFormAntdValues {
 export default function TicketFormAntd({ onCreated, initialValues = {} }: TicketFormAntdProps) {
   const [form] = Form.useForm<TicketFormAntdValues>();
   const globalProjectId = useProjectId();
-  const projectId = Form.useWatch('project_id', form) ?? globalProjectId;
+  const projectIdWatch = Form.useWatch('project_id', form) ?? globalProjectId;
+  const projectId = projectIdWatch != null ? Number(projectIdWatch) : null;
 
   const { data: statuses = [] } = useTicketStatuses();
   const { data: projects = [] } = useProjects();
@@ -91,7 +92,7 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
     if (initialValues.project_id != null) {
       form.setFieldValue('project_id', initialValues.project_id);
     } else if (globalProjectId) {
-      form.setFieldValue('project_id', globalProjectId);
+      form.setFieldValue('project_id', Number(globalProjectId));
     }
     if (initialValues.unit_ids) {
       form.setFieldValue('unit_ids', initialValues.unit_ids);
