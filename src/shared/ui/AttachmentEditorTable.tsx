@@ -125,13 +125,13 @@ export default function AttachmentEditorTable({
     {
       title: 'Тип',
       dataIndex: 'typeId',
-      width: 320,
+      width: 420,
       render: (_: number | null, row) => (
         <Space size={4}>
           {onChangeRemoteType && row.isRemote ? (
             <Select
               size="small"
-              style={{ width: 300 }}
+              style={{ width: 400 }}
               value={row.typeId ?? undefined}
               onChange={(v) => onChangeRemoteType(row.id as string, v ?? null)}
               options={[{ value: undefined, label: 'Тип не указан' }, ...attachmentTypes.map((t) => ({ value: t.id, label: t.name }))]}
@@ -139,7 +139,7 @@ export default function AttachmentEditorTable({
           ) : onChangeNewType && !row.isRemote ? (
             <Select
               size="small"
-              style={{ width: 300 }}
+              style={{ width: 400 }}
               value={row.typeId ?? undefined}
               onChange={(v) => onChangeNewType(Number(row.key.split('-')[1]), v ?? null)}
               options={[{ value: undefined, label: 'Тип не указан' }, ...attachmentTypes.map((t) => ({ value: t.id, label: t.name }))]}
@@ -207,5 +207,15 @@ export default function AttachmentEditorTable({
     },
   ];
 
-  return <Table rowKey="key" size="small" pagination={false} columns={columns} dataSource={data} />;
+  return (
+    <Table
+      rowKey="key"
+      size="small"
+      pagination={false}
+      columns={columns}
+      dataSource={data}
+      showHeader={false}
+      style={{ width: 'fit-content', marginLeft: 0 }}
+    />
+  );
 }

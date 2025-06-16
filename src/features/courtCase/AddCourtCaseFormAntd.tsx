@@ -135,6 +135,10 @@ export default function AddCourtCaseFormAntd({
   const handleCaseFiles = (files: File[]) => addCaseFiles(files);
 
   const handleAddCase = async (values: any) => {
+    if (caseFiles.some((f) => f.type_id == null)) {
+      notify.error('Укажите тип файла для всех документов');
+      return;
+    }
     try {
       const newCase = await addCaseMutation.mutateAsync({
         project_id: values.project_id,
@@ -377,7 +381,7 @@ export default function AddCourtCaseFormAntd({
                 <Col flex="auto">
                   <span>{f.file.name}</span>
                 </Col>
-                <Col flex="160px">
+                <Col flex="220px">
                   <Select
                     style={{ width: '100%' }}
                     placeholder="Тип файла"

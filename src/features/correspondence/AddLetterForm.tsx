@@ -11,6 +11,7 @@ import {
   Radio,
   Space,
   Popconfirm,
+  message,
 } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import dayjs, { Dayjs } from 'dayjs';
@@ -122,6 +123,10 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
   };
 
   const submit = (values: Omit<AddLetterFormData, 'attachments'>) => {
+    if (files.some((f) => f.type_id == null)) {
+      message.error('Укажите тип файла для всех документов');
+      return;
+    }
     onSubmit({
       ...values,
       date: values.date ?? dayjs(),
@@ -361,7 +366,7 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
               <div key={i} style={{ display: 'flex', alignItems: 'center', marginTop: 4 }}>
                 <span style={{ marginRight: 8 }}>{f.file.name}</span>
                 <Select
-                    style={{ width: 160 }}
+                    style={{ width: 220 }}
                     placeholder="Тип файла"
                     value={f.type_id ?? undefined}
                     onChange={(v) => setType(i, v)}
