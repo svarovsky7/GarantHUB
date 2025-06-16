@@ -603,20 +603,6 @@
   },
   {
     "table_name": "letters",
-    "column_name": "sender",
-    "data_type": "text",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
-    "table_name": "letters",
-    "column_name": "receiver",
-    "data_type": "text",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
-    "table_name": "letters",
     "column_name": "sender_person_id",
     "data_type": "bigint",
     "is_nullable": "YES",
