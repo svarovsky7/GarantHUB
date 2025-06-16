@@ -51,7 +51,7 @@ export function useLetters() {
       const { data, error } = await supabase
         .from(LETTERS_TABLE)
         .select(
-          `id, project_id, number, letter_type_id, status_id, letter_date, subject, content, sender, receiver, sender_person_id, sender_contractor_id, receiver_person_id, receiver_contractor_id, responsible_user_id, unit_ids, attachment_ids, created_at`
+          `id, project_id, number, letter_type_id, status_id, letter_date, subject, content, sender_person_id, sender_contractor_id, receiver_person_id, receiver_contractor_id, responsible_user_id, unit_ids, attachment_ids, created_at`
         )
         .order('id');
       if (error) throw error;
@@ -123,14 +123,15 @@ export function useLetters() {
       const linkMap = new Map<number, number>();
       (links ?? []).forEach((lnk) => linkMap.set(lnk.child_id, lnk.parent_id));
       return (data ?? []).map((row: any) => {
-        const type = row.receiver ? 'outgoing' : 'incoming';
+        const type =
+          row.receiver_person_id != null || row.receiver_contractor_id != null
+            ? 'outgoing'
+            : 'incoming';
         const sender =
-          row.sender ||
           personsMap[row.sender_person_id] ||
           contractorsMap[row.sender_contractor_id] ||
           '';
         const receiver =
-          row.receiver ||
           personsMap[row.receiver_person_id] ||
           contractorsMap[row.receiver_contractor_id] ||
           '';
@@ -191,8 +192,6 @@ export function useAddLetter() {
         letter_date: data.date,
         subject: data.subject,
         content: data.content,
-        sender: data.sender,
-        receiver: data.receiver,
         sender_person_id: senderIds.personId,
         sender_contractor_id: senderIds.contractorId,
         receiver_person_id: receiverIds.personId,
@@ -369,7 +368,7 @@ export function useLetter(letterId: number | string | undefined) {
       const { data, error } = await supabase
         .from(LETTERS_TABLE)
         .select(
-          `id, project_id, number, letter_type_id, status_id, letter_date, subject, content, sender, receiver, sender_person_id, sender_contractor_id, receiver_person_id, receiver_contractor_id, responsible_user_id, unit_ids, attachment_ids`
+          `id, project_id, number, letter_type_id, status_id, letter_date, subject, content, sender_person_id, sender_contractor_id, receiver_person_id, receiver_contractor_id, responsible_user_id, unit_ids, attachment_ids`
         )
         .eq('id', id)
         .single();
@@ -379,35 +378,46 @@ export function useLetter(letterId: number | string | undefined) {
         .select('parent_id')
         .eq('child_id', id)
         .maybeSingle();
-      const type = data?.receiver ? 'outgoing' : 'incoming';
+      const type =
+        data?.receiver_person_id != null || data?.receiver_contractor_id != null
+          ? 'outgoing'
+          : 'incoming';
       const sender =
-        data?.sender ||
         (data?.sender_person_id
-          ? (await supabase
-              .from('persons')
-              .select('full_name')
-              .eq('id', data.sender_person_id)
-              .maybeSingle()).data?.full_name ??
-            (await supabase
-              .from('contractors')
-              .select('name')
-              .eq('id', data.sender_contractor_id)
-              .maybeSingle()).data?.name
-          : '') || '';
+          ? (
+              await supabase
+                .from('persons')
+                .select('full_name')
+                .eq('id', data.sender_person_id)
+                .maybeSingle()
+            ).data?.full_name
+          : null) ??
+        (
+          await supabase
+            .from('contractors')
+            .select('name')
+            .eq('id', data.sender_contractor_id)
+            .maybeSingle()
+        ).data?.name ??
+        '';
       const receiver =
-        data?.receiver ||
         (data?.receiver_person_id
-          ? (await supabase
-              .from('persons')
-              .select('full_name')
-              .eq('id', data.receiver_person_id)
-              .maybeSingle()).data?.full_name ??
-            (await supabase
-              .from('contractors')
-              .select('name')
-              .eq('id', data.receiver_contractor_id)
-              .maybeSingle()).data?.name
-          : '') || '';
+          ? (
+              await supabase
+                .from('persons')
+                .select('full_name')
+                .eq('id', data.receiver_person_id)
+                .maybeSingle()
+            ).data?.full_name
+          : null) ??
+        (
+          await supabase
+            .from('contractors')
+            .select('name')
+            .eq('id', data.receiver_contractor_id)
+            .maybeSingle()
+        ).data?.name ??
+        '';
       let attachments: any[] = [];
       if (data?.attachment_ids?.length) {
         attachments = await getAttachmentsByIds(data.attachment_ids);
@@ -475,11 +485,13 @@ export function useUpdateLetter() {
           const ids = await getContactIds(updates.sender as string);
           upd.sender_person_id = ids.personId;
           upd.sender_contractor_id = ids.contractorId;
+          delete upd.sender;
         }
         if (Object.prototype.hasOwnProperty.call(updates, 'receiver')) {
           const ids = await getContactIds(updates.receiver as string);
           upd.receiver_person_id = ids.personId;
           upd.receiver_contractor_id = ids.contractorId;
+          delete upd.receiver;
         }
         const { error } = await supabase
           .from(LETTERS_TABLE)
