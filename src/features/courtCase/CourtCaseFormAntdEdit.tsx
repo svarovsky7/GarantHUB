@@ -60,8 +60,10 @@ export default function CourtCaseFormAntdEdit({
       unit_ids: courtCase.unit_ids,
       number: courtCase.number,
       date: dayjs(courtCase.date),
-      plaintiff_id: courtCase.plaintiff_id,
-      defendant_id: courtCase.defendant_id,
+      plaintiff_id:
+        courtCase.plaintiff_person_id ?? courtCase.plaintiff_contractor_id ?? null,
+      defendant_id:
+        courtCase.defendant_person_id ?? courtCase.defendant_contractor_id ?? null,
       responsible_lawyer_id: courtCase.responsible_lawyer_id ?? undefined,
       status: courtCase.status,
       fix_start_date: courtCase.fix_start_date ? dayjs(courtCase.fix_start_date) : null,
@@ -108,8 +110,18 @@ export default function CourtCaseFormAntdEdit({
           unit_ids: values.unit_ids,
           number: values.number,
           date: values.date ? (values.date as Dayjs).format('YYYY-MM-DD') : courtCase?.date,
-          plaintiff_id: values.plaintiff_id,
-          defendant_id: values.defendant_id,
+          plaintiff_person_id: personsList.some((p) => p.id === values.plaintiff_id)
+            ? values.plaintiff_id
+            : null,
+          plaintiff_contractor_id: contractors.some((c) => c.id === values.plaintiff_id)
+            ? values.plaintiff_id
+            : null,
+          defendant_person_id: personsList.some((p) => p.id === values.defendant_id)
+            ? values.defendant_id
+            : null,
+          defendant_contractor_id: contractors.some((c) => c.id === values.defendant_id)
+            ? values.defendant_id
+            : null,
           responsible_lawyer_id: values.responsible_lawyer_id ?? null,
           status: values.status,
           fix_start_date: values.fix_start_date ? (values.fix_start_date as Dayjs).format('YYYY-MM-DD') : null,
