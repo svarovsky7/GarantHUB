@@ -125,13 +125,13 @@ export default function AttachmentEditorTable({
     {
       title: 'Тип',
       dataIndex: 'typeId',
-      width: 220,
+      width: 320,
       render: (_: number | null, row) => (
         <Space size={4}>
           {onChangeRemoteType && row.isRemote ? (
             <Select
               size="small"
-              style={{ width: 200 }}
+              style={{ width: 300 }}
               value={row.typeId ?? undefined}
               onChange={(v) => onChangeRemoteType(row.id as string, v ?? null)}
               options={[{ value: undefined, label: 'Тип не указан' }, ...attachmentTypes.map((t) => ({ value: t.id, label: t.name }))]}
@@ -139,7 +139,7 @@ export default function AttachmentEditorTable({
           ) : onChangeNewType && !row.isRemote ? (
             <Select
               size="small"
-              style={{ width: 200 }}
+              style={{ width: 300 }}
               value={row.typeId ?? undefined}
               onChange={(v) => onChangeNewType(Number(row.key.split('-')[1]), v ?? null)}
               options={[{ value: undefined, label: 'Тип не указан' }, ...attachmentTypes.map((t) => ({ value: t.id, label: t.name }))]}
