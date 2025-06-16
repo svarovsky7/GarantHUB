@@ -34,8 +34,6 @@ export interface CourtCase {
   defendant_contractor_id: number | null;
   responsible_lawyer_id: string | null;
   status: number;
-  /** признак закрытого дела */
-  is_closed: boolean;
   fix_start_date?: string | null;
   fix_end_date?: string | null;
   description: string;

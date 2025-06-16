@@ -155,7 +155,6 @@ export default function AddCourtCaseFormAntd({
           defendantType === 'contractor' ? values.defendant_id : null,
         responsible_lawyer_id: values.responsible_lawyer_id,
         status: values.status,
-        is_closed: false,
         fix_start_date: values.fix_start_date
           ? (values.fix_start_date as Dayjs).format('YYYY-MM-DD')
           : null,

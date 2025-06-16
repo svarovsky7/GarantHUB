@@ -86,7 +86,6 @@ export default function AddCourtCaseForm({
         defendant_contractor_id: null,
         responsible_lawyer_id: values.responsible_lawyer_id,
         status: values.status ?? 1,
-        is_closed: false,
         fix_start_date: null,
         fix_end_date: null,
         description: values.description || '',
