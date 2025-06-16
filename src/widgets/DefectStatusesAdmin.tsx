@@ -5,7 +5,7 @@ import {
   useUpdateDefectStatus,
   useDeleteDefectStatus,
 } from '@/entities/defectStatus';
-import { Button, Stack, Dialog, DialogTitle, DialogContent, IconButton } from '@mui/material';
+import { Button, Stack, Dialog, DialogTitle, DialogContent, IconButton, Box } from '@mui/material';
 import AdminDataGrid from '@/shared/ui/AdminDataGrid';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -31,7 +31,7 @@ export default function DefectStatusesAdmin({ pageSize = 25, rowsPerPageOptions 
     if (window.confirm('Удалить статус дефекта?')) deleteMutation.mutate(id);
   };
 
-  const handleSubmit = async (values: { name: string }) => {
+  const handleSubmit = async (values: { name: string; color: string }) => {
     if (editRow) {
       await (updateMutation.mutateAsync as any)({ id: editRow.id, updates: values });
     } else {
@@ -43,6 +43,22 @@ export default function DefectStatusesAdmin({ pageSize = 25, rowsPerPageOptions 
   const columns = [
     { field: 'id', headerName: 'ID', width: 80 },
     { field: 'name', headerName: 'Название статуса', flex: 1 },
+    {
+      field: 'color',
+      headerName: 'Цвет',
+      width: 90,
+      renderCell: (params: any) => (
+        <Box
+          sx={{
+            width: 32,
+            height: 24,
+            bgcolor: params.value,
+            border: '1px solid #bbb',
+            borderRadius: 0.5,
+          }}
+        />
+      ),
+    },
     {
       field: 'actions',
       headerName: '',
