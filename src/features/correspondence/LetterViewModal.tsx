@@ -12,8 +12,8 @@ interface Props {
 
 /** Модальное окно просмотра письма */
 export default function LetterViewModal({ open, letterId, onClose }: Props) {
-  if (!letterId) return null;
-  const { data: letter } = useLetter(letterId);
+  const { data: letter } = useLetter(letterId ?? undefined);
+  if (!open || !letterId) return null;
   const titleText = letter
     ? `Письмо №${letter.number} от ${dayjs(letter.date).format('DD.MM.YYYY')} (${
         letter.type === 'incoming' ? 'входящее' : 'исходящее'
