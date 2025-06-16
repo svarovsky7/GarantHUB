@@ -29,6 +29,14 @@ export interface CorrespondenceLetter {
   sender: string;
   /** Получатель письма */
   receiver: string;
+  /** ID отправителя, если это физлицо */
+  sender_person_id?: number | null;
+  /** ID отправителя, если это контрагент */
+  sender_contractor_id?: number | null;
+  /** ID получателя, если это физлицо */
+  receiver_person_id?: number | null;
+  /** ID получателя, если это контрагент */
+  receiver_contractor_id?: number | null;
   /** Тема письма */
   subject: string;
   /** Содержание письма */
