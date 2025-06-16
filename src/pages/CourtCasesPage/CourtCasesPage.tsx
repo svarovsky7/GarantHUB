@@ -176,10 +176,13 @@ export default function CourtCasesPage() {
       .map((id: number) => caseUnits.find((u) => u.id === id)?.name)
       .filter(Boolean)
       .join(', '),
-    plaintiff: personsList.find((p) => p.id === c.plaintiff_id)?.full_name || c.plaintiff,
+    plaintiff:
+      personsList.find((p) => p.id === c.plaintiff_person_id)?.full_name ||
+      contractors.find((d) => d.id === c.plaintiff_contractor_id)?.name ||
+      c.plaintiff,
     defendant:
-      contractors.find((d) => d.id === c.defendant_id)?.name ||
-      personsList.find((p) => p.id === c.defendant_id)?.full_name ||
+      contractors.find((d) => d.id === c.defendant_contractor_id)?.name ||
+      personsList.find((p) => p.id === c.defendant_person_id)?.full_name ||
       c.defendant,
     responsibleLawyer: users.find((u) => u.id === c.responsible_lawyer_id)?.name ?? c.responsibleLawyer,
     daysSinceFixStart: c.fix_start_date ? dayjs(c.fix_end_date ?? dayjs()).diff(dayjs(c.fix_start_date), 'day') : null,

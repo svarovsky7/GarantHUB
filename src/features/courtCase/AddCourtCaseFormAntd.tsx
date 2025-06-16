@@ -141,8 +141,14 @@ export default function AddCourtCaseFormAntd({
         unit_ids: values.unit_ids || [],
         number: values.number,
         date: values.date.format('YYYY-MM-DD'),
-        plaintiff_id: values.plaintiff_id,
-        defendant_id: values.defendant_id,
+        plaintiff_person_id:
+          plaintiffType === 'person' ? values.plaintiff_id : null,
+        plaintiff_contractor_id:
+          plaintiffType === 'contractor' ? values.plaintiff_id : null,
+        defendant_person_id:
+          defendantType === 'person' ? values.defendant_id : null,
+        defendant_contractor_id:
+          defendantType === 'contractor' ? values.defendant_id : null,
         responsible_lawyer_id: values.responsible_lawyer_id,
         status: values.status,
         is_closed: false,

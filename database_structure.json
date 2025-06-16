@@ -295,14 +295,28 @@
   },
   {
     "table_name": "court_cases",
-    "column_name": "plaintiff_id",
+    "column_name": "plaintiff_person_id",
+    "data_type": "bigint",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "court_cases",
+    "column_name": "plaintiff_contractor_id",
     "data_type": "integer",
     "is_nullable": "YES",
     "column_default": null
   },
   {
     "table_name": "court_cases",
-    "column_name": "defendant_id",
+    "column_name": "defendant_person_id",
+    "data_type": "bigint",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "court_cases",
+    "column_name": "defendant_contractor_id",
     "data_type": "integer",
     "is_nullable": "YES",
     "column_default": null

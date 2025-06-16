@@ -24,8 +24,14 @@ export interface CourtCase {
   unit_ids: number[];
   date: string;
   number: string;
-  plaintiff_id: number;
-  defendant_id: number;
+  /** Истец - ссылка на физлицо */
+  plaintiff_person_id: number | null;
+  /** Истец - ссылка на контрагента */
+  plaintiff_contractor_id: number | null;
+  /** Ответчик - ссылка на физлицо */
+  defendant_person_id: number | null;
+  /** Ответчик - ссылка на контрагента */
+  defendant_contractor_id: number | null;
   responsible_lawyer_id: string | null;
   status: number;
   /** признак закрытого дела */
