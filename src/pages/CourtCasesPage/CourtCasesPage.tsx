@@ -33,7 +33,6 @@ import { supabase } from '@/shared/api/supabaseClient';
 import { useQuery } from '@tanstack/react-query';
 import { useNotify } from '@/shared/hooks/useNotify';
 import CourtCaseStatusSelect from '@/features/courtCase/CourtCaseStatusSelect';
-import CourtCaseClosedSelect from '@/features/courtCase/CourtCaseClosedSelect';
 import LinkCasesDialog from '@/features/courtCase/LinkCasesDialog';
 import ExportCourtCasesButton from '@/features/courtCase/ExportCourtCasesButton';
 import AddCourtCaseFormAntd from '@/features/courtCase/AddCourtCaseFormAntd';
@@ -212,7 +211,8 @@ export default function CourtCasesPage() {
         dayjs(c.fix_start_date).isSameOrAfter(filters.fixStartRange[0], 'day') &&
         dayjs(c.fix_start_date).isSameOrBefore(filters.fixStartRange[1], 'day'));
     const matchesLawyer = !filters.lawyerId || String(c.responsible_lawyer_id) === filters.lawyerId;
-    const matchesClosed = !filters.hideClosed || (closedStageId ? c.status !== closedStageId : !c.is_closed);
+    const matchesClosed =
+      !filters.hideClosed || !closedStageId || c.status !== closedStageId;
     const matchesIds = !filters.ids || filters.ids.includes(c.id);
     return (
       matchesIds &&
@@ -345,12 +345,6 @@ export default function CourtCasesPage() {
       dataIndex: 'responsibleLawyer',
       sorter: (a, b) => (a.responsibleLawyer || '').localeCompare(b.responsibleLawyer || ''),
     },
-    is_closed: {
-      title: 'Дело закрыто',
-      dataIndex: 'is_closed',
-      sorter: (a, b) => Number(a.is_closed) - Number(b.is_closed),
-      render: (_: boolean, row) => <CourtCaseClosedSelect caseId={row.id} isClosed={row.is_closed} />,
-    },
     actions: {
       title: 'Действия',
       key: 'actions',
@@ -425,7 +419,7 @@ export default function CourtCasesPage() {
 
   const total = cases.length;
   const closedCount = React.useMemo(
-    () => cases.filter((c) => (closedStageId ? c.status === closedStageId : c.is_closed)).length,
+    () => cases.filter((c) => closedStageId && c.status === closedStageId).length,
     [cases, closedStageId],
   );
   const openCount = total - closedCount;
@@ -449,6 +443,7 @@ export default function CourtCasesPage() {
           <ExportCourtCasesButton
             cases={filteredCases}
             stages={Object.fromEntries(stages.map((s) => [s.id, s.name]))}
+            closedStageId={closedStageId ?? undefined}
           />
         </span>
         {showAddForm && (

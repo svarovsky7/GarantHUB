@@ -13,6 +13,8 @@ export interface ExportCourtCasesButtonProps {
   cases: (CourtCase & Record<string, any>)[];
   /** Словарь названий стадий по идентификатору. */
   stages: Record<number, string>;
+  /** ID стадии "Закрыто" */
+  closedStageId?: number;
 }
 
 /**
@@ -23,6 +25,7 @@ export interface ExportCourtCasesButtonProps {
 export default function ExportCourtCasesButton({
   cases,
   stages,
+  closedStageId,
 }: ExportCourtCasesButtonProps) {
   const [loading, setLoading] = React.useState(false);
 
@@ -48,7 +51,7 @@ export default function ExportCourtCasesButton({
         '№ дела': c.number,
         'Дата дела': dayjs(c.date).format('DD.MM.YYYY'),
         Статус: stages[c.status] || c.status,
-        'Дело закрыто': c.is_closed ? 'Да' : 'Нет',
+        'Дело закрыто': closedStageId ? (c.status === closedStageId ? 'Да' : 'Нет') : '',
         Истец: (c as any).plaintiff ?? '',
         Ответчик: (c as any).defendant ?? '',
         'Ответственный юрист': (c as any).responsibleLawyer ?? '',
@@ -75,7 +78,7 @@ export default function ExportCourtCasesButton({
     } finally {
       setLoading(false);
     }
-  }, [cases, stages]);
+  }, [cases, stages, closedStageId]);
 
   return (
     <Tooltip title="Выгрузить в Excel">

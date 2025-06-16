@@ -1,6 +1,7 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { supabase } from '@/shared/api/supabaseClient';
 import { useAuthStore } from '@/shared/store/authStore';
+import { useCourtCaseStatuses } from '@/entities/courtCaseStatus';
 
 /**
  * Универсальный хук для шахматки квартир.
@@ -17,6 +18,12 @@ export default function useUnitsMatrix(projectId, building, section) {
     const [ticketsByUnit, setTicketsByUnit] = useState({});
     const [casesByUnit, setCasesByUnit] = useState({});
     const [filteredUnits, setFilteredUnits] = useState([]);
+
+    const { data: stages = [] } = useCourtCaseStatuses();
+    const closedStageId = useMemo(
+        () => stages.find(s => /закры/i.test(s.name))?.id,
+        [stages]
+    );
 
     const fetchUnits = useCallback(async () => {
         if (!projectId) {
@@ -70,12 +77,12 @@ export default function useUnitsMatrix(projectId, building, section) {
             // Court cases (не закрытые)
             const { data: casesData } = await supabase
                 .from('court_cases')
-                .select('id, unit_ids, is_closed')
+                .select('id, unit_ids, status')
                 .eq('project_id', projectId)
                 .overlaps('unit_ids', unitIds);
             const casesMap = {};
             (casesData || [])
-                .filter(c => !c.is_closed)
+                .filter(c => !closedStageId || c.status !== closedStageId)
                 .forEach(c => {
                     (c.unit_ids || []).forEach(uid => {
                         if (!casesMap[uid]) casesMap[uid] = [];
@@ -87,7 +94,7 @@ export default function useUnitsMatrix(projectId, building, section) {
             setTicketsByUnit({});
             setCasesByUnit({});
         }
-    }, [projectId, building, section]);
+    }, [projectId, building, section, closedStageId]);
 
     useEffect(() => { fetchUnits(); }, [fetchUnits]);
 

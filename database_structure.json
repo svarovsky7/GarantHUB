@@ -316,13 +316,6 @@
   },
   {
     "table_name": "court_cases",
-    "column_name": "is_closed",
-    "data_type": "boolean",
-    "is_nullable": "NO",
-    "column_default": "false"
-  },
-  {
-    "table_name": "court_cases",
     "column_name": "plaintiff_person_id",
     "data_type": "bigint",
     "is_nullable": "YES",
