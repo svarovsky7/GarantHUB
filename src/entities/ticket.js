@@ -461,6 +461,10 @@ export function useTicket(ticketId) {
 }
 
 // ──────────────────────────── delete ──────────────────────────────
+/**
+ * Удалить замечание вместе с вложениями и связанными дефектами.
+ * После успешного удаления инвалидирует кэш замечаний и дефектов.
+ */
 export function useDeleteTicket() {
   const projectId = useProjectId();
   const qc = useQueryClient();
@@ -519,6 +523,9 @@ export function useDeleteTicket() {
         queryKey: ["ticket", id, projectId],
         exact: true,
       });
+      qc.invalidateQueries({ queryKey: ["defects"] });
+      qc.invalidateQueries({ queryKey: ["defects-by-ids"] });
+      qc.invalidateQueries({ queryKey: ["defects-with-names"] });
       notify.success("Замечание удалено вместе с вложениями");
     },
     onError: (e) => notify.error(`Ошибка удаления замечания: ${e.message}`),
