@@ -11,8 +11,8 @@ interface Props {
 
 /** Модальное окно просмотра замечания */
 export default function TicketViewModal({ open, ticketId, onClose }: Props) {
-  if (!ticketId) return null;
-  const { data: ticket } = useTicket(ticketId);
+  const { data: ticket } = useTicket(ticketId ?? undefined);
+  if (!open || !ticketId) return null;
   const titleText = ticket
     ? `Замечание №${ticket.id}. Создано ${
         ticket.createdAt ? ticket.createdAt.format('DD.MM.YYYY [в] HH:mm') : ''
