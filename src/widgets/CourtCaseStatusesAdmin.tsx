@@ -14,7 +14,7 @@ import {
 
 import CourtCaseStatusForm from '@/features/courtCaseStatus/CourtCaseStatusForm';
 import AdminDataGrid from '@/shared/ui/AdminDataGrid';
-import { Dialog, DialogTitle, DialogContent } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, Box } from '@mui/material';
 import { useNotify } from '@/shared/hooks/useNotify';
 
 // Интерфейс пропсов для поддержки пагинации
@@ -41,6 +41,22 @@ export default function CourtCaseStatusesAdmin({
     const columns = [
         { field: 'id', headerName: 'ID', width: 80 },
         { field: 'name', headerName: 'Название стадии', flex: 1 },
+        {
+            field: 'color',
+            headerName: 'Цвет',
+            width: 90,
+            renderCell: (params: any) => (
+                <Box
+                    sx={{
+                        width: 32,
+                        height: 24,
+                        bgcolor: params.value,
+                        border: '1px solid #bbb',
+                        borderRadius: 0.5,
+                    }}
+                />
+            ),
+        },
         {
             field: 'actions',
             type: 'actions',
