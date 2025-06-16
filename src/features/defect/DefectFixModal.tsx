@@ -118,6 +118,7 @@ export default function DefectFixModal({ defectId, open, onClose }: Props) {
     <Modal
       open={open}
       onCancel={onClose}
+      width={700}
       footer={
         <Button
           type="primary"
