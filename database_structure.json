@@ -812,6 +812,13 @@
     "column_default": "'[]'::jsonb"
   },
   {
+    "table_name": "role_permissions",
+    "column_name": "only_assigned_project",
+    "data_type": "boolean",
+    "is_nullable": "NO",
+    "column_default": "false"
+  },
+  {
     "table_name": "roles",
     "column_name": "id",
     "data_type": "integer",

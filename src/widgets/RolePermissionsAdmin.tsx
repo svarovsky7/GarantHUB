@@ -40,10 +40,28 @@ export default function RolePermissionsAdmin() {
     upsert.mutate({ ...current, [field]: Array.from(list) });
   };
 
+  const handleProjectToggle = (role: RoleName, value: boolean) => {
+    const current = merged.find((m) => m.role_name === role)!;
+    upsert.mutate({ ...current, only_assigned_project: value });
+  };
+
   const columns: ColumnsType<RolePermission> = [
     {
       title: 'Роль',
       dataIndex: 'role_name',
+    },
+    {
+      title: 'Только свой проект',
+      dataIndex: 'only_assigned_project',
+      render: (_, record) => (
+        <Switch
+          size="small"
+          checked={record.only_assigned_project}
+          onChange={(checked) =>
+            handleProjectToggle(record.role_name as RoleName, checked)
+          }
+        />
+      ),
     },
     {
       title: 'Доступные страницы',
