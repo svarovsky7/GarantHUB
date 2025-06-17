@@ -1063,4 +1063,9 @@
     "is_nullable": "YES",
     "column_default": null
   }
+,
+  {"table_name": "role_permissions", "column_name": "role_name", "data_type": "text", "is_nullable": "NO", "column_default": null},
+  {"table_name": "role_permissions", "column_name": "pages", "data_type": "jsonb", "is_nullable": "NO", "column_default": "'[]'::jsonb"},
+  {"table_name": "role_permissions", "column_name": "edit_tables", "data_type": "jsonb", "is_nullable": "NO", "column_default": "'[]'::jsonb"},
+  {"table_name": "role_permissions", "column_name": "delete_tables", "data_type": "jsonb", "is_nullable": "NO", "column_default": "'[]'::jsonb"}
 ]

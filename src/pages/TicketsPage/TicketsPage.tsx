@@ -37,6 +37,9 @@ import type { ColumnsType } from "antd/es/table";
 import type { TicketWithNames } from "@/shared/types/ticketWithNames";
 import { useNotify } from "@/shared/hooks/useNotify";
 import { filterTickets } from "@/shared/utils/ticketFilter";
+import { useRolePermission } from "@/entities/rolePermission";
+import { useAuthStore } from "@/shared/store/authStore";
+import type { RoleName } from "@/shared/types/rolePermission";
 
 const fmt = (d: any, withTime = false) =>
   d && dayjs.isDayjs(d) && d.isValid()
@@ -77,6 +80,8 @@ export default function TicketsPage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const hideOnScroll = React.useRef(false);
   const deleteTicketMutation = useDeleteTicket();
+  const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
+  const { data: perm } = useRolePermission(role);
 
   React.useEffect(() => {
     if (searchParams.get('open_form') === '1') {
@@ -355,18 +360,26 @@ export default function TicketsPage() {
                 />
               </Tooltip>
             )}
-            <Popconfirm
-              title="Удалить замечание?"
-              okText="Да"
-              cancelText="Нет"
-              onConfirm={async () => {
-                await deleteTicketMutation.mutateAsync(record.id);
-                message.success('Удалено');
-              }}
-              disabled={deleteTicketMutation.isPending}
-            >
-              <Button size="small" type="text" danger icon={<DeleteOutlined />} loading={deleteTicketMutation.isPending} />
-            </Popconfirm>
+            {perm?.delete_tables.includes('tickets') && (
+              <Popconfirm
+                title="Удалить замечание?"
+                okText="Да"
+                cancelText="Нет"
+                onConfirm={async () => {
+                  await deleteTicketMutation.mutateAsync(record.id);
+                  message.success('Удалено');
+                }}
+                disabled={deleteTicketMutation.isPending}
+              >
+                <Button
+                  size="small"
+                  type="text"
+                  danger
+                  icon={<DeleteOutlined />}
+                  loading={deleteTicketMutation.isPending}
+                />
+              </Popconfirm>
+            )}
           </Space>
         ),
       },
@@ -435,13 +448,15 @@ export default function TicketsPage() {
   return (
     <ConfigProvider locale={ruRU}>
       <>
-        <Button
-          type="primary"
-          onClick={() => setShowAddForm((p) => !p)}
-          style={{ marginTop: 16, marginRight: 8 }}
-        >
-          {showAddForm ? 'Скрыть форму' : 'Добавить замечание'}
-        </Button>
+        {perm?.edit_tables.includes('tickets') && (
+          <Button
+            type="primary"
+            onClick={() => setShowAddForm((p) => !p)}
+            style={{ marginTop: 16, marginRight: 8 }}
+          >
+            {showAddForm ? 'Скрыть форму' : 'Добавить замечание'}
+          </Button>
+        )}
         <Button onClick={() => setShowFilters((p) => !p)} style={{ marginTop: 16 }}>
           {showFilters ? 'Скрыть фильтры' : 'Показать фильтры'}
         </Button>

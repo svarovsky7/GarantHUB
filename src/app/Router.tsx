@@ -17,6 +17,7 @@ import LoginPage from "@/pages/UnitsPage/LoginPage"; // ← CHANGE
 import RegisterPage from "@/pages/UnitsPage/RegisterPage"; // ← CHANGE
 import AdminPage from "@/pages/UnitsPage/AdminPage";
 import ProjectStructurePage from "@/pages/ProjectStructurePage/ProjectStructurePage";
+import RequirePermission from "@/shared/components/RequirePermission";
 
 /** --------------------------------------------------------------------------
  *  Компонент-сторож
@@ -63,7 +64,9 @@ export default function AppRouter() {
         path="/"
         element={
           <RequireAuth data-oid="_5wblnc">
-            <DashboardPage data-oid="mxrre2o" />
+            <RequirePermission page="dashboard">
+              <DashboardPage data-oid="mxrre2o" />
+            </RequirePermission>
           </RequireAuth>
         }
         data-oid="9:ob6bt"
@@ -73,7 +76,9 @@ export default function AppRouter() {
         path="/tickets"
         element={
           <RequireAuth data-oid="nq-xmuj">
-            <TicketsPage data-oid="i99wikm" />
+            <RequirePermission page="tickets">
+              <TicketsPage data-oid="i99wikm" />
+            </RequirePermission>
           </RequireAuth>
         }
         data-oid="41m4r4h"
@@ -83,7 +88,9 @@ export default function AppRouter() {
         path="/defects"
         element={
           <RequireAuth>
-            <DefectsPage />
+            <RequirePermission page="defects">
+              <DefectsPage />
+            </RequirePermission>
           </RequireAuth>
         }
       />
@@ -92,7 +99,9 @@ export default function AppRouter() {
         path="/court-cases"
         element={
           <RequireAuth>
-            <CourtCasesPage />
+            <RequirePermission page="court-cases">
+              <CourtCasesPage />
+            </RequirePermission>
           </RequireAuth>
         }
       />
@@ -101,7 +110,9 @@ export default function AppRouter() {
         path="/correspondence"
         element={
           <RequireAuth>
-            <CorrespondencePage />
+            <RequirePermission page="correspondence">
+              <CorrespondencePage />
+            </RequirePermission>
           </RequireAuth>
         }
       />
@@ -110,7 +121,9 @@ export default function AppRouter() {
         path="/structure"
         element={
           <RequireAuth data-oid="khk60eg">
-            <ProjectStructurePage data-oid="1zm.al-" />
+            <RequirePermission page="structure">
+              <ProjectStructurePage data-oid="1zm.al-" />
+            </RequirePermission>
           </RequireAuth>
         }
         data-oid="50g:286"
@@ -121,7 +134,9 @@ export default function AppRouter() {
         path="/tickets/:ticketId/edit"
         element={
           <RequireAuth data-oid="jw4mt.4">
-            <TicketFormPage data-oid="r9pp63u" />
+            <RequirePermission page="tickets">
+              <TicketFormPage data-oid="r9pp63u" />
+            </RequirePermission>
           </RequireAuth>
         }
         data-oid="rdc_d7y"
@@ -132,7 +147,9 @@ export default function AppRouter() {
         path="/admin"
         element={
           <RequireAuth data-oid="f0b3w1p">
-            <AdminPage data-oid="rs22ppe" />
+            <RequirePermission page="admin">
+              <AdminPage data-oid="rs22ppe" />
+            </RequirePermission>
           </RequireAuth>
         }
         data-oid="b1_45g_"

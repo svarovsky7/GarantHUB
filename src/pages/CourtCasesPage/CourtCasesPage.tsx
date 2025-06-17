@@ -14,6 +14,9 @@ import { useContractors } from '@/entities/contractor';
 import { useUsers } from '@/entities/user';
 import { useCourtCaseStatuses } from '@/entities/courtCaseStatus';
 import { usePersons } from '@/entities/person';
+import { useRolePermission } from '@/entities/rolePermission';
+import { useAuthStore } from '@/shared/store/authStore';
+import type { RoleName } from '@/shared/types/rolePermission';
 import {
   PlusOutlined,
   DeleteOutlined,
@@ -92,6 +95,8 @@ export default function CourtCasesPage() {
   const { data: users = [] } = useUsers();
   const { data: stages = [] } = useCourtCaseStatuses();
   const { data: personsList = [] } = usePersons();
+  const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
+  const { data: perm } = useRolePermission(role);
 
   const unitIds = React.useMemo(() => Array.from(new Set(cases.flatMap((c) => c.unit_ids).filter(Boolean))), [cases]);
   const { data: caseUnits = [] } = useUnitsByIds(unitIds);
@@ -364,14 +369,16 @@ export default function CourtCasesPage() {
               />
             </Tooltip>
           )}
-          <Popconfirm
-            title="Удалить дело?"
-            okText="Да"
-            cancelText="Нет"
-            onConfirm={() => deleteCaseMutation.mutate(record.id)}
-          >
-            <Button type="text" danger icon={<DeleteOutlined />} />
-          </Popconfirm>
+          {perm?.delete_tables.includes('court_cases') && (
+            <Popconfirm
+              title="Удалить дело?"
+              okText="Да"
+              cancelText="Нет"
+              onConfirm={() => deleteCaseMutation.mutate(record.id)}
+            >
+              <Button type="text" danger icon={<DeleteOutlined />} />
+            </Popconfirm>
+          )}
         </Space>
       ),
     },
@@ -428,9 +435,15 @@ export default function CourtCasesPage() {
   return (
     <ConfigProvider locale={ruRU}>
       <>
-        <Button type="primary" onClick={() => setShowAddForm((p) => !p)} style={{ marginTop: 16, marginRight: 8 }}>
-          {showAddForm ? 'Скрыть форму' : 'Добавить дело'}
-        </Button>
+        {perm?.edit_tables.includes('court_cases') && (
+          <Button
+            type="primary"
+            onClick={() => setShowAddForm((p) => !p)}
+            style={{ marginTop: 16, marginRight: 8 }}
+          >
+            {showAddForm ? 'Скрыть форму' : 'Добавить дело'}
+          </Button>
+        )}
         <Button onClick={() => setShowFilters((p) => !p)} style={{ marginTop: 16 }}>
           {showFilters ? 'Скрыть фильтры' : 'Показать фильтры'}
         </Button>
