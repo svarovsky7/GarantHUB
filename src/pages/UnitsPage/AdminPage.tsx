@@ -13,6 +13,7 @@ import CourtCaseStatusesAdmin from "../../widgets/CourtCaseStatusesAdmin";
 import LetterTypesAdmin from "../../widgets/LetterTypesAdmin";
 import AttachmentTypesAdmin from "../../widgets/AttachmentTypesAdmin";
 import LetterStatusesAdmin from "../../widgets/LetterStatusesAdmin";
+import RolePermissionsAdmin from "../../widgets/RolePermissionsAdmin";
 
 export default function AdminPage() {
   return (
@@ -65,6 +66,8 @@ export default function AdminPage() {
         />
 
         <UsersTable pageSize={25} rowsPerPageOptions={[10, 25, 50, 100]} />
+
+        <RolePermissionsAdmin />
       </Stack>
     </Container>
   );

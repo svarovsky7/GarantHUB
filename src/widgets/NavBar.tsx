@@ -17,6 +17,7 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import { supabase } from "@/shared/api/supabaseClient";
 import { useAuthStore } from "@/shared/store/authStore";
 import { useProjects } from "@/entities/project";
+import { useRolePermission } from "@/entities/rolePermission";
 
 const NavBar = () => {
   const profile = useAuthStore((s) => s.profile);
@@ -24,6 +25,7 @@ const NavBar = () => {
   const setProjectId = useAuthStore((s) => s.setProjectId);
 
   const { data: projects = [], isPending } = useProjects();
+  const { data: perm } = useRolePermission(profile?.role as any);
 
   const logout = async () => {
     await supabase.auth.signOut();
@@ -48,52 +50,62 @@ const NavBar = () => {
 
         {/* --- навигация --- */}
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
-          <Button
-            color="inherit"
-            component={RouterLink}
-            to="/structure"
-            sx={{ whiteSpace: "normal" }}
-          >
-            Структура проекта
-          </Button>
-          <Button
-            color="inherit"
-            component={RouterLink}
-            to="/tickets"
-            sx={{ whiteSpace: "normal" }}
-          >
-            Замечания
-          </Button>
-          <Button
-            color="inherit"
-            component={RouterLink}
-            to="/defects"
-            sx={{ whiteSpace: "normal" }}
-          >
-            Дефекты
-          </Button>
-          <Button
-            color="inherit"
-            component={RouterLink}
-            to="/court-cases"
-            sx={{ whiteSpace: "normal" }}
-          >
-            Судебные дела
-          </Button>
-          <Button
-            color="inherit"
-            component={RouterLink}
-            to="/correspondence"
-            sx={{ whiteSpace: "normal" }}
-          >
-            Письма
-          </Button>
-          {profile?.role === "ADMIN" && (
+          {perm?.pages.includes('structure') && (
+            <Button
+              color="inherit"
+              component={RouterLink}
+              to="/structure"
+              sx={{ whiteSpace: 'normal' }}
+            >
+              Структура проекта
+            </Button>
+          )}
+          {perm?.pages.includes('tickets') && (
+            <Button
+              color="inherit"
+              component={RouterLink}
+              to="/tickets"
+              sx={{ whiteSpace: 'normal' }}
+            >
+              Замечания
+            </Button>
+          )}
+          {perm?.pages.includes('defects') && (
+            <Button
+              color="inherit"
+              component={RouterLink}
+              to="/defects"
+              sx={{ whiteSpace: 'normal' }}
+            >
+              Дефекты
+            </Button>
+          )}
+          {perm?.pages.includes('court-cases') && (
+            <Button
+              color="inherit"
+              component={RouterLink}
+              to="/court-cases"
+              sx={{ whiteSpace: 'normal' }}
+            >
+              Судебные дела
+            </Button>
+          )}
+          {perm?.pages.includes('correspondence') && (
+            <Button
+              color="inherit"
+              component={RouterLink}
+              to="/correspondence"
+              sx={{ whiteSpace: 'normal' }}
+            >
+              Письма
+            </Button>
+          )}
+          {perm?.pages.includes('admin') && (
             <Button
               color="inherit"
               component={RouterLink}
               to="/admin"
-              sx={{ whiteSpace: "normal" }}
+              sx={{ whiteSpace: 'normal' }}
             >
               Администрирование
             </Button>

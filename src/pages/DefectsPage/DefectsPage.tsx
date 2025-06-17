@@ -23,6 +23,9 @@ import { useUnitsByIds } from "@/entities/unit";
 import { useProjects } from "@/entities/project";
 import { useBrigades } from "@/entities/brigade";
 import { useContractors } from "@/entities/contractor";
+import { useRolePermission } from "@/entities/rolePermission";
+import { useAuthStore } from "@/shared/store/authStore";
+import type { RoleName } from "@/shared/types/rolePermission";
 import DefectsTable from "@/widgets/DefectsTable";
 import DefectsFilters from "@/widgets/DefectsFilters";
 import TableColumnsDrawer from "@/widgets/TableColumnsDrawer";
@@ -139,6 +142,8 @@ export default function DefectsPage() {
   const [viewId, setViewId] = useState<number | null>(null);
   const [fixId, setFixId] = useState<number | null>(null);
   const { mutateAsync: removeDefect, isPending: removing } = useDeleteDefect();
+  const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
+  const { data: perm } = useRolePermission(role);
 
   const LS_FILTERS_VISIBLE_KEY = "defectsFiltersVisible";
   const LS_COLUMNS_KEY = "defectsColumns";
@@ -270,24 +275,26 @@ export default function DefectsPage() {
                 onClick={() => setFixId(row.id)}
               />
             </Tooltip>
-            <Popconfirm
-              title="Удалить дефект?"
-              okText="Да"
-              cancelText="Нет"
-              onConfirm={async () => {
-                await removeDefect(row.id);
-                message.success("Удалено");
-              }}
-              disabled={removing}
-            >
-              <Button
-                size="small"
-                type="text"
-                danger
-                icon={<DeleteOutlined />}
-                loading={removing}
-              />
-            </Popconfirm>
+            {perm?.delete_tables.includes('defects') && (
+              <Popconfirm
+                title="Удалить дефект?"
+                okText="Да"
+                cancelText="Нет"
+                onConfirm={async () => {
+                  await removeDefect(row.id);
+                  message.success("Удалено");
+                }}
+                disabled={removing}
+              >
+                <Button
+                  size="small"
+                  type="text"
+                  danger
+                  icon={<DeleteOutlined />}
+                  loading={removing}
+                />
+              </Popconfirm>
+            )}
           </>
         ),
       } as any,
