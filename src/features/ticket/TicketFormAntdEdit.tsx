@@ -15,7 +15,7 @@ import { useDefectTypes } from '@/entities/defectType';
 import { useTicketStatuses } from '@/entities/ticketStatus';
 import { useUnitsByProject } from '@/entities/unit';
 import { useUsers } from '@/entities/user';
-import { useProjects } from '@/entities/project';
+import { useVisibleProjects } from '@/entities/project';
 import { useCreateTicket, useTicket } from '@/entities/ticket';
 import { useAttachmentTypes } from '@/entities/attachmentType';
 import { useProjectId } from '@/shared/hooks/useProjectId';
@@ -66,7 +66,7 @@ export default function TicketFormAntdEdit({
 
   const { data: types = [] } = useDefectTypes();
   const { data: statuses = [] } = useTicketStatuses();
-  const { data: projects = [] } = useProjects();
+  const { data: projects = [] } = useVisibleProjects();
   const { data: users = [] } = useUsers();
   const projectIdWatch = Form.useWatch('project_id', form) ?? globalProjectId;
   const projectId = projectIdWatch != null ? Number(projectIdWatch) : null;

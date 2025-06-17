@@ -16,7 +16,7 @@ import LogoutIcon from "@mui/icons-material/Logout";
 
 import { supabase } from "@/shared/api/supabaseClient";
 import { useAuthStore } from "@/shared/store/authStore";
-import { useProjects } from "@/entities/project";
+import { useVisibleProjects } from "@/entities/project";
 import { useRolePermission } from "@/entities/rolePermission";
 
 const NavBar = () => {
@@ -24,7 +24,7 @@ const NavBar = () => {
   const setProfile = useAuthStore((s) => s.setProfile);
   const setProjectId = useAuthStore((s) => s.setProjectId);
 
-  const { data: projects = [], isPending } = useProjects();
+  const { data: projects = [], isPending } = useVisibleProjects();
   const { data: perm } = useRolePermission(profile?.role as any);
 
   const logout = async () => {
@@ -138,6 +138,7 @@ const NavBar = () => {
                   value={profile.project_id ?? ""}
                   onChange={(e) => setProjectId(e.target.value)}
                   displayEmpty
+                  disabled={perm?.only_assigned_project}
                   sx={{
                     color: "inherit",
                     fontSize: 12,

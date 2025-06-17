@@ -8,7 +8,7 @@ import { ConfigProvider, Button, Card, Table, Space, Popconfirm, Tooltip, Typogr
 import ruRU from 'antd/locale/ru_RU';
 import type { ColumnsType } from 'antd/es/table';
 import type { CourtCase } from '@/shared/types/courtCase';
-import { useProjects } from '@/entities/project';
+import { useVisibleProjects } from '@/entities/project';
 import { useUnitsByIds } from '@/entities/unit';
 import { useContractors } from '@/entities/contractor';
 import { useUsers } from '@/entities/user';
@@ -90,7 +90,7 @@ export default function CourtCasesPage() {
     }
   }, [searchParams]);
 
-  const { data: projects = [] } = useProjects();
+  const { data: projects = [] } = useVisibleProjects();
   const { data: contractors = [] } = useContractors();
   const { data: users = [] } = useUsers();
   const { data: stages = [] } = useCourtCaseStatuses();

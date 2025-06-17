@@ -20,7 +20,7 @@ import {
 } from "@mui/material";
 import { useSnackbar } from "notistack";
 
-import { useProjects } from "@/entities/project";
+import { useVisibleProjects } from "@/entities/project";
 
 /**
  * Страница регистрации нового пользователя.
@@ -36,7 +36,7 @@ export default function RegisterPage() {
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const { data: projects = [], isLoading: projLoad } = useProjects();
+  const { data: projects = [], isLoading: projLoad } = useVisibleProjects();
 
   /** Отправка формы регистрации */
   async function signUp(e) {

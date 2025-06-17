@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/shared/api/supabaseClient';
 import type { Project } from '@/shared/types/project';
+import { useVisibleProjects } from '@/entities/project';
 
 const LS_KEY = 'structurePageSelection';
 
@@ -9,7 +10,7 @@ const LS_KEY = 'structurePageSelection';
  * Сохраняет состояние в localStorage и синхронизирует его между вкладками.
  */
 export default function useProjectStructure() {
-    const [projects, setProjects] = useState<Project[]>([]);
+    const { data: projects = [] } = useVisibleProjects();
     const [projectId, setProjectIdState] = useState<string>('');
     const [buildings, setBuildings] = useState<string[]>([]);
     const [building, setBuildingState] = useState<string>('');
@@ -47,13 +48,7 @@ export default function useProjectStructure() {
         } catch { /* ignore */ }
     }, []);
 
-    // --- Projects ---
-    useEffect(() => {
-        (async () => {
-            const { data } = await supabase.from('projects').select('*').order('id');
-            setProjects((data ?? []) as Project[]);
-        })();
-    }, []);
+
 
     // --- Buildings and sections auto-refresh ---
     const refreshAll = useCallback(async () => {

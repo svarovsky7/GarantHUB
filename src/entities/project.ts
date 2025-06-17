@@ -3,12 +3,16 @@
 // CRUD-хуки для проектов
 // -----------------------------------------------------------------------------
 import { supabase } from '@/shared/api/supabaseClient';
+import React from 'react';
 import {
     useQuery,
     useMutation,
     useQueryClient,
 } from '@tanstack/react-query';
 import type { Project } from '@/shared/types/project';
+import { useAuthStore, useProjectId } from '@/shared/store/authStore';
+import { useRolePermission } from '@/entities/rolePermission';
+import type { RoleName } from '@/shared/types/rolePermission';
 
 /* ---------- helpers ---------- */
 const normalize = (s: string) => s.trim();
@@ -113,4 +117,25 @@ const deleteProject = async (id: number): Promise<void> => {
     if (error) throw error;
 };
 export const useDeleteProject = withInvalidate(deleteProject);
+
+/**
+ * Возвращает список проектов с учётом настроек роли пользователя.
+ * Если роли включено ограничение {@link RolePermission.only_assigned_project},
+ * оставляет только проект, назначенный профилю.
+ */
+export const useVisibleProjects = () => {
+    const query = useProjects();
+    const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
+    const { data: perm } = useRolePermission(role);
+    const projectId = useProjectId();
+
+    const data = React.useMemo(() => {
+        if (perm?.only_assigned_project && projectId != null) {
+            return (query.data ?? []).filter((p) => p.id === Number(projectId));
+        }
+        return query.data ?? [];
+    }, [query.data, perm?.only_assigned_project, projectId]);
+
+    return { ...query, data } as typeof query;
+};
 

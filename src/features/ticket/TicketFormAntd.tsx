@@ -7,7 +7,7 @@ import { Form, Input, Select, DatePicker, Switch, Button, Row, Col } from 'antd'
 import { useTicketStatuses } from '@/entities/ticketStatus';
 import { useUnitsByProject } from '@/entities/unit';
 import { useUsers } from '@/entities/user';
-import { useProjects } from '@/entities/project';
+import { useVisibleProjects } from '@/entities/project';
 import { useCreateTicket } from '@/entities/ticket';
 import { useCreateDefects, type NewDefect } from '@/entities/defect';
 import { useAttachmentTypes } from '@/entities/attachmentType';
@@ -63,7 +63,7 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
   const projectId = projectIdWatch != null ? Number(projectIdWatch) : null;
 
   const { data: statuses = [] } = useTicketStatuses();
-  const { data: projects = [] } = useProjects();
+  const { data: projects = [] } = useVisibleProjects();
   const { data: units = [] } = useUnitsByProject(projectId);
   const { data: users = [] } = useUsers();
   const { data: attachmentTypes = [] } = useAttachmentTypes();

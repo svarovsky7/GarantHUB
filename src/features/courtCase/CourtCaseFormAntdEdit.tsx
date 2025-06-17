@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import dayjs, { Dayjs } from 'dayjs';
 import { Form, Input, Select, DatePicker, Row, Col, Button, Skeleton } from 'antd';
-import { useProjects } from '@/entities/project';
+import { useVisibleProjects } from '@/entities/project';
 import { useUnitsByProject } from '@/entities/unit';
 import { useContractors } from '@/entities/contractor';
 import { useUsers } from '@/entities/user';
@@ -32,7 +32,7 @@ export default function CourtCaseFormAntdEdit({
 }: CourtCaseFormAntdEditProps) {
   const [form] = Form.useForm();
   const { data: courtCase } = useCourtCase(caseId);
-  const { data: projects = [] } = useProjects();
+  const { data: projects = [] } = useVisibleProjects();
   const projectId = Form.useWatch('project_id', form);
   const { data: units = [] } = useUnitsByProject(projectId);
   const { data: contractors = [] } = useContractors();
