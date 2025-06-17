@@ -17,7 +17,7 @@ import {
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useUsers } from '@/entities/user';
 import { useLetterTypes } from '@/entities/letterType';
-import { useProjects } from '@/entities/project';
+import { useVisibleProjects } from '@/entities/project';
 import { useUnitsByProject } from '@/entities/unit';
 import { useAttachmentTypes } from '@/entities/attachmentType';
 import { useContractors, useDeleteContractor } from '@/entities/contractor';
@@ -44,7 +44,7 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
   const { data: letter } = useLetter(letterId);
   const { data: users = [] } = useUsers();
   const { data: letterTypes = [] } = useLetterTypes();
-  const { data: projects = [] } = useProjects();
+  const { data: projects = [] } = useVisibleProjects();
   const projectId = Form.useWatch('project_id', form);
   const { data: units = [] } = useUnitsByProject(projectId); 
   const { data: attachmentTypes = [] } = useAttachmentTypes();

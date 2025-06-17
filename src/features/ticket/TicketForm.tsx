@@ -22,7 +22,7 @@ import { useDefectTypes } from "@/entities/defectType";
 import { useTicketStatuses } from "@/entities/ticketStatus";
 import { useUnitsByProject } from "@/entities/unit";
 import { useUsers } from "@/entities/user";
-import { useProjects } from "@/entities/project";
+import { useVisibleProjects } from "@/entities/project";
 import { useDefectDeadlines } from "@/entities/defectDeadline";
 import { useAttachmentTypes } from "@/entities/attachmentType";
 import { useCreateTicket, useTicket, signedUrl } from "@/entities/ticket";
@@ -112,7 +112,7 @@ export default function TicketForm({
     },
   });
 
-  const { data: projects = [] } = useProjects();
+  const { data: projects = [] } = useVisibleProjects();
   const { data: types = [] } = useDefectTypes();
   const { data: statuses = [] } = useTicketStatuses();
   const { data: users = [] } = useUsers();

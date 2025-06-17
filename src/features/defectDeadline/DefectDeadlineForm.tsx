@@ -8,7 +8,7 @@ import {
   CircularProgress,
   MenuItem,
 } from '@mui/material';
-import { useProjects } from '@/entities/project';
+import { useVisibleProjects } from '@/entities/project';
 import { useDefectTypes } from '@/entities/defectType';
 
 interface FormValues {
@@ -32,7 +32,7 @@ export default function DefectDeadlineForm({ initialData, onSubmit, onCancel }: 
     },
   });
 
-  const { data: projects = [] } = useProjects();
+  const { data: projects = [] } = useVisibleProjects();
   const { data: types = [] } = useDefectTypes();
 
   return (

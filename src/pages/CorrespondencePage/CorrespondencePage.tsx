@@ -40,7 +40,7 @@ import { fixForeignKeys } from '@/shared/utils/fixForeignKeys';
 
 import { useUsers } from '@/entities/user';
 import { useLetterTypes } from '@/entities/letterType';
-import { useProjects } from '@/entities/project';
+import { useVisibleProjects } from '@/entities/project';
 import { useUnitsByProject, useUnitsByIds } from '@/entities/unit';
 import { useAttachmentTypes } from '@/entities/attachmentType';
 import { useNotify } from '@/shared/hooks/useNotify';
@@ -188,7 +188,7 @@ export default function CorrespondencePage() {
   const { data: statuses = [] } = useLetterStatuses();
   const { data: contractors = [] } = useContractors();
   const { data: persons = [] } = usePersons();
-  const { data: projects = [] } = useProjects();
+  const { data: projects = [] } = useVisibleProjects();
   const { data: attachmentTypes = [] } = useAttachmentTypes();
   const { data: projectUnits = [] } = useUnitsByProject(
     filters.project ? Number(filters.project) : null,

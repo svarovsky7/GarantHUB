@@ -13,7 +13,7 @@ import {
   Modal,
 } from 'antd';
 import { Dayjs } from 'dayjs';
-import { useProjects } from '@/entities/project';
+import { useVisibleProjects } from '@/entities/project';
 import { useUnitsByProject } from '@/entities/unit';
 import {
   useContractors,
@@ -92,7 +92,7 @@ export default function AddCourtCaseFormAntd({
     prevProjectIdRef.current = projectId ?? null;
   }, [projectId, form]);
 
-  const { data: projects = [] } = useProjects();
+  const { data: projects = [] } = useVisibleProjects();
   const { data: units = [], isPending: unitsLoading } = useUnitsByProject(projectId);
   const { data: contractors = [], isPending: contractorsLoading } = useContractors();
   const { data: users = [], isPending: usersLoading } = useUsers();

@@ -20,7 +20,7 @@ import ruRU from "antd/locale/ru_RU";
 import { useDefects, useDeleteDefect } from "@/entities/defect";
 import { useTicketsSimple } from "@/entities/ticket";
 import { useUnitsByIds } from "@/entities/unit";
-import { useProjects } from "@/entities/project";
+import { useVisibleProjects } from "@/entities/project";
 import { useBrigades } from "@/entities/brigade";
 import { useContractors } from "@/entities/contractor";
 import { useRolePermission } from "@/entities/rolePermission";
@@ -50,7 +50,7 @@ export default function DefectsPage() {
     [tickets],
   );
   const { data: units = [] } = useUnitsByIds(unitIds);
-  const { data: projects = [] } = useProjects();
+  const { data: projects = [] } = useVisibleProjects();
   const { data: brigades = [] } = useBrigades();
   const { data: contractors = [] } = useContractors();
 

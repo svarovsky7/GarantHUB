@@ -10,12 +10,12 @@ import {
   Skeleton,
 } from "@mui/material";
 import { useSnackbar } from "notistack";
-import { useProjects } from "../../entities/project";
+import { useVisibleProjects } from "../../entities/project";
 import { useAuthStore } from "../../shared/store/authStore";
 
 const DashboardPage = () => {
   const { enqueueSnackbar } = useSnackbar();
-  const { data: projects = [], isPending, error } = useProjects();
+  const { data: projects = [], isPending, error } = useVisibleProjects();
   const profile = useAuthStore((s) => s.profile);
 
   useEffect(() => {

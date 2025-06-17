@@ -17,7 +17,7 @@ import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import dayjs, { Dayjs } from 'dayjs';
 import { useUsers } from '@/entities/user';
 import { useLetterTypes } from '@/entities/letterType';
-import { useProjects } from '@/entities/project';
+import { useVisibleProjects } from '@/entities/project';
 import { useUnitsByProject } from '@/entities/unit';
 import { useContractors, useDeleteContractor } from '@/entities/contractor';
 import { usePersons, useDeletePerson } from '@/entities/person';
@@ -68,7 +68,7 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
 
   const { data: users = [], isLoading: loadingUsers } = useUsers();
   const { data: letterTypes = [], isLoading: loadingTypes } = useLetterTypes();
-  const { data: projects = [], isLoading: loadingProjects } = useProjects();
+  const { data: projects = [], isLoading: loadingProjects } = useVisibleProjects();
   const { data: units = [], isLoading: loadingUnits } = useUnitsByProject(projectId);
   const { data: contractors = [], isLoading: loadingContractors } = useContractors();
   const { data: persons = [], isLoading: loadingPersons } = usePersons();
