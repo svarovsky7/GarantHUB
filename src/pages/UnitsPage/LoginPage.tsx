@@ -1,7 +1,8 @@
 // src/pages/UnitsPage/LoginPage.js
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "@shared/api/supabaseClient";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { useAuthStore } from "@/shared/store/authStore";
 import {
   Paper,
   TextField,
@@ -13,13 +14,24 @@ import {
 } from "@mui/material";
 import { useSnackbar } from "notistack";
 
+/**
+ * Страница входа в систему.
+ * Перенаправляет на главную, если пользователь уже авторизован.
+ */
 export default function LoginPage() {
   const nav = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
+  const profile = useAuthStore((s) => s.profile);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (profile) {
+      nav('/', { replace: true });
+    }
+  }, [profile, nav]);
 
   const login = async (e) => {
     e.preventDefault();
