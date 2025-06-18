@@ -127,7 +127,7 @@ export const useVisibleProjects = () => {
     const query = useProjects();
     const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
     const { data: perm } = useRolePermission(role);
-    const projectIds = useAuthStore((s) => s.profile?.project_ids ?? []);
+    const projectIds = useAuthStore((s) => s.profile?.project_ids) ?? [];
 
     const data = React.useMemo(() => {
         if (perm?.only_assigned_project && projectIds.length > 0) {

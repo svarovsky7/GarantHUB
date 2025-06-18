@@ -32,5 +32,7 @@ export const useProjectId = () =>
   useAuthStore((s) => s.profile?.project_id ?? null);
 
 /** Селектор project_ids */
-export const useProjectIds = () =>
-  useAuthStore((s) => s.profile?.project_ids ?? []);
+export const useProjectIds = () => {
+  const ids = useAuthStore((s) => s.profile?.project_ids);
+  return ids ?? [];
+};
