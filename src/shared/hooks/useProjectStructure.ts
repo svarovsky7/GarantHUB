@@ -31,7 +31,7 @@ export default function useProjectStructure() {
     // --- Обёртки, чтобы сеттеры писали в localStorage ---
     const setProjectId = (id: string) => {
         setProjectIdState(id);
-        setGlobalProjectId(id ? String(id) : null);
+        setGlobalProjectId(id ? Number(id) : null);
         saveToLS({ projectId: id, building, section });
     };
     const setBuilding = (bld: string) => {
@@ -49,7 +49,7 @@ export default function useProjectStructure() {
             const saved = JSON.parse(localStorage.getItem(LS_KEY) || '{}') as Partial<ProjectStructureSelection>;
             if (saved.projectId) {
                 setProjectIdState(saved.projectId);
-                setGlobalProjectId(saved.projectId);
+                setGlobalProjectId(Number(saved.projectId));
             }
             if (saved.building) setBuildingState(saved.building);
             if (saved.section) setSectionState(saved.section);
@@ -89,7 +89,7 @@ export default function useProjectStructure() {
     // --- Автоматическое сохранение выбранных значений при изменении ---
     useEffect(() => {
         saveToLS({ projectId, building, section });
-        setGlobalProjectId(projectId || null);
+        setGlobalProjectId(projectId ? Number(projectId) : null);
     }, [projectId, building, section]);
 
     // --- Поддержка обновления между вкладками ---
@@ -100,7 +100,7 @@ export default function useProjectStructure() {
                     const saved = JSON.parse(e.newValue || '{}') as Partial<ProjectStructureSelection>;
                     if (saved.projectId) {
                         setProjectIdState(saved.projectId);
-                        setGlobalProjectId(saved.projectId);
+                        setGlobalProjectId(Number(saved.projectId));
                     }
                     if (saved.building) setBuildingState(saved.building);
                     if (saved.section) setSectionState(saved.section);

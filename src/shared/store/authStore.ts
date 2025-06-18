@@ -22,7 +22,16 @@ export const useAuthStore = create<AuthState>((set) => ({
   setProfile: (profile) => set({ profile }),
   clearProfile: () => set({ profile: null }),
   setProjectId: (project_id) =>
-    set((s) => (s.profile ? { profile: { ...s.profile, project_id } } : {})),
+    set((s) =>
+      s.profile
+        ? {
+            profile: {
+              ...s.profile,
+              project_id: project_id != null ? Number(project_id) : null,
+            },
+          }
+        : {},
+    ),
   setProjectIds: (project_ids) =>
     set((s) => (s.profile ? { profile: { ...s.profile, project_ids } } : {})),
 }));
