@@ -1,7 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/shared/api/supabaseClient';
 import type { Project } from '@/shared/types/project';
+import type { ProjectStructureSelection } from '@/shared/types/projectStructure';
 import { useVisibleProjects } from '@/entities/project';
+import { useAuthStore } from '@/shared/store/authStore';
 
 const LS_KEY = 'structurePageSelection';
 
@@ -11,6 +13,8 @@ const LS_KEY = 'structurePageSelection';
  */
 export default function useProjectStructure() {
     const { data: projects = [] } = useVisibleProjects();
+    const setGlobalProjectId = useAuthStore((s) => s.setProjectId);
+
     const [projectId, setProjectIdState] = useState<string>('');
     const [buildings, setBuildings] = useState<string[]>([]);
     const [building, setBuildingState] = useState<string>('');
@@ -27,6 +31,7 @@ export default function useProjectStructure() {
     // --- Обёртки, чтобы сеттеры писали в localStorage ---
     const setProjectId = (id: string) => {
         setProjectIdState(id);
+        setGlobalProjectId(id ? String(id) : null);
         saveToLS({ projectId: id, building, section });
     };
     const setBuilding = (bld: string) => {
@@ -41,8 +46,11 @@ export default function useProjectStructure() {
     // --- Восстановление из localStorage при инициализации ---
     useEffect(() => {
         try {
-            const saved = JSON.parse(localStorage.getItem(LS_KEY) || '{}') as Partial<{ projectId: string; building: string; section: string }>;
-            if (saved.projectId) setProjectIdState(saved.projectId);
+            const saved = JSON.parse(localStorage.getItem(LS_KEY) || '{}') as Partial<ProjectStructureSelection>;
+            if (saved.projectId) {
+                setProjectIdState(saved.projectId);
+                setGlobalProjectId(saved.projectId);
+            }
             if (saved.building) setBuildingState(saved.building);
             if (saved.section) setSectionState(saved.section);
         } catch { /* ignore */ }
@@ -81,18 +89,22 @@ export default function useProjectStructure() {
     // --- Автоматическое сохранение выбранных значений при изменении ---
     useEffect(() => {
         saveToLS({ projectId, building, section });
+        setGlobalProjectId(projectId || null);
     }, [projectId, building, section]);
 
     // --- Поддержка обновления между вкладками ---
     useEffect(() => {
-        const handler = (e) => {
+        const handler = (e: StorageEvent) => {
             if (e.key === LS_KEY) {
                 try {
-                    const saved = JSON.parse(e.newValue || '{}');
-                    if (saved.projectId) setProjectIdState(saved.projectId);
+                    const saved = JSON.parse(e.newValue || '{}') as Partial<ProjectStructureSelection>;
+                    if (saved.projectId) {
+                        setProjectIdState(saved.projectId);
+                        setGlobalProjectId(saved.projectId);
+                    }
                     if (saved.building) setBuildingState(saved.building);
                     if (saved.section) setSectionState(saved.section);
-                } catch {/* ignore */}
+                } catch { /* ignore */ }
             }
         };
         window.addEventListener('storage', handler);
