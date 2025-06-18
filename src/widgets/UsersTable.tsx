@@ -3,13 +3,11 @@ import { GridActionsCellItem } from "@mui/x-data-grid";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { MenuItem, Select, CircularProgress } from "@mui/material";
 
-import { useUsers, useDeleteUser } from "@/entities/user";
+import { useUsers, useDeleteUser, useUpdateUserProjects } from "@/entities/user";
 import { useRoles } from "@/entities/role";
 import { useProjects } from "@/entities/project";
 import AdminDataGrid from "@/shared/ui/AdminDataGrid";
 import { useNotify } from "@/shared/hooks/useNotify";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/shared/api/supabaseClient";
 import RoleSelect from "@/features/user/RoleSelect";
 
 // Интерфейс для пропсов с пагинацией
@@ -28,26 +26,9 @@ export default function UsersTable({
   const { data: projects = [], isPending: pLoad } = useProjects();
   const delUser = useDeleteUser();
 
-  const qc = useQueryClient();
 
-  // Мутация для смены project_id пользователя
-  const updateProject = useMutation({
-    mutationFn: async ({ id, project_id }: any) => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .update({ project_id })
-        .eq("id", id)
-        .select("id, name, email, role, project_id")
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["users", "all"] });
-      notify.success("Проект пользователя обновлен");
-    },
-    onError: (e) => notify.error(e.message),
-  });
+  // Мутация для обновления списка проектов пользователя
+  const updateProjects = useUpdateUserProjects();
 
   // Таблица
   const columns = [
@@ -61,23 +42,27 @@ export default function UsersTable({
       renderCell: ({ row }) => <RoleSelect user={row} roles={roles} />,
     },
     {
-      field: "project_id",
-      headerName: "Проект",
+      field: "project_ids",
+      headerName: "Проекты",
       flex: 1,
       renderCell: ({ row }) => {
         if (pLoad) return <CircularProgress size={18} />;
         return (
           <Select
+            multiple
             size="small"
             variant="standard"
-            value={row.project_id || ""}
+            value={row.project_ids || []}
             onChange={(e) =>
-              updateProject.mutate({ id: row.id, project_id: e.target.value })
+              updateProjects.mutate({ id: row.id, projectIds: e.target.value as number[] })
             }
             sx={{ minWidth: 160 }}
-            displayEmpty
+            renderValue={(selected) =>
+              (selected as number[])
+                .map((id) => projects.find((p) => p.id === id)?.name)
+                .join(', ')
+            }
           >
-            <MenuItem value="">—</MenuItem>
             {projects.map((proj) => (
               <MenuItem key={proj.id} value={proj.id}>
                 {proj.name}

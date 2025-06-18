@@ -19,18 +19,24 @@ export default function App() {
     async (user, tag = "") => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, email, name, role, project_id")
+        .select("id, email, name, role, project_id, profiles_projects(project_id)")
         .eq("id", user.id)
         .single();
 
       setProfile(
-        data ?? {
-          id: user.id,
-          email: user.email,
-          name: user.user_metadata?.name ?? null,
-          role: "USER",
-          project_id: null,
-        },
+        data
+          ? {
+              ...data,
+              project_ids: data.profiles_projects?.map((p: any) => p.project_id) ?? [],
+            }
+          : {
+              id: user.id,
+              email: user.email,
+              name: user.user_metadata?.name ?? null,
+              role: "USER",
+              project_id: null,
+              project_ids: [],
+            },
       );
     },
     [setProfile],
