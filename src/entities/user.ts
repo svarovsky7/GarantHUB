@@ -7,7 +7,7 @@ import { supabase } from '@/shared/api/supabaseClient';
 import type { User } from '@/shared/types/user';
 import type { RoleName } from '@/shared/types/rolePermission';
 
-const FIELDS = 'id, name, email, role, project_id';
+const FIELDS = 'id, name, email, role, project_id, profiles_projects ( project_id )';
 
 /* ─────────── SELECT ─────────── */
 /** Получить всех пользователей БД без фильтрации */
@@ -20,7 +20,10 @@ export const useUsers = () => {
                 .select(FIELDS)
                 .order('id');
             if (error) throw error;
-            return data ?? [];
+            return (data ?? []).map((u: any) => ({
+                ...u,
+                project_ids: u.profiles_projects?.map((p: any) => p.project_id) ?? [],
+            }));
         },
         staleTime: 5 * 60_000,
     });
@@ -38,7 +41,10 @@ export const useUpdateUserRole = () => {
                 .select(FIELDS)
                 .single();
             if (error) throw error;
-            return data;
+            return {
+                ...data,
+                project_ids: data?.profiles_projects?.map((p: any) => p.project_id) ?? [],
+            } as User;
         },
         onSuccess: () => qc.invalidateQueries({ queryKey: ['users', 'all'] }),
     });
@@ -73,5 +79,49 @@ export async function addUserProfile(payload: {
 }): Promise<void> {
     const { error } = await supabase.from('profiles').insert(payload);
     if (error) throw error;
+    if (payload.project_id) {
+        const { error: linkErr } = await supabase
+            .from('profiles_projects')
+            .insert({ profile_id: payload.id, project_id: payload.project_id });
+        if (linkErr) throw linkErr;
+    }
 }
+
+/* ─────────── UPDATE PROJECTS ─────────── */
+/**
+ * Обновляет список проектов пользователя.
+ * Перезаписывает связи в таблице `profiles_projects`.
+ */
+export const useUpdateUserProjects = () => {
+    const qc = useQueryClient();
+    return useMutation<void, Error, { id: string; projectIds: number[] }>({
+        mutationFn: async ({ id, projectIds }): Promise<void> => {
+            const { data: current, error: selErr } = await supabase
+                .from('profiles_projects')
+                .select('project_id')
+                .eq('profile_id', id);
+            if (selErr) throw selErr;
+            const currentIds = (current ?? []).map((p: any) => p.project_id);
+            const toInsert = projectIds
+                .filter((pid) => !currentIds.includes(pid))
+                .map((pid) => ({ profile_id: id, project_id: pid }));
+            const toDelete = currentIds.filter((pid) => !projectIds.includes(pid));
+            if (toInsert.length) {
+                const { error } = await supabase
+                    .from('profiles_projects')
+                    .insert(toInsert);
+                if (error) throw error;
+            }
+            if (toDelete.length) {
+                const { error } = await supabase
+                    .from('profiles_projects')
+                    .delete()
+                    .eq('profile_id', id)
+                    .in('project_id', toDelete);
+                if (error) throw error;
+            }
+        },
+        onSuccess: () => qc.invalidateQueries({ queryKey: ['users', 'all'] }),
+    });
+};
 

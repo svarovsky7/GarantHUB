@@ -10,7 +10,7 @@ import {
     useQueryClient,
 } from '@tanstack/react-query';
 import type { Project } from '@/shared/types/project';
-import { useAuthStore, useProjectId } from '@/shared/store/authStore';
+import { useAuthStore } from '@/shared/store/authStore';
 import { useRolePermission } from '@/entities/rolePermission';
 import type { RoleName } from '@/shared/types/rolePermission';
 
@@ -127,14 +127,14 @@ export const useVisibleProjects = () => {
     const query = useProjects();
     const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
     const { data: perm } = useRolePermission(role);
-    const projectId = useProjectId();
+    const projectIds = useAuthStore((s) => s.profile?.project_ids ?? []);
 
     const data = React.useMemo(() => {
-        if (perm?.only_assigned_project && projectId != null) {
-            return (query.data ?? []).filter((p) => p.id === Number(projectId));
+        if (perm?.only_assigned_project && projectIds.length > 0) {
+            return (query.data ?? []).filter((p) => projectIds.includes(p.id));
         }
         return query.data ?? [];
-    }, [query.data, perm?.only_assigned_project, projectId]);
+    }, [query.data, perm?.only_assigned_project, projectIds]);
 
     return { ...query, data } as typeof query;
 };

@@ -13,6 +13,8 @@ interface AuthState {
   clearProfile: () => void;
   /** Обновление project_id без перезагрузки профиля */
   setProjectId: (project_id: string | null) => void;
+  /** Обновление списка проектов пользователя */
+  setProjectIds: (project_ids: number[]) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -21,8 +23,14 @@ export const useAuthStore = create<AuthState>((set) => ({
   clearProfile: () => set({ profile: null }),
   setProjectId: (project_id) =>
     set((s) => (s.profile ? { profile: { ...s.profile, project_id } } : {})),
+  setProjectIds: (project_ids) =>
+    set((s) => (s.profile ? { profile: { ...s.profile, project_ids } } : {})),
 }));
 
 /** Селектор project_id (null, если пользователь гость либо проект не назначен) */
 export const useProjectId = () =>
   useAuthStore((s) => s.profile?.project_id ?? null);
+
+/** Селектор project_ids */
+export const useProjectIds = () =>
+  useAuthStore((s) => s.profile?.project_ids ?? []);

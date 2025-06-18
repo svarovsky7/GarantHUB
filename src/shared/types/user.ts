@@ -4,4 +4,6 @@ export interface User {
   email: string | null;
   role: string | null;
   project_id: string | null;
+  /** Массив проектов, назначенных пользователю */
+  project_ids: number[];
 }
