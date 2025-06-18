@@ -8,9 +8,6 @@ import {
 } from '@tanstack/react-query';
 import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useAuthStore } from '@/shared/store/authStore'; // Добавлено!
-import { useRolePermission } from '@/entities/rolePermission';
-import type { RoleName } from '@/shared/types/rolePermission';
-import { filterByProjects } from '@/shared/utils/projectQuery';
 
 /* ---------- базовый SELECT ---------- */
 const SELECT = `
@@ -33,17 +30,15 @@ const sanitize = (obj) => {
 /* ====================== READ ====================== */
 export const useUnits = () => {
     const projectId = useProjectId();
-    const projectIds = useAuthStore((s) => s.profile?.project_ids) ?? [];
-    const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
-    const { data: perm } = useRolePermission(role);
     return useQuery({
         queryKey: ['units', projectId],
-        enabled : !!projectId || (perm?.only_assigned_project && projectIds.length > 0),
+        enabled : !!projectId,
         queryFn : async () => {
-            let query = supabase.from('units').select(SELECT);
-            query = filterByProjects(query, projectId, projectIds, perm?.only_assigned_project);
-            query = query.order('id');
-            const { data, error } = await query;
+            const { data, error } = await supabase
+                .from('units')
+                .select(SELECT)
+                .eq('project_id', projectId)
+                .order('id');
 
             if (error) throw error;
 
@@ -95,20 +90,16 @@ export const useUnitsByIds = (ids) =>
 
 export const useUnit = (unitId) => {
     const projectId = useProjectId();
-    const projectIds = useAuthStore((s) => s.profile?.project_ids) ?? [];
-    const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
-    const { data: perm } = useRolePermission(role);
     return useQuery({
         queryKey: ['unit', unitId, projectId],
-        enabled : !!unitId && (!!projectId || (perm?.only_assigned_project && projectIds.length > 0)),
+        enabled : !!unitId && !!projectId,
         queryFn : async () => {
-            let query = supabase
+            const { data, error } = await supabase
                 .from('units')
                 .select(SELECT)
-                .eq('id', unitId);
-            query = filterByProjects(query, projectId, projectIds, perm?.only_assigned_project);
-            query = query.single();
-            const { data, error } = await query;
+                .eq('id', unitId)
+                .eq('project_id', projectId)
+                .single();
 
             if (error) throw error;
 

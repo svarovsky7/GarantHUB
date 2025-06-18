@@ -21,7 +21,6 @@ import { useRolePermission } from "@/entities/rolePermission";
 
 const NavBar = () => {
   const profile = useAuthStore((s) => s.profile);
-  const projectId = useAuthStore((s) => s.projectId);
   const setProfile = useAuthStore((s) => s.setProfile);
   const setProjectId = useAuthStore((s) => s.setProjectId);
 
@@ -136,7 +135,7 @@ const NavBar = () => {
             ) : (
               <FormControl variant="standard" size="small">
                 <Select
-                  value={projectId ?? ""}
+                  value={profile.project_id ?? ""}
                   onChange={(e) => {
                     const val = e.target.value;
                     setProjectId(val === '' ? null : Number(val));
