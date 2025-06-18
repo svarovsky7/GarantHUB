@@ -136,7 +136,10 @@ const NavBar = () => {
               <FormControl variant="standard" size="small">
                 <Select
                   value={profile.project_id ?? ""}
-                  onChange={(e) => setProjectId(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setProjectId(val === '' ? null : Number(val));
+                  }}
                   displayEmpty
                   disabled={perm?.only_assigned_project}
                   sx={{

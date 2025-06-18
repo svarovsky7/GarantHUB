@@ -218,7 +218,7 @@ export default function ProjectStructurePage() {
                         >
                             <Select
                                 value={projectId || ""}
-                                onChange={(e) => setProjectId(e.target.value)}
+                                onChange={(e) => setProjectId(String(e.target.value))}
                                 displayEmpty
                                 sx={{
                                     bgcolor: "rgba(255,255,255,0.11)",
