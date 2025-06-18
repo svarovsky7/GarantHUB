@@ -30,6 +30,9 @@ import { signedUrl } from '@/entities/ticket';
 import { useChangedFields } from '@/shared/hooks/useChangedFields';
 import TicketDefectsTable from '@/widgets/TicketDefectsTable';
 
+/** Ключ в localStorage для последнего выбранного проекта */
+const LS_LAST_PROJECT_KEY = 'ticketsLastProject';
+
 export interface TicketFormAntdEditProps {
   ticketId?: string;
   onCreated?: () => void;
@@ -121,8 +124,18 @@ export default function TicketFormAntdEdit({
       });
       setFormTouched(false);
     } else {
+      let savedProject: number | null = null;
+      if (globalProjectId == null) {
+        try {
+          const saved = localStorage.getItem(LS_LAST_PROJECT_KEY);
+          if (saved) savedProject = JSON.parse(saved);
+        } catch {}
+      }
       form.setFieldsValue({
-        project_id: globalProjectId != null ? Number(globalProjectId) : null,
+        project_id:
+          globalProjectId != null
+            ? Number(globalProjectId)
+            : savedProject,
         unit_ids: initialUnitId != null ? [initialUnitId] : [],
         responsible_engineer_id: profileId ?? undefined,
         received_at: dayjs(),
@@ -214,6 +227,12 @@ export default function TicketFormAntdEdit({
           ...payload,
           attachments: newFiles.map((f) => ({ file: f.file, type_id: f.type_id })),
         } as any);
+        try {
+          localStorage.setItem(
+            LS_LAST_PROJECT_KEY,
+            JSON.stringify(payload.project_id),
+          );
+        } catch {}
         onCreated?.();
         form.resetFields();
         resetAttachments();
