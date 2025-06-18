@@ -1,4 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAuthStore } from '@/shared/store/authStore';
+import { useRolePermission } from '@/entities/rolePermission';
+import type { RoleName } from '@/shared/types/rolePermission';
 import {
   CorrespondenceLetter,
   CorrespondenceAttachment,
@@ -45,15 +48,25 @@ export function useLetterLinks() {
 }
 
 export function useLetters() {
+  const projectIds = useAuthStore((s) => s.profile?.project_ids) ?? [];
+  const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
+  const { data: perm } = useRolePermission(role);
+
   return useQuery({
     queryKey: [LETTERS_TABLE],
+    enabled:
+      perm !== undefined &&
+      (!perm.only_assigned_project || projectIds.length > 0),
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from(LETTERS_TABLE)
         .select(
           `id, project_id, number, letter_type_id, status_id, letter_date, subject, content, sender_person_id, sender_contractor_id, receiver_person_id, receiver_contractor_id, responsible_user_id, unit_ids, attachment_ids, created_at`
-        )
-        .order('id');
+        );
+      if (perm?.only_assigned_project) {
+        query = query.in('project_id', projectIds.length ? projectIds : [-1]);
+      }
+      const { data, error } = await query.order('id');
       if (error) throw error;
       const { data: links, error: linkErr } = await supabase
         .from(LINKS_TABLE)
