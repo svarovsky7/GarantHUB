@@ -22,6 +22,7 @@ import {
 import { useSnackbar } from "notistack";
 
 import { useVisibleProjects } from "@/entities/project";
+import { addUserProfile } from "@/entities/user";
 import type { RoleName } from "@/shared/types/rolePermission";
 
 const ROLE_OPTIONS: { value: RoleName; label: string }[] = [
@@ -77,6 +78,21 @@ export default function RegisterPage() {
         console.error("[signUp error]", error, JSON.stringify(data, null, 2));
         enqueueSnackbar(error.message, { variant: "error" });
         return;
+      }
+
+      if (data?.user) {
+        try {
+          await addUserProfile({
+            id: data.user.id,
+            name: fullName,
+            email,
+            role,
+            project_id: project.id,
+          });
+        } catch (insertErr) {
+          // eslint-disable-next-line no-console
+          console.error('[profile insert]', insertErr);
+        }
       }
 
       enqueueSnackbar("Проверьте e-mail — отправили ссылку подтверждения.", {
