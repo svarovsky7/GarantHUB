@@ -30,21 +30,24 @@ export default function UsersTable({
 
   const qc = useQueryClient();
 
-  // Мутация для смены project_id пользователя
-  const updateProject = useMutation({
-    mutationFn: async ({ id, project_id }: any) => {
+  // Мутация для обновления проектов пользователя
+  const updateProjects = useMutation({
+    mutationFn: async ({ id, project_ids }: any) => {
       const { data, error } = await supabase
         .from("profiles")
-        .update({ project_id })
+        .update({
+          project_ids,
+          project_id: project_ids.length ? project_ids[0] : null,
+        })
         .eq("id", id)
-        .select("id, name, email, role, project_id")
+        .select("id, name, email, role, project_id, project_ids")
         .single();
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["users", "all"] });
-      notify.success("Проект пользователя обновлен");
+      notify.success("Проекты пользователя обновлены");
     },
     onError: (e) => notify.error(e.message),
   });
@@ -61,8 +64,8 @@ export default function UsersTable({
       renderCell: ({ row }) => <RoleSelect user={row} roles={roles} />,
     },
     {
-      field: "project_id",
-      headerName: "Проект",
+      field: "project_ids",
+      headerName: "Проекты",
       flex: 1,
       renderCell: ({ row }) => {
         if (pLoad) return <CircularProgress size={18} />;
@@ -70,14 +73,22 @@ export default function UsersTable({
           <Select
             size="small"
             variant="standard"
-            value={row.project_id || ""}
+            multiple
+            value={row.project_ids || []}
             onChange={(e) =>
-              updateProject.mutate({ id: row.id, project_id: e.target.value })
+              updateProjects.mutate({
+                id: row.id,
+                project_ids: e.target.value as number[],
+              })
             }
             sx={{ minWidth: 160 }}
-            displayEmpty
+            renderValue={(selected) =>
+              (selected as number[])
+                .map((id) => projects.find((p) => p.id === id)?.name)
+                .filter(Boolean)
+                .join(', ')
+            }
           >
-            <MenuItem value="">—</MenuItem>
             {projects.map((proj) => (
               <MenuItem key={proj.id} value={proj.id}>
                 {proj.name}

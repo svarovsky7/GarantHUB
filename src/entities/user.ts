@@ -6,7 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/shared/api/supabaseClient';
 import type { User } from '@/shared/types/user';
 
-const FIELDS = 'id, name, email, role, project_id';
+const FIELDS = 'id, name, email, role, project_id, project_ids';
 
 /* ─────────── SELECT ─────────── */
 /** Получить всех пользователей БД без фильтрации */
