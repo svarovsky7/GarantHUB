@@ -5,6 +5,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/shared/api/supabaseClient';
 import type { User } from '@/shared/types/user';
+import type { RoleName } from '@/shared/types/rolePermission';
 
 const FIELDS = 'id, name, email, role, project_id';
 
@@ -57,3 +58,20 @@ export const useDeleteUser = () => {
         onSuccess: () => qc.invalidateQueries({ queryKey: ['users', 'all'] }),
     });
 };
+
+/* ─────────── CREATE ─────────── */
+/**
+ * Создает запись профиля пользователя в таблице `profiles`.
+ * Используется после регистрации нового аккаунта.
+ */
+export async function addUserProfile(payload: {
+    id: string;
+    name: string | null;
+    email: string;
+    role: RoleName;
+    project_id: number;
+}): Promise<void> {
+    const { error } = await supabase.from('profiles').insert(payload);
+    if (error) throw error;
+}
+
