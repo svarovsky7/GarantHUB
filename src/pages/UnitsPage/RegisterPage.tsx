@@ -1,6 +1,6 @@
 // src/pages/RegisterPage.js
 // -----------------------------------------------------------------------------
-// Регистрация: проект обязателен, поле «Фамилия Имя», роль назначается «USER».
+// Регистрация: проект обязателен, поле «Фамилия Имя», выбор роли ENGINEER | LAWYER | CONTRACTOR.
 // -----------------------------------------------------------------------------
 
 import React, { useState } from "react";
@@ -17,10 +17,18 @@ import {
   Autocomplete,
   Tooltip,
   Skeleton,
+  MenuItem,
 } from "@mui/material";
 import { useSnackbar } from "notistack";
 
 import { useVisibleProjects } from "@/entities/project";
+import type { RoleName } from "@/shared/types/rolePermission";
+
+const ROLE_OPTIONS: { value: RoleName; label: string }[] = [
+  { value: "ENGINEER", label: "Инженер Гарантийного отдела" },
+  { value: "LAWYER", label: "Юрист" },
+  { value: "CONTRACTOR", label: "Подрядчик" },
+];
 
 /**
  * Страница регистрации нового пользователя.
@@ -33,6 +41,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState(""); // CHANGE: Фамилия Имя
+  const [role, setRole] = useState<RoleName>("ENGINEER");
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -58,6 +67,7 @@ export default function RegisterPage() {
           data: {
             name: fullName, // поле остаётся name в metadata
             project_id: project.id,
+            role,
           },
         },
       });
@@ -116,6 +126,21 @@ export default function RegisterPage() {
             inputProps={{ minLength: 6 }}
             fullWidth
           />
+
+          <TextField
+            select
+            label="Роль"
+            value={role}
+            onChange={(e) => setRole(e.target.value as RoleName)}
+            required
+            fullWidth
+          >
+            {ROLE_OPTIONS.map((opt) => (
+              <MenuItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </MenuItem>
+            ))}
+          </TextField>
 
           {/* Проект ОБЯЗАТЕЛЕН */}
           {projLoad ? (
