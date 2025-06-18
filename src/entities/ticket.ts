@@ -16,6 +16,9 @@ import {
 import { useNotify } from "@/shared/hooks/useNotify";
 import { useProjectId } from "@/shared/hooks/useProjectId";
 import { useAuthStore } from "@/shared/store/authStore";
+import { useRolePermission } from '@/entities/rolePermission';
+import type { RoleName } from '@/shared/types/rolePermission';
+import { filterByProjects } from '@/shared/utils/projectQuery';
 
 const LINKS_TABLE = "ticket_links";
 
@@ -174,11 +177,14 @@ function mapTicket(r) {
 // ──────────────────────────── queries ─────────────────────────────
 export function useTickets() {
   const projectId = useProjectId();
+  const projectIds = useAuthStore((s) => s.profile?.project_ids) ?? [];
+  const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
+  const { data: perm } = useRolePermission(role);
   return useQuery({
     queryKey: ["tickets", projectId],
-    enabled: !!projectId,
+    enabled: !!projectId || (perm?.only_assigned_project && projectIds.length > 0),
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("tickets")
         .select(
           `
@@ -189,9 +195,10 @@ export function useTickets() {
           projects (id, name),
           ticket_statuses (id, name, color)
         `,
-        )
-        .eq("project_id", projectId)
-        .order("created_at", { ascending: false });
+        );
+      query = filterByProjects(query, projectId, projectIds, perm?.only_assigned_project);
+      query = query.order("created_at", { ascending: false });
+      const { data, error } = await query;
 
       if (error) throw error;
 
@@ -227,11 +234,12 @@ export function useTickets() {
           .filter(Boolean);
         if (atts.length !== (r.attachment_ids || []).length) {
           const existIds = atts.map((a) => a.id);
-          await supabase
+          let upq = supabase
             .from("tickets")
             .update({ attachment_ids: existIds })
-            .eq("id", r.id)
-            .eq("project_id", projectId);
+            .eq("id", r.id);
+          upq = filterByProjects(upq, projectId, projectIds, perm?.only_assigned_project);
+          await upq;
           r.attachment_ids = existIds;
         }
         result.push(
@@ -313,9 +321,9 @@ export function useTicket(ticketId) {
 
   const query = useQuery({
     queryKey: ["ticket", id, projectId],
-    enabled: !!id && !!projectId,
+    enabled: !!id && (!!projectId || (perm?.only_assigned_project && projectIds.length > 0)),
     queryFn: async () => {
-      const { data, error } = await supabase
+      let tQuery = supabase
         .from("tickets")
         .select(
           `
@@ -327,9 +335,10 @@ export function useTicket(ticketId) {
           ticket_statuses (id, name, color)
         `,
         )
-        .eq("id", id)
-        .eq("project_id", projectId)
-        .single();
+        .eq("id", id);
+      tQuery = filterByProjects(tQuery, projectId, projectIds, perm?.only_assigned_project);
+      tQuery = tQuery.single();
+      const { data, error } = await tQuery;
       if (error) throw error;
       let atts = [];
       if (data?.attachment_ids?.length) {
@@ -344,11 +353,12 @@ export function useTicket(ticketId) {
         }));
         const existIds = files.map((f) => f.id);
         if (existIds.length !== data.attachment_ids.length) {
-          await supabase
+          let uq = supabase
             .from("tickets")
             .update({ attachment_ids: existIds })
-            .eq("id", id)
-            .eq("project_id", projectId);
+            .eq("id", id);
+          uq = filterByProjects(uq, projectId, projectIds, perm?.only_assigned_project);
+          await uq;
           data.attachment_ids = existIds;
         }
       }
@@ -400,11 +410,12 @@ export function useTicket(ticketId) {
 
       // обновляем тикет
       if (Object.keys(updates).length) {
-        const { error } = await supabase
+        let uq = supabase
           .from("tickets")
           .update(updates)
-          .eq("id", updId)
-          .eq("project_id", projectId);
+          .eq("id", updId);
+        uq = filterByProjects(uq, projectId, projectIds, perm?.only_assigned_project);
+        const { error } = await uq;
         if (error) throw error;
       }
 
@@ -436,11 +447,12 @@ export function useTicket(ticketId) {
         newAttachments.length ||
         updatedAttachments.length
       ) {
-        const { error } = await supabase
+        let fq = supabase
           .from("tickets")
           .update({ ...updates, attachment_ids: ids })
-          .eq("id", updId)
-          .eq("project_id", projectId);
+          .eq("id", updId);
+        fq = filterByProjects(fq, projectId, projectIds, perm?.only_assigned_project);
+        const { error } = await fq;
         if (error) throw error;
       }
       return uploaded;
@@ -511,11 +523,12 @@ export function useDeleteTicket() {
         await supabase.from("defects").delete().in("id", defectIds);
       }
 
-      await supabase
+      let dq = supabase
         .from("tickets")
         .delete()
-        .eq("id", ticketId)
-        .eq("project_id", projectId);
+        .eq("id", ticketId);
+      dq = filterByProjects(dq, projectId, projectIds, perm?.only_assigned_project);
+      await dq;
     },
     onSuccess: (_, id) => {
       qc.invalidateQueries({ queryKey: ["tickets", projectId] });
@@ -554,14 +567,18 @@ export function useAllTicketsSimple() {
 // -----------------------------------------------------------------------------
 export function useTicketsSimple() {
   const projectId = useProjectId();
+  const projectIds = useAuthStore((s) => s.profile?.project_ids) ?? [];
+  const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
+  const { data: perm } = useRolePermission(role);
   return useQuery({
     queryKey: ["tickets-simple", projectId],
-    enabled: !!projectId,
+    enabled: !!projectId || (perm?.only_assigned_project && projectIds.length > 0),
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("tickets")
-        .select("id, project_id, unit_ids, defect_ids")
-        .eq("project_id", projectId);
+        .select("id, project_id, unit_ids, defect_ids");
+      q = filterByProjects(q, projectId, projectIds, perm?.only_assigned_project);
+      const { data, error } = await q;
       if (error) throw error;
       return data ?? [];
     },
@@ -574,18 +591,21 @@ export function useTicketsSimple() {
 // -----------------------------------------------------------------------------
 export function useUpdateTicketStatus() {
   const projectId = useProjectId();
+  const projectIds = useAuthStore((s) => s.profile?.project_ids) ?? [];
+  const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
+  const { data: perm } = useRolePermission(role);
   const qc = useQueryClient();
   const notify = useNotify();
 
   return useMutation({
     mutationFn: async ({ id, statusId }) => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("tickets")
         .update({ status_id: statusId })
-        .eq("id", id)
-        .eq("project_id", projectId)
-        .select("id, defect_ids")
-        .single();
+        .eq("id", id);
+      q = filterByProjects(q, projectId, projectIds, perm?.only_assigned_project);
+      q = q.select("id, defect_ids").single();
+      const { data, error } = await q;
       if (error) throw error;
 
       const { data: status } = await supabase

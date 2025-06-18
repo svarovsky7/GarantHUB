@@ -7,7 +7,7 @@ import { supabase } from '@/shared/api/supabaseClient';
 import type { User } from '@/shared/types/user';
 import type { RoleName } from '@/shared/types/rolePermission';
 
-const FIELDS = 'id, name, email, role, project_id, profiles_projects ( project_id )';
+const FIELDS = 'id, name, email, role, profiles_projects ( project_id )';
 
 /* ─────────── SELECT ─────────── */
 /** Получить всех пользователей БД без фильтрации */
@@ -77,12 +77,13 @@ export async function addUserProfile(payload: {
     role: RoleName;
     project_id: number;
 }): Promise<void> {
-    const { error } = await supabase.from('profiles').insert(payload);
+    const { project_id, ...profile } = payload;
+    const { error } = await supabase.from('profiles').insert(profile);
     if (error) throw error;
-    if (payload.project_id) {
+    if (project_id) {
         const { error: linkErr } = await supabase
             .from('profiles_projects')
-            .insert({ profile_id: payload.id, project_id: payload.project_id });
+            .insert({ profile_id: payload.id, project_id });
         if (linkErr) throw linkErr;
     }
 }
