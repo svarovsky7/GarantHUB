@@ -17,6 +17,9 @@ import FileDropZone from '@/shared/ui/FileDropZone';
 import { useNotify } from '@/shared/hooks/useNotify';
 import DefectEditableTable from '@/widgets/DefectEditableTable';
 
+/** Ключ в localStorage для последнего выбранного проекта */
+const LS_LAST_PROJECT_KEY = 'ticketsLastProject';
+
 /**
  * Форма создания замечания на основе Ant Design.
  * @param onCreated callback после успешного создания
@@ -93,6 +96,13 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
       form.setFieldValue('project_id', initialValues.project_id);
     } else if (globalProjectId) {
       form.setFieldValue('project_id', Number(globalProjectId));
+    } else {
+      try {
+        const saved = localStorage.getItem(LS_LAST_PROJECT_KEY);
+        if (saved) {
+          form.setFieldValue('project_id', JSON.parse(saved));
+        }
+      } catch {}
     }
     if (initialValues.unit_ids) {
       form.setFieldValue('unit_ids', initialValues.unit_ids);
@@ -163,6 +173,12 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
           : null,
       };
       await create.mutateAsync(payload as any);
+      try {
+        localStorage.setItem(
+          LS_LAST_PROJECT_KEY,
+          JSON.stringify(payload.project_id),
+        );
+      } catch {}
       form.resetFields();
       setFiles([]);
       setFixedAtManual(false);
