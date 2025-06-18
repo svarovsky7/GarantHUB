@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
     Box,
     Stack,
@@ -31,7 +31,6 @@ function getCurrentProfile() {
     }
 }
 
-const LS_KEY = "structurePageSelection";
 
 function pluralObj(n) {
     n = Number(n);
@@ -54,6 +53,12 @@ export default function ProjectStructurePage() {
         setSection,
         refreshAll,
     } = useProjectStructure();
+
+    const profile = getCurrentProfile();
+    const LS_KEY = useMemo(
+        () => `structurePageSelection_${profile.id ?? 'guest'}`,
+        [profile.id],
+    );
 
     // Диалоги для корпусов/секций
     const [addDialog, setAddDialog] = useState({
@@ -94,7 +99,7 @@ export default function ProjectStructurePage() {
                 setProjectId(String(projects[0].id));
             }
         }
-    }, [projectId, projects, setProjectId]);
+    }, [projectId, projects, setProjectId, LS_KEY]);
 
     useEffect(() => {
         const saved = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
@@ -105,7 +110,7 @@ export default function ProjectStructurePage() {
                 setBuilding(buildings[0]);
             }
         }
-    }, [buildings, building, setBuilding]);
+    }, [buildings, building, setBuilding, LS_KEY]);
 
     useEffect(() => {
         const saved = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
@@ -114,14 +119,14 @@ export default function ProjectStructurePage() {
                 setSection(saved.section);
             }
         }
-    }, [sections, section, setSection]);
+    }, [sections, section, setSection, LS_KEY]);
 
     useEffect(() => {
         localStorage.setItem(
             LS_KEY,
             JSON.stringify({ projectId, building, section }),
         );
-    }, [projectId, building, section]);
+    }, [projectId, building, section, LS_KEY]);
 
     // --- Диалоги ---
     const handleOpenAddDialog = (type) =>

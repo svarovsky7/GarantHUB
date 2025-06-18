@@ -1,11 +1,10 @@
-import { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { supabase } from '@/shared/api/supabaseClient';
 import type { Project } from '@/shared/types/project';
 import type { ProjectStructureSelection } from '@/shared/types/projectStructure';
 import { useVisibleProjects } from '@/entities/project';
 import { useAuthStore } from '@/shared/store/authStore';
 
-const LS_KEY = 'structurePageSelection';
 
 /**
  * Хук для выбора проекта, корпуса и секции.
@@ -14,6 +13,11 @@ const LS_KEY = 'structurePageSelection';
 export default function useProjectStructure() {
     const { data: projects = [] } = useVisibleProjects();
     const setGlobalProjectId = useAuthStore((s) => s.setProjectId);
+    const userId = useAuthStore((s) => s.profile?.id);
+    const LS_KEY = useMemo(
+        () => `structurePageSelection_${userId ?? 'guest'}`,
+        [userId],
+    );
 
     const [projectId, setProjectIdState] = useState<string>('');
     const [buildings, setBuildings] = useState<string[]>([]);
@@ -54,7 +58,7 @@ export default function useProjectStructure() {
             if (saved.building) setBuildingState(saved.building);
             if (saved.section) setSectionState(saved.section);
         } catch { /* ignore */ }
-    }, []);
+    }, [LS_KEY]);
 
 
 
@@ -90,7 +94,7 @@ export default function useProjectStructure() {
     useEffect(() => {
         saveToLS({ projectId, building, section });
         setGlobalProjectId(projectId || null);
-    }, [projectId, building, section]);
+    }, [projectId, building, section, LS_KEY]);
 
     // --- Поддержка обновления между вкладками ---
     useEffect(() => {
@@ -109,7 +113,7 @@ export default function useProjectStructure() {
         };
         window.addEventListener('storage', handler);
         return () => window.removeEventListener('storage', handler);
-    }, []);
+    }, [LS_KEY]);
 
     return {
         projects, projectId, setProjectId,
