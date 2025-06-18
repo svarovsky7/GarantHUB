@@ -763,13 +763,6 @@
     "column_default": null
   },
   {
-    "table_name": "profiles",
-    "column_name": "project_id",
-    "data_type": "integer",
-    "is_nullable": "NO",
-    "column_default": null
-  },
-  {
     "table_name": "profiles_projects",
     "column_name": "profile_id",
     "data_type": "uuid",
