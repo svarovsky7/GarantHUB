@@ -1,34 +1,60 @@
-import React from "react";
-import { FormControl, Select, MenuItem, CircularProgress } from "@mui/material";
-import { useUpdateUserRole } from "../../entities/user";
+import React from 'react';
+import { Select, Tag, Skeleton } from 'antd';
+import { useUpdateUserRole } from '@/entities/user';
+import type { User } from '@/shared/types/user';
+import type { Role } from '@/shared/types/role';
 
-const RoleSelect = ({ user, roles }) => {
+interface RoleSelectProps {
+  user: User;
+  roles: Role[];
+  /** Показывать скелетон вместо контента */
+  loading?: boolean;
+}
+
+/**
+ * Инлайн-редактор роли пользователя.
+ * При клике на текущее значение открывает выпадающий список Ant Design.
+ */
+export default function RoleSelect({
+  user,
+  roles,
+  loading = false,
+}: RoleSelectProps) {
   const updateRole = useUpdateUserRole();
+  const [editing, setEditing] = React.useState(false);
 
-  const handleChange = (e) =>
-    updateRole.mutate({ id: user.id, newRole: e.target.value });
+  const options = React.useMemo(
+    () => roles.map((r) => ({ label: r.name, value: r.name })),
+    [roles],
+  );
+
+  const handleChange = (value: string) => {
+    updateRole.mutate({ id: user.id, newRole: value });
+    setEditing(false);
+  };
+
+  if (loading) return <Skeleton.Button active size="small" style={{ width: 100 }} />;
+
+  if (!editing) {
+    return (
+      <Tag color="blue" onClick={() => setEditing(true)} style={{ cursor: 'pointer' }}>
+        {user.role ?? '—'}
+      </Tag>
+    );
+  }
 
   return (
-    <FormControl size="small" sx={{ minWidth: 140 }}>
-      {updateRole.isPending && (
-        <CircularProgress
-          size={18}
-          sx={{ position: "absolute", right: 8, top: 8 }}
-        />
-      )}
-      <Select
-        value={user.role}
-        onChange={handleChange}
-        disabled={updateRole.isPending}
-      >
-        {roles.map((r) => (
-          <MenuItem key={r.name} value={r.name}>
-            {r.name}
-          </MenuItem>
-        ))}
-      </Select>
-    </FormControl>
+    <Select
+      size="small"
+      autoFocus
+      open
+      defaultValue={user.role ?? undefined}
+      onBlur={() => setEditing(false)}
+      onChange={handleChange}
+      loading={updateRole.isPending}
+      options={options}
+      style={{ width: '100%' }}
+    />
   );
-};
+}
 
-export default RoleSelect;
