@@ -1,14 +1,14 @@
 import React from "react";
 import { GridActionsCellItem } from "@mui/x-data-grid";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { MenuItem, Select, CircularProgress } from "@mui/material";
 
-import { useUsers, useDeleteUser, useUpdateUserProjects } from "@/entities/user";
+import { useUsers, useDeleteUser } from "@/entities/user";
 import { useRoles } from "@/entities/role";
 import { useProjects } from "@/entities/project";
 import AdminDataGrid from "@/shared/ui/AdminDataGrid";
 import { useNotify } from "@/shared/hooks/useNotify";
 import RoleSelect from "@/features/user/RoleSelect";
+import UserProjectsSelect from "@/features/user/UserProjectsSelect";
 
 // Интерфейс для пропсов с пагинацией
 interface UsersTableProps {
@@ -26,10 +26,6 @@ export default function UsersTable({
   const { data: projects = [], isPending: pLoad } = useProjects();
   const delUser = useDeleteUser();
 
-
-  // Мутация для обновления списка проектов пользователя
-  const updateProjects = useUpdateUserProjects();
-
   // Таблица
   const columns = [
     { field: "id", headerName: "ID", width: 70 },
@@ -39,38 +35,17 @@ export default function UsersTable({
       field: "role",
       headerName: "Роль",
       flex: 0.7,
-      renderCell: ({ row }) => <RoleSelect user={row} roles={roles} />,
+      renderCell: ({ row }) => (
+        <RoleSelect user={row} roles={roles} loading={rLoad} />
+      ),
     },
     {
-      field: "project_ids",
-      headerName: "Проекты",
+      field: 'project_ids',
+      headerName: 'Проекты',
       flex: 1,
-      renderCell: ({ row }) => {
-        if (pLoad) return <CircularProgress size={18} />;
-        return (
-          <Select
-            multiple
-            size="small"
-            variant="standard"
-            value={row.project_ids || []}
-            onChange={(e) =>
-              updateProjects.mutate({ id: row.id, projectIds: e.target.value as number[] })
-            }
-            sx={{ minWidth: 160 }}
-            renderValue={(selected) =>
-              (selected as number[])
-                .map((id) => projects.find((p) => p.id === id)?.name)
-                .join(', ')
-            }
-          >
-            {projects.map((proj) => (
-              <MenuItem key={proj.id} value={proj.id}>
-                {proj.name}
-              </MenuItem>
-            ))}
-          </Select>
-        );
-      },
+      renderCell: ({ row }) => (
+        <UserProjectsSelect user={row} projects={projects} loading={pLoad} />
+      ),
     },
     {
       field: "actions",
