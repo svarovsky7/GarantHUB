@@ -19,7 +19,6 @@ import AddBuildingOrSectionDialog from "@/features/addBuildingOrSection/AddBuild
 import UnitsMatrix from "@/widgets/UnitsMatrix/UnitsMatrix";
 import StatusLegend from "@/widgets/StatusLegend";
 import useProjectStructure from "@/shared/hooks/useProjectStructure";
-import { useProjectId } from '@/shared/hooks/useProjectId';
 // Новое:
 import HistoryDialog from "@/features/history/HistoryDialog"; // путь скорректируйте под ваш проект
 import { useNavigate } from 'react-router-dom';
@@ -55,7 +54,6 @@ export default function ProjectStructurePage() {
         setSection,
         refreshAll,
     } = useProjectStructure();
-    const globalProjectId = useProjectId();
 
     // Диалоги для корпусов/секций
     const [addDialog, setAddDialog] = useState({
@@ -88,10 +86,10 @@ export default function ProjectStructurePage() {
             ) {
                 setProjectId(saved.projectId);
             } else if (
-                globalProjectId &&
-                projects.find((p) => String(p.id) === String(globalProjectId))
+                profile.project_id &&
+                projects.find((p) => String(p.id) === String(profile.project_id))
             ) {
-                setProjectId(String(globalProjectId));
+                setProjectId(profile.project_id);
             } else if (projects.length > 0) {
                 setProjectId(String(projects[0].id));
             }

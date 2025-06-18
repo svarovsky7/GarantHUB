@@ -3,6 +3,7 @@ export interface User {
   name: string | null;
   email: string | null;
   role: string | null;
+  project_id: string | null;
   /** Массив проектов, назначенных пользователю */
   project_ids: number[];
 }
