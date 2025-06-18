@@ -25,7 +25,8 @@ export function useRealtimeUpdates() {
       : projectId
         ? [projectId]
         : [];
-    if (ids.length === 0) return;
+    const subscribeAllLetters = !perm?.only_assigned_project && !projectId;
+    if (ids.length === 0 && !subscribeAllLetters) return;
 
     const channel = supabase.channel('realtime-updates');
     ids.forEach((pid) => {
@@ -81,6 +82,24 @@ export function useRealtimeUpdates() {
           () => qc.invalidateQueries({ queryKey: ['unit_history'] }),
         );
     });
+    if (subscribeAllLetters) {
+      channel
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'letters' },
+          () => qc.invalidateQueries({ queryKey: ['letters'] }),
+        )
+        .on(
+          'postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'letters' },
+          () => qc.invalidateQueries({ queryKey: ['letters'] }),
+        )
+        .on(
+          'postgres_changes',
+          { event: 'DELETE', schema: 'public', table: 'letters' },
+          () => qc.invalidateQueries({ queryKey: ['letters'] }),
+        );
+    }
     channel.subscribe();
 
     return () => {
