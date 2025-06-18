@@ -136,6 +136,9 @@ export const useVisibleProjects = () => {
         return query.data ?? [];
     }, [query.data, perm?.only_assigned_project, projectIds]);
 
-    return { ...query, data } as typeof query;
+    return React.useMemo(
+        () => ({ ...query, data }) as typeof query,
+        [query.data, query.error, query.isPending, data],
+    );
 };
 
