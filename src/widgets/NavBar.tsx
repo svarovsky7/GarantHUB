@@ -18,6 +18,7 @@ import { supabase } from "@/shared/api/supabaseClient";
 import { useAuthStore } from "@/shared/store/authStore";
 import { useVisibleProjects } from "@/entities/project";
 import { useRolePermission } from "@/entities/rolePermission";
+import { Skeleton } from "antd";
 
 const NavBar = () => {
   const profile = useAuthStore((s) => s.profile);
@@ -129,6 +130,16 @@ const NavBar = () => {
             <Typography variant="body2">
               {profile.name ?? profile.email}
             </Typography>
+
+            {perm?.only_assigned_project && (
+              isPending ? (
+                <Skeleton active title={false} paragraph={false} style={{ width: 120, marginTop: 2 }} />
+              ) : (
+                <Typography variant="caption" sx={{ color: "inherit", opacity: 0.8 }}>
+                  {projects.map((p) => p.name).join("; ") || "—"}
+                </Typography>
+              )
+            )}
 
             {/* выпадающий список проектов */}
             {isPending ? (
