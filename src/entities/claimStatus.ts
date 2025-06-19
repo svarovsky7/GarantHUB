@@ -38,3 +38,37 @@ export const useUpdateClaimStatus = () => {
     onSuccess: () => qc.invalidateQueries({ queryKey: [TABLE] }),
   });
 };
+
+/**
+ * Хук добавления статуса претензии.
+ */
+export const useAddClaimStatus = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (values: Omit<ClaimStatus, 'id'>) => {
+      const { data, error } = await supabase
+        .from(TABLE)
+        .insert(values)
+        .select('*')
+        .single();
+      if (error) throw error;
+      return data as ClaimStatus;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: [TABLE] }),
+  });
+};
+
+/**
+ * Хук удаления статуса претензии.
+ */
+export const useDeleteClaimStatus = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const { error } = await supabase.from(TABLE).delete().eq('id', id);
+      if (error) throw error;
+      return id;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: [TABLE] }),
+  });
+};
