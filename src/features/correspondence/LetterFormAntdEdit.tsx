@@ -67,7 +67,7 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
 
   const senderValue = Form.useWatch('sender', form);
   const receiverValue = Form.useWatch('receiver', form);
-  const [senderType, setSenderType] = React.useState<'person' | 'contractor'>('person');
+  const [senderType, setSenderType] = React.useState<'person' | 'contractor'>('contractor');
   const [receiverType, setReceiverType] = React.useState<'person' | 'contractor'>('contractor');
   const [personModal, setPersonModal] = React.useState<{ target: 'sender' | 'receiver'; data?: any } | null>(null);
   const [contractorModal, setContractorModal] = React.useState<{ target: 'sender' | 'receiver'; data?: any } | null>(null);
@@ -253,8 +253,8 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
           <Form.Item label="Отправитель" style={{ marginBottom: 0, ...highlight('sender') }}>
             <Space direction="vertical" style={{ width: '100%' }}>
               <Radio.Group value={senderType} onChange={(e) => setSenderType(e.target.value)}>
-                <Radio.Button value="person">Физлицо</Radio.Button>
                 <Radio.Button value="contractor">Контрагент</Radio.Button>
+                <Radio.Button value="person">Физлицо</Radio.Button>
               </Radio.Group>
               <Space.Compact style={{ width: '100%' }}>
                 <Form.Item name="sender" noStyle>
@@ -324,8 +324,8 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
           <Form.Item label="Получатель" style={{ marginBottom: 0, ...highlight('receiver') }}>
             <Space direction="vertical" style={{ width: '100%' }}>
               <Radio.Group value={receiverType} onChange={(e) => setReceiverType(e.target.value)}>
-                <Radio.Button value="person">Физлицо</Radio.Button>
                 <Radio.Button value="contractor">Контрагент</Radio.Button>
+                <Radio.Button value="person">Физлицо</Radio.Button>
               </Radio.Group>
               <Space.Compact style={{ width: '100%' }}>
                 <Form.Item name="receiver" noStyle>
