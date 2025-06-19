@@ -9,6 +9,7 @@ import { Backdrop, CircularProgress } from "@mui/material";
 import { useAuthStore } from "@/shared/store/authStore";
 import DashboardPage from "@/pages/DashboardPage/DashboardPage";
 import TicketsPage from "@/pages/TicketsPage/TicketsPage";
+import ClaimsPage from "@/pages/ClaimsPage/ClaimsPage";
 import TicketFormPage from "@/pages/TicketsPage/TicketFormPage";
 import CourtCasesPage from "@/pages/CourtCasesPage/CourtCasesPage";
 import CorrespondencePage from "@/pages/CorrespondencePage/CorrespondencePage";
@@ -84,6 +85,16 @@ export default function AppRouter() {
         data-oid="41m4r4h"
       />
 
+      <Route
+        path="/claims"
+        element={
+          <RequireAuth>
+            <RequirePermission page="claims">
+              <ClaimsPage />
+            </RequirePermission>
+          </RequireAuth>
+        }
+      />
       <Route
         path="/defects"
         element={

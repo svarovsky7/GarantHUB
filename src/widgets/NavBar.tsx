@@ -72,6 +72,16 @@ const NavBar = () => {
               Замечания
             </Button>
           )}
+          {perm?.pages.includes('claims') && (
+            <Button
+              color="inherit"
+              component={RouterLink}
+              to="/claims"
+              sx={{ whiteSpace: 'normal' }}
+            >
+              Претензии
+            </Button>
+          )}
           {perm?.pages.includes('defects') && (
             <Button
               color="inherit"
