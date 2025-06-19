@@ -11,7 +11,11 @@ import {
   Radio,
   Popconfirm,
   Modal,
+  Table,
+  InputNumber,
+  Skeleton,
 } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 import { Dayjs } from 'dayjs';
 import { useVisibleProjects } from '@/entities/project';
 import { useUnitsByProject } from '@/entities/unit';
@@ -25,6 +29,8 @@ import { usePersons, useDeletePerson } from '@/entities/person';
 import { useAddCourtCase, useUpdateCourtCase } from '@/entities/courtCase';
 import { useAttachmentTypes } from '@/entities/attachmentType';
 import { addCaseAttachments } from '@/entities/attachment';
+import { useLawsuitClaimTypes } from '@/entities/lawsuitClaimType';
+import { useAddCaseClaims } from '@/entities/courtCaseClaim';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/shared/api/supabaseClient';
 import { useProjectId } from '@/shared/hooks/useProjectId';
@@ -99,8 +105,10 @@ export default function AddCourtCaseFormAntd({
   const { data: stages = [], isPending: stagesLoading } = useCourtCaseStatuses();
   const { data: personsList = [] } = usePersons();
   const { data: attachmentTypes = [] } = useAttachmentTypes();
+  const { data: claimTypes = [], isPending: claimTypesLoading } = useLawsuitClaimTypes();
   const addCaseMutation = useAddCourtCase();
   const updateCaseMutation = useUpdateCourtCase();
+  const addClaimsMutation = useAddCaseClaims();
   const deletePersonMutation = useDeletePerson();
   const deleteContractorMutation = useDeleteContractor();
   const notify = useNotify();
@@ -119,6 +127,7 @@ export default function AddCourtCaseFormAntd({
   const [plaintiffType, setPlaintiffType] = useState<'person' | 'contractor'>('person');
   const [defendantType, setDefendantType] = useState<'person' | 'contractor'>('contractor');
   const [partyRole, setPartyRole] = useState<'plaintiff' | 'defendant' | null>(null);
+  const [showClaimsModal, setShowClaimsModal] = useState(false);
   const { caseFiles, addFiles: addCaseFiles, setType: setCaseFileType, removeFile: removeCaseFile, reset: resetCaseFiles } = useCaseFiles();
 
   const { data: projectPersons = [], isPending: personsLoading } = useQuery({
@@ -173,6 +182,22 @@ export default function AddCourtCaseFormAntd({
           updates: { attachment_ids: newAtts.map((a) => a.id) },
         });
         qc.invalidateQueries({ queryKey: ['court_cases'] });
+      }
+
+      const claims: any[] = (values.claims || []).filter((c: any) =>
+        ['claimed_amount', 'confirmed_amount', 'paid_amount', 'agreed_amount'].some((k) => c[k] != null && c[k] !== '')
+      );
+      if (claims.length) {
+        await addClaimsMutation.mutateAsync(
+          claims.map((c: any) => ({
+            case_id: newCase.id,
+            claim_type_id: c.claim_type_id,
+            claimed_amount: c.claimed_amount ? Number(c.claimed_amount) : null,
+            confirmed_amount: c.confirmed_amount ? Number(c.confirmed_amount) : null,
+            paid_amount: c.paid_amount ? Number(c.paid_amount) : null,
+            agreed_amount: c.agreed_amount ? Number(c.agreed_amount) : null,
+          }))
+        );
       }
 
       form.resetFields();
@@ -372,7 +397,20 @@ export default function AddCourtCaseFormAntd({
             </Form.Item>
           </Col>
         </Row>
-        {/* Row 6 */}
+        {/* Row 6: Требования */}
+        <Row gutter={16}>
+          <Col span={24} style={{ textAlign: 'right' }}>
+            <Button type="dashed" onClick={() => {
+              if (!form.getFieldValue('claims')?.length) {
+                form.setFieldValue('claims', claimTypes.map(t => ({ claim_type_id: t.id })));
+              }
+              setShowClaimsModal(true);
+            }}>
+              Добавить требования
+            </Button>
+          </Col>
+        </Row>
+        {/* Row 7 */}
         <Row gutter={16}>
           <Col span={24}>
             <FileDropZone onFiles={handleCaseFiles} />
@@ -467,6 +505,84 @@ export default function AddCourtCaseFormAntd({
         }}
         initialData={contractorModal}
       />
+
+      <Modal
+        open={showClaimsModal}
+        onCancel={() => setShowClaimsModal(false)}
+        onOk={() => setShowClaimsModal(false)}
+        width={800}
+        title="Суммы исковых требований"
+      >
+        {claimTypesLoading ? (
+          <Skeleton active />
+        ) : (
+          <Form.List name="claims">
+            {(fields) => {
+              const data = fields.map((field, i) => ({
+                key: claimTypes[i]?.id || i,
+                name: claimTypes[i]?.name,
+                field,
+              }));
+              const columns = [
+                {
+                  title: 'Требование',
+                  dataIndex: 'name',
+                  width: 200,
+                  render: (name: string, row: any) => (
+                    <>
+                      <Form.Item name={[row.field.name, 'claim_type_id']} initialValue={claimTypes[row.field.name]?.id} hidden>
+                        <input type="hidden" />
+                      </Form.Item>
+                      {name}
+                    </>
+                  ),
+                },
+                {
+                  title: 'Заявлено',
+                  dataIndex: 'claimed',
+                  width: 150,
+                  render: (_: any, row: any) => (
+                    <Form.Item name={[row.field.name, 'claimed_amount']} noStyle>
+                      <InputNumber min={0} style={{ width: '100%' }} />
+                    </Form.Item>
+                  ),
+                },
+                {
+                  title: 'Подтверждено',
+                  dataIndex: 'confirmed',
+                  width: 150,
+                  render: (_: any, row: any) => (
+                    <Form.Item name={[row.field.name, 'confirmed_amount']} noStyle>
+                      <InputNumber min={0} style={{ width: '100%' }} />
+                    </Form.Item>
+                  ),
+                },
+                {
+                  title: 'Оплачено',
+                  dataIndex: 'paid',
+                  width: 150,
+                  render: (_: any, row: any) => (
+                    <Form.Item name={[row.field.name, 'paid_amount']} noStyle>
+                      <InputNumber min={0} style={{ width: '100%' }} />
+                    </Form.Item>
+                  ),
+                },
+                {
+                  title: 'Согласовано',
+                  dataIndex: 'agreed',
+                  width: 150,
+                  render: (_: any, row: any) => (
+                    <Form.Item name={[row.field.name, 'agreed_amount']} noStyle>
+                      <InputNumber min={0} style={{ width: '100%' }} />
+                    </Form.Item>
+                  ),
+                },
+              ] as ColumnsType<any>;
+              return <Table rowKey="key" pagination={false} columns={columns} dataSource={data} />;
+            }}
+          </Form.List>
+        )}
+      </Modal>
     </>
   );
 }
