@@ -1224,4 +1224,18 @@
     "is_nullable": "YES",
     "column_default": null
   }
+  {
+    "table_name": "lawsuit_claim_types",
+    "column_name": "id",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": "nextval('lawsuit_claim_types_id_seq'::regclass)"
+  },
+  {
+    "table_name": "lawsuit_claim_types",
+    "column_name": "name",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
 ]
