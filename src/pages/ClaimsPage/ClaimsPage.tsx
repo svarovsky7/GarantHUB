@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { ConfigProvider, Alert, Card, Button, Tooltip } from 'antd';
 import ruRU from 'antd/locale/ru_RU';
 import { SettingOutlined, EyeOutlined } from '@ant-design/icons';
+import ExportClaimsButton from '@/features/claim/ExportClaimsButton';
 import { useSnackbar } from 'notistack';
 import { useClaims } from '@/entities/claim';
 import { useUsers } from '@/entities/user';
@@ -112,7 +113,13 @@ export default function ClaimsPage() {
         <Button type="primary" onClick={() => setShowAddForm((p) => !p)} style={{ marginTop: 16, marginRight: 8 }}>
           {showAddForm ? 'Скрыть форму' : 'Добавить претензию'}
         </Button>
+        <Button onClick={() => setShowFilters((p) => !p)} style={{ marginTop: 16 }}>
+          {showFilters ? 'Скрыть фильтры' : 'Показать фильтры'}
+        </Button>
         <Button icon={<SettingOutlined />} style={{ marginTop: 16, marginLeft: 8 }} onClick={() => setShowColumnsDrawer(true)} />
+        <span style={{ marginTop: 16, marginLeft: 8, display: 'inline-block' }}>
+          <ExportClaimsButton claims={claimsWithNames} filters={filters} />
+        </span>
         {showAddForm && (
           <div style={{ marginTop: 16 }}>
             <ClaimFormAntd onCreated={() => setShowAddForm(false)} />
@@ -120,9 +127,6 @@ export default function ClaimsPage() {
         )}
         <TableColumnsDrawer open={showColumnsDrawer} columns={columnsState} onChange={setColumnsState} onClose={() => setShowColumnsDrawer(false)} />
         <div style={{ marginTop: 24 }}>
-          <Button onClick={() => setShowFilters((p) => !p)} style={{ marginBottom: 8 }}>
-            {showFilters ? 'Скрыть фильтры' : 'Показать фильтры'}
-          </Button>
           {showFilters && (
             <Card style={{ marginBottom: 24 }}>
               <ClaimsFilters options={options} onChange={setFilters} />

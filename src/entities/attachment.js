@@ -90,6 +90,15 @@ export function uploadTicketAttachment(file, projectId, ticketId) {
 }
 
 /**
+ * Загружает файл претензии в хранилище Supabase.
+ * @param {File} file
+ * @param {number} claimId
+ */
+export function uploadClaimAttachment(file, claimId) {
+    return upload(file, `claims/${claimId}`);
+}
+
+/**
  * Загружает файл дефекта в хранилище Supabase.
  * @param {File} file
  * @param {number} defectId
@@ -163,6 +172,34 @@ export async function addLetterAttachments(files, letterId) {
 export async function addTicketAttachments(files, projectId, ticketId) {
     const uploaded = await Promise.all(
         files.map(({ file }) => uploadTicketAttachment(file, projectId, ticketId)),
+    );
+
+    const rows = uploaded.map((u, idx) => ({
+        file_url: u.url,
+        file_type: u.type,
+        original_name: files[idx].file.name,
+        storage_path: u.path,
+        attachment_type_id: files[idx].type_id ?? null,
+    }));
+
+    const { data, error } = await supabase
+        .from('attachments')
+        .insert(rows)
+        .select('id, storage_path, file_url, file_type, attachment_type_id, original_name');
+
+    if (error) throw error;
+    return data ?? [];
+}
+
+/**
+ * Загружает файлы претензии и создаёт записи в таблице attachments
+ * с возвратом созданных строк.
+ * @param {{file: File, type_id: number | null}[]} files
+ * @param {number} claimId
+ */
+export async function addClaimAttachments(files, claimId) {
+    const uploaded = await Promise.all(
+        files.map(({ file }) => uploadClaimAttachment(file, claimId)),
     );
 
     const rows = uploaded.map((u, idx) => ({

@@ -5,6 +5,7 @@ import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useAuthStore } from '@/shared/store/authStore';
 import { filterByProjects } from '@/shared/utils/projectQuery';
 import type { Claim } from '@/shared/types/claim';
+import { addClaimAttachments } from '@/entities/attachment';
 
 const TABLE = 'claims';
 
@@ -56,14 +57,23 @@ export function useCreateClaim() {
   const userId = useAuthStore((s) => s.profile?.id ?? null);
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: Omit<Claim, 'id'>) => {
-      const { data, error } = await supabase
+    mutationFn: async ({ attachments = [], ...payload }: Omit<Claim, 'id'> & { attachments?: any[] }) => {
+      const { data: created, error } = await supabase
         .from(TABLE)
         .insert({ ...payload, project_id: payload.project_id ?? projectId, created_by: userId })
-        .select('*')
+        .select('id, project_id')
         .single();
       if (error) throw error;
-      return data as Claim;
+      let ids: number[] = [];
+      if (attachments.length) {
+        const uploaded = await addClaimAttachments(
+          attachments.map((f: any) => ('file' in f ? { file: f.file, type_id: f.type_id ?? null } : { file: f, type_id: null })),
+          created.id,
+        );
+        ids = uploaded.map((u) => u.id);
+        await supabase.from(TABLE).update({ attachment_ids: ids }).eq('id', created.id);
+      }
+      return { ...created, attachment_ids: ids } as any;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: [TABLE] }),
   });

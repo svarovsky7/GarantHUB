@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Form, Input, Select, DatePicker, Button, Row, Col } from 'antd';
+import { Form, Input, Select, DatePicker, Button, Row, Col, Tag } from 'antd';
+import FileDropZone from '@/shared/ui/FileDropZone';
+import { useAttachmentTypes } from '@/entities/attachmentType';
 import dayjs from 'dayjs';
 import { useVisibleProjects } from '@/entities/project';
 import { useUnitsByProject } from '@/entities/unit';
@@ -10,9 +12,6 @@ import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useNotify } from '@/shared/hooks/useNotify';
 import DefectEditableTable from '@/widgets/DefectEditableTable';
 import { useCreateDefects, type NewDefect } from '@/entities/defect';
-import { addDefectAttachments } from '@/entities/attachment';
-import { supabase } from '@/shared/api/supabaseClient';
-import type { NewDefectFile } from '@/shared/types/defectFile';
 
 export interface ClaimFormAntdProps {
   onCreated?: () => void;
@@ -34,7 +33,8 @@ export interface ClaimFormValues {
 
 export default function ClaimFormAntd({ onCreated, initialValues = {} }: ClaimFormAntdProps) {
   const [form] = Form.useForm<ClaimFormValues>();
-  const [defectFiles, setDefectFiles] = useState<Record<number, NewDefectFile[]>>({});
+  const [files, setFiles] = useState<{ file: File; type_id: number | null }[]>([]);
+  const { data: attachmentTypes = [] } = useAttachmentTypes();
   const globalProjectId = useProjectId();
   const projectIdWatch = Form.useWatch('project_id', form) ?? globalProjectId;
   const projectId = projectIdWatch != null ? Number(projectIdWatch) : null;
@@ -47,9 +47,12 @@ export default function ClaimFormAntd({ onCreated, initialValues = {} }: ClaimFo
   const notify = useNotify();
   const createDefects = useCreateDefects();
 
-  const handleFilesChange = (idx: number, files: NewDefectFile[]) => {
-    setDefectFiles((p) => ({ ...p, [idx]: files }));
+  const handleDropFiles = (dropped: File[]) => {
+    setFiles((p) => [...p, ...dropped.map((f) => ({ file: f, type_id: null }))]);
   };
+  const setType = (idx: number, val: number | null) =>
+    setFiles((p) => p.map((f, i) => (i === idx ? { ...f, type_id: val } : f)));
+  const removeFile = (idx: number) => setFiles((p) => p.filter((_, i) => i !== idx));
 
   useEffect(() => {
     if (initialValues.project_id != null) form.setFieldValue('project_id', initialValues.project_id);
@@ -74,19 +77,14 @@ export default function ClaimFormAntd({ onCreated, initialValues = {} }: ClaimFo
       fixed_at: d.fixed_at ? d.fixed_at.format('YYYY-MM-DD') : null,
     }));
     const defectIds = await createDefects.mutateAsync(newDefs);
-    for (let i = 0; i < defectIds.length; i++) {
-      const files = defectFiles[i];
-      if (files?.length) {
-        const uploaded = await addDefectAttachments(files, defectIds[i]);
-        await supabase
-          .from('defects')
-          .update({ attachment_ids: uploaded.map((u) => u.id) })
-          .eq('id', defectIds[i]);
-      }
+    if (files.some((f) => f.type_id == null)) {
+      notify.error('Выберите тип файла для всех документов');
+      return;
     }
     await create.mutateAsync({
       ...rest,
       defect_ids: defectIds,
+      attachments: files,
       project_id: values.project_id ?? globalProjectId,
       claim_date: values.claim_date ? values.claim_date.format('YYYY-MM-DD') : null,
       received_by_developer_at: values.received_by_developer_at ? values.received_by_developer_at.format('YYYY-MM-DD') : null,
@@ -94,7 +92,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {} }: ClaimFo
       fixed_at: values.fixed_at ? values.fixed_at.format('YYYY-MM-DD') : null,
     } as any);
     form.resetFields();
-    setDefectFiles({});
+    setFiles([]);
     onCreated?.();
   };
 
@@ -125,35 +123,47 @@ export default function ClaimFormAntd({ onCreated, initialValues = {} }: ClaimFo
       </Row>
       <Row gutter={16}>
         <Col span={8}>
-          <Form.Item name="status_id" label="Статус" rules={[{ required: true }]}> 
-            <Select showSearch options={statuses.map((s) => ({ value: s.id, label: s.name }))} />
-          </Form.Item>
-        </Col>
-        <Col span={8}>
           <Form.Item name="number" label="№ претензии" rules={[{ required: true }]}> 
             <Input />
           </Form.Item>
         </Col>
         <Col span={8}>
-          <Form.Item name="claim_date" label="Дата претензии"> 
+          <Form.Item name="claim_date" label="Дата претензии">
+            <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
+          </Form.Item>
+        </Col>
+        <Col span={8}>
+          <Form.Item name="received_by_developer_at" label="Дата получения претензии Застройщиком">
             <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
           </Form.Item>
         </Col>
       </Row>
       <Row gutter={16}>
         <Col span={8}>
-          <Form.Item name="received_by_developer_at" label="Дата получения претензии Застройщиком"> 
-            <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
-          </Form.Item>
-        </Col>
-        <Col span={8}>
           <Form.Item name="registered_at" label="Дата регистрации претензии">
             <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
           </Form.Item>
+          <Tag
+            color="blue"
+            onClick={() => {
+              const val = form.getFieldValue('registered_at');
+              if (val) {
+                form.setFieldValue('fixed_at', dayjs(val).add(45, 'day'));
+              }
+            }}
+            style={{ cursor: 'pointer', marginTop: 4 }}
+          >
+            +45 дней
+          </Tag>
         </Col>
         <Col span={8}>
-          <Form.Item name="fixed_at" label="Дата устранения претензии"> 
+          <Form.Item name="fixed_at" label="Дата устранения претензии">
             <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
+          </Form.Item>
+        </Col>
+        <Col span={8}>
+          <Form.Item name="status_id" label="Статус" rules={[{ required: true }]}> 
+            <Select showSearch options={statuses.map((s) => ({ value: s.id, label: s.name }))} />
           </Form.Item>
         </Col>
       </Row>
@@ -164,11 +174,40 @@ export default function ClaimFormAntd({ onCreated, initialValues = {} }: ClaimFo
             add={add}
             remove={remove}
             projectId={projectId}
-            fileMap={defectFiles}
-            onFilesChange={handleFilesChange}
+            showFiles={false}
           />
         )}
       </Form.List>
+      <Form.Item label="Файлы">
+        <FileDropZone onFiles={handleDropFiles} />
+        {files.map((f, i) => (
+          <Row key={i} gutter={8} align="middle" style={{ marginTop: 4 }}>
+            <Col flex="auto">
+              <span>{f.file.name}</span>
+            </Col>
+            <Col flex="160px">
+              <Select
+                style={{ width: '100%' }}
+                placeholder="Тип файла"
+                value={f.type_id ?? undefined}
+                onChange={(v) => setType(i, v)}
+                allowClear
+              >
+                {attachmentTypes.map((t) => (
+                  <Select.Option key={t.id} value={t.id}>
+                    {t.name}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Col>
+            <Col>
+              <Button type="text" danger onClick={() => removeFile(i)}>
+                Удалить
+              </Button>
+            </Col>
+          </Row>
+        ))}
+      </Form.Item>
       <Form.Item style={{ textAlign: 'right' }}>
         <Button type="primary" htmlType="submit" loading={create.isPending}>
           Создать

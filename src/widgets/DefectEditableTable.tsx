@@ -37,6 +37,8 @@ interface Props {
   fileMap?: Record<number, NewDefectFile[]>;
   /** Изменение файлов по индексу */
   onFilesChange?: (index: number, files: NewDefectFile[]) => void;
+  /** Показывать колонку загрузки файлов */
+  showFiles?: boolean;
 }
 
 /**
@@ -118,7 +120,7 @@ const FixByField: React.FC<FixByFieldProps> = React.memo(
  * Editable table for adding defects inside ticket form.
  * Shows skeleton until defect types and statuses are loaded.
  */
-export default function DefectEditableTable({ fields, add, remove, projectId, fileMap = {}, onFilesChange }: Props) {
+export default function DefectEditableTable({ fields, add, remove, projectId, fileMap = {}, onFilesChange, showFiles = true }: Props) {
   const { data: defectTypes = [], isPending: loadingTypes } = useDefectTypes();
   const { data: defectStatuses = [], isPending: loadingStatuses } = useDefectStatuses();
   const { data: deadlines = [] } = useDefectDeadlines();
@@ -136,7 +138,8 @@ export default function DefectEditableTable({ fields, add, remove, projectId, fi
 
 
   const columns: ColumnsType<any> = useMemo(
-    () => [
+    () =>
+      [
       {
         title: '#',
         dataIndex: 'index',
@@ -317,36 +320,38 @@ export default function DefectEditableTable({ fields, add, remove, projectId, fi
           />
         ),
       },
-      {
-        title: 'Файлы',
-        dataIndex: 'files',
-        width: 200,
-        render: (_: any, field: any) => (
-          <Upload
-            multiple
-            beforeUpload={(file) => {
-              const cur = fileMap[field.name] ?? [];
-              const arr = [...cur, { file, type_id: null }];
-              onFilesChange?.(field.name, arr);
-              return false;
-            }}
-            onRemove={(info) => {
-              const cur = fileMap[field.name] ?? [];
-              const idx = Number(info.uid);
-              const arr = cur.filter((_, i) => i !== idx);
-              onFilesChange?.(field.name, arr);
-              return false;
-            }}
-            fileList={(fileMap[field.name] ?? []).map((f, i) => ({
-              uid: String(i),
-              name: f.file.name,
-              status: 'done',
-            }))}
-          >
-            <Button size="small" icon={<UploadOutlined />}>Загрузить</Button>
-          </Upload>
-        ),
-      },
+      showFiles
+        ? {
+            title: 'Файлы',
+            dataIndex: 'files',
+            width: 200,
+            render: (_: any, field: any) => (
+              <Upload
+                multiple
+                beforeUpload={(file) => {
+                  const cur = fileMap[field.name] ?? [];
+                  const arr = [...cur, { file, type_id: null }];
+                  onFilesChange?.(field.name, arr);
+                  return false;
+                }}
+                onRemove={(info) => {
+                  const cur = fileMap[field.name] ?? [];
+                  const idx = Number(info.uid);
+                  const arr = cur.filter((_, i) => i !== idx);
+                  onFilesChange?.(field.name, arr);
+                  return false;
+                }}
+                fileList={(fileMap[field.name] ?? []).map((f, i) => ({
+                  uid: String(i),
+                  name: f.file.name,
+                  status: 'done',
+                }))}
+              >
+                <Button size="small" icon={<UploadOutlined />}>Загрузить</Button>
+              </Upload>
+            ),
+          }
+        : null,
       {
         title: '',
         dataIndex: 'actions',
@@ -363,8 +368,8 @@ export default function DefectEditableTable({ fields, add, remove, projectId, fi
           </Tooltip>
         ),
       },
-    ],
-    [defectTypes, defectStatuses, remove],
+    ].filter(Boolean),
+    [defectTypes, defectStatuses, remove, showFiles, fileMap],
   );
 
   if (loadingTypes || loadingStatuses) {
