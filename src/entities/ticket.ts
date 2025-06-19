@@ -179,9 +179,10 @@ function mapTicket(r) {
 // ──────────────────────────── queries ─────────────────────────────
 export function useTickets() {
   const { projectId, projectIds, onlyAssigned, enabled } = useProjectFilter();
+  const keyProjectId = onlyAssigned ? projectId : null;
   return useQuery({
-    queryKey: ticketsKey(projectId, projectIds),
-    enabled,
+    queryKey: ticketsKey(keyProjectId, projectIds),
+    enabled: onlyAssigned ? enabled : true,
     queryFn: async () => {
       let query = supabase
         .from("tickets")
@@ -195,7 +196,7 @@ export function useTickets() {
           ticket_statuses (id, name, color)
         `,
         );
-      query = filterByProjects(query, projectId, projectIds, onlyAssigned);
+      query = filterByProjects(query, keyProjectId, projectIds, onlyAssigned);
       query = query.order("created_at", { ascending: false });
       const { data, error } = await query;
 
@@ -237,7 +238,7 @@ export function useTickets() {
             .from("tickets")
             .update({ attachment_ids: existIds })
             .eq("id", r.id);
-          upq = filterByProjects(upq, projectId, projectIds, perm?.only_assigned_project);
+          upq = filterByProjects(upq, keyProjectId, projectIds, onlyAssigned);
           await upq;
           r.attachment_ids = existIds;
         }
@@ -302,9 +303,8 @@ export function useCreateTicket() {
       }
       return { ...newTicket, attachment_ids: ids };
     },
-    onSuccess: (_, vars) => {
-      const pid = vars.project_id ?? projectId;
-      const keyPid = onlyAssigned ? projectId : pid;
+    onSuccess: () => {
+      const keyPid = onlyAssigned ? projectId : null;
       qc.invalidateQueries({ queryKey: ticketsKey(keyPid, projectIds) });
       qc.invalidateQueries({ queryKey: ticketsSimpleKey(keyPid, projectIds) });
       notify.success("Замечание успешно создано");
@@ -462,7 +462,8 @@ export function useTicket(ticketId) {
       return uploaded;
     },
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: ticketsKey(projectId, projectIds) });
+      const keyPid = onlyAssigned ? projectId : null;
+      qc.invalidateQueries({ queryKey: ticketsKey(keyPid, projectIds) });
       qc.invalidateQueries({ queryKey: ["ticket", vars.id, projectId] });
       notify.success("Замечание успешно обновлено");
     },
@@ -538,7 +539,8 @@ export function useDeleteTicket() {
       await dq;
     },
     onSuccess: (_, id) => {
-      qc.invalidateQueries({ queryKey: ticketsKey(projectId, projectIds) });
+      const keyPid = onlyAssigned ? projectId : null;
+      qc.invalidateQueries({ queryKey: ticketsKey(keyPid, projectIds) });
       qc.invalidateQueries({
         queryKey: ["ticket", id, projectId],
         exact: true,
@@ -650,7 +652,8 @@ export function useUpdateTicketStatus() {
       return { id: data.id, status_id: statusId };
     },
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: ticketsKey(projectId, projectIds) });
+      const keyPid = perm?.only_assigned_project ? projectId : null;
+      qc.invalidateQueries({ queryKey: ticketsKey(keyPid, projectIds) });
       qc.invalidateQueries({
         queryKey: ["ticket", vars.id, projectId],
         exact: true,
@@ -680,7 +683,7 @@ export function useTicketLinks() {
 
 export function useLinkTickets() {
   const qc = useQueryClient();
-  const { projectId, projectIds } = useProjectFilter();
+  const { projectId, projectIds, onlyAssigned } = useProjectFilter();
   return useMutation({
     mutationFn: async ({ parentId, childIds }) => {
       const ids = childIds.map((c) => Number(c));
@@ -689,20 +692,22 @@ export function useLinkTickets() {
       const rows = ids.map((child_id) => ({ parent_id: Number(parentId), child_id }));
       await supabase.from(LINKS_TABLE).insert(rows);
       qc.invalidateQueries({ queryKey: [LINKS_TABLE] });
-      qc.invalidateQueries({ queryKey: ticketsKey(projectId, projectIds) });
+      const keyPid = onlyAssigned ? projectId : null;
+      qc.invalidateQueries({ queryKey: ticketsKey(keyPid, projectIds) });
     },
   });
 }
 
 export function useUnlinkTicket() {
   const qc = useQueryClient();
-  const { projectId, projectIds } = useProjectFilter();
+  const { projectId, projectIds, onlyAssigned } = useProjectFilter();
   return useMutation({
     mutationFn: async (id) => {
       const childId = Number(id);
       await supabase.from(LINKS_TABLE).delete().eq('child_id', childId);
       qc.invalidateQueries({ queryKey: [LINKS_TABLE] });
-      qc.invalidateQueries({ queryKey: ticketsKey(projectId, projectIds) });
+      const keyPid = onlyAssigned ? projectId : null;
+      qc.invalidateQueries({ queryKey: ticketsKey(keyPid, projectIds) });
     },
   });
 }
