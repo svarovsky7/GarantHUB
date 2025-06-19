@@ -100,6 +100,7 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
     form.setFieldsValue({
       project_id: letter.project_id,
       unit_ids: letter.unit_ids,
+      type: letter.type,
       number: letter.number,
       date: dayjs(letter.date),
       sender: letter.sender,
@@ -146,6 +147,7 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
           unit_ids: values.unit_ids,
           number: values.number,
           letter_type_id: values.letter_type_id,
+          type: values.type,
           letter_date: values.date ? (values.date as Dayjs).format('YYYY-MM-DD') : letter?.date,
           sender: values.sender,
           receiver: values.receiver,
@@ -190,8 +192,18 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
       onFinish={onFinish}
       onValuesChange={handleChanged}
       style={{ maxWidth: embedded ? 'none' : 640 }}
-      autoComplete="off"
-    >
+  autoComplete="off"
+  >
+      <Row gutter={16}>
+        <Col span={8}>
+          <Form.Item name="type" label="Тип письма" style={highlight('type')}>
+            <Select>
+              <Select.Option value="incoming">Входящее</Select.Option>
+              <Select.Option value="outgoing">Исходящее</Select.Option>
+            </Select>
+          </Form.Item>
+        </Col>
+      </Row>
       <Row gutter={16}>
         <Col span={8}>
           <Form.Item

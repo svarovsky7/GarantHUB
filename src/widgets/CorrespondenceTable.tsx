@@ -98,6 +98,7 @@ export default function CorrespondenceTable({
   }, [letters, maps]);
 
   const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
+  const [pageSize, setPageSize] = useState(25);
 
   useEffect(() => {
     try {
@@ -143,6 +144,7 @@ export default function CorrespondenceTable({
       title: 'ID',
       dataIndex: 'id',
       width: 80,
+      sorter: (a, b) => Number(a.id) - Number(b.id),
     },
     {
       title: 'Тип',
@@ -285,7 +287,11 @@ export default function CorrespondenceTable({
           rowKey="id"
           columns={columns}
           dataSource={treeData}
-          pagination={{ pageSize: 25, showSizeChanger: true }}
+          pagination={{
+            pageSize,
+            showSizeChanger: true,
+            onChange: (_p, size) => size && setPageSize(size),
+          }}
           size="middle"
           expandable={{
             expandRowByClick: true,
