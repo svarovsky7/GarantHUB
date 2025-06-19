@@ -4,6 +4,9 @@ import type { ClaimStatus } from '@/shared/types/claimStatus';
 
 const TABLE = 'claim_statuses';
 
+/**
+ * Хук получения списка статусов претензии.
+ */
 export const useClaimStatuses = () => {
   return useQuery({
     queryKey: [TABLE],
@@ -16,6 +19,9 @@ export const useClaimStatuses = () => {
   });
 };
 
+/**
+ * Хук обновления статуса претензии.
+ */
 export const useUpdateClaimStatus = () => {
   const qc = useQueryClient();
   return useMutation({

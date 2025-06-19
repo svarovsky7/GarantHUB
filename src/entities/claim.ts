@@ -8,6 +8,9 @@ import type { Claim } from '@/shared/types/claim';
 
 const TABLE = 'claims';
 
+/**
+ * Хук получения списка претензий с учётом фильтров проекта.
+ */
 export function useClaims() {
   const { projectId, projectIds, onlyAssigned } = useProjectFilter();
   return useQuery({
@@ -24,6 +27,9 @@ export function useClaims() {
   });
 }
 
+/**
+ * Хук получения одной претензии по идентификатору.
+ */
 export function useClaim(id?: number | string) {
   const { projectId, projectIds, onlyAssigned } = useProjectFilter();
   const claimId = Number(id);
@@ -42,6 +48,9 @@ export function useClaim(id?: number | string) {
   });
 }
 
+/**
+ * Хук создания новой претензии.
+ */
 export function useCreateClaim() {
   const projectId = useProjectId();
   const userId = useAuthStore((s) => s.profile?.id ?? null);
@@ -60,6 +69,9 @@ export function useCreateClaim() {
   });
 }
 
+/**
+ * Хук обновления данных претензии.
+ */
 export function useUpdateClaim() {
   const qc = useQueryClient();
   const { projectId, projectIds, onlyAssigned } = useProjectFilter();
@@ -78,6 +90,9 @@ export function useUpdateClaim() {
   });
 }
 
+/**
+ * Хук удаления претензии.
+ */
 export function useDeleteClaim() {
   const qc = useQueryClient();
   const { projectId, projectIds, onlyAssigned } = useProjectFilter();
