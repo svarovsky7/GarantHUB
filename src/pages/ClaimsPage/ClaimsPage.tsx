@@ -25,6 +25,19 @@ export default function ClaimsPage() {
   const { data: units = [] } = useUnitsByIds(unitIds);
   const [filters, setFilters] = useState({});
   const [showAddForm, setShowAddForm] = useState(false);
+  const LS_SHOW_FILTERS = 'claims:showFilters';
+  const [showFilters, setShowFilters] = useState<boolean>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(LS_SHOW_FILTERS) || 'true');
+    } catch {
+      return true;
+    }
+  });
+  React.useEffect(() => {
+    try {
+      localStorage.setItem(LS_SHOW_FILTERS, JSON.stringify(showFilters));
+    } catch {}
+  }, [showFilters]);
   const [viewId, setViewId] = useState<number | null>(null);
   const [showColumnsDrawer, setShowColumnsDrawer] = useState(false);
   const [columnsState, setColumnsState] = useState<TableColumnSetting[]>(() => {
@@ -79,7 +92,7 @@ export default function ClaimsPage() {
       number: { title: '№ претензии', dataIndex: 'number', width: 160, sorter: (a: any, b: any) => a.number.localeCompare(b.number) },
       claimDate: { title: 'Дата претензии', dataIndex: 'claimDate', width: 120, sorter: (a: any, b: any) => (a.claimDate ? a.claimDate.valueOf() : 0) - (b.claimDate ? b.claimDate.valueOf() : 0), render: (v: any) => fmt(v) },
       receivedByDeveloperAt: { title: 'Дата получения Застройщиком', dataIndex: 'receivedByDeveloperAt', width: 120, sorter: (a: any, b: any) => (a.receivedByDeveloperAt ? a.receivedByDeveloperAt.valueOf() : 0) - (b.receivedByDeveloperAt ? b.receivedByDeveloperAt.valueOf() : 0), render: (v: any) => fmt(v) },
-      receivedByMeAt: { title: 'Дата получения мной', dataIndex: 'receivedByMeAt', width: 120, sorter: (a: any, b: any) => (a.receivedByMeAt ? a.receivedByMeAt.valueOf() : 0) - (b.receivedByMeAt ? b.receivedByMeAt.valueOf() : 0), render: (v: any) => fmt(v) },
+      registeredAt: { title: 'Дата регистрации претензии', dataIndex: 'registeredAt', width: 120, sorter: (a: any, b: any) => (a.registeredAt ? a.registeredAt.valueOf() : 0) - (b.registeredAt ? b.registeredAt.valueOf() : 0), render: (v: any) => fmt(v) },
       fixedAt: { title: 'Дата устранения', dataIndex: 'fixedAt', width: 120, sorter: (a: any, b: any) => (a.fixedAt ? a.fixedAt.valueOf() : 0) - (b.fixedAt ? b.fixedAt.valueOf() : 0), render: (v: any) => fmt(v) },
       responsibleEngineerName: { title: 'Ответственный инженер', dataIndex: 'responsibleEngineerName', width: 180, sorter: (a: any, b: any) => (a.responsibleEngineerName || '').localeCompare(b.responsibleEngineerName || '') },
       actions: { title: 'Действия', key: 'actions', width: 80, render: (_: any, record: any) => (
@@ -107,9 +120,14 @@ export default function ClaimsPage() {
         )}
         <TableColumnsDrawer open={showColumnsDrawer} columns={columnsState} onChange={setColumnsState} onClose={() => setShowColumnsDrawer(false)} />
         <div style={{ marginTop: 24 }}>
-          <Card style={{ marginBottom: 24 }}>
-            <ClaimsFilters options={options} onChange={setFilters} />
-          </Card>
+          <Button onClick={() => setShowFilters((p) => !p)} style={{ marginBottom: 8 }}>
+            {showFilters ? 'Скрыть фильтры' : 'Показать фильтры'}
+          </Button>
+          {showFilters && (
+            <Card style={{ marginBottom: 24 }}>
+              <ClaimsFilters options={options} onChange={setFilters} />
+            </Card>
+          )}
           {error ? <Alert type="error" message={error.message} /> : <ClaimsTable claims={claimsWithNames} filters={filters} loading={isLoading} columns={columns} onView={(id) => setViewId(id)} />}
         </div>
         <ClaimViewModal open={viewId !== null} claimId={viewId} onClose={() => setViewId(null)} />

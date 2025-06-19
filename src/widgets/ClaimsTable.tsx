@@ -27,7 +27,7 @@ export default function ClaimsTable({ claims, filters, loading, columns: columns
       { title: '№ претензии', dataIndex: 'number', width: 160, sorter: (a, b) => a.number.localeCompare(b.number) },
       { title: 'Дата претензии', dataIndex: 'claimDate', width: 120, sorter: (a, b) => (a.claimDate ? a.claimDate.valueOf() : 0) - (b.claimDate ? b.claimDate.valueOf() : 0), render: (v) => fmt(v) },
       { title: 'Дата получения Застройщиком', dataIndex: 'receivedByDeveloperAt', width: 120, sorter: (a, b) => (a.receivedByDeveloperAt ? a.receivedByDeveloperAt.valueOf() : 0) - (b.receivedByDeveloperAt ? b.receivedByDeveloperAt.valueOf() : 0), render: (v) => fmt(v) },
-      { title: 'Дата получения мной', dataIndex: 'receivedByMeAt', width: 120, sorter: (a, b) => (a.receivedByMeAt ? a.receivedByMeAt.valueOf() : 0) - (b.receivedByMeAt ? b.receivedByMeAt.valueOf() : 0), render: (v) => fmt(v) },
+      { title: 'Дата регистрации претензии', dataIndex: 'registeredAt', width: 120, sorter: (a, b) => (a.registeredAt ? a.registeredAt.valueOf() : 0) - (b.registeredAt ? b.registeredAt.valueOf() : 0), render: (v) => fmt(v) },
       { title: 'Дата устранения', dataIndex: 'fixedAt', width: 120, sorter: (a, b) => (a.fixedAt ? a.fixedAt.valueOf() : 0) - (b.fixedAt ? b.fixedAt.valueOf() : 0), render: (v) => fmt(v) },
       { title: 'Ответственный инженер', dataIndex: 'responsibleEngineerName', width: 180, sorter: (a, b) => (a.responsibleEngineerName || '').localeCompare(b.responsibleEngineerName || '') },
       { title: 'Действия', key: 'actions', width: 80, render: (_: any, record) => (
@@ -51,7 +51,7 @@ export default function ClaimsTable({ claims, filters, loading, columns: columns
       const matchesResponsible = !filters.responsible || c.responsibleEngineerName === filters.responsible;
       const matchesNumber = !filters.number || c.number.includes(filters.number);
       const matchesIds = !filters.id || filters.id.includes(c.id);
-      const matchesPeriod = !filters.period || (c.receivedByMeAt && c.receivedByMeAt.isSameOrAfter(filters.period[0], 'day') && c.receivedByMeAt.isSameOrBefore(filters.period[1], 'day'));
+      const matchesPeriod = !filters.period || (c.registeredAt && c.registeredAt.isSameOrAfter(filters.period[0], 'day') && c.registeredAt.isSameOrBefore(filters.period[1], 'day'));
       return matchesProject && matchesUnits && matchesStatus && matchesResponsible && matchesNumber && matchesIds && matchesPeriod;
     });
   }, [claims, filters]);

@@ -12,8 +12,9 @@ import {
   Tag,
   Space,
   Radio,
+  Upload,
 } from 'antd';
-import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PlusOutlined, DeleteOutlined, UploadOutlined } from '@ant-design/icons';
 import { useDefectTypes } from '@/entities/defectType';
 import { useDefectStatuses } from '@/entities/defectStatus';
 import { useDefectDeadlines } from '@/entities/defectDeadline';
@@ -21,6 +22,7 @@ import { useBrigades } from '@/entities/brigade';
 import { useContractors } from '@/entities/contractor';
 import type { ColumnsType } from 'antd/es/table';
 import type { FormInstance } from 'antd/es/form';
+import type { NewDefectFile } from '@/shared/types/defectFile';
 
 /**
  * Props for {@link DefectEditableTable}
@@ -31,6 +33,10 @@ interface Props {
   remove: (index: number) => void;
   /** ID выбранного проекта, используется для сроков устранения */
   projectId?: number | null;
+  /** Карта файлов по индексу дефекта */
+  fileMap?: Record<number, NewDefectFile[]>;
+  /** Изменение файлов по индексу */
+  onFilesChange?: (index: number, files: NewDefectFile[]) => void;
 }
 
 /**
@@ -90,11 +96,7 @@ const FixByField: React.FC<FixByFieldProps> = React.memo(
           <Radio.Button value="brigade">Собст</Radio.Button>
           <Radio.Button value="contractor">Подряд</Radio.Button>
         </Radio.Group>
-        <Form.Item
-          name={namePath}
-          noStyle
-          rules={[{ required: true, message: 'Выберите исполнителя' }]}
-        >
+        <Form.Item name={namePath} noStyle>
           <Select
             key={mode}
             size="small"
@@ -116,7 +118,7 @@ const FixByField: React.FC<FixByFieldProps> = React.memo(
  * Editable table for adding defects inside ticket form.
  * Shows skeleton until defect types and statuses are loaded.
  */
-export default function DefectEditableTable({ fields, add, remove, projectId }: Props) {
+export default function DefectEditableTable({ fields, add, remove, projectId, fileMap = {}, onFilesChange }: Props) {
   const { data: defectTypes = [], isPending: loadingTypes } = useDefectTypes();
   const { data: defectStatuses = [], isPending: loadingStatuses } = useDefectStatuses();
   const { data: deadlines = [] } = useDefectDeadlines();
@@ -313,6 +315,36 @@ export default function DefectEditableTable({ fields, add, remove, projectId }: 
             brigades={brigades}
             contractors={contractors}
           />
+        ),
+      },
+      {
+        title: 'Файлы',
+        dataIndex: 'files',
+        width: 200,
+        render: (_: any, field: any) => (
+          <Upload
+            multiple
+            beforeUpload={(file) => {
+              const cur = fileMap[field.name] ?? [];
+              const arr = [...cur, { file, type_id: null }];
+              onFilesChange?.(field.name, arr);
+              return false;
+            }}
+            onRemove={(info) => {
+              const cur = fileMap[field.name] ?? [];
+              const idx = Number(info.uid);
+              const arr = cur.filter((_, i) => i !== idx);
+              onFilesChange?.(field.name, arr);
+              return false;
+            }}
+            fileList={(fileMap[field.name] ?? []).map((f, i) => ({
+              uid: String(i),
+              name: f.file.name,
+              status: 'done',
+            }))}
+          >
+            <Button size="small" icon={<UploadOutlined />}>Загрузить</Button>
+          </Upload>
         ),
       },
       {
