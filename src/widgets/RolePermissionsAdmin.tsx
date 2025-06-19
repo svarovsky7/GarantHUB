@@ -12,6 +12,7 @@ const PAGES = [
   'dashboard',
   'structure',
   'tickets',
+  'claims',
   'defects',
   'court-cases',
   'correspondence',
