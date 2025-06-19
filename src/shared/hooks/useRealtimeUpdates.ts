@@ -5,6 +5,7 @@ import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useAuthStore } from '@/shared/store/authStore';
 import { useRolePermission } from '@/entities/rolePermission';
 import type { RoleName } from '@/shared/types/rolePermission';
+import { ticketsKey } from '@/shared/utils/queryKeys';
 
 /**
  * Подписка на создание записей в ключевых таблицах.
@@ -34,17 +35,17 @@ export function useRealtimeUpdates() {
         .on(
           'postgres_changes',
           { event: 'INSERT', schema: 'public', table: 'tickets', filter: `project_id=eq.${pid}` },
-          () => qc.invalidateQueries({ queryKey: ['tickets', pid] }),
+          () => qc.invalidateQueries({ queryKey: ticketsKey(projectId, projectIds) }),
         )
         .on(
           'postgres_changes',
           { event: 'UPDATE', schema: 'public', table: 'tickets', filter: `project_id=eq.${pid}` },
-          () => qc.invalidateQueries({ queryKey: ['tickets', pid] }),
+          () => qc.invalidateQueries({ queryKey: ticketsKey(projectId, projectIds) }),
         )
         .on(
           'postgres_changes',
           { event: 'DELETE', schema: 'public', table: 'tickets', filter: `project_id=eq.${pid}` },
-          () => qc.invalidateQueries({ queryKey: ['tickets', pid] }),
+          () => qc.invalidateQueries({ queryKey: ticketsKey(projectId, projectIds) }),
         )
         .on(
           'postgres_changes',

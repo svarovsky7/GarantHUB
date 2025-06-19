@@ -27,6 +27,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import TicketForm from "@/features/ticket/TicketForm";
 import { signedUrl } from "@/entities/ticket";
 import { addTicketAttachments, getAttachmentsByIds } from "@/entities/attachment";
+import { useProjectFilter } from "@/shared/hooks/useProjectFilter";
+import { ticketsKey } from "@/shared/utils/queryKeys";
 
 export default function TicketListDialog({
   open,
@@ -36,6 +38,7 @@ export default function TicketListDialog({
 }) {
   const notify = useNotify();
   const queryClient = useQueryClient();
+  const { projectIds } = useProjectFilter();
   const [tickets, setTickets] = useState([]);
   const [statuses, setStatuses] = useState([]);
   const [attachments, setAttachments] = useState({});
@@ -96,11 +99,8 @@ export default function TicketListDialog({
     );
     notify.success("Статус обновлён");
     // Инвалидируем кэш тикетов
-    if (unit?.project_id) {
-      queryClient.invalidateQueries({ queryKey: ["tickets", unit.project_id] });
-    } else {
-      queryClient.invalidateQueries({ queryKey: ["tickets"] });
-    }
+    const pid = unit?.project_id ?? null;
+    queryClient.invalidateQueries({ queryKey: ticketsKey(pid, projectIds) });
     // ЯВНО ТРИГГЕРИМ ОБНОВЛЕНИЕ ВНЕШНЕГО ХРАНИЛИЩА (шахматки)
     if (onTicketsChanged) onTicketsChanged();
   };

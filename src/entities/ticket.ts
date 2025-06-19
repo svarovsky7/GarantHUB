@@ -20,6 +20,7 @@ import { useAuthStore } from '@/shared/store/authStore';
 import { useRolePermission } from '@/entities/rolePermission';
 import type { RoleName } from '@/shared/types/rolePermission';
 import { filterByProjects } from '@/shared/utils/projectQuery';
+import { ticketsKey, ticketsSimpleKey } from '@/shared/utils/queryKeys';
 
 const LINKS_TABLE = "ticket_links";
 
@@ -179,7 +180,7 @@ function mapTicket(r) {
 export function useTickets() {
   const { projectId, projectIds, onlyAssigned, enabled } = useProjectFilter();
   return useQuery({
-    queryKey: ["tickets", projectId, projectIds.join(',')],
+    queryKey: ticketsKey(projectId, projectIds),
     enabled,
     queryFn: async () => {
       let query = supabase
@@ -256,6 +257,7 @@ export function useCreateTicket() {
   const projectId = useProjectId();
   const userId = useAuthStore((s) => s.profile?.id ?? null);
   const profile = useAuthStore((s) => s.profile); // ← получаем весь профиль
+  const { projectIds, onlyAssigned } = useProjectFilter();
   const qc = useQueryClient();
   const notify = useNotify();
 
@@ -302,8 +304,9 @@ export function useCreateTicket() {
     },
     onSuccess: (_, vars) => {
       const pid = vars.project_id ?? projectId;
-      qc.invalidateQueries({ queryKey: ["tickets", pid] });
-      qc.invalidateQueries({ queryKey: ["tickets-simple", pid] });
+      const keyPid = onlyAssigned ? projectId : pid;
+      qc.invalidateQueries({ queryKey: ticketsKey(keyPid, projectIds) });
+      qc.invalidateQueries({ queryKey: ticketsSimpleKey(keyPid, projectIds) });
       notify.success("Замечание успешно создано");
     },
     onError: (e) => notify.error(`Ошибка создания замечания: ${e.message}`),
@@ -313,6 +316,9 @@ export function useCreateTicket() {
 // ───────────────────────── one ticket / update ───────────────────
 export function useTicket(ticketId) {
   const projectId = useProjectId();
+  const projectIds = useAuthStore((s) => s.profile?.project_ids) ?? [];
+  const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
+  const { data: perm } = useRolePermission(role);
   const qc = useQueryClient();
   const notify = useNotify();
   const id = Number(ticketId);
@@ -456,7 +462,7 @@ export function useTicket(ticketId) {
       return uploaded;
     },
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: ["tickets", projectId] });
+      qc.invalidateQueries({ queryKey: ticketsKey(projectId, projectIds) });
       qc.invalidateQueries({ queryKey: ["ticket", vars.id, projectId] });
       notify.success("Замечание успешно обновлено");
     },
@@ -477,6 +483,9 @@ export function useTicket(ticketId) {
  */
 export function useDeleteTicket() {
   const projectId = useProjectId();
+  const projectIds = useAuthStore((s) => s.profile?.project_ids) ?? [];
+  const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
+  const { data: perm } = useRolePermission(role);
   const qc = useQueryClient();
   const notify = useNotify();
 
@@ -529,7 +538,7 @@ export function useDeleteTicket() {
       await dq;
     },
     onSuccess: (_, id) => {
-      qc.invalidateQueries({ queryKey: ["tickets", projectId] });
+      qc.invalidateQueries({ queryKey: ticketsKey(projectId, projectIds) });
       qc.invalidateQueries({
         queryKey: ["ticket", id, projectId],
         exact: true,
@@ -566,7 +575,7 @@ export function useAllTicketsSimple() {
 export function useTicketsSimple() {
   const { projectId, projectIds, onlyAssigned, enabled } = useProjectFilter();
   return useQuery({
-    queryKey: ["tickets-simple", projectId, projectIds.join(',')],
+    queryKey: ticketsSimpleKey(projectId, projectIds),
     enabled,
     queryFn: async () => {
       let q = supabase
@@ -623,7 +632,7 @@ export function useUpdateTicketStatus() {
       return { id: data.id, status_id: statusId };
     },
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: ["tickets", projectId] });
+      qc.invalidateQueries({ queryKey: ticketsKey(projectId, projectIds) });
       qc.invalidateQueries({
         queryKey: ["ticket", vars.id, projectId],
         exact: true,
@@ -653,6 +662,7 @@ export function useTicketLinks() {
 
 export function useLinkTickets() {
   const qc = useQueryClient();
+  const { projectId, projectIds } = useProjectFilter();
   return useMutation({
     mutationFn: async ({ parentId, childIds }) => {
       const ids = childIds.map((c) => Number(c));
@@ -661,19 +671,20 @@ export function useLinkTickets() {
       const rows = ids.map((child_id) => ({ parent_id: Number(parentId), child_id }));
       await supabase.from(LINKS_TABLE).insert(rows);
       qc.invalidateQueries({ queryKey: [LINKS_TABLE] });
-      qc.invalidateQueries({ queryKey: ['tickets'] });
+      qc.invalidateQueries({ queryKey: ticketsKey(projectId, projectIds) });
     },
   });
 }
 
 export function useUnlinkTicket() {
   const qc = useQueryClient();
+  const { projectId, projectIds } = useProjectFilter();
   return useMutation({
     mutationFn: async (id) => {
       const childId = Number(id);
       await supabase.from(LINKS_TABLE).delete().eq('child_id', childId);
       qc.invalidateQueries({ queryKey: [LINKS_TABLE] });
-      qc.invalidateQueries({ queryKey: ['tickets'] });
+      qc.invalidateQueries({ queryKey: ticketsKey(projectId, projectIds) });
     },
   });
 }
