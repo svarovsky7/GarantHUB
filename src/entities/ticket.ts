@@ -14,8 +14,9 @@ import {
   getAttachmentsByIds,
 } from "@/entities/attachment";
 import { useNotify } from "@/shared/hooks/useNotify";
-import { useProjectId } from "@/shared/hooks/useProjectId";
-import { useAuthStore } from "@/shared/store/authStore";
+import { useProjectFilter } from '@/shared/hooks/useProjectFilter';
+import { useProjectId } from '@/shared/hooks/useProjectId';
+import { useAuthStore } from '@/shared/store/authStore';
 import { useRolePermission } from '@/entities/rolePermission';
 import type { RoleName } from '@/shared/types/rolePermission';
 import { filterByProjects } from '@/shared/utils/projectQuery';
@@ -176,13 +177,10 @@ function mapTicket(r) {
 
 // ──────────────────────────── queries ─────────────────────────────
 export function useTickets() {
-  const projectId = useProjectId();
-  const projectIds = useAuthStore((s) => s.profile?.project_ids) ?? [];
-  const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
-  const { data: perm } = useRolePermission(role);
+  const { projectId, projectIds, onlyAssigned, enabled } = useProjectFilter();
   return useQuery({
-    queryKey: ["tickets", projectId],
-    enabled: !!projectId || (perm?.only_assigned_project && projectIds.length > 0),
+    queryKey: ["tickets", projectId, projectIds.join(',')],
+    enabled,
     queryFn: async () => {
       let query = supabase
         .from("tickets")
@@ -196,7 +194,7 @@ export function useTickets() {
           ticket_statuses (id, name, color)
         `,
         );
-      query = filterByProjects(query, projectId, projectIds, perm?.only_assigned_project);
+      query = filterByProjects(query, projectId, projectIds, onlyAssigned);
       query = query.order("created_at", { ascending: false });
       const { data, error } = await query;
 
@@ -566,18 +564,15 @@ export function useAllTicketsSimple() {
 // Получить список замечаний текущего проекта (минимальный набор полей)
 // -----------------------------------------------------------------------------
 export function useTicketsSimple() {
-  const projectId = useProjectId();
-  const projectIds = useAuthStore((s) => s.profile?.project_ids) ?? [];
-  const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
-  const { data: perm } = useRolePermission(role);
+  const { projectId, projectIds, onlyAssigned, enabled } = useProjectFilter();
   return useQuery({
-    queryKey: ["tickets-simple", projectId],
-    enabled: !!projectId || (perm?.only_assigned_project && projectIds.length > 0),
+    queryKey: ["tickets-simple", projectId, projectIds.join(',')],
+    enabled,
     queryFn: async () => {
       let q = supabase
         .from("tickets")
         .select("id, project_id, unit_ids, defect_ids");
-      q = filterByProjects(q, projectId, projectIds, perm?.only_assigned_project);
+      q = filterByProjects(q, projectId, projectIds, onlyAssigned);
       const { data, error } = await q;
       if (error) throw error;
       return data ?? [];

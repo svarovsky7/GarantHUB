@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/shared/api/supabaseClient';
-import { useProjectId } from '@/shared/hooks/useProjectId';
+import { useProjectFilter } from '@/shared/hooks/useProjectFilter';
 import type { CourtCase, Defect } from '@/shared/types/courtCase';
 import type { NewCaseFile } from '@/shared/types/caseFile';
 import { addCaseAttachments, getAttachmentsByIds, ATTACH_BUCKET } from '../attachment';
@@ -11,15 +11,19 @@ const CASE_DEFECTS_TABLE = 'court_case_defects';
 const CASE_LINKS_TABLE = 'court_case_links';
 
 export function useCourtCases() {
-  const projectId = useProjectId();
+  const { projectId, projectIds, onlyAssigned, enabled } = useProjectFilter();
   return useQuery({
-    queryKey: [CASES_TABLE, projectId],
+    queryKey: [CASES_TABLE, projectId, projectIds.join(',')],
+    enabled,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from(CASES_TABLE)
-        .select('*')
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: false });
+      let query = supabase.from(CASES_TABLE).select('*');
+      if (onlyAssigned) {
+        query = query.in('project_id', projectIds.length ? projectIds : [-1]);
+      } else if (projectId != null) {
+        query = query.eq('project_id', projectId);
+      }
+      query = query.order('created_at', { ascending: false });
+      const { data, error } = await query;
       if (error) throw error;
       const { data: links, error: linkErr } = await supabase
         .from(CASE_LINKS_TABLE)
@@ -72,7 +76,7 @@ export function useUpdateCourtCase() {
 }
 
 export function useDeleteCourtCase() {
-  const projectId = useProjectId();
+  const { projectId } = useProjectFilter();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: number) => {
