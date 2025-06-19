@@ -368,6 +368,35 @@ export function useUpdateLetterStatus() {
   });
 }
 
+export function useUpdateLetterDirection() {
+  const qc = useQueryClient();
+  const notify = useNotify();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      direction,
+    }: {
+      id: string;
+      direction: 'incoming' | 'outgoing';
+    }) => {
+      const { data, error } = await supabase
+        .from(LETTERS_TABLE)
+        .update({ direction })
+        .eq('id', Number(id))
+        .select('id, direction')
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [LETTERS_TABLE] });
+      notify.success('Тип письма обновлён');
+    },
+    onError: (e: any) =>
+      notify.error(`Ошибка обновления типа письма: ${e.message}`),
+  });
+}
+
 export function useLetter(letterId: number | string | undefined) {
   const id = Number(letterId);
   return useQuery({

@@ -1,10 +1,11 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import dayjs from 'dayjs';
-import { Table, Space, Button, Popconfirm, Tag, Tooltip } from 'antd';
+import { Table, Space, Button, Popconfirm, Tooltip } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { DeleteOutlined, PlusOutlined, MailOutlined, BranchesOutlined, LinkOutlined, EyeOutlined } from '@ant-design/icons';
 import { CorrespondenceLetter } from '@/shared/types/correspondence';
 import LetterStatusSelect from '@/features/correspondence/LetterStatusSelect';
+import LetterDirectionSelect from '@/features/correspondence/LetterDirectionSelect';
 
 interface Option { id: number | string; name: string; }
 
@@ -149,12 +150,10 @@ export default function CorrespondenceTable({
     {
       title: 'Тип',
       dataIndex: 'type',
-      width: 100,
+      width: 120,
       sorter: (a, b) => a.type.localeCompare(b.type),
-      render: (v: string) => (
-          <Tag color={v === 'incoming' ? 'success' : 'processing'}>
-            {v === 'incoming' ? 'Входящее' : 'Исходящее'}
-          </Tag>
+      render: (_: string, row: CorrespondenceLetter) => (
+        <LetterDirectionSelect letterId={row.id} type={row.type} />
       ),
     },
     {
