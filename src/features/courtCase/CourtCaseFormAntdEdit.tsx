@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import dayjs, { Dayjs } from 'dayjs';
-import { Form, Input, Select, DatePicker, Row, Col, Button, Skeleton } from 'antd';
+import { Form, Input, Select, DatePicker, Row, Col, Button, Skeleton, Radio, Space } from 'antd';
 import { useVisibleProjects } from '@/entities/project';
 import { useUnitsByProject } from '@/entities/unit';
 import { useContractors } from '@/entities/contractor';
@@ -48,6 +48,9 @@ export default function CourtCaseFormAntdEdit({
     [courtCase],
   );
 
+  const [plaintiffType, setPlaintiffType] = useState<'person' | 'contractor'>('person');
+  const [defendantType, setDefendantType] = useState<'person' | 'contractor'>('contractor');
+
   const highlight = (name: string) =>
     changedFields[name]
       ? { background: '#fffbe6', padding: 4, borderRadius: 2 }
@@ -70,6 +73,8 @@ export default function CourtCaseFormAntdEdit({
       fix_end_date: courtCase.fix_end_date ? dayjs(courtCase.fix_end_date) : null,
       description: courtCase.description,
     });
+    setPlaintiffType(courtCase.plaintiff_person_id ? 'person' : 'contractor');
+    setDefendantType(courtCase.defendant_person_id ? 'person' : 'contractor');
   }, [courtCase, form]);
 
   const handleFiles = (files: File[]) => attachments.addFiles(files);
@@ -110,18 +115,10 @@ export default function CourtCaseFormAntdEdit({
           unit_ids: values.unit_ids,
           number: values.number,
           date: values.date ? (values.date as Dayjs).format('YYYY-MM-DD') : courtCase?.date,
-          plaintiff_person_id: personsList.some((p) => p.id === values.plaintiff_id)
-            ? values.plaintiff_id
-            : null,
-          plaintiff_contractor_id: contractors.some((c) => c.id === values.plaintiff_id)
-            ? values.plaintiff_id
-            : null,
-          defendant_person_id: personsList.some((p) => p.id === values.defendant_id)
-            ? values.defendant_id
-            : null,
-          defendant_contractor_id: contractors.some((c) => c.id === values.defendant_id)
-            ? values.defendant_id
-            : null,
+          plaintiff_person_id: plaintiffType === 'person' ? values.plaintiff_id : null,
+          plaintiff_contractor_id: plaintiffType === 'contractor' ? values.plaintiff_id : null,
+          defendant_person_id: defendantType === 'person' ? values.defendant_id : null,
+          defendant_contractor_id: defendantType === 'contractor' ? values.defendant_id : null,
           responsible_lawyer_id: values.responsible_lawyer_id ?? null,
           status: values.status,
           fix_start_date: values.fix_start_date ? (values.fix_start_date as Dayjs).format('YYYY-MM-DD') : null,
@@ -233,37 +230,75 @@ export default function CourtCaseFormAntdEdit({
       </Row>
       <Row gutter={16}>
         <Col span={12}>
-          <Form.Item
-            name="plaintiff_id"
-            label="Истец"
-            rules={[{ required: true }]}
-            style={highlight('plaintiff_id')}
-          >
-            <Select
-              showSearch
-              optionFilterProp="label"
-              options={[
-                ...personsList.map((p) => ({ value: p.id, label: p.full_name })),
-                ...contractors.map((c) => ({ value: c.id, label: c.name })),
-              ]}
-            />
+          <Form.Item label="Истец" style={{ marginBottom: 0 }}>
+            <Space direction="vertical" style={{ width: '100%' }}>
+              <Radio.Group
+                value={plaintiffType}
+                onChange={(e) => {
+                  setPlaintiffType(e.target.value);
+                  form.setFieldValue('plaintiff_id', null);
+                }}
+              >
+                <Radio.Button value="person">Физлицо</Radio.Button>
+                <Radio.Button value="contractor">Контрагент</Radio.Button>
+              </Radio.Group>
+              <Form.Item
+                name="plaintiff_id"
+                noStyle
+                rules={[{ required: true }]}
+                style={highlight('plaintiff_id')}
+              >
+                {plaintiffType === 'person' ? (
+                  <Select
+                    showSearch
+                    optionFilterProp="label"
+                    options={personsList.map((p) => ({ value: p.id, label: p.full_name }))}
+                  />
+                ) : (
+                  <Select
+                    showSearch
+                    optionFilterProp="label"
+                    options={contractors.map((c) => ({ value: c.id, label: c.name }))}
+                  />
+                )}
+              </Form.Item>
+            </Space>
           </Form.Item>
         </Col>
         <Col span={12}>
-          <Form.Item
-            name="defendant_id"
-            label="Ответчик"
-            rules={[{ required: true }]}
-            style={highlight('defendant_id')}
-          >
-            <Select
-              showSearch
-              optionFilterProp="label"
-              options={[
-                ...personsList.map((p) => ({ value: p.id, label: p.full_name })),
-                ...contractors.map((c) => ({ value: c.id, label: c.name })),
-              ]}
-            />
+          <Form.Item label="Ответчик" style={{ marginBottom: 0 }}>
+            <Space direction="vertical" style={{ width: '100%' }}>
+              <Radio.Group
+                value={defendantType}
+                onChange={(e) => {
+                  setDefendantType(e.target.value);
+                  form.setFieldValue('defendant_id', null);
+                }}
+              >
+                <Radio.Button value="person">Физлицо</Radio.Button>
+                <Radio.Button value="contractor">Контрагент</Radio.Button>
+              </Radio.Group>
+              <Form.Item
+                name="defendant_id"
+                noStyle
+                rules={[{ required: true }]}
+                style={highlight('defendant_id')}
+              >
+                {defendantType === 'person' ? (
+                  <Select
+                    showSearch
+                    optionFilterProp="label"
+                    options={personsList.map((p) => ({ value: p.id, label: p.full_name }))}
+                  />
+                ) : (
+                  <Select
+                    showSearch
+                    optionFilterProp="label"
+                    options={contractors.map((c) => ({ value: c.id, label: c.name }))}
+                  />
+                )}
+              </Form.Item>
+            </Space>
           </Form.Item>
         </Col>
       </Row>

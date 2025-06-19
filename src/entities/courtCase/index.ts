@@ -75,10 +75,10 @@ export function useDeleteCourtCase() {
   const { projectId } = useProjectFilter();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async ({ id, project_id }: { id: number; project_id?: number }) => {
       const { data: courtCase } = await supabase
         .from(CASES_TABLE)
-        .select('attachment_ids')
+        .select('attachment_ids, project_id')
         .eq('id', id)
         .single();
 
@@ -94,11 +94,12 @@ export function useDeleteCourtCase() {
         await supabase.from('attachments').delete().in('id', ids);
       }
 
+      const projectIdToMatch = project_id ?? projectId ?? courtCase.project_id;
       const { error } = await supabase
         .from(CASES_TABLE)
         .delete()
         .eq('id', id)
-        .eq('project_id', projectId);
+        .eq('project_id', projectIdToMatch);
       if (error) throw error;
       return id;
     },

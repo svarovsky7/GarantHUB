@@ -370,12 +370,17 @@ export default function CourtCasesPage() {
             </Tooltip>
           )}
           {perm?.delete_tables.includes('court_cases') && (
-            <Popconfirm
-              title="Удалить дело?"
-              okText="Да"
-              cancelText="Нет"
-              onConfirm={() => deleteCaseMutation.mutate(record.id)}
-            >
+              <Popconfirm
+                title="Удалить дело?"
+                okText="Да"
+                cancelText="Нет"
+                onConfirm={() =>
+                  deleteCaseMutation.mutate({
+                    id: record.id,
+                    project_id: record.project_id,
+                  })
+                }
+              >
               <Button type="text" danger icon={<DeleteOutlined />} />
             </Popconfirm>
           )}
