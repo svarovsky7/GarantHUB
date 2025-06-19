@@ -679,6 +679,13 @@
     "column_default": null
   },
   {
+    "table_name": "letters",
+    "column_name": "direction",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": "'incoming'::text"
+  },
+  {
     "table_name": "persons",
     "column_name": "id",
     "data_type": "bigint",
