@@ -25,7 +25,7 @@ export default function ClaimsFilters({ options, onChange, initialValues = {} }:
 
   return (
     <Form form={form} layout="vertical" onValuesChange={handleValuesChange} className="filter-grid" style={{ marginBottom: 20 }}>
-      <Form.Item name="period" label="Период получения претензий">
+      <Form.Item name="period" label="Период регистрации претензий">
         <RangePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
       </Form.Item>
       <Form.Item name="project" label="Проект">

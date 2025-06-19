@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Form, Input, Select, DatePicker, Button, Row, Col } from 'antd';
 import dayjs from 'dayjs';
 import { useVisibleProjects } from '@/entities/project';
@@ -10,6 +10,9 @@ import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useNotify } from '@/shared/hooks/useNotify';
 import DefectEditableTable from '@/widgets/DefectEditableTable';
 import { useCreateDefects, type NewDefect } from '@/entities/defect';
+import { addDefectAttachments } from '@/entities/attachment';
+import { supabase } from '@/shared/api/supabaseClient';
+import type { NewDefectFile } from '@/shared/types/defectFile';
 
 export interface ClaimFormAntdProps {
   onCreated?: () => void;
@@ -23,7 +26,7 @@ export interface ClaimFormValues {
   number: string;
   claim_date: dayjs.Dayjs | null;
   received_by_developer_at: dayjs.Dayjs | null;
-  received_by_me_at: dayjs.Dayjs | null;
+  registered_at: dayjs.Dayjs | null;
   fixed_at: dayjs.Dayjs | null;
   responsible_engineer_id: string | null;
   defects?: Array<{ type_id: number | null; fixed_at: dayjs.Dayjs | null; brigade_id: number | null; contractor_id: number | null; description?: string; status_id?: number | null; received_at?: dayjs.Dayjs | null; }>;
@@ -31,6 +34,7 @@ export interface ClaimFormValues {
 
 export default function ClaimFormAntd({ onCreated, initialValues = {} }: ClaimFormAntdProps) {
   const [form] = Form.useForm<ClaimFormValues>();
+  const [defectFiles, setDefectFiles] = useState<Record<number, NewDefectFile[]>>({});
   const globalProjectId = useProjectId();
   const projectIdWatch = Form.useWatch('project_id', form) ?? globalProjectId;
   const projectId = projectIdWatch != null ? Number(projectIdWatch) : null;
@@ -42,6 +46,10 @@ export default function ClaimFormAntd({ onCreated, initialValues = {} }: ClaimFo
   const create = useCreateClaim();
   const notify = useNotify();
   const createDefects = useCreateDefects();
+
+  const handleFilesChange = (idx: number, files: NewDefectFile[]) => {
+    setDefectFiles((p) => ({ ...p, [idx]: files }));
+  };
 
   useEffect(() => {
     if (initialValues.project_id != null) form.setFieldValue('project_id', initialValues.project_id);
@@ -66,16 +74,27 @@ export default function ClaimFormAntd({ onCreated, initialValues = {} }: ClaimFo
       fixed_at: d.fixed_at ? d.fixed_at.format('YYYY-MM-DD') : null,
     }));
     const defectIds = await createDefects.mutateAsync(newDefs);
+    for (let i = 0; i < defectIds.length; i++) {
+      const files = defectFiles[i];
+      if (files?.length) {
+        const uploaded = await addDefectAttachments(files, defectIds[i]);
+        await supabase
+          .from('defects')
+          .update({ attachment_ids: uploaded.map((u) => u.id) })
+          .eq('id', defectIds[i]);
+      }
+    }
     await create.mutateAsync({
       ...rest,
       defect_ids: defectIds,
       project_id: values.project_id ?? globalProjectId,
       claim_date: values.claim_date ? values.claim_date.format('YYYY-MM-DD') : null,
       received_by_developer_at: values.received_by_developer_at ? values.received_by_developer_at.format('YYYY-MM-DD') : null,
-      received_by_me_at: values.received_by_me_at ? values.received_by_me_at.format('YYYY-MM-DD') : null,
+      registered_at: values.registered_at ? values.registered_at.format('YYYY-MM-DD') : null,
       fixed_at: values.fixed_at ? values.fixed_at.format('YYYY-MM-DD') : null,
     } as any);
     form.resetFields();
+    setDefectFiles({});
     onCreated?.();
   };
 
@@ -128,7 +147,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {} }: ClaimFo
           </Form.Item>
         </Col>
         <Col span={8}>
-          <Form.Item name="received_by_me_at" label="Дата получения претензии мною"> 
+          <Form.Item name="registered_at" label="Дата регистрации претензии">
             <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
           </Form.Item>
         </Col>
@@ -140,7 +159,14 @@ export default function ClaimFormAntd({ onCreated, initialValues = {} }: ClaimFo
       </Row>
       <Form.List name="defects">
         {(fields, { add, remove }) => (
-          <DefectEditableTable fields={fields} add={add} remove={remove} projectId={projectId} />
+          <DefectEditableTable
+            fields={fields}
+            add={add}
+            remove={remove}
+            projectId={projectId}
+            fileMap={defectFiles}
+            onFilesChange={handleFilesChange}
+          />
         )}
       </Form.List>
       <Form.Item style={{ textAlign: 'right' }}>
