@@ -570,6 +570,24 @@ export function useAllTicketsSimple() {
 }
 
 // -----------------------------------------------------------------------------
+// Получить список замечаний по всем проектам (минимальный набор полей)
+// Используется на странице дефектов при отсутствии ограничения only_assigned_project
+// -----------------------------------------------------------------------------
+export function useTicketsSimpleAll() {
+  return useQuery({
+    queryKey: ["tickets-simple-all"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tickets")
+        .select("id, project_id, unit_ids, defect_ids");
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
+// -----------------------------------------------------------------------------
 // Получить список замечаний текущего проекта (минимальный набор полей)
 // -----------------------------------------------------------------------------
 export function useTicketsSimple() {

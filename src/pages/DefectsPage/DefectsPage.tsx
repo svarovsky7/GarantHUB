@@ -18,7 +18,7 @@ import {
 
 import ruRU from "antd/locale/ru_RU";
 import { useDefects, useDeleteDefect } from "@/entities/defect";
-import { useTicketsSimple } from "@/entities/ticket";
+import { useTicketsSimple, useTicketsSimpleAll } from "@/entities/ticket";
 import { useUnitsByIds } from "@/entities/unit";
 import { useVisibleProjects } from "@/entities/project";
 import { useBrigades } from "@/entities/brigade";
@@ -44,7 +44,11 @@ const fmt = (v: string | null) => (v ? dayjs(v).format("DD.MM.YYYY") : "—");
 
 export default function DefectsPage() {
   const { data: defects = [], isPending } = useDefects();
-  const { data: tickets = [] } = useTicketsSimple();
+  const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
+  const { data: perm } = useRolePermission(role);
+  const { data: ticketsAll = [] } = useTicketsSimpleAll();
+  const { data: ticketsAssigned = [] } = useTicketsSimple();
+  const tickets = perm?.only_assigned_project ? ticketsAssigned : ticketsAll;
   const unitIds = useMemo(
     () => Array.from(new Set(tickets.flatMap((t) => t.unit_ids || []))),
     [tickets],
@@ -53,6 +57,8 @@ export default function DefectsPage() {
   const { data: projects = [] } = useVisibleProjects();
   const { data: brigades = [] } = useBrigades();
   const { data: contractors = [] } = useContractors();
+
+  const userProjectIds = useAuthStore((s) => s.profile?.project_ids) ?? [];
 
   const data: DefectWithInfo[] = useMemo(() => {
     const unitMap = new Map(units.map((u) => [u.id, formatUnitName(u)]));
@@ -112,6 +118,15 @@ export default function DefectsPage() {
     });
   }, [defects, tickets, units, projects]);
 
+  const filteredData = useMemo(() => {
+    if (perm?.only_assigned_project) {
+      return data.filter((d) =>
+        (d.projectIds || []).some((id) => userProjectIds.includes(id)),
+      );
+    }
+    return data;
+  }, [data, perm?.only_assigned_project, userProjectIds]);
+
   const options = useMemo(() => {
     const uniq = (entries: [number | null, string | null][]) => {
       const map = new Map<number, string>();
@@ -121,29 +136,27 @@ export default function DefectsPage() {
       return Array.from(map.entries()).map(([value, label]) => ({ value, label }));
     };
     return {
-      ids: Array.from(new Set(data.map((d) => d.id))).map((id) => ({
+      ids: Array.from(new Set(filteredData.map((d) => d.id))).map((id) => ({
         label: String(id),
         value: id,
       })),
       tickets: Array.from(
-        new Set(data.flatMap((d) => d.ticketIds))
+        new Set(filteredData.flatMap((d) => d.ticketIds))
       ).map((id) => ({ label: String(id), value: id })),
       units: units.map((u) => ({ label: u.name, value: u.id })),
       projects: projects.map((p) => ({ label: p.name, value: p.id })),
-      types: uniq(data.map((d) => [d.defect_type_id, d.defectTypeName])),
-      statuses: uniq(data.map((d) => [d.defect_status_id, d.defectStatusName])),
-      fixBy: Array.from(new Set(data.map((d) => d.fixByName).filter(Boolean))).map(
+      types: uniq(filteredData.map((d) => [d.defect_type_id, d.defectTypeName])),
+      statuses: uniq(filteredData.map((d) => [d.defect_status_id, d.defectStatusName])),
+      fixBy: Array.from(new Set(filteredData.map((d) => d.fixByName).filter(Boolean))).map(
         (name) => ({ label: String(name), value: String(name) })
       ),
     };
-  }, [data, units, projects]);
+  }, [filteredData, units, projects]);
 
   const [filters, setFilters] = useState<DefectFilters>({});
   const [viewId, setViewId] = useState<number | null>(null);
   const [fixId, setFixId] = useState<number | null>(null);
   const { mutateAsync: removeDefect, isPending: removing } = useDeleteDefect();
-  const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
-  const { data: perm } = useRolePermission(role);
 
   const LS_FILTERS_VISIBLE_KEY = "defectsFiltersVisible";
   const LS_COLUMNS_KEY = "defectsColumns";
@@ -366,17 +379,17 @@ export default function DefectsPage() {
 
   const [showColumnsDrawer, setShowColumnsDrawer] = useState(false);
 
-  const total = data.length;
+  const total = filteredData.length;
   const closedCount = useMemo(
     () =>
-      data.filter((d) => d.defectStatusName?.toLowerCase().includes("закры"))
+      filteredData.filter((d) => d.defectStatusName?.toLowerCase().includes("закры"))
         .length,
-    [data],
+    [filteredData],
   );
   const openCount = total - closedCount;
   const readyToExport = useMemo(
-    () => filterDefects(data, filters).length,
-    [data, filters],
+    () => filterDefects(filteredData, filters).length,
+    [filteredData, filters],
   );
 
   return (
@@ -394,7 +407,7 @@ export default function DefectsPage() {
           onClick={() => setShowColumnsDrawer(true)}
         />
         <span style={{ marginTop: 16, marginLeft: 8, display: "inline-block" }}>
-          <ExportDefectsButton defects={data} filters={filters} />
+          <ExportDefectsButton defects={filteredData} filters={filters} />
         </span>
         {showFilters && (
           <Card style={{ marginTop: 16, marginBottom: 24 }}>
@@ -402,7 +415,7 @@ export default function DefectsPage() {
           </Card>
         )}
         <DefectsTable
-          defects={data}
+          defects={filteredData}
           filters={filters}
           loading={isPending}
           onView={setViewId}
