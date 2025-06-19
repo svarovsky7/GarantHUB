@@ -1237,5 +1237,68 @@
     "data_type": "uuid",
     "is_nullable": "YES",
     "column_default": null
+  },
+  {
+    "table_name": "court_case_claims",
+    "column_name": "id",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": "nextval('court_case_claims_id_seq'::regclass)"
+  },
+  {
+    "table_name": "court_case_claims",
+    "column_name": "case_id",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "court_case_claims",
+    "column_name": "claim_type_id",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "court_case_claims",
+    "column_name": "claimed_amount",
+    "data_type": "numeric",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "court_case_claims",
+    "column_name": "confirmed_amount",
+    "data_type": "numeric",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "court_case_claims",
+    "column_name": "paid_amount",
+    "data_type": "numeric",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "court_case_claims",
+    "column_name": "agreed_amount",
+    "data_type": "numeric",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "court_case_claims",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "court_case_claims",
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
   }
 ]
