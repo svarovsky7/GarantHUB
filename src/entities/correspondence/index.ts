@@ -1,7 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuthStore } from '@/shared/store/authStore';
-import { useRolePermission } from '@/entities/rolePermission';
-import type { RoleName } from '@/shared/types/rolePermission';
+import { useProjectFilter } from '@/shared/hooks/useProjectFilter';
 import {
   CorrespondenceLetter,
   CorrespondenceAttachment,
@@ -48,22 +46,18 @@ export function useLetterLinks() {
 }
 
 export function useLetters() {
-  const projectIds = useAuthStore((s) => s.profile?.project_ids) ?? [];
-  const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
-  const { data: perm } = useRolePermission(role);
+  const { projectIds, onlyAssigned, enabled } = useProjectFilter();
 
   return useQuery({
-    queryKey: [LETTERS_TABLE],
-    enabled:
-      perm !== undefined &&
-      (!perm.only_assigned_project || projectIds.length > 0),
+    queryKey: [LETTERS_TABLE, projectIds.join(',')],
+    enabled,
     queryFn: async () => {
       let query = supabase
         .from(LETTERS_TABLE)
         .select(
           `id, project_id, number, letter_type_id, status_id, letter_date, subject, content, sender_person_id, sender_contractor_id, receiver_person_id, receiver_contractor_id, responsible_user_id, unit_ids, attachment_ids, created_at`
         );
-      if (perm?.only_assigned_project) {
+      if (onlyAssigned) {
         query = query.in('project_id', projectIds.length ? projectIds : [-1]);
       }
       const { data, error } = await query.order('id');
