@@ -11,16 +11,13 @@ const CASE_DEFECTS_TABLE = 'court_case_defects';
 const CASE_LINKS_TABLE = 'court_case_links';
 
 export function useCourtCases() {
-  const { projectId, projectIds, onlyAssigned, enabled } = useProjectFilter();
+  const { projectId, projectIds, onlyAssigned } = useProjectFilter();
   return useQuery({
     queryKey: [CASES_TABLE, projectId, projectIds.join(',')],
-    enabled,
     queryFn: async () => {
       let query = supabase.from(CASES_TABLE).select('*');
       if (onlyAssigned) {
         query = query.in('project_id', projectIds.length ? projectIds : [-1]);
-      } else if (projectId != null) {
-        query = query.eq('project_id', projectId);
       }
       query = query.order('created_at', { ascending: false });
       const { data, error } = await query;
@@ -36,7 +33,6 @@ export function useCourtCases() {
         parent_id: linkMap.get(row.id) ?? null,
       })) as CourtCase[];
     },
-    enabled: !!projectId,
     staleTime: 5 * 60_000,
   });
 }
