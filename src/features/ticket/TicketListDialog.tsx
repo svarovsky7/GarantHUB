@@ -38,7 +38,7 @@ export default function TicketListDialog({
 }) {
   const notify = useNotify();
   const queryClient = useQueryClient();
-  const { projectIds } = useProjectFilter();
+  const { projectId, projectIds, onlyAssigned } = useProjectFilter();
   const [tickets, setTickets] = useState([]);
   const [statuses, setStatuses] = useState([]);
   const [attachments, setAttachments] = useState({});
@@ -99,8 +99,8 @@ export default function TicketListDialog({
     );
     notify.success("Статус обновлён");
     // Инвалидируем кэш тикетов
-    const pid = unit?.project_id ?? null;
-    queryClient.invalidateQueries({ queryKey: ticketsKey(pid, projectIds) });
+    const keyPid = onlyAssigned ? projectId : null;
+    queryClient.invalidateQueries({ queryKey: ticketsKey(keyPid, projectIds) });
     // ЯВНО ТРИГГЕРИМ ОБНОВЛЕНИЕ ВНЕШНЕГО ХРАНИЛИЩА (шахматки)
     if (onTicketsChanged) onTicketsChanged();
   };

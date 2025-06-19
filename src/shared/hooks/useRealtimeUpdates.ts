@@ -35,17 +35,26 @@ export function useRealtimeUpdates() {
         .on(
           'postgres_changes',
           { event: 'INSERT', schema: 'public', table: 'tickets', filter: `project_id=eq.${pid}` },
-          () => qc.invalidateQueries({ queryKey: ticketsKey(projectId, projectIds) }),
+          () => {
+            const keyPid = perm?.only_assigned_project ? projectId : null;
+            qc.invalidateQueries({ queryKey: ticketsKey(keyPid, projectIds) });
+          },
         )
         .on(
           'postgres_changes',
           { event: 'UPDATE', schema: 'public', table: 'tickets', filter: `project_id=eq.${pid}` },
-          () => qc.invalidateQueries({ queryKey: ticketsKey(projectId, projectIds) }),
+          () => {
+            const keyPid = perm?.only_assigned_project ? projectId : null;
+            qc.invalidateQueries({ queryKey: ticketsKey(keyPid, projectIds) });
+          },
         )
         .on(
           'postgres_changes',
           { event: 'DELETE', schema: 'public', table: 'tickets', filter: `project_id=eq.${pid}` },
-          () => qc.invalidateQueries({ queryKey: ticketsKey(projectId, projectIds) }),
+          () => {
+            const keyPid = perm?.only_assigned_project ? projectId : null;
+            qc.invalidateQueries({ queryKey: ticketsKey(keyPid, projectIds) });
+          },
         )
         .on(
           'postgres_changes',
