@@ -86,6 +86,22 @@ export default function useProjectStructure() {
         refreshAll();
     }, [refreshAll]);
 
+    // --- Подписка на изменения в units для мгновенного обновления ---
+    useEffect(() => {
+        if (!projectId) return;
+        const channel = supabase
+            .channel('units-structure-' + projectId)
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'units', filter: `project_id=eq.${projectId}` },
+                () => refreshAll(),
+            );
+        channel.subscribe();
+        return () => {
+            channel.unsubscribe();
+        };
+    }, [projectId, refreshAll]);
+
     // --- Автоматическое сохранение выбранных значений при изменении ---
     useEffect(() => {
         saveToLS({ projectId, building, section });
@@ -116,6 +132,8 @@ export default function useProjectStructure() {
         buildings, building, setBuilding,
         sections, section, setSection,
         refreshAll,
+        setBuildings,
+        setSections,
     };
 }
 
