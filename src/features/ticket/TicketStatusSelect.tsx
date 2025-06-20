@@ -11,6 +11,8 @@ interface TicketStatusSelectProps {
   statusColor?: string | null;
   /** имя статуса, используется до загрузки списка */
   statusName?: string | null;
+  /** идентификатор проекта замечания */
+  projectId?: number;
 }
 
 /**
@@ -22,6 +24,7 @@ export default function TicketStatusSelect({
   statusId,
   statusColor,
   statusName,
+  projectId,
 }: TicketStatusSelectProps) {
   const { data: statuses = [], isLoading } = useTicketStatuses();
   const update = useUpdateTicketStatus();
@@ -47,7 +50,7 @@ export default function TicketStatusSelect({
   );
 
   const handleChange = (value: number) => {
-    (update as any).mutate({ id: ticketId, statusId: value });
+    (update as any).mutate({ id: ticketId, statusId: value, projectId });
     setEditing(false);
   };
 

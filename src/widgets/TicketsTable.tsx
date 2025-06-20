@@ -142,6 +142,7 @@ export default function TicketsTable({
             statusId={row.statusId}
             statusColor={row.statusColor}
             statusName={row.statusName}
+            projectId={row.projectId}
           />
         ),
       },
