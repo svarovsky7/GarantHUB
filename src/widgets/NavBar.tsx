@@ -1,4 +1,4 @@
-// src/widgets/NavBar.js
+// src/widgets/NavBar.tsx
 import React from "react";
 import { Link as RouterLink } from "react-router-dom";
 import {
@@ -20,7 +20,11 @@ import { useVisibleProjects } from "@/entities/project";
 import { useRolePermission } from "@/entities/rolePermission";
 import { Skeleton } from "antd";
 
-const NavBar = () => {
+/**
+ * Навигационная панель приложения.
+ * Отображает ссылки по ролям, профиль пользователя и выбор проекта.
+ */
+const NavBar: React.FC = () => {
   const profile = useAuthStore((s) => s.profile);
   const projectId = useAuthStore((s) => s.projectId);
   const setProfile = useAuthStore((s) => s.setProfile);
@@ -138,7 +142,9 @@ const NavBar = () => {
             }}
           >
             <Typography variant="body2">
-              {profile.name ?? profile.email}
+              {profile.name
+                ? `${profile.name} (${profile.email})`
+                : profile.email}
             </Typography>
 
             {perm?.only_assigned_project && (
@@ -151,36 +157,37 @@ const NavBar = () => {
               )
             )}
 
-            {/* выпадающий список проектов */}
-            {isPending ? (
-              <CircularProgress size={14} sx={{ mt: 0.5 }} />
-            ) : (
-              <FormControl variant="standard" size="small">
-                <Select
-                  value={projectId ?? ""}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setProjectId(val === '' ? null : Number(val));
-                  }}
-                  displayEmpty
-                  disabled={perm?.only_assigned_project}
-                  sx={{
-                    color: "inherit",
-                    fontSize: 12,
-                    "& .MuiSelect-icon": { color: "inherit" },
-                    "&:before, &:after": {
-                      borderBottomColor: "rgba(255,255,255,0.5)",
-                    },
-                  }}
-                >
-                  {projects.map((p) => (
-                    <MenuItem key={p.id} value={p.id}>
-                      {p.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            )}
+            {/* выпадающий список проектов только для администратора */}
+            {profile.role === 'ADMIN' &&
+              (isPending ? (
+                <CircularProgress size={14} sx={{ mt: 0.5 }} />
+              ) : (
+                <FormControl variant="standard" size="small">
+                  <Select
+                    value={projectId ?? ""}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setProjectId(val === '' ? null : Number(val));
+                    }}
+                    displayEmpty
+                    disabled={perm?.only_assigned_project}
+                    sx={{
+                      color: "inherit",
+                      fontSize: 12,
+                      "& .MuiSelect-icon": { color: "inherit" },
+                      "&:before, &:after": {
+                        borderBottomColor: "rgba(255,255,255,0.5)",
+                      },
+                    }}
+                  >
+                    {projects.map((p) => (
+                      <MenuItem key={p.id} value={p.id}>
+                        {p.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              ))}
           </Box>
         )}
 
