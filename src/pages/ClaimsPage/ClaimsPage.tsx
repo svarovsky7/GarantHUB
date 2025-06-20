@@ -107,7 +107,7 @@ export default function ClaimsPage() {
             okText="Да"
             cancelText="Нет"
             onConfirm={async () => {
-              await deleteClaimMutation.mutateAsync(record.id);
+              await deleteClaimMutation.mutateAsync({ id: record.id, defectIds: record.defect_ids });
               message.success('Удалено');
             }}
             disabled={deleteClaimMutation.isPending}

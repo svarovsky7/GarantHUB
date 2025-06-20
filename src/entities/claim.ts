@@ -6,6 +6,7 @@ import { useAuthStore } from '@/shared/store/authStore';
 import { filterByProjects } from '@/shared/utils/projectQuery';
 import type { Claim } from '@/shared/types/claim';
 import type { ClaimWithNames } from '@/shared/types/claimWithNames';
+import type { ClaimDeleteParams } from '@/shared/types/claimDelete';
 import { addClaimAttachments, ATTACH_BUCKET } from '@/entities/attachment';
 import dayjs from 'dayjs';
 
@@ -154,8 +155,15 @@ export function useUpdateClaim() {
 export function useDeleteClaim() {
   const qc = useQueryClient();
   const { projectId, projectIds, onlyAssigned } = useProjectFilter();
-  return useMutation({
-    mutationFn: async (id: number) => {
+  return useMutation<number, Error, ClaimDeleteParams>({
+    /**
+     * Удаляет претензию и связанные с ней дефекты.
+     * @param payload Объект с идентификатором претензии и массивом дефектов
+     */
+    mutationFn: async ({ id, defectIds = [] }) => {
+      if (defectIds.length) {
+        await supabase.from('defects').delete().in('id', defectIds);
+      }
       let q = supabase.from(TABLE).delete().eq('id', id);
       q = filterByProjects(q, projectId, projectIds, onlyAssigned);
       const { error } = await q;
