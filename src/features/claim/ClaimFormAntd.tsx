@@ -72,6 +72,19 @@ export default function ClaimFormAntd({ onCreated, initialValues = {} }: ClaimFo
     if (initialValues.fixed_at) form.setFieldValue('fixed_at', dayjs(initialValues.fixed_at));
   }, [globalProjectId, form, initialValues]);
 
+  /**
+   * Если статус не указан, подставляем первым из списка.
+   */
+  useEffect(() => {
+    if (
+      statuses.length &&
+      !initialValues.status_id &&
+      !form.getFieldValue('status_id')
+    ) {
+      form.setFieldValue('status_id', statuses[0].id);
+    }
+  }, [statuses, form, initialValues.status_id]);
+
   const onFinish = async (values: ClaimFormValues) => {
     const { defects: defs, ...rest } = values;
     if (!defs || defs.length === 0) {
