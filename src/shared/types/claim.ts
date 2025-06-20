@@ -10,5 +10,7 @@ export interface Claim {
   registered_at: string | null;
   fixed_at: string | null;
   responsible_engineer_id: string | null;
+  /** Массив идентификаторов вложений претензии */
+  attachment_ids?: number[];
   defect_ids?: number[];
 }

@@ -1,6 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Form, Input, Select, DatePicker, Button, Row, Col, Tag } from 'antd';
+import {
+  Form,
+  Input,
+  Select,
+  DatePicker,
+  Button,
+  Row,
+  Col,
+  Tag,
+} from 'antd';
 import FileDropZone from '@/shared/ui/FileDropZone';
+import AttachmentEditorTable from '@/shared/ui/AttachmentEditorTable';
 import { useAttachmentTypes } from '@/entities/attachmentType';
 import dayjs from 'dayjs';
 import { useVisibleProjects } from '@/entities/project';
@@ -217,33 +227,12 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
       )}
       <Form.Item label="Файлы">
         <FileDropZone onFiles={handleDropFiles} />
-        {files.map((f, i) => (
-          <Row key={i} gutter={8} align="middle" style={{ marginTop: 4 }}>
-            <Col flex="auto">
-              <span>{f.file.name}</span>
-            </Col>
-            <Col flex="160px">
-              <Select
-                style={{ width: '100%' }}
-                placeholder="Тип файла"
-                value={f.type_id ?? undefined}
-                onChange={(v) => setType(i, v)}
-                allowClear
-              >
-                {attachmentTypes.map((t) => (
-                  <Select.Option key={t.id} value={t.id}>
-                    {t.name}
-                  </Select.Option>
-                ))}
-              </Select>
-            </Col>
-            <Col>
-              <Button type="text" danger onClick={() => removeFile(i)}>
-                Удалить
-              </Button>
-            </Col>
-          </Row>
-        ))}
+        <AttachmentEditorTable
+          newFiles={files.map((f) => ({ file: f.file, typeId: f.type_id, mime: f.file.type }))}
+          attachmentTypes={attachmentTypes.map((t) => ({ id: t.id, name: t.name }))}
+          onRemoveNew={removeFile}
+          onChangeNewType={setType}
+        />
       </Form.Item>
       {showDefectsForm && (
         <Form.Item style={{ textAlign: 'right' }}>

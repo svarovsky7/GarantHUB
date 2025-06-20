@@ -1,6 +1,7 @@
 import React from 'react';
 import { Modal, Skeleton, Typography } from 'antd';
-import { useClaim, useClaimAttachments, signedUrl } from '@/entities/claim';
+import { useClaim, signedUrl } from '@/entities/claim';
+import AttachmentEditorTable from '@/shared/ui/AttachmentEditorTable';
 import TicketDefectsTable from '@/widgets/TicketDefectsTable';
 import ClaimFormAntd from './ClaimFormAntd';
 
@@ -12,7 +13,6 @@ interface Props {
 
 export default function ClaimViewModal({ open, claimId, onClose }: Props) {
   const { data: claim } = useClaim(claimId ?? undefined);
-  const { data: files = [] } = useClaimAttachments(claim?.id);
   if (!open || !claimId) return null;
   const titleText = claim
     ? `Претензия №${claim.number}`
@@ -32,33 +32,20 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
               <TicketDefectsTable defectIds={claim.defect_ids} />
             </div>
           ) : null}
-          {files.length ? (
+          {claim.attachments?.length ? (
             <div style={{ marginTop: 16 }}>
-              <b>Файлы:</b>
-              <ul style={{ paddingLeft: 20 }}>
-                {files.map((f: any) => (
-                  <li key={f.id}>
-                    <a
-                      href="#"
-                      onClick={async (e) => {
-                        e.preventDefault();
-                        const url = await signedUrl(
-                          f.storage_path,
-                          f.original_name ?? 'file',
-                        );
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = f.original_name ?? 'file';
-                        document.body.appendChild(a);
-                        a.click();
-                        a.remove();
-                      }}
-                    >
-                      {f.original_name ?? f.storage_path.split('/').pop()}
-                    </a>
-                  </li>
-                ))}
-              </ul>
+              <AttachmentEditorTable
+                remoteFiles={claim.attachments.map((f) => ({
+                  id: String(f.id),
+                  name: f.original_name ?? f.name,
+                  path: f.path ?? f.storage_path,
+                  typeId: f.attachment_type_id,
+                  typeName: f.attachment_type_name,
+                  mime: f.type,
+                }))}
+                attachmentTypes={[]}
+                getSignedUrl={(path, name) => signedUrl(path, name)}
+              />
             </div>
           ) : null}
         </>
