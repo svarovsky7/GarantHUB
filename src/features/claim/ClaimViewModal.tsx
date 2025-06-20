@@ -22,7 +22,11 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
     <Modal open={open} onCancel={onClose} footer={null} width="80%" title={<Typography.Title level={4} style={{ margin: 0 }}>{titleText}</Typography.Title>}>
       {claim ? (
         <>
-          <ClaimFormAntd initialValues={claim as any} onCreated={onClose} />
+          <ClaimFormAntd
+            initialValues={claim as any}
+            onCreated={onClose}
+            showDefectsForm={false}
+          />
           {claim.defect_ids?.length ? (
             <div style={{ marginTop: 16 }}>
               <TicketDefectsTable defectIds={claim.defect_ids} />

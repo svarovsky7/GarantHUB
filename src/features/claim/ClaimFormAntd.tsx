@@ -16,6 +16,8 @@ import { useCreateDefects, type NewDefect } from '@/entities/defect';
 export interface ClaimFormAntdProps {
   onCreated?: () => void;
   initialValues?: Partial<{ project_id: number; unit_ids: number[]; responsible_engineer_id: string }>;
+  /** Показывать форму добавления дефектов */
+  showDefectsForm?: boolean;
 }
 
 export interface ClaimFormValues {
@@ -31,7 +33,7 @@ export interface ClaimFormValues {
   defects?: Array<{ type_id: number | null; fixed_at: dayjs.Dayjs | null; brigade_id: number | null; contractor_id: number | null; description?: string; status_id?: number | null; received_at?: dayjs.Dayjs | null; }>;
 }
 
-export default function ClaimFormAntd({ onCreated, initialValues = {} }: ClaimFormAntdProps) {
+export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefectsForm = true }: ClaimFormAntdProps) {
   const [form] = Form.useForm<ClaimFormValues>();
   const [files, setFiles] = useState<{ file: File; type_id: number | null }[]>([]);
   const { data: attachmentTypes = [] } = useAttachmentTypes();
@@ -86,6 +88,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {} }: ClaimFo
   }, [statuses, form, initialValues.status_id]);
 
   const onFinish = async (values: ClaimFormValues) => {
+    if (!showDefectsForm) return;
     const { defects: defs, ...rest } = values;
     if (!defs || defs.length === 0) {
       notify.error('Добавьте хотя бы один дефект');
@@ -199,17 +202,19 @@ export default function ClaimFormAntd({ onCreated, initialValues = {} }: ClaimFo
           </Form.Item>
         </Col>
       </Row>
-      <Form.List name="defects">
-        {(fields, { add, remove }) => (
-          <DefectEditableTable
-            fields={fields}
-            add={add}
-            remove={remove}
-            projectId={projectId}
-            showFiles={false}
-          />
-        )}
-      </Form.List>
+      {showDefectsForm && (
+        <Form.List name="defects">
+          {(fields, { add, remove }) => (
+            <DefectEditableTable
+              fields={fields}
+              add={add}
+              remove={remove}
+              projectId={projectId}
+              showFiles={false}
+            />
+          )}
+        </Form.List>
+      )}
       <Form.Item label="Файлы">
         <FileDropZone onFiles={handleDropFiles} />
         {files.map((f, i) => (
@@ -240,11 +245,13 @@ export default function ClaimFormAntd({ onCreated, initialValues = {} }: ClaimFo
           </Row>
         ))}
       </Form.Item>
-      <Form.Item style={{ textAlign: 'right' }}>
-        <Button type="primary" htmlType="submit" loading={create.isPending}>
-          Создать
-        </Button>
-      </Form.Item>
+      {showDefectsForm && (
+        <Form.Item style={{ textAlign: 'right' }}>
+          <Button type="primary" htmlType="submit" loading={create.isPending}>
+            Создать
+          </Button>
+        </Form.Item>
+      )}
     </Form>
   );
 }
