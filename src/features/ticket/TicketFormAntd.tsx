@@ -278,6 +278,7 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
             add={add}
             remove={remove}
             projectId={projectId}
+            showFiles={false}
           />
         )}
       </Form.List>
