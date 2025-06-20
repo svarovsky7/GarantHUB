@@ -283,13 +283,51 @@ export function useDeleteClaim() {
   const { projectId, projectIds, onlyAssigned } = useProjectFilter();
   return useMutation<number, Error, ClaimDeleteParams>({
     /**
-     * Удаляет претензию и связанные с ней дефекты.
-     * @param payload Объект с идентификатором претензии и массивом дефектов
+     * Удаляет претензию вместе с загруженными файлами и связанными дефектами.
+     * @param payload объект с идентификатором претензии и массивом дефектов
      */
     mutationFn: async ({ id, defectIds = [] }) => {
-      if (defectIds.length) {
-        await supabase.from('defects').delete().in('id', defectIds);
+      const { data: claim } = await supabase
+        .from(TABLE)
+        .select('attachment_ids, defect_ids')
+        .eq('id', id)
+        .single();
+
+      const claimFiles = (claim?.attachment_ids ?? []) as number[];
+      const claimDefects = defectIds.length
+        ? defectIds
+        : ((claim?.defect_ids ?? []) as number[]);
+
+      if (claimFiles.length) {
+        const files = await getAttachmentsByIds(claimFiles);
+        if (files?.length) {
+          await supabase.storage
+            .from(ATTACH_BUCKET)
+            .remove(files.map((f) => f.storage_path));
+        }
+        await supabase.from('attachments').delete().in('id', claimFiles);
       }
+
+      if (claimDefects.length) {
+        const { data: defects } = await supabase
+          .from('defects')
+          .select('id, attachment_ids')
+          .in('id', claimDefects);
+        const attIds = Array.from(
+          new Set((defects ?? []).flatMap((d) => d.attachment_ids || [])),
+        );
+        if (attIds.length) {
+          const files = await getAttachmentsByIds(attIds);
+          if (files?.length) {
+            await supabase.storage
+              .from(ATTACH_BUCKET)
+              .remove(files.map((f) => f.storage_path));
+          }
+          await supabase.from('attachments').delete().in('id', attIds);
+        }
+        await supabase.from('defects').delete().in('id', claimDefects);
+      }
+
       let q = supabase.from(TABLE).delete().eq('id', id);
       q = filterByProjects(q, projectId, projectIds, onlyAssigned);
       const { error } = await q;
