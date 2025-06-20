@@ -484,7 +484,7 @@ export function useTicket(ticketId) {
  */
 export function useDeleteTicket() {
   const projectId = useProjectId();
-  const projectIds = useAuthStore((s) => s.profile?.project_ids) ?? [];
+  const { projectIds, onlyAssigned } = useProjectFilter();
   const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
   const { data: perm } = useRolePermission(role);
   const qc = useQueryClient();
