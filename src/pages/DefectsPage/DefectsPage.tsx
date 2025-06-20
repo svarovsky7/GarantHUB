@@ -219,12 +219,7 @@ export default function DefectsPage() {
         render: (v: number[]) => v.join(", "),
       },
       days: {
-        title: (
-          <span>
-            Прошло дней
-            <br />с даты получения
-          </span>
-        ),
+        title: 'Прошло дней с даты получения',
         dataIndex: "days",
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           (a.days ?? -1) - (b.days ?? -1),
@@ -375,7 +370,15 @@ export default function DefectsPage() {
       const saved = localStorage.getItem(LS_COLUMNS_KEY);
       if (saved) {
         const parsed = JSON.parse(saved) as TableColumnSetting[];
-        const filtered = parsed.filter((c) => base[c.key]);
+        const filtered = parsed
+          .filter((c) => base[c.key])
+          .map((c) => ({
+            ...c,
+            title:
+              typeof c.title === 'string'
+                ? c.title
+                : (base[c.key].title as string),
+          }));
         const missing = defaults.filter(
           (d) => !filtered.some((f) => f.key === d.key),
         );
@@ -389,7 +392,7 @@ export default function DefectsPage() {
     const base = baseColumns;
     const defaults = columnOrder.map((key) => ({
       key,
-      title: base[key].title as string,
+      title: typeof base[key].title === 'string' ? base[key].title : (base[key].title as string),
       visible: true,
     }));
     setColumnsState(defaults);
