@@ -30,9 +30,4 @@ VITE_ATTACH_BUCKET=<название корзины для вложений>
 
 Описание таблиц и полей находится в файле [`database_structure.json`](database_structure.json).
 
-## Обновление триггера регистрации
-
-Для корректной работы регистрации используйте скрипт [`supabase/fix_handle_new_user.sql`](supabase/fix_handle_new_user.sql).
-Его нужно выполнить в SQL Editor вашего проекта Supabase, чтобы обновить функцию `handle_new_user` и связанный триггер.
-
 
