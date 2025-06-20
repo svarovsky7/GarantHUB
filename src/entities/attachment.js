@@ -262,4 +262,18 @@ export async function getAttachmentsByIds(ids) {
     return data ?? [];
 }
 
-export { ATTACH_BUCKET };
+/**
+ * Возвращает все вложения претензии по её идентификатору.
+ * @param {number} claimId
+ */
+export async function getClaimAttachments(claimId) {
+    if (!claimId) return [];
+    const { data, error } = await supabase
+        .from('attachments')
+        .select('id, storage_path, file_url, file_type, attachment_type_id, original_name')
+        .like('storage_path', `claims/${claimId}/%`);
+    if (error) throw error;
+    return data ?? [];
+}
+
+export { ATTACH_BUCKET, getClaimAttachments };
