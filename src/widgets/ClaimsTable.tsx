@@ -42,7 +42,7 @@ export default function ClaimsTable({ claims, filters, loading, columns: columns
             okText="Да"
             cancelText="Нет"
             onConfirm={async () => {
-              await remove(record.id);
+              await remove({ id: record.id, defectIds: record.defect_ids });
               message.success('Удалено');
             }}
             disabled={isPending}
