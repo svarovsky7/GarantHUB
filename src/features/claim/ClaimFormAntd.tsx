@@ -55,21 +55,10 @@ export default function ClaimFormAntd({ onCreated, initialValues = {} }: ClaimFo
   const removeFile = (idx: number) => setFiles((p) => p.filter((_, i) => i !== idx));
 
   useEffect(() => {
-    if (initialValues.project_id != null) {
-      form.setFieldValue('project_id', initialValues.project_id);
-    } else if (globalProjectId) {
-      form.setFieldValue('project_id', Number(globalProjectId));
-    }
+    if (initialValues.project_id != null) form.setFieldValue('project_id', initialValues.project_id);
+    else if (globalProjectId) form.setFieldValue('project_id', Number(globalProjectId));
     if (initialValues.unit_ids) form.setFieldValue('unit_ids', initialValues.unit_ids);
-    if (initialValues.responsible_engineer_id)
-      form.setFieldValue('responsible_engineer_id', initialValues.responsible_engineer_id);
-    if (initialValues.status_id != null) form.setFieldValue('status_id', initialValues.status_id);
-    if (initialValues.number) form.setFieldValue('number', initialValues.number);
-    if (initialValues.claim_date) form.setFieldValue('claim_date', dayjs(initialValues.claim_date));
-    if (initialValues.received_by_developer_at)
-      form.setFieldValue('received_by_developer_at', dayjs(initialValues.received_by_developer_at));
-    if (initialValues.registered_at) form.setFieldValue('registered_at', dayjs(initialValues.registered_at));
-    if (initialValues.fixed_at) form.setFieldValue('fixed_at', dayjs(initialValues.fixed_at));
+    if (initialValues.responsible_engineer_id) form.setFieldValue('responsible_engineer_id', initialValues.responsible_engineer_id);
   }, [globalProjectId, form, initialValues]);
 
   const onFinish = async (values: ClaimFormValues) => {
@@ -151,28 +140,21 @@ export default function ClaimFormAntd({ onCreated, initialValues = {} }: ClaimFo
       </Row>
       <Row gutter={16}>
         <Col span={8}>
-          <Form.Item
-            name="registered_at"
-            label={
-              <span>
-                Дата регистрации претензии
-                <Tag
-                  color="blue"
-                  onClick={() => {
-                    const val = form.getFieldValue('registered_at');
-                    if (val) {
-                      form.setFieldValue('fixed_at', dayjs(val).add(45, 'day'));
-                    }
-                  }}
-                  style={{ cursor: 'pointer', marginLeft: 8 }}
-                >
-                  +45 дней
-                </Tag>
-              </span>
-            }
-          >
+          <Form.Item name="registered_at" label="Дата регистрации претензии">
             <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
           </Form.Item>
+          <Tag
+            color="blue"
+            onClick={() => {
+              const val = form.getFieldValue('registered_at');
+              if (val) {
+                form.setFieldValue('fixed_at', dayjs(val).add(45, 'day'));
+              }
+            }}
+            style={{ cursor: 'pointer', marginTop: 4 }}
+          >
+            +45 дней
+          </Tag>
         </Col>
         <Col span={8}>
           <Form.Item name="fixed_at" label="Дата устранения претензии">
