@@ -303,11 +303,7 @@ export default function DefectEditableTable({ fields, add, remove, projectId, fi
         ),
       },
       {
-        title: (
-          <span>
-            Кем устраняется<span style={{ color: 'red' }}>*</span>
-          </span>
-        ),
+        title: 'Кем устраняется',
         dataIndex: 'executor',
         width: 180,
         ellipsis: true,
