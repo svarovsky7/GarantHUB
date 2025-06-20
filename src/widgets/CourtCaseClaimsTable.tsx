@@ -35,7 +35,7 @@ export default function CourtCaseClaimsTable({ fields, add, remove }: Props) {
     {
       title: 'Требование',
       dataIndex: 'type',
-      width: 200,
+      width: 280,
       render: (_: unknown, field: any) => (
         <Form.Item name={[field.name, 'claim_type_id']} rules={[{ required: true, message: 'Выберите вид' }]} noStyle>
           <Select options={claimTypes.map((t) => ({ value: t.id, label: t.name }))} />

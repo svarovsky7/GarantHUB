@@ -41,3 +41,41 @@ export function useAddCaseClaims() {
     },
   });
 }
+
+export function useUpdateCaseClaim() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, updates }: { id: number; updates: Partial<CourtCaseClaim> }) => {
+      const { data, error } = await supabase
+        .from(TABLE)
+        .update(updates)
+        .eq('id', id)
+        .select('id, case_id, claim_type_id, claimed_amount, confirmed_amount, paid_amount, agreed_amount')
+        .single();
+      if (error) throw error;
+      return data as CourtCaseClaim;
+    },
+    onSuccess: (row) => {
+      qc.invalidateQueries({ queryKey: [TABLE, row.case_id] });
+    },
+  });
+}
+
+export function useDeleteCaseClaim() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const { data, error } = await supabase
+        .from(TABLE)
+        .select('case_id')
+        .eq('id', id)
+        .single();
+      if (error) throw error;
+      const caseId = data.case_id as number;
+      const { error: delErr } = await supabase.from(TABLE).delete().eq('id', id);
+      if (delErr) throw delErr;
+      return caseId;
+    },
+    onSuccess: (caseId) => qc.invalidateQueries({ queryKey: [TABLE, caseId] }),
+  });
+}

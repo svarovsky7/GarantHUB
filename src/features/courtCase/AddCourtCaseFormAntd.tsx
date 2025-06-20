@@ -125,6 +125,12 @@ export default function AddCourtCaseFormAntd({
   const [showClaims, setShowClaims] = useState(false);
   const { caseFiles, addFiles: addCaseFiles, setType: setCaseFileType, removeFile: removeCaseFile, reset: resetCaseFiles } = useCaseFiles();
 
+  useEffect(() => {
+    if (showClaims && !(form.getFieldValue('claims')?.length)) {
+      form.setFieldValue('claims', [{}]);
+    }
+  }, [showClaims, form]);
+
   const { data: projectPersons = [], isPending: personsLoading } = useQuery({
     queryKey: ['projectPersons'],
     queryFn: async () => {
