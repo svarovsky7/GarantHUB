@@ -70,5 +70,18 @@ export default function ClaimsTable({ claims, filters, loading, columns: columns
     });
   }, [claims, filters]);
 
-  return <Table rowKey="id" columns={columns} dataSource={filtered} loading={loading} pagination={{ pageSize: 25, showSizeChanger: true }} size="middle" />;
+  const rowClassName = (row: ClaimWithNames) =>
+    row.hasCheckingDefect ? 'claim-checking-row' : '';
+
+  return (
+    <Table
+      rowKey="id"
+      columns={columns}
+      dataSource={filtered}
+      loading={loading}
+      pagination={{ pageSize: 25, showSizeChanger: true }}
+      size="middle"
+      rowClassName={rowClassName}
+    />
+  );
 }
