@@ -11,4 +11,5 @@ export interface Claim {
   fixed_at: string | null;
   responsible_engineer_id: string | null;
   defect_ids?: number[];
+  attachments?: import('./claimFile').RemoteClaimFile[];
 }
