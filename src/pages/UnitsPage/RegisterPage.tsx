@@ -10,7 +10,6 @@ import { useSnackbar } from 'notistack';
 import { supabase } from '@/shared/api/supabaseClient';
 
 import { useVisibleProjects } from '@/entities/project';
-import { addUserProfile } from '@/entities/user';
 import type { RoleName } from '@/shared/types/rolePermission';
 import type { RegisterFormValues } from '@/shared/types/register';
 
@@ -65,21 +64,6 @@ export default function RegisterPage() {
         console.error('[signUp error]', error, JSON.stringify(data, null, 2));
         enqueueSnackbar(error.message, { variant: 'error' });
         return;
-      }
-
-      if (data?.user) {
-        try {
-          await addUserProfile({
-            id: data.user.id,
-            name: values.name,
-            email: values.email,
-            role: values.role,
-            project_ids: values.project_ids,
-          });
-        } catch (insertErr) {
-          // eslint-disable-next-line no-console
-          console.error('[profile insert]', insertErr);
-        }
       }
 
       enqueueSnackbar('Проверьте e-mail — отправили ссылку подтверждения.', {
