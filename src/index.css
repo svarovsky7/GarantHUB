@@ -110,6 +110,9 @@ body {
 .defect-confirmed-row {
   background: #f6ffed !important;
 }
+.claim-checking-row {
+  background: #f6ffed !important;
+}
 .defect-closed-row {
   color: #aaa;
   background: inherit !important;

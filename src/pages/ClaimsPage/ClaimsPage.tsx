@@ -7,6 +7,7 @@ import { useSnackbar } from 'notistack';
 import { useClaims, useDeleteClaim } from '@/entities/claim';
 import { useUsers } from '@/entities/user';
 import { useUnitsByIds } from '@/entities/unit';
+import { useDefectsByIds } from '@/entities/defect';
 import ClaimsTable from '@/widgets/ClaimsTable';
 import ClaimsFilters from '@/widgets/ClaimsFilters';
 import ClaimFormAntd from '@/features/claim/ClaimFormAntd';
@@ -23,8 +24,24 @@ export default function ClaimsPage() {
   const { data: claims = [], isLoading, error } = useClaims();
   const deleteClaimMutation = useDeleteClaim();
   const { data: users = [] } = useUsers();
-  const unitIds = useMemo(() => Array.from(new Set(claims.flatMap((t) => t.unit_ids))), [claims]);
+  const unitIds = useMemo(
+    () => Array.from(new Set(claims.flatMap((t) => t.unit_ids))),
+    [claims],
+  );
   const { data: units = [] } = useUnitsByIds(unitIds);
+  const defectIds = useMemo(
+    () => Array.from(new Set(claims.flatMap((c) => c.defect_ids || []))),
+    [claims],
+  );
+  const { data: defectsInfo = [] } = useDefectsByIds(defectIds);
+  const checkingDefectMap = useMemo(() => {
+    const map = new Map<number, boolean>();
+    defectsInfo.forEach((d) => {
+      const name = d.statusName?.toLowerCase() || '';
+      map.set(d.id, /провер/.test(name));
+    });
+    return map;
+  }, [defectsInfo]);
   const [filters, setFilters] = useState({});
   const [showAddForm, setShowAddForm] = useState(false);
   const LS_SHOW_FILTERS = 'claims:showFilters';
@@ -70,8 +87,9 @@ export default function ClaimsPage() {
         ...c,
         unitNames: c.unit_ids.map((id) => unitMap[id]).filter(Boolean).join(', '),
         responsibleEngineerName: userMap[c.responsible_engineer_id] ?? null,
+        hasCheckingDefect: (c.defect_ids || []).some((id) => checkingDefectMap.get(id)),
       })),
-    [claims, unitMap, userMap],
+    [claims, unitMap, userMap, checkingDefectMap],
   );
 
   const options = useMemo(() => {

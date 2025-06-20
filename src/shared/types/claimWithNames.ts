@@ -22,4 +22,6 @@ export interface ClaimWithNames extends Claim {
   fixedAt: Dayjs | null;
   /** Загруженные файлы */
   attachments?: import('./claimFile').RemoteClaimFile[];
+  /** Есть связанные дефекты со статусом "На проверке" */
+  hasCheckingDefect?: boolean;
 }
