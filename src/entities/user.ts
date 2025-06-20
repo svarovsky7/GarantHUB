@@ -69,23 +69,21 @@ export const useDeleteUser = () => {
 /**
  * Создает запись профиля пользователя в таблице `profiles`.
  * Используется после регистрации нового аккаунта.
- * @param payload Данные нового профиля и список проектов
  */
 export async function addUserProfile(payload: {
     id: string;
     name: string | null;
     email: string;
     role: RoleName;
-    project_ids: number[];
+    project_id: number;
 }): Promise<void> {
-    const { project_ids, ...profile } = payload;
+    const { project_id, ...profile } = payload;
     const { error } = await supabase.from('profiles').insert(profile);
     if (error) throw error;
-    if (project_ids.length) {
-        const rows = project_ids.map((pid) => ({ profile_id: payload.id, project_id: pid }));
+    if (project_id) {
         const { error: linkErr } = await supabase
             .from('profiles_projects')
-            .insert(rows);
+            .insert({ profile_id: payload.id, project_id });
         if (linkErr) throw linkErr;
     }
 }
