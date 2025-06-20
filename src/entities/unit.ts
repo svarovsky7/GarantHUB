@@ -9,6 +9,7 @@ import {
 import { useProjectFilter } from '@/shared/hooks/useProjectFilter';
 import { useAuthStore } from '@/shared/store/authStore';
 import { filterByProjects } from '@/shared/utils/projectQuery';
+import { useNotify } from '@/shared/hooks/useNotify';
 
 /* ---------- базовый SELECT ---------- */
 const SELECT = `
@@ -203,5 +204,48 @@ export const useDeleteUnit = () => {
             if (error) throw error;
         },
         onSuccess: () => qc.invalidateQueries({ queryKey: ['units'] }),
+    });
+};
+
+/** Удалить все квартиры в корпусе */
+export const useDeleteUnitsByBuilding = () => {
+    const qc = useQueryClient();
+    const notify = useNotify();
+    return useMutation({
+        mutationFn: async ({ projectId, building }: { projectId: string | number; building: string }) => {
+            const { error } = await supabase
+                .from('units')
+                .delete()
+                .eq('project_id', projectId)
+                .eq('building', building);
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['units'] });
+            notify.success('Корпус удалён');
+        },
+        onError: (e: Error) => notify.error(e.message),
+    });
+};
+
+/** Удалить все квартиры в секции корпуса */
+export const useDeleteUnitsBySection = () => {
+    const qc = useQueryClient();
+    const notify = useNotify();
+    return useMutation({
+        mutationFn: async ({ projectId, building, section }: { projectId: string | number; building: string; section: string }) => {
+            const { error } = await supabase
+                .from('units')
+                .delete()
+                .eq('project_id', projectId)
+                .eq('building', building)
+                .eq('section', section);
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['units'] });
+            notify.success('Секция удалена');
+        },
+        onError: (e: Error) => notify.error(e.message),
     });
 };

@@ -47,7 +47,7 @@ export default function AddBuildingOrSectionDialog({
       ]);
     }
     onClose();
-    afterAdd && afterAdd();
+    afterAdd && afterAdd(value.trim());
   };
 
   return (

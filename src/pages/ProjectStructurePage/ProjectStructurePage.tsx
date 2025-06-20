@@ -20,6 +20,7 @@ import UnitsMatrix from "@/widgets/UnitsMatrix/UnitsMatrix";
 import StatusLegend from "@/widgets/StatusLegend";
 import useProjectStructure from "@/shared/hooks/useProjectStructure";
 import { useProjectId } from '@/shared/hooks/useProjectId';
+import { useDeleteUnitsByBuilding, useDeleteUnitsBySection } from '@/entities/unit';
 // Новое:
 import HistoryDialog from "@/features/history/HistoryDialog"; // путь скорректируйте под ваш проект
 import { useNavigate } from 'react-router-dom';
@@ -54,6 +55,8 @@ export default function ProjectStructurePage() {
         section,
         setSection,
         refreshAll,
+        setBuildings,
+        setSections,
     } = useProjectStructure();
     const globalProjectId = useProjectId();
 
@@ -76,6 +79,8 @@ export default function ProjectStructurePage() {
     const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
     const [selectedUnit, setSelectedUnit] = useState(null);
     const navigate = useNavigate();
+    const deleteBuildingMutation = useDeleteUnitsByBuilding();
+    const deleteSectionMutation = useDeleteUnitsBySection();
 
     // Автоматический выбор проекта, корпуса, секции
     useEffect(() => {
@@ -140,7 +145,19 @@ export default function ProjectStructurePage() {
         setConfirmDialog({ open: true, type: "section", value: section });
     };
     const handleConfirmDelete = async () => {
-        setConfirmDialog({ open: false, type: "", value: "" });
+        if (confirmDialog.type === 'building') {
+            await deleteBuildingMutation.mutateAsync({ projectId, building: confirmDialog.value });
+            setBuildings((b) => b.filter((v) => v !== confirmDialog.value));
+            setSections([]);
+            setBuilding('');
+            setSection('');
+        }
+        if (confirmDialog.type === 'section') {
+            await deleteSectionMutation.mutateAsync({ projectId, building, section: confirmDialog.value });
+            setSections((s) => s.filter((v) => v !== confirmDialog.value));
+            setSection('');
+        }
+        setConfirmDialog({ open: false, type: '', value: '' });
         refreshAll();
     };
     const handleCancelDelete = () =>
@@ -439,7 +456,15 @@ export default function ProjectStructurePage() {
                 onClose={handleCloseAddDialog}
                 projectId={projectId}
                 building={building}
-                afterAdd={refreshAll}
+                afterAdd={(name) => {
+                    if (addDialog.type === 'building') {
+                        setBuildings((b) => Array.from(new Set([...b, name])));
+                    }
+                    if (addDialog.type === 'section') {
+                        setSections((s) => Array.from(new Set([...s, name])));
+                    }
+                    refreshAll();
+                }}
             />
 
             {/* Диалог подтверждения удаления */}
