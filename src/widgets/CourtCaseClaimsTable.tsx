@@ -1,5 +1,15 @@
 import React from 'react';
-import { Table, Form, Select, InputNumber, Button, Tooltip, Skeleton, Typography } from 'antd';
+import {
+  Table,
+  Form,
+  Select,
+  InputNumber,
+  Button,
+  Tooltip,
+  Skeleton,
+  Typography,
+} from 'antd';
+import { formatRub, parseRub } from '@/shared/utils/formatCurrency';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useLawsuitClaimTypes } from '@/entities/lawsuitClaimType';
@@ -48,7 +58,12 @@ export default function CourtCaseClaimsTable({ fields, add, remove }: Props) {
       width: 150,
       render: (_: unknown, field: any) => (
         <Form.Item name={[field.name, 'claimed_amount']} noStyle>
-          <InputNumber min={0} style={{ width: '100%' }} />
+          <InputNumber
+            min={0}
+            style={{ width: '100%' }}
+            formatter={(v) => formatRub(Number(v))}
+            parser={parseRub}
+          />
         </Form.Item>
       ),
     },
@@ -58,7 +73,12 @@ export default function CourtCaseClaimsTable({ fields, add, remove }: Props) {
       width: 150,
       render: (_: unknown, field: any) => (
         <Form.Item name={[field.name, 'confirmed_amount']} noStyle>
-          <InputNumber min={0} style={{ width: '100%' }} />
+          <InputNumber
+            min={0}
+            style={{ width: '100%' }}
+            formatter={(v) => formatRub(Number(v))}
+            parser={parseRub}
+          />
         </Form.Item>
       ),
     },
@@ -68,7 +88,12 @@ export default function CourtCaseClaimsTable({ fields, add, remove }: Props) {
       width: 150,
       render: (_: unknown, field: any) => (
         <Form.Item name={[field.name, 'paid_amount']} noStyle>
-          <InputNumber min={0} style={{ width: '100%' }} />
+          <InputNumber
+            min={0}
+            style={{ width: '100%' }}
+            formatter={(v) => formatRub(Number(v))}
+            parser={parseRub}
+          />
         </Form.Item>
       ),
     },
@@ -78,7 +103,12 @@ export default function CourtCaseClaimsTable({ fields, add, remove }: Props) {
       width: 150,
       render: (_: unknown, field: any) => (
         <Form.Item name={[field.name, 'agreed_amount']} noStyle>
-          <InputNumber min={0} style={{ width: '100%' }} />
+          <InputNumber
+            min={0}
+            style={{ width: '100%' }}
+            formatter={(v) => formatRub(Number(v))}
+            parser={parseRub}
+          />
         </Form.Item>
       ),
     },
@@ -117,10 +147,10 @@ export default function CourtCaseClaimsTable({ fields, add, remove }: Props) {
             <Table.Summary.Cell index={0}>
               <Typography.Text strong>Итого</Typography.Text>
             </Table.Summary.Cell>
-            <Table.Summary.Cell index={1}>{totals.claimed}</Table.Summary.Cell>
-            <Table.Summary.Cell index={2}>{totals.confirmed}</Table.Summary.Cell>
-            <Table.Summary.Cell index={3}>{totals.paid}</Table.Summary.Cell>
-            <Table.Summary.Cell index={4}>{totals.agreed}</Table.Summary.Cell>
+            <Table.Summary.Cell index={1}>{formatRub(totals.claimed)}</Table.Summary.Cell>
+            <Table.Summary.Cell index={2}>{formatRub(totals.confirmed)}</Table.Summary.Cell>
+            <Table.Summary.Cell index={3}>{formatRub(totals.paid)}</Table.Summary.Cell>
+            <Table.Summary.Cell index={4}>{formatRub(totals.agreed)}</Table.Summary.Cell>
             <Table.Summary.Cell index={5} />
           </Table.Summary.Row>
         )}

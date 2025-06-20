@@ -1,5 +1,14 @@
 import React from 'react';
-import { Table, Select, InputNumber, Button, Tooltip, Popconfirm, Skeleton } from 'antd';
+import {
+  Table,
+  Select,
+  InputNumber,
+  Button,
+  Tooltip,
+  Popconfirm,
+  Skeleton,
+} from 'antd';
+import { formatRub, parseRub } from '@/shared/utils/formatCurrency';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useLawsuitClaimTypes } from '@/entities/lawsuitClaimType';
@@ -72,7 +81,11 @@ export default function CaseClaimsEditorTable({ caseId }: Props) {
           min={0}
           style={{ width: '100%' }}
           value={v ?? undefined}
-          onChange={(val) => updateClaim.mutate({ id: row.id, updates: { claimed_amount: val ?? null } })}
+          formatter={(val) => formatRub(Number(val))}
+          parser={parseRub}
+          onChange={(val) =>
+            updateClaim.mutate({ id: row.id, updates: { claimed_amount: val ?? null } })
+          }
         />
       ),
     },
@@ -85,7 +98,11 @@ export default function CaseClaimsEditorTable({ caseId }: Props) {
           min={0}
           style={{ width: '100%' }}
           value={v ?? undefined}
-          onChange={(val) => updateClaim.mutate({ id: row.id, updates: { confirmed_amount: val ?? null } })}
+          formatter={(val) => formatRub(Number(val))}
+          parser={parseRub}
+          onChange={(val) =>
+            updateClaim.mutate({ id: row.id, updates: { confirmed_amount: val ?? null } })
+          }
         />
       ),
     },
@@ -98,6 +115,8 @@ export default function CaseClaimsEditorTable({ caseId }: Props) {
           min={0}
           style={{ width: '100%' }}
           value={v ?? undefined}
+          formatter={(val) => formatRub(Number(val))}
+          parser={parseRub}
           onChange={(val) => updateClaim.mutate({ id: row.id, updates: { paid_amount: val ?? null } })}
         />
       ),
@@ -111,7 +130,11 @@ export default function CaseClaimsEditorTable({ caseId }: Props) {
           min={0}
           style={{ width: '100%' }}
           value={v ?? undefined}
-          onChange={(val) => updateClaim.mutate({ id: row.id, updates: { agreed_amount: val ?? null } })}
+          formatter={(val) => formatRub(Number(val))}
+          parser={parseRub}
+          onChange={(val) =>
+            updateClaim.mutate({ id: row.id, updates: { agreed_amount: val ?? null } })
+          }
         />
       ),
     },
@@ -155,10 +178,10 @@ export default function CaseClaimsEditorTable({ caseId }: Props) {
         summary={() => (
           <Table.Summary.Row>
             <Table.Summary.Cell index={0}>Итого</Table.Summary.Cell>
-            <Table.Summary.Cell index={1}>{totals.claimed}</Table.Summary.Cell>
-            <Table.Summary.Cell index={2}>{totals.confirmed}</Table.Summary.Cell>
-            <Table.Summary.Cell index={3}>{totals.paid}</Table.Summary.Cell>
-            <Table.Summary.Cell index={4}>{totals.agreed}</Table.Summary.Cell>
+            <Table.Summary.Cell index={1}>{formatRub(totals.claimed)}</Table.Summary.Cell>
+            <Table.Summary.Cell index={2}>{formatRub(totals.confirmed)}</Table.Summary.Cell>
+            <Table.Summary.Cell index={3}>{formatRub(totals.paid)}</Table.Summary.Cell>
+            <Table.Summary.Cell index={4}>{formatRub(totals.agreed)}</Table.Summary.Cell>
             <Table.Summary.Cell index={5} />
           </Table.Summary.Row>
         )}
