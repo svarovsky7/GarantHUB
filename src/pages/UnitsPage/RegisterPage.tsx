@@ -144,17 +144,16 @@ export default function RegisterPage() {
               name="project_ids"
               label="Проекты"
               rules={[{ required: true, message: 'Выберите проекты' }]}
+              tooltip="Без проекта регистрация невозможна"
             >
               {projLoad ? (
                 <Skeleton active paragraph={false} />
               ) : (
-                <Tooltip title="Без проекта регистрация невозможна">
-                  <Select
-                    mode="multiple"
-                    options={options}
-                    placeholder="Выберите проекты"
-                  />
-                </Tooltip>
+                <Select
+                  mode="multiple"
+                  options={options}
+                  placeholder="Выберите проекты"
+                />
               )}
             </Form.Item>
 
