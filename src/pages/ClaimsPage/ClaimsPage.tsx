@@ -1,10 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { ConfigProvider, Alert, Card, Button, Tooltip } from 'antd';
+import { ConfigProvider, Alert, Card, Button, Tooltip, Popconfirm, message, Space } from 'antd';
 import ruRU from 'antd/locale/ru_RU';
-import { SettingOutlined, EyeOutlined } from '@ant-design/icons';
+import { SettingOutlined, EyeOutlined, DeleteOutlined } from '@ant-design/icons';
 import ExportClaimsButton from '@/features/claim/ExportClaimsButton';
 import { useSnackbar } from 'notistack';
-import { useClaims } from '@/entities/claim';
+import { useClaims, useDeleteClaim } from '@/entities/claim';
 import { useUsers } from '@/entities/user';
 import { useUnitsByIds } from '@/entities/unit';
 import ClaimsTable from '@/widgets/ClaimsTable';
@@ -21,6 +21,7 @@ import type { ClaimWithNames } from '@/shared/types/claimWithNames';
 export default function ClaimsPage() {
   const { enqueueSnackbar } = useSnackbar();
   const { data: claims = [], isLoading, error } = useClaims();
+  const deleteClaimMutation = useDeleteClaim();
   const { data: users = [] } = useUsers();
   const unitIds = useMemo(() => Array.from(new Set(claims.flatMap((t) => t.unit_ids))), [claims]);
   const { data: units = [] } = useUnitsByIds(unitIds);
@@ -89,22 +90,36 @@ export default function ClaimsPage() {
       id: { title: 'ID', dataIndex: 'id', width: 80, sorter: (a: any, b: any) => a.id - b.id },
       projectName: { title: 'Проект', dataIndex: 'projectName', width: 180, sorter: (a: any, b: any) => a.projectName.localeCompare(b.projectName) },
       unitNames: { title: 'Объекты', dataIndex: 'unitNames', width: 160, sorter: (a: any, b: any) => a.unitNames.localeCompare(b.unitNames) },
-      statusId: { title: 'Статус', dataIndex: 'statusId', width: 160, sorter: (a: any, b: any) => a.statusName.localeCompare(b.statusName), render: (_: any, row: any) => <ClaimStatusSelect claimId={row.id} statusId={row.statusId} statusColor={row.statusColor} statusName={row.statusName} /> },
+      statusId: { title: 'Статус', dataIndex: 'status_id', width: 160, sorter: (a: any, b: any) => a.statusName.localeCompare(b.statusName), render: (_: any, row: any) => <ClaimStatusSelect claimId={row.id} statusId={row.status_id} statusColor={row.statusColor} statusName={row.statusName} /> },
       number: { title: '№ претензии', dataIndex: 'number', width: 160, sorter: (a: any, b: any) => a.number.localeCompare(b.number) },
       claimDate: { title: 'Дата претензии', dataIndex: 'claimDate', width: 120, sorter: (a: any, b: any) => (a.claimDate ? a.claimDate.valueOf() : 0) - (b.claimDate ? b.claimDate.valueOf() : 0), render: (v: any) => fmt(v) },
       receivedByDeveloperAt: { title: 'Дата получения Застройщиком', dataIndex: 'receivedByDeveloperAt', width: 120, sorter: (a: any, b: any) => (a.receivedByDeveloperAt ? a.receivedByDeveloperAt.valueOf() : 0) - (b.receivedByDeveloperAt ? b.receivedByDeveloperAt.valueOf() : 0), render: (v: any) => fmt(v) },
       registeredAt: { title: 'Дата регистрации претензии', dataIndex: 'registeredAt', width: 120, sorter: (a: any, b: any) => (a.registeredAt ? a.registeredAt.valueOf() : 0) - (b.registeredAt ? b.registeredAt.valueOf() : 0), render: (v: any) => fmt(v) },
       fixedAt: { title: 'Дата устранения', dataIndex: 'fixedAt', width: 120, sorter: (a: any, b: any) => (a.fixedAt ? a.fixedAt.valueOf() : 0) - (b.fixedAt ? b.fixedAt.valueOf() : 0), render: (v: any) => fmt(v) },
       responsibleEngineerName: { title: 'Ответственный инженер', dataIndex: 'responsibleEngineerName', width: 180, sorter: (a: any, b: any) => (a.responsibleEngineerName || '').localeCompare(b.responsibleEngineerName || '') },
-      actions: { title: 'Действия', key: 'actions', width: 80, render: (_: any, record: any) => (
-        <Tooltip title="Просмотр">
-          <Button size="small" type="text" icon={<EyeOutlined />} onClick={() => setViewId(record.id)} />
-        </Tooltip>
+      actions: { title: 'Действия', key: 'actions', width: 100, render: (_: any, record: any) => (
+        <Space size="middle">
+          <Tooltip title="Просмотр">
+            <Button size="small" type="text" icon={<EyeOutlined />} onClick={() => setViewId(record.id)} />
+          </Tooltip>
+          <Popconfirm
+            title="Удалить претензию?"
+            okText="Да"
+            cancelText="Нет"
+            onConfirm={async () => {
+              await deleteClaimMutation.mutateAsync(record.id);
+              message.success('Удалено');
+            }}
+            disabled={deleteClaimMutation.isPending}
+          >
+            <Button size="small" type="text" danger icon={<DeleteOutlined />} loading={deleteClaimMutation.isPending} />
+          </Popconfirm>
+        </Space>
       ) },
     } as Record<string, ColumnsType<any>[number]>;
   }
 
-  const baseColumns = useMemo(getBaseColumns, []);
+  const baseColumns = useMemo(getBaseColumns, [deleteClaimMutation.isPending]);
   const columns: ColumnsType<any> = useMemo(() => columnsState.filter((c) => c.visible).map((c) => baseColumns[c.key]), [columnsState, baseColumns]);
 
   return (

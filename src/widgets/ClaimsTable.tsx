@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react';
 import dayjs from 'dayjs';
-import { Table, Tooltip, Space, Button, Tag } from 'antd';
+import { Table, Tooltip, Space, Button, Tag, Popconfirm, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { EyeOutlined } from '@ant-design/icons';
+import { EyeOutlined, DeleteOutlined } from '@ant-design/icons';
+import { useDeleteClaim } from '@/entities/claim';
 import type { ClaimFilters } from '@/shared/types/claimFilters';
 import type { ClaimWithNames } from '@/shared/types/claimWithNames';
 import ClaimStatusSelect from '@/features/claim/ClaimStatusSelect';
@@ -18,27 +19,40 @@ interface Props {
 }
 
 export default function ClaimsTable({ claims, filters, loading, columns: columnsProp, onView }: Props) {
+  const { mutateAsync: remove, isPending } = useDeleteClaim();
   const defaultColumns: ColumnsType<any> = useMemo(
     () => [
       { title: 'ID', dataIndex: 'id', width: 80, sorter: (a, b) => a.id - b.id },
       { title: 'Проект', dataIndex: 'projectName', width: 180, sorter: (a, b) => a.projectName.localeCompare(b.projectName) },
       { title: 'Объекты', dataIndex: 'unitNames', width: 160, sorter: (a, b) => a.unitNames.localeCompare(b.unitNames) },
-      { title: 'Статус', dataIndex: 'statusId', width: 160, sorter: (a, b) => a.statusName.localeCompare(b.statusName), render: (_: any, row: any) => <ClaimStatusSelect claimId={row.id} statusId={row.statusId} statusColor={row.statusColor} statusName={row.statusName} /> },
+      { title: 'Статус', dataIndex: 'status_id', width: 160, sorter: (a, b) => a.statusName.localeCompare(b.statusName), render: (_: any, row: any) => <ClaimStatusSelect claimId={row.id} statusId={row.status_id} statusColor={row.statusColor} statusName={row.statusName} /> },
       { title: '№ претензии', dataIndex: 'number', width: 160, sorter: (a, b) => a.number.localeCompare(b.number) },
       { title: 'Дата претензии', dataIndex: 'claimDate', width: 120, sorter: (a, b) => (a.claimDate ? a.claimDate.valueOf() : 0) - (b.claimDate ? b.claimDate.valueOf() : 0), render: (v) => fmt(v) },
       { title: 'Дата получения Застройщиком', dataIndex: 'receivedByDeveloperAt', width: 120, sorter: (a, b) => (a.receivedByDeveloperAt ? a.receivedByDeveloperAt.valueOf() : 0) - (b.receivedByDeveloperAt ? b.receivedByDeveloperAt.valueOf() : 0), render: (v) => fmt(v) },
       { title: 'Дата регистрации претензии', dataIndex: 'registeredAt', width: 120, sorter: (a, b) => (a.registeredAt ? a.registeredAt.valueOf() : 0) - (b.registeredAt ? b.registeredAt.valueOf() : 0), render: (v) => fmt(v) },
       { title: 'Дата устранения', dataIndex: 'fixedAt', width: 120, sorter: (a, b) => (a.fixedAt ? a.fixedAt.valueOf() : 0) - (b.fixedAt ? b.fixedAt.valueOf() : 0), render: (v) => fmt(v) },
       { title: 'Ответственный инженер', dataIndex: 'responsibleEngineerName', width: 180, sorter: (a, b) => (a.responsibleEngineerName || '').localeCompare(b.responsibleEngineerName || '') },
-      { title: 'Действия', key: 'actions', width: 80, render: (_: any, record) => (
+      { title: 'Действия', key: 'actions', width: 100, render: (_: any, record) => (
         <Space size="middle">
           <Tooltip title="Просмотр">
             <Button size="small" type="text" icon={<EyeOutlined />} onClick={() => onView && onView(record.id)} />
           </Tooltip>
+          <Popconfirm
+            title="Удалить претензию?"
+            okText="Да"
+            cancelText="Нет"
+            onConfirm={async () => {
+              await remove(record.id);
+              message.success('Удалено');
+            }}
+            disabled={isPending}
+          >
+            <Button size="small" type="text" danger icon={<DeleteOutlined />} loading={isPending} />
+          </Popconfirm>
         </Space>
       ) },
     ],
-    [onView],
+    [onView, remove, isPending],
   );
 
   const columns = columnsProp ?? defaultColumns;
