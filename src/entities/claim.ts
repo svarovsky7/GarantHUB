@@ -5,9 +5,42 @@ import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useAuthStore } from '@/shared/store/authStore';
 import { filterByProjects } from '@/shared/utils/projectQuery';
 import type { Claim } from '@/shared/types/claim';
+import type { ClaimWithNames } from '@/shared/types/claimWithNames';
 import { addClaimAttachments } from '@/entities/attachment';
+import dayjs from 'dayjs';
 
 const TABLE = 'claims';
+
+/**
+ * Преобразует запись Supabase в объект претензии с удобными полями.
+ */
+function mapClaim(r: any): ClaimWithNames {
+  const toDayjs = (d: any) => (d ? (dayjs(d).isValid() ? dayjs(d) : null) : null);
+  return {
+    id: r.id,
+    project_id: r.project_id,
+    unit_ids: r.unit_ids || [],
+    status_id: r.status_id ?? null,
+    number: r.number,
+    claim_date: r.claim_date,
+    received_by_developer_at: r.received_by_developer_at,
+    registered_at: r.registered_at,
+    fixed_at: r.fixed_at,
+    responsible_engineer_id: r.responsible_engineer_id,
+    defect_ids: r.defect_ids ?? [],
+    attachment_ids: r.attachment_ids ?? [],
+    projectName: r.projects?.name ?? '—',
+    statusName: r.claim_statuses?.name ?? '—',
+    statusColor: r.claim_statuses?.color ?? null,
+    responsibleEngineerName: null,
+    unitNames: '',
+    // convert strings to dayjs for consumer convenience
+    claimDate: toDayjs(r.claim_date),
+    receivedByDeveloperAt: toDayjs(r.received_by_developer_at),
+    registeredAt: toDayjs(r.registered_at),
+    fixedAt: toDayjs(r.fixed_at),
+  } as unknown as ClaimWithNames;
+}
 
 /**
  * Хук получения списка претензий с учётом фильтров проекта.
@@ -17,12 +50,20 @@ export function useClaims() {
   return useQuery({
     queryKey: [TABLE, projectId, projectIds.join(',')],
     queryFn: async () => {
-      let q = supabase.from(TABLE).select('*');
+      let q = supabase
+        .from(TABLE)
+        .select(
+          `id, project_id, unit_ids, status_id, number, claim_date,
+          received_by_developer_at, registered_at, fixed_at,
+          responsible_engineer_id, defect_ids, attachment_ids, created_at,
+          projects (id, name),
+          claim_statuses (id, name, color)`,
+        );
       q = filterByProjects(q, projectId, projectIds, onlyAssigned);
       q = q.order('created_at', { ascending: false });
       const { data, error } = await q;
       if (error) throw error;
-      return (data ?? []) as Claim[];
+      return (data ?? []).map(mapClaim);
     },
     staleTime: 5 * 60_000,
   });
@@ -38,12 +79,21 @@ export function useClaim(id?: number | string) {
     queryKey: [TABLE, claimId],
     enabled: !!claimId,
     queryFn: async () => {
-      let q = supabase.from(TABLE).select('*').eq('id', claimId);
+      let q = supabase
+        .from(TABLE)
+        .select(
+          `id, project_id, unit_ids, status_id, number, claim_date,
+          received_by_developer_at, registered_at, fixed_at,
+          responsible_engineer_id, defect_ids, attachment_ids, created_at,
+          projects (id, name),
+          claim_statuses (id, name, color)`,
+        )
+        .eq('id', claimId);
       q = filterByProjects(q, projectId, projectIds, onlyAssigned);
       q = q.single();
       const { data, error } = await q;
       if (error) throw error;
-      return data as Claim;
+      return mapClaim(data);
     },
     staleTime: 5 * 60_000,
   });
