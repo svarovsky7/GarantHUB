@@ -364,11 +364,19 @@ export default function DefectsPage() {
     "actions",
   ] as const;
 
+  const getTitleText = (t: React.ReactNode): string => {
+    if (typeof t === 'string') return t;
+    if (React.isValidElement(t)) {
+      return React.Children.toArray(t.props.children).join(' ');
+    }
+    return String(t);
+  };
+
   const [columnsState, setColumnsState] = useState<TableColumnSetting[]>(() => {
     const base = baseColumns;
     const defaults = columnOrder.map((key) => ({
       key,
-      title: base[key].title as string,
+      title: getTitleText(base[key].title),
       visible: true,
     }));
     try {
@@ -389,7 +397,7 @@ export default function DefectsPage() {
     const base = baseColumns;
     const defaults = columnOrder.map((key) => ({
       key,
-      title: base[key].title as string,
+      title: getTitleText(base[key].title),
       visible: true,
     }));
     setColumnsState(defaults);
