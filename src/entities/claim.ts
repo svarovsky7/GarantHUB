@@ -7,7 +7,11 @@ import { filterByProjects } from '@/shared/utils/projectQuery';
 import type { Claim } from '@/shared/types/claim';
 import type { ClaimWithNames } from '@/shared/types/claimWithNames';
 import type { ClaimDeleteParams } from '@/shared/types/claimDelete';
-import { addClaimAttachments, ATTACH_BUCKET } from '@/entities/attachment';
+import {
+  addClaimAttachments,
+  getAttachmentsByIds,
+  ATTACH_BUCKET,
+} from '@/entities/attachment';
 import dayjs from 'dayjs';
 
 const TABLE = 'claims';
@@ -17,6 +21,30 @@ const TABLE = 'claims';
  */
 function mapClaim(r: any): ClaimWithNames {
   const toDayjs = (d: any) => (d ? (dayjs(d).isValid() ? dayjs(d) : null) : null);
+  const attachments = Array.isArray(r.attachments)
+    ? r.attachments.map((a: any) => {
+        let name = a.original_name;
+        if (!name) {
+          try {
+            name = decodeURIComponent(
+              a.storage_path.split('/').pop()?.replace(/^\d+_/, '') ||
+                a.storage_path,
+            );
+          } catch {
+            name = a.storage_path;
+          }
+        }
+        return {
+          id: a.id,
+          path: a.storage_path,
+          original_name: a.original_name ?? null,
+          name,
+          url: a.file_url,
+          type: a.file_type,
+          attachment_type_id: a.attachment_type_id ?? null,
+        } as import('@/shared/types/claimFile').RemoteClaimFile;
+      })
+    : [];
   return {
     id: r.id,
     project_id: r.project_id,
@@ -39,6 +67,7 @@ function mapClaim(r: any): ClaimWithNames {
     receivedByDeveloperAt: toDayjs(r.received_by_developer_at),
     registeredAt: toDayjs(r.registered_at),
     fixedAt: toDayjs(r.fixed_at),
+    attachments,
   } as unknown as ClaimWithNames;
 }
 
@@ -55,7 +84,7 @@ export function useClaims() {
         .select(
           `id, project_id, unit_ids, status_id, number, claim_date,
           received_by_developer_at, registered_at, fixed_at,
-          responsible_engineer_id, defect_ids, created_at,
+          responsible_engineer_id, defect_ids, created_at, attachment_ids,
           projects (id, name),
           claim_statuses (id, name, color)`,
         );
@@ -63,7 +92,41 @@ export function useClaims() {
       q = q.order('created_at', { ascending: false });
       const { data, error } = await q;
       if (error) throw error;
-      return (data ?? []).map(mapClaim);
+      const allIds = Array.from(
+        new Set((data ?? []).flatMap((c) => c.attachment_ids || [])),
+      );
+      let filesMap: Record<number, any> = {};
+      if (allIds.length) {
+        const files = await getAttachmentsByIds(allIds);
+        files.forEach((f) => {
+          filesMap[f.id] = {
+            id: f.id,
+            storage_path: f.storage_path,
+            original_name: f.original_name,
+            file_url: f.file_url,
+            file_type: f.file_type,
+            attachment_type_id: f.attachment_type_id ?? null,
+          };
+        });
+      }
+      const result: ClaimWithNames[] = [];
+      for (const r of data ?? []) {
+        const atts = (r.attachment_ids || [])
+          .map((i: number) => filesMap[i])
+          .filter(Boolean);
+        if (atts.length !== (r.attachment_ids || []).length) {
+          const existIds = atts.map((a: any) => a.id);
+          let upq = supabase
+            .from(TABLE)
+            .update({ attachment_ids: existIds })
+            .eq('id', r.id);
+          upq = filterByProjects(upq, projectId, projectIds, onlyAssigned);
+          await upq;
+          r.attachment_ids = existIds;
+        }
+        result.push(mapClaim({ ...r, attachments: atts }));
+      }
+      return result;
     },
     staleTime: 5 * 60_000,
   });
@@ -84,7 +147,7 @@ export function useClaim(id?: number | string) {
         .select(
           `id, project_id, unit_ids, status_id, number, claim_date,
           received_by_developer_at, registered_at, fixed_at,
-          responsible_engineer_id, defect_ids, created_at,
+          responsible_engineer_id, defect_ids, created_at, attachment_ids,
           projects (id, name),
           claim_statuses (id, name, color)`,
         )
@@ -93,7 +156,29 @@ export function useClaim(id?: number | string) {
       q = q.single();
       const { data, error } = await q;
       if (error) throw error;
-      return mapClaim(data);
+      let attachments: any[] = [];
+      if (data?.attachment_ids?.length) {
+        const files = await getAttachmentsByIds(data.attachment_ids);
+        attachments = files.map((f) => ({
+          id: f.id,
+          storage_path: f.storage_path,
+          original_name: f.original_name,
+          file_url: f.file_url,
+          file_type: f.file_type,
+          attachment_type_id: f.attachment_type_id ?? null,
+        }));
+        const existIds = files.map((f) => f.id);
+        if (existIds.length !== data.attachment_ids.length) {
+          let uq = supabase
+            .from(TABLE)
+            .update({ attachment_ids: existIds })
+            .eq('id', claimId);
+          uq = filterByProjects(uq, projectId, projectIds, onlyAssigned);
+          await uq;
+          data.attachment_ids = existIds;
+        }
+      }
+      return mapClaim({ ...data, attachments });
     },
     staleTime: 5 * 60_000,
   });
@@ -152,15 +237,18 @@ export function useCreateClaim() {
         .select('id, project_id')
         .single();
       if (error) throw error;
+      let ids: number[] = [];
       if (attachments.length) {
-        await addClaimAttachments(
+        const uploaded = await addClaimAttachments(
           attachments.map((f: any) =>
             'file' in f ? { file: f.file, type_id: f.type_id ?? null } : { file: f, type_id: null },
           ),
           created.id,
         );
+        ids = uploaded.map((u: any) => u.id);
+        await supabase.from(TABLE).update({ attachment_ids: ids }).eq('id', created.id);
       }
-      return created as Claim;
+      return { ...created, attachment_ids: ids } as Claim;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: [TABLE] }),
   });
@@ -218,14 +306,14 @@ export function useClaimAttachments(id?: number) {
     queryKey: ['claim-attachments', id],
     enabled: !!id,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('attachments')
-        .select(
-          'id, storage_path, file_url, file_type, attachment_type_id, original_name',
-        )
-        .ilike('storage_path', `claims/${id}/%`);
-      if (error) throw error;
-      return data ?? [];
+      const { data } = await supabase
+        .from(TABLE)
+        .select('attachment_ids')
+        .eq('id', id as number)
+        .single();
+      const ids: number[] = data?.attachment_ids ?? [];
+      if (!ids.length) return [];
+      return getAttachmentsByIds(ids);
     },
     staleTime: 5 * 60_000,
   });

@@ -20,4 +20,6 @@ export interface ClaimWithNames extends Claim {
   registeredAt: Dayjs | null;
   /** Дата устранения претензии */
   fixedAt: Dayjs | null;
+  /** Загруженные файлы */
+  attachments?: import('./claimFile').RemoteClaimFile[];
 }
