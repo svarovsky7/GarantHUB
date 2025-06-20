@@ -6,7 +6,7 @@ import { useAuthStore } from '@/shared/store/authStore';
 import { filterByProjects } from '@/shared/utils/projectQuery';
 import type { Claim } from '@/shared/types/claim';
 import type { ClaimWithNames } from '@/shared/types/claimWithNames';
-import { addClaimAttachments, ATTACH_BUCKET, getClaimAttachments } from '@/entities/attachment';
+import { addClaimAttachments } from '@/entities/attachment';
 import dayjs from 'dayjs';
 
 const TABLE = 'claims';
@@ -92,9 +92,7 @@ export function useClaim(id?: number | string) {
       q = q.single();
       const { data, error } = await q;
       if (error) throw error;
-      const base = mapClaim(data);
-      const attachments = await getClaimAttachments(claimId);
-      return { ...base, attachments } as ClaimWithNames & { attachments: any[] };
+      return mapClaim(data);
     },
     staleTime: 5 * 60_000,
   });
@@ -166,24 +164,4 @@ export function useDeleteClaim() {
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: [TABLE] }),
   });
-}
-
-/** Получить вложения претензии */
-export function useClaimAttachments(claimId?: number | string) {
-  const id = Number(claimId);
-  return useQuery({
-    queryKey: ['claim-attachments', id],
-    enabled: !!id,
-    queryFn: () => getClaimAttachments(id),
-    staleTime: 5 * 60_000,
-  });
-}
-
-/** Получить временную ссылку на файл претензии */
-export async function signedUrl(path: string, filename = ''): Promise<string> {
-  const { data, error } = await supabase.storage
-    .from(ATTACH_BUCKET)
-    .createSignedUrl(path, 60, { download: filename || undefined });
-  if (error) throw error;
-  return data.signedUrl;
 }
