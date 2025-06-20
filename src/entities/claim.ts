@@ -99,6 +99,44 @@ export function useClaim(id?: number | string) {
 }
 
 /**
+ * Получить список претензий по всем проектам (минимальный набор полей).
+ */
+export function useClaimsSimpleAll() {
+  return useQuery<Array<{ id: number; project_id: number; unit_ids: number[]; defect_ids: number[] }>>({
+    queryKey: ['claims-simple-all'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from(TABLE)
+        .select('id, project_id, unit_ids, defect_ids');
+      if (error) throw error;
+      return (data ?? []) as Array<{ id: number; project_id: number; unit_ids: number[]; defect_ids: number[] }>;
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
+/**
+ * Получить список претензий текущего проекта (минимальный набор полей).
+ */
+export function useClaimsSimple() {
+  const { projectId, projectIds, onlyAssigned, enabled } = useProjectFilter();
+  return useQuery<Array<{ id: number; project_id: number; unit_ids: number[]; defect_ids: number[] }>>({
+    queryKey: ['claims-simple', projectId, projectIds.join(',')],
+    enabled,
+    queryFn: async () => {
+      let q = supabase
+        .from(TABLE)
+        .select('id, project_id, unit_ids, defect_ids');
+      q = filterByProjects(q, projectId, projectIds, onlyAssigned);
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data ?? []) as Array<{ id: number; project_id: number; unit_ids: number[]; defect_ids: number[] }>;
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
+/**
  * Хук создания новой претензии.
  */
 export function useCreateClaim() {
