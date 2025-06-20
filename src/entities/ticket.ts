@@ -623,12 +623,13 @@ export function useUpdateTicketStatus() {
   const notify = useNotify();
 
   return useMutation({
-    mutationFn: async ({ id, statusId }) => {
+    mutationFn: async ({ id, statusId, projectId: rowProjectId }) => {
+      const pid = rowProjectId ?? projectId;
       let q = supabase
         .from("tickets")
         .update({ status_id: statusId })
         .eq("id", id);
-      q = filterByProjects(q, projectId, projectIds, perm?.only_assigned_project);
+      q = filterByProjects(q, pid, projectIds, perm?.only_assigned_project);
       q = q.select("id, defect_ids").single();
       const { data, error } = await q;
       if (error) throw error;
@@ -650,13 +651,14 @@ export function useUpdateTicketStatus() {
         qc.invalidateQueries({ queryKey: ['defects'] });
         qc.invalidateQueries({ queryKey: ['defects-by-ids'] });
       }
-      return { id: data.id, status_id: statusId };
+      return { id: data.id, status_id: statusId, projectId: pid };
     },
     onSuccess: (_, vars) => {
-      const keyPid = perm?.only_assigned_project ? projectId : null;
+      const pid = vars.projectId ?? projectId;
+      const keyPid = perm?.only_assigned_project ? pid : null;
       qc.invalidateQueries({ queryKey: ticketsKey(keyPid, projectIds) });
       qc.invalidateQueries({
-        queryKey: ["ticket", vars.id, projectId],
+        queryKey: ["ticket", vars.id, pid],
         exact: true,
       });
       notify.success("Статус обновлён");

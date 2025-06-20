@@ -287,6 +287,7 @@ export default function TicketsPage() {
             statusId={row.statusId}
             statusColor={row.statusColor}
             statusName={row.statusName}
+            projectId={row.projectId}
           />
         ),
       },

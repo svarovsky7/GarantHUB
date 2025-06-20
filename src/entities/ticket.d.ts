@@ -62,7 +62,7 @@ export function useAllTicketsSimple(): UseQueryResult<Array<{ id: number; status
 export function useTicketsSimpleAll(): UseQueryResult<Array<{ id: number; project_id: number; unit_ids: number[]; defect_ids: number[] }>>;
 export function useTicketsSimple(): UseQueryResult<Array<{ id: number; project_id: number; unit_ids: number[]; defect_ids: number[] }>>;
 export function useUpdateTicket(): UseMutationResult<any, Error, { id: number; updates: object }>;
-export function useUpdateTicketStatus(): UseMutationResult<any, Error, { id: number; statusId: number }>;
+export function useUpdateTicketStatus(): UseMutationResult<any, Error, { id: number; statusId: number; projectId?: number }>;
 
 export function useTicketLinks(): UseQueryResult<TicketLink[]>;
 
