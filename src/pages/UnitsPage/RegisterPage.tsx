@@ -3,32 +3,21 @@
 // Регистрация: проект обязателен, поле «Фамилия Имя», выбор роли ENGINEER | LAWYER | CONTRACTOR.
 // -----------------------------------------------------------------------------
 
-import React, { useState } from "react";
-import { supabase } from "@/shared/api/supabaseClient";
-import { useNavigate, Link as RouterLink } from "react-router-dom";
-import {
-  Paper,
-  TextField,
-  Button,
-  Stack,
-  Typography,
-  Link,
-  CircularProgress,
-  Autocomplete,
-  Tooltip,
-  Skeleton,
-  MenuItem,
-} from "@mui/material";
-import { useSnackbar } from "notistack";
+import React from 'react';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { Form, Input, Select, Button, Typography, Tooltip, Skeleton } from 'antd';
+import { useSnackbar } from 'notistack';
+import { supabase } from '@/shared/api/supabaseClient';
 
-import { useVisibleProjects } from "@/entities/project";
-import { addUserProfile } from "@/entities/user";
-import type { RoleName } from "@/shared/types/rolePermission";
+import { useVisibleProjects } from '@/entities/project';
+import { addUserProfile } from '@/entities/user';
+import type { RoleName } from '@/shared/types/rolePermission';
+import type { RegisterFormValues } from '@/shared/types/register';
 
 const ROLE_OPTIONS: { value: RoleName; label: string }[] = [
-  { value: "ENGINEER", label: "Инженер Гарантийного отдела" },
-  { value: "LAWYER", label: "Юрист" },
-  { value: "CONTRACTOR", label: "Подрядчик" },
+  { value: 'ENGINEER', label: 'Инженер Гарантийного отдела' },
+  { value: 'LAWYER', label: 'Юрист' },
+  { value: 'CONTRACTOR', label: 'Подрядчик' },
 ];
 
 /**
@@ -39,22 +28,20 @@ export default function RegisterPage() {
   const nav = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState(""); // CHANGE: Фамилия Имя
-  const [role, setRole] = useState<RoleName>("ENGINEER");
-  const [project, setProject] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [form] = Form.useForm<RegisterFormValues>();
+  const [loading, setLoading] = React.useState(false);
 
   const { data: projects = [], isLoading: projLoad } = useVisibleProjects();
 
-  /** Отправка формы регистрации */
-  async function signUp(e) {
-    e.preventDefault();
+  const options = React.useMemo(
+    () => projects.map((p) => ({ label: p.name, value: p.id })),
+    [projects],
+  );
 
-    if (!project) {
-      // CHANGE: обязательный проект
-      enqueueSnackbar("Выберите проект", { variant: "warning" });
+  /** Отправка формы регистрации */
+  const signUp = async (values: RegisterFormValues) => {
+    if (!values.project_ids.length) {
+      enqueueSnackbar('Выберите проекты', { variant: 'warning' });
       return;
     }
 
@@ -62,21 +49,21 @@ export default function RegisterPage() {
 
     try {
       const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
+        email: values.email,
+        password: values.password,
         options: {
           data: {
-            name: fullName, // поле остаётся name в metadata
-            project_id: project.id,
-            role,
+            name: values.name,
+            role: values.role,
+            project_ids: values.project_ids,
           },
         },
       });
 
       if (error) {
         // eslint-disable-next-line no-console
-        console.error("[signUp error]", error, JSON.stringify(data, null, 2));
-        enqueueSnackbar(error.message, { variant: "error" });
+        console.error('[signUp error]', error, JSON.stringify(data, null, 2));
+        enqueueSnackbar(error.message, { variant: 'error' });
         return;
       }
 
@@ -84,10 +71,10 @@ export default function RegisterPage() {
         try {
           await addUserProfile({
             id: data.user.id,
-            name: fullName,
-            email,
-            role,
-            project_id: project.id,
+            name: values.name,
+            email: values.email,
+            role: values.role,
+            project_ids: values.project_ids,
           });
         } catch (insertErr) {
           // eslint-disable-next-line no-console
@@ -95,109 +82,99 @@ export default function RegisterPage() {
         }
       }
 
-      enqueueSnackbar("Проверьте e-mail — отправили ссылку подтверждения.", {
-        variant: "success",
+      enqueueSnackbar('Проверьте e-mail — отправили ссылку подтверждения.', {
+        variant: 'success',
       });
-      setTimeout(() => nav("/login", { replace: true }), 2500);
+      setTimeout(() => nav('/login', { replace: true }), 2500);
     } catch (err) {
       // eslint-disable-next-line no-console
-      console.error("[signUp unexpected]", err);
-      enqueueSnackbar("Неизвестная ошибка регистрации", { variant: "error" });
+      console.error('[signUp unexpected]', err);
+      enqueueSnackbar('Неизвестная ошибка регистрации', { variant: 'error' });
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
-    <Paper sx={{ p: 4, maxWidth: 440, mx: "auto", mt: 6 }}>
-      <form onSubmit={signUp} noValidate>
-        <Stack spacing={2}>
-          <Typography variant="h5" align="center">
+    <div style={{ maxWidth: 440, margin: '24px auto' }}>
+      <Form form={form} layout="vertical" onFinish={signUp} autoComplete="off">
+        <Form.Item>
+          <Typography.Title level={3} style={{ textAlign: 'center' }}>
             Регистрация
-          </Typography>
+          </Typography.Title>
+        </Form.Item>
 
-          <TextField
-            label="Фамилия Имя" /* CHANGE */
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            required
-            fullWidth
-          />
+            <Form.Item
+              name="name"
+              label="Фамилия Имя"
+              rules={[{ required: true, message: 'Укажите имя' }]}
+            >
+              <Input />
+            </Form.Item>
 
-          <TextField
-            label="E-mail"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            fullWidth
-          />
+            <Form.Item
+              name="email"
+              label="E-mail"
+              rules={[
+                { required: true, message: 'Укажите e-mail' },
+                { type: 'email', message: 'Некорректный e-mail' },
+              ]}
+            >
+              <Input />
+            </Form.Item>
 
-          <TextField
-            label="Пароль"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            inputProps={{ minLength: 6 }}
-            fullWidth
-          />
+            <Form.Item
+              name="password"
+              label="Пароль"
+              rules={[{ required: true, message: 'Укажите пароль', min: 6 }]}
+            >
+              <Input.Password />
+            </Form.Item>
 
-          <TextField
-            select
-            label="Роль"
-            value={role}
-            onChange={(e) => setRole(e.target.value as RoleName)}
-            required
-            fullWidth
-          >
-            {ROLE_OPTIONS.map((opt) => (
-              <MenuItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </MenuItem>
-            ))}
-          </TextField>
+            <Form.Item
+              name="role"
+              label="Роль"
+              initialValue={ROLE_OPTIONS[0].value}
+              rules={[{ required: true, message: 'Выберите роль' }]}
+            >
+              <Select options={ROLE_OPTIONS} />
+            </Form.Item>
 
-          {/* Проект ОБЯЗАТЕЛЕН */}
-          {projLoad ? (
-            <Skeleton variant="rectangular" height={56} />
-          ) : (
-            <Tooltip title="Без проекта регистрация невозможна">
-              <Autocomplete
-                options={projects}
-                loading={projLoad}
-                getOptionLabel={(opt) => opt.name || ""}
-                value={project}
-                onChange={(_, val) => setProject(val)}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Проект"
-                    placeholder="Выберите проект"
-                    required
+            <Form.Item
+              name="project_ids"
+              label="Проекты"
+              rules={[{ required: true, message: 'Выберите проекты' }]}
+            >
+              {projLoad ? (
+                <Skeleton active paragraph={false} />
+              ) : (
+                <Tooltip title="Без проекта регистрация невозможна">
+                  <Select
+                    mode="multiple"
+                    options={options}
+                    placeholder="Выберите проекты"
                   />
-                )}
-              />
-            </Tooltip>
-          )}
+                </Tooltip>
+              )}
+            </Form.Item>
 
-          <Button
-            variant="contained"
-            type="submit"
-            disabled={loading}
-            startIcon={loading && <CircularProgress size={18} />}
-          >
-            Создать аккаунт
-          </Button>
+            <Form.Item>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loading}
+                block
+              >
+                Создать аккаунт
+              </Button>
+            </Form.Item>
 
-          <Typography align="center" variant="body2">
-            Уже зарегистрированы?{" "}
-            <Link component={RouterLink} to="/login">
-              Войти
-            </Link>
-          </Typography>
-        </Stack>
-      </form>
-    </Paper>
+        <Form.Item>
+          <Typography.Text style={{ textAlign: 'center', display: 'block' }}>
+            Уже зарегистрированы? <RouterLink to="/login">Войти</RouterLink>
+          </Typography.Text>
+        </Form.Item>
+      </Form>
+    </div>
   );
 }
