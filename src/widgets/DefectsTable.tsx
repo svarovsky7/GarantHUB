@@ -179,11 +179,13 @@ export default function DefectsTable({
   if (loading) return <Skeleton active paragraph={{ rows: 6 }} />;
 
   const rowClassName = (row: DefectWithInfo) => {
-    const closed = row.defectStatusName?.toLowerCase().includes("закры");
+    const classes = ["main-defect-row"];
+    if (row.claimIds?.length) classes.push("defect-claim-row");
     const checking = row.defectStatusName?.toLowerCase().includes("провер");
-    if (closed) return "main-defect-row defect-closed-row";
-    if (checking) return "main-defect-row defect-confirmed-row";
-    return "main-defect-row";
+    const closed = row.defectStatusName?.toLowerCase().includes("закры");
+    if (checking) classes.push("defect-confirmed-row");
+    if (closed) classes.push("defect-closed-row");
+    return classes.join(" ");
   };
 
   return (
