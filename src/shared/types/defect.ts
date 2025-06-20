@@ -48,6 +48,8 @@ export interface DefectWithInfo extends DefectRecord {
   projectIds?: number[];
   /** Названия проектов, объединённые в строку */
   projectNames?: string;
+  /** ID претензий, содержащих данный дефект */
+  claimIds?: number[];
   /** Прошло дней с даты получения */
   days?: number | null;
 }

@@ -19,6 +19,7 @@ import {
 import ruRU from "antd/locale/ru_RU";
 import { useDefects, useDeleteDefect } from "@/entities/defect";
 import { useTicketsSimple, useTicketsSimpleAll } from "@/entities/ticket";
+import { useClaimsSimple, useClaimsSimpleAll } from "@/entities/claim";
 import { useUnitsByIds } from "@/entities/unit";
 import { useVisibleProjects } from "@/entities/project";
 import { useBrigades } from "@/entities/brigade";
@@ -49,9 +50,18 @@ export default function DefectsPage() {
   const { data: ticketsAll = [] } = useTicketsSimpleAll();
   const { data: ticketsAssigned = [] } = useTicketsSimple();
   const tickets = perm?.only_assigned_project ? ticketsAssigned : ticketsAll;
+  const { data: claimsAll = [] } = useClaimsSimpleAll();
+  const { data: claimsAssigned = [] } = useClaimsSimple();
+  const claims = perm?.only_assigned_project ? claimsAssigned : claimsAll;
   const unitIds = useMemo(
-    () => Array.from(new Set(tickets.flatMap((t) => t.unit_ids || []))),
-    [tickets],
+    () =>
+      Array.from(
+        new Set([
+          ...tickets.flatMap((t) => t.unit_ids || []),
+          ...claims.flatMap((c) => c.unit_ids || []),
+        ]),
+      ),
+    [tickets, claims],
   );
   const { data: units = [] } = useUnitsByIds(unitIds);
   const { data: projects = [] } = useVisibleProjects();
@@ -67,6 +77,10 @@ export default function DefectsPage() {
       number,
       { id: number; unit_ids: number[]; project_id: number }[]
     >();
+    const claimsMap = new Map<
+      number,
+      { id: number; unit_ids: number[]; project_id: number | null }[]
+    >();
     tickets.forEach((t: any) => {
       (t.defect_ids || []).forEach((id: number) => {
         const arr = ticketsMap.get(id) || [];
@@ -78,14 +92,36 @@ export default function DefectsPage() {
         ticketsMap.set(id, arr);
       });
     });
+    claims.forEach((c: any) => {
+      (c.defect_ids || []).forEach((id: number) => {
+        const arr = claimsMap.get(id) || [];
+        arr.push({
+          id: c.id,
+          unit_ids: c.unit_ids || [],
+          project_id: c.project_id ?? null,
+        });
+        claimsMap.set(id, arr);
+      });
+    });
     return defects.map((d: any) => {
-      const linked = ticketsMap.get(d.id) || [];
-      const unitIds = Array.from(new Set(linked.flatMap((l) => l.unit_ids)));
+      const linkedTickets = ticketsMap.get(d.id) || [];
+      const linkedClaims = claimsMap.get(d.id) || [];
+      const unitIds = Array.from(
+        new Set([
+          ...linkedTickets.flatMap((l) => l.unit_ids),
+          ...linkedClaims.flatMap((l) => l.unit_ids),
+        ]),
+      );
       const unitNamesList = unitIds
         .map((id) => unitMap.get(id))
         .filter(Boolean);
       const unitNames = unitNamesList.join(", ");
-      const projectIds = Array.from(new Set(linked.map((l) => l.project_id)));
+      const projectIds = Array.from(
+        new Set([
+          ...linkedTickets.map((l) => l.project_id),
+          ...linkedClaims.map((l) => l.project_id ?? undefined),
+        ].filter((v) => v != null)),
+      ) as number[];
       const projectNames = projectIds
         .map((id) => projectMap.get(id))
         .filter(Boolean)
@@ -101,7 +137,8 @@ export default function DefectsPage() {
       }
       return {
         ...d,
-        ticketIds: linked.map((l) => l.id),
+        ticketIds: linkedTickets.map((l) => l.id),
+        claimIds: linkedClaims.map((l) => l.id),
         unitIds,
         unitNames,
         unitNamesList,
@@ -116,7 +153,7 @@ export default function DefectsPage() {
         defectStatusColor: d.defect_status?.color ?? null,
       } as DefectWithInfo;
     });
-  }, [defects, tickets, units, projects]);
+  }, [defects, tickets, claims, units, projects]);
 
   const filteredData = useMemo(() => {
     if (perm?.only_assigned_project) {
@@ -183,6 +220,13 @@ export default function DefectsPage() {
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           a.ticketIds.join(",").localeCompare(b.ticketIds.join(",")),
         render: (v: number[]) => v.join(", "),
+      },
+      claims: {
+        title: "ID претензии",
+        dataIndex: "claimIds",
+        sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
+          (a.claimIds || []).join(',').localeCompare((b.claimIds || []).join(',')),
+        render: (v: number[]) => (v ? v.join(', ') : ''),
       },
       days: {
         title: (
@@ -317,6 +361,7 @@ export default function DefectsPage() {
   const columnOrder = [
     "id",
     "tickets",
+    "claims",
     "days",
     "project",
     "units",

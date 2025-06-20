@@ -6,6 +6,7 @@ import { useAuthStore } from '@/shared/store/authStore';
 import { filterByProjects } from '@/shared/utils/projectQuery';
 import type { Claim } from '@/shared/types/claim';
 import type { ClaimWithNames } from '@/shared/types/claimWithNames';
+import type { ClaimSimple } from '@/shared/types/claimSimple';
 import { addClaimAttachments } from '@/entities/attachment';
 import dayjs from 'dayjs';
 
@@ -63,6 +64,46 @@ export function useClaims() {
       const { data, error } = await q;
       if (error) throw error;
       return (data ?? []).map(mapClaim);
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
+/**
+ * Получить список претензий по всем проектам (минимальный набор полей).
+ * Используется для привязки дефектов к претензиям на странице дефектов.
+ */
+export function useClaimsSimpleAll() {
+  return useQuery<ClaimSimple[]>({
+    queryKey: ['claims-simple-all'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from(TABLE)
+        .select('id, project_id, unit_ids, defect_ids');
+      if (error) throw error;
+      return (data ?? []) as ClaimSimple[];
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
+/**
+ * Получить список претензий доступных проектов (минимальный набор полей).
+ * Ограничивается выбранным проектом и правами пользователя.
+ */
+export function useClaimsSimple() {
+  const { projectId, projectIds, onlyAssigned, enabled } = useProjectFilter();
+  return useQuery<ClaimSimple[]>({
+    queryKey: ['claims-simple', projectId, projectIds.join(',')],
+    enabled,
+    queryFn: async () => {
+      let q = supabase
+        .from(TABLE)
+        .select('id, project_id, unit_ids, defect_ids');
+      q = filterByProjects(q, projectId, projectIds, onlyAssigned);
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data ?? []) as ClaimSimple[];
     },
     staleTime: 5 * 60_000,
   });
