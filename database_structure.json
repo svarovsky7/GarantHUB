@@ -203,6 +203,13 @@
     "column_default": "now()"
   },
   {
+    "table_name": "claims",
+    "column_name": "attachment_ids",
+    "data_type": "ARRAY",
+    "is_nullable": "YES",
+    "column_default": "ARRAY[]::integer[]"
+  },
+  {
     "table_name": "contractors",
     "column_name": "id",
     "data_type": "integer",
