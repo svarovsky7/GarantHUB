@@ -158,7 +158,6 @@ export default function ClaimFormAntd({ onCreated, initialValues = {} }: ClaimFo
                 Дата регистрации претензии
                 <Tag
                   color="blue"
-                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => {
                     const val = form.getFieldValue('registered_at');
                     if (val) {
