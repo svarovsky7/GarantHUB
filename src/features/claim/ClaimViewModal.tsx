@@ -1,7 +1,7 @@
 import React from 'react';
 import { Modal, Skeleton, Typography } from 'antd';
-import { useClaim, getClaimAttachments } from '@/entities/claim';
-import { useQuery } from '@tanstack/react-query';
+import { useClaim } from '@/entities/claim';
+import TicketDefectsTable from '@/widgets/TicketDefectsTable';
 import ClaimFormAntd from './ClaimFormAntd';
 
 interface Props {
@@ -12,7 +12,6 @@ interface Props {
 
 export default function ClaimViewModal({ open, claimId, onClose }: Props) {
   const { data: claim } = useClaim(claimId ?? undefined);
-  const { data: files = [] } = useQuery(['claim-files', claimId], () => getClaimAttachments(Number(claimId)), { enabled: !!claimId });
   if (!open || !claimId) return null;
   const titleText = claim
     ? `Претензия №${claim.number}`
@@ -21,13 +20,14 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
   return (
     <Modal open={open} onCancel={onClose} footer={null} width="80%" title={<Typography.Title level={4} style={{ margin: 0 }}>{titleText}</Typography.Title>}>
       {claim ? (
-        <ClaimFormAntd
-          initialValues={claim as any}
-          onCreated={onClose}
-          viewMode
-          defectIds={claim.defect_ids}
-          attachments={files}
-        />
+        <>
+          <ClaimFormAntd initialValues={claim as any} onCreated={onClose} />
+          {claim.defect_ids?.length ? (
+            <div style={{ marginTop: 16, overflowX: 'auto' }}>
+              <TicketDefectsTable defectIds={claim.defect_ids} />
+            </div>
+          ) : null}
+        </>
       ) : (
         <Skeleton active />
       )}

@@ -6,7 +6,7 @@ import { useAuthStore } from '@/shared/store/authStore';
 import { filterByProjects } from '@/shared/utils/projectQuery';
 import type { Claim } from '@/shared/types/claim';
 import type { ClaimWithNames } from '@/shared/types/claimWithNames';
-import { addClaimAttachments, ATTACH_BUCKET } from '@/entities/attachment';
+import { addClaimAttachments } from '@/entities/attachment';
 import dayjs from 'dayjs';
 
 const TABLE = 'claims';
@@ -164,21 +164,4 @@ export function useDeleteClaim() {
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: [TABLE] }),
   });
-}
-
-export async function getClaimAttachments(id: number) {
-  const { data, error } = await supabase
-    .from('attachments')
-    .select('id, storage_path, file_url, file_type, attachment_type_id, original_name')
-    .like('storage_path', `claims/${id}/%`);
-  if (error) throw error;
-  return data ?? [];
-}
-
-export async function signedUrl(path: string, filename = ''): Promise<string> {
-  const { data, error } = await supabase.storage
-    .from(ATTACH_BUCKET)
-    .createSignedUrl(path, 60, { download: filename || undefined });
-  if (error) throw error;
-  return data.signedUrl;
 }

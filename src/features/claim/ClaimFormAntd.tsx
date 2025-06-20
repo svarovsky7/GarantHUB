@@ -11,19 +11,11 @@ import { useCreateClaim } from '@/entities/claim';
 import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useNotify } from '@/shared/hooks/useNotify';
 import DefectEditableTable from '@/widgets/DefectEditableTable';
-import TicketDefectsTable from '@/widgets/TicketDefectsTable';
 import { useCreateDefects, type NewDefect } from '@/entities/defect';
-import { signedUrl as claimSignedUrl } from '@/entities/claim';
 
 export interface ClaimFormAntdProps {
   onCreated?: () => void;
   initialValues?: Partial<{ project_id: number; unit_ids: number[]; responsible_engineer_id: string }>;
-  /** Отображать форму в режиме просмотра */
-  viewMode?: boolean;
-  /** Идентификаторы связанных дефектов */
-  defectIds?: number[];
-  /** Существующие файлы претензии */
-  attachments?: any[];
 }
 
 export interface ClaimFormValues {
@@ -39,13 +31,7 @@ export interface ClaimFormValues {
   defects?: Array<{ type_id: number | null; fixed_at: dayjs.Dayjs | null; brigade_id: number | null; contractor_id: number | null; description?: string; status_id?: number | null; received_at?: dayjs.Dayjs | null; }>;
 }
 
-export default function ClaimFormAntd({
-  onCreated,
-  initialValues = {},
-  viewMode = false,
-  defectIds = [],
-  attachments = [],
-}: ClaimFormAntdProps) {
+export default function ClaimFormAntd({ onCreated, initialValues = {} }: ClaimFormAntdProps) {
   const [form] = Form.useForm<ClaimFormValues>();
   const [files, setFiles] = useState<{ file: File; type_id: number | null }[]>([]);
   const { data: attachmentTypes = [] } = useAttachmentTypes();
@@ -87,7 +73,6 @@ export default function ClaimFormAntd({
   }, [globalProjectId, form, initialValues]);
 
   const onFinish = async (values: ClaimFormValues) => {
-    if (viewMode) return;
     const { defects: defs, ...rest } = values;
     if (!defs || defs.length === 0) {
       notify.error('Добавьте хотя бы один дефект');
@@ -173,9 +158,7 @@ export default function ClaimFormAntd({
                 Дата регистрации претензии
                 <Tag
                   color="blue"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={(e) => {
-                    e.stopPropagation();
+                  onClick={() => {
                     const val = form.getFieldValue('registered_at');
                     if (val) {
                       form.setFieldValue('fixed_at', dayjs(val).add(45, 'day'));
@@ -202,92 +185,52 @@ export default function ClaimFormAntd({
           </Form.Item>
         </Col>
       </Row>
-      {viewMode ? (
-        defectIds.length ? <TicketDefectsTable defectIds={defectIds} /> : null
-      ) : (
-        <Form.List name="defects">
-          {(fields, { add, remove }) => (
-            <DefectEditableTable
-              fields={fields}
-              add={add}
-              remove={remove}
-              projectId={projectId}
-              showFiles={false}
-            />
-          )}
-        </Form.List>
-      )}
-      {viewMode ? (
-        attachments.length ? (
-          <div style={{ marginTop: 16 }}>
-            <b>Файлы:</b>
-            <ul style={{ paddingLeft: 20 }}>
-              {attachments.map((f: any) => (
-                <li key={f.id}>
-                  <a
-                    href="#"
-                    onClick={async (e) => {
-                      e.preventDefault();
-                      const url = await claimSignedUrl(
-                        f.storage_path,
-                        f.original_name ?? 'file',
-                      );
-                      const a = document.createElement('a');
-                      a.href = url;
-                      a.download = f.original_name ?? 'file';
-                      document.body.appendChild(a);
-                      a.click();
-                      a.remove();
-                    }}
-                  >
-                    {f.original_name ?? f.storage_path.split('/').pop()}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null
-      ) : (
-        <>
-          <Form.Item label="Файлы">
-            <FileDropZone onFiles={handleDropFiles} />
-            {files.map((f, i) => (
-              <Row key={i} gutter={8} align="middle" style={{ marginTop: 4 }}>
-                <Col flex="auto">
-                  <span>{f.file.name}</span>
-                </Col>
-                <Col flex="160px">
-                  <Select
-                    style={{ width: '100%' }}
-                    placeholder="Тип файла"
-                    value={f.type_id ?? undefined}
-                    onChange={(v) => setType(i, v)}
-                    allowClear
-                  >
-                    {attachmentTypes.map((t) => (
-                      <Select.Option key={t.id} value={t.id}>
-                        {t.name}
-                      </Select.Option>
-                    ))}
-                  </Select>
-                </Col>
-                <Col>
-                  <Button type="text" danger onClick={() => removeFile(i)}>
-                    Удалить
-                  </Button>
-                </Col>
-              </Row>
-            ))}
-          </Form.Item>
-        </>
-      )}
-      {!viewMode && (
-        <Form.Item style={{ textAlign: 'right' }}>
-          <Button type="primary" htmlType="submit" loading={create.isPending}>
-            Создать
-          </Button>
-        </Form.Item>
-      )}
+      <Form.List name="defects">
+        {(fields, { add, remove }) => (
+          <DefectEditableTable
+            fields={fields}
+            add={add}
+            remove={remove}
+            projectId={projectId}
+            showFiles={false}
+          />
+        )}
+      </Form.List>
+      <Form.Item label="Файлы">
+        <FileDropZone onFiles={handleDropFiles} />
+        {files.map((f, i) => (
+          <Row key={i} gutter={8} align="middle" style={{ marginTop: 4 }}>
+            <Col flex="auto">
+              <span>{f.file.name}</span>
+            </Col>
+            <Col flex="160px">
+              <Select
+                style={{ width: '100%' }}
+                placeholder="Тип файла"
+                value={f.type_id ?? undefined}
+                onChange={(v) => setType(i, v)}
+                allowClear
+              >
+                {attachmentTypes.map((t) => (
+                  <Select.Option key={t.id} value={t.id}>
+                    {t.name}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Col>
+            <Col>
+              <Button type="text" danger onClick={() => removeFile(i)}>
+                Удалить
+              </Button>
+            </Col>
+          </Row>
+        ))}
+      </Form.Item>
+      <Form.Item style={{ textAlign: 'right' }}>
+        <Button type="primary" htmlType="submit" loading={create.isPending}>
+          Создать
+        </Button>
+      </Form.Item>
     </Form>
   );
 }
