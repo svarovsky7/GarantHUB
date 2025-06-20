@@ -24,6 +24,7 @@ import { useVisibleProjects } from "@/entities/project";
 import { useBrigades } from "@/entities/brigade";
 import { useContractors } from "@/entities/contractor";
 import { useRolePermission } from "@/entities/rolePermission";
+import { useClaimsSimple, useClaimsSimpleAll } from "@/entities/claim";
 import { useAuthStore } from "@/shared/store/authStore";
 import type { RoleName } from "@/shared/types/rolePermission";
 import DefectsTable from "@/widgets/DefectsTable";
@@ -49,9 +50,17 @@ export default function DefectsPage() {
   const { data: ticketsAll = [] } = useTicketsSimpleAll();
   const { data: ticketsAssigned = [] } = useTicketsSimple();
   const tickets = perm?.only_assigned_project ? ticketsAssigned : ticketsAll;
+  const { data: claimsAll = [] } = useClaimsSimpleAll();
+  const { data: claimsAssigned = [] } = useClaimsSimple();
+  const claims = perm?.only_assigned_project ? claimsAssigned : claimsAll;
   const unitIds = useMemo(
-    () => Array.from(new Set(tickets.flatMap((t) => t.unit_ids || []))),
-    [tickets],
+    () =>
+      Array.from(
+        new Set(
+          [...tickets, ...claims].flatMap((t) => t.unit_ids || []),
+        ),
+      ),
+    [tickets, claims],
   );
   const { data: units = [] } = useUnitsByIds(unitIds);
   const { data: projects = [] } = useVisibleProjects();
@@ -78,8 +87,25 @@ export default function DefectsPage() {
         ticketsMap.set(id, arr);
       });
     });
+    const claimsMap = new Map<
+      number,
+      { id: number; unit_ids: number[]; project_id: number }[]
+    >();
+    claims.forEach((c: any) => {
+      (c.defect_ids || []).forEach((id: number) => {
+        const arr = claimsMap.get(id) || [];
+        arr.push({
+          id: c.id,
+          unit_ids: c.unit_ids || [],
+          project_id: c.project_id,
+        });
+        claimsMap.set(id, arr);
+      });
+    });
     return defects.map((d: any) => {
-      const linked = ticketsMap.get(d.id) || [];
+      const ticketLinked = ticketsMap.get(d.id) || [];
+      const claimLinked = claimsMap.get(d.id) || [];
+      const linked = [...ticketLinked, ...claimLinked];
       const unitIds = Array.from(new Set(linked.flatMap((l) => l.unit_ids)));
       const unitNamesList = unitIds
         .map((id) => unitMap.get(id))
@@ -101,7 +127,8 @@ export default function DefectsPage() {
       }
       return {
         ...d,
-        ticketIds: linked.map((l) => l.id),
+        ticketIds: ticketLinked.map((l) => l.id),
+        claimIds: claimLinked.map((l) => l.id),
         unitIds,
         unitNames,
         unitNamesList,
@@ -116,7 +143,7 @@ export default function DefectsPage() {
         defectStatusColor: d.defect_status?.color ?? null,
       } as DefectWithInfo;
     });
-  }, [defects, tickets, units, projects]);
+  }, [defects, tickets, claims, units, projects]);
 
   const filteredData = useMemo(() => {
     if (perm?.only_assigned_project) {
@@ -182,6 +209,13 @@ export default function DefectsPage() {
         dataIndex: "ticketIds",
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           a.ticketIds.join(",").localeCompare(b.ticketIds.join(",")),
+        render: (v: number[]) => v.join(", "),
+      },
+      claims: {
+        title: "ID претензии",
+        dataIndex: "claimIds",
+        sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
+          a.claimIds.join(",").localeCompare(b.claimIds.join(",")),
         render: (v: number[]) => v.join(", "),
       },
       days: {
@@ -317,6 +351,7 @@ export default function DefectsPage() {
   const columnOrder = [
     "id",
     "tickets",
+    "claims",
     "days",
     "project",
     "units",

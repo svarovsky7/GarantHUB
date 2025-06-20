@@ -55,6 +55,13 @@ export default function DefectsTable({
       render: (v: number[]) => v.join(", "),
     },
     {
+      title: "ID претензии",
+      dataIndex: "claimIds",
+      sorter: (a, b) =>
+        a.claimIds.join(",").localeCompare(b.claimIds.join(",")),
+      render: (v: number[]) => v.join(", "),
+    },
+    {
       title: (
         <span>
           Прошло дней
