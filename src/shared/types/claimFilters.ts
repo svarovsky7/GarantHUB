@@ -7,5 +7,9 @@ export interface ClaimFilters {
   status?: string;
   responsible?: string;
   claim_no?: string;
+  /** Поиск в поле дополнительной информации */
+  description?: string;
+  /** Скрывать записи со статусом "Закрыто" */
+  hideClosed?: boolean;
   period?: [Dayjs, Dayjs];
 }

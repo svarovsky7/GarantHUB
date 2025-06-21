@@ -12,6 +12,8 @@ export interface ClaimWithNames extends Claim {
   responsibleEngineerName: string | null;
   /** Список объектов одной строкой */
   unitNames?: string;
+  /** Список номеров объектов одной строкой */
+  unitNumbers?: string;
   /** Дата обнаружения дефекта */
   claimedOn: Dayjs | null;
   /** Дата принятия претензии застройщиком */

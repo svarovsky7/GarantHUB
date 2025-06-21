@@ -92,27 +92,36 @@ export default function ClaimsPage() {
     return map;
   }, [units]);
 
+  const unitNumberMap = useMemo(() => {
+    const map = {} as Record<number, string>;
+    (units ?? []).forEach((u) => {
+      map[u.id] = u.name;
+    });
+    return map;
+  }, [units]);
+
   const claimsWithNames: ClaimWithNames[] = useMemo(
     () =>
       claims.map((c) => ({
         ...c,
         unitNames: c.unit_ids.map((id) => unitMap[id]).filter(Boolean).join(', '),
+        unitNumbers: c.unit_ids.map((id) => unitNumberMap[id]).filter(Boolean).join(', '),
         responsibleEngineerName: userMap[c.engineer_id] ?? null,
         hasCheckingDefect: false,
       })),
-    [claims, unitMap, userMap, checkingDefectMap],
+    [claims, unitMap, unitNumberMap, userMap, checkingDefectMap],
   );
 
   const options = useMemo(() => {
     const uniq = (arr: any[], key: string) => Array.from(new Set(arr.map((i) => i[key]).filter(Boolean))).map((v) => ({ label: v, value: v }));
     return {
       projects: uniq(claimsWithNames, 'projectName'),
-      units: uniq(claimsWithNames, 'unitNames'),
+      units: Array.from(new Set((units ?? []).map((u) => u.name))).map((v) => ({ label: v, value: v })),
       statuses: uniq(claimsWithNames, 'statusName'),
       responsibleEngineers: uniq(claimsWithNames, 'responsibleEngineerName'),
       ids: uniq(claimsWithNames, 'id'),
     };
-  }, [claimsWithNames]);
+  }, [claimsWithNames, units]);
 
   function getBaseColumns() {
     return {
@@ -125,7 +134,7 @@ export default function ClaimsPage() {
       acceptedOn: { title: 'Дата получения Застройщиком', dataIndex: 'acceptedOn', width: 120, sorter: (a: any, b: any) => (a.acceptedOn ? a.acceptedOn.valueOf() : 0) - (b.acceptedOn ? b.acceptedOn.valueOf() : 0), render: (v: any) => fmt(v) },
       registeredOn: { title: 'Дата регистрации претензии', dataIndex: 'registeredOn', width: 120, sorter: (a: any, b: any) => (a.registeredOn ? a.registeredOn.valueOf() : 0) - (b.registeredOn ? b.registeredOn.valueOf() : 0), render: (v: any) => fmt(v) },
       resolvedOn: { title: 'Дата устранения', dataIndex: 'resolvedOn', width: 120, sorter: (a: any, b: any) => (a.resolvedOn ? a.resolvedOn.valueOf() : 0) - (b.resolvedOn ? b.resolvedOn.valueOf() : 0), render: (v: any) => fmt(v) },
-      responsibleEngineerName: { title: 'Ответственный инженер', dataIndex: 'responsibleEngineerName', width: 180, sorter: (a: any, b: any) => (a.responsibleEngineerName || '').localeCompare(b.responsibleEngineerName || '') },
+      responsibleEngineerName: { title: 'Закрепленный инженер', dataIndex: 'responsibleEngineerName', width: 180, sorter: (a: any, b: any) => (a.responsibleEngineerName || '').localeCompare(b.responsibleEngineerName || '') },
       actions: {
         title: 'Действия',
         key: 'actions',

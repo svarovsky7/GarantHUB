@@ -59,7 +59,7 @@ export default function ClaimsTable({ claims, filters, loading, columns: columns
       { title: 'Дата получения Застройщиком', dataIndex: 'acceptedOn', width: 120, sorter: (a, b) => (a.acceptedOn ? a.acceptedOn.valueOf() : 0) - (b.acceptedOn ? b.acceptedOn.valueOf() : 0), render: (v) => fmt(v) },
       { title: 'Дата регистрации претензии', dataIndex: 'registeredOn', width: 120, sorter: (a, b) => (a.registeredOn ? a.registeredOn.valueOf() : 0) - (b.registeredOn ? b.registeredOn.valueOf() : 0), render: (v) => fmt(v) },
       { title: 'Дата устранения', dataIndex: 'resolvedOn', width: 120, sorter: (a, b) => (a.resolvedOn ? a.resolvedOn.valueOf() : 0) - (b.resolvedOn ? b.resolvedOn.valueOf() : 0), render: (v) => fmt(v) },
-      { title: 'Ответственный инженер', dataIndex: 'responsibleEngineerName', width: 180, sorter: (a, b) => (a.responsibleEngineerName || '').localeCompare(b.responsibleEngineerName || '') },
+      { title: 'Закрепленный инженер', dataIndex: 'responsibleEngineerName', width: 180, sorter: (a, b) => (a.responsibleEngineerName || '').localeCompare(b.responsibleEngineerName || '') },
       {
         title: 'Действия',
         key: 'actions',
@@ -104,13 +104,18 @@ export default function ClaimsTable({ claims, filters, loading, columns: columns
   const filtered = useMemo(() => {
     return claims.filter((c) => {
       const matchesProject = !filters.project || c.projectName === filters.project;
-      const matchesUnits = !filters.units || filters.units.every((u) => c.unitNames.includes(u));
+      const matchesUnits = !filters.units || (() => {
+        const units = c.unitNumbers ? c.unitNumbers.split(',').map((n) => n.trim()) : [];
+        return filters.units.every((u) => units.includes(u));
+      })();
       const matchesStatus = !filters.status || c.statusName === filters.status;
       const matchesResponsible = !filters.responsible || c.responsibleEngineerName === filters.responsible;
       const matchesNumber = !filters.claim_no || c.claim_no.includes(filters.claim_no);
       const matchesIds = !filters.id || filters.id.includes(c.id);
+      const matchesDescription = !filters.description || (c.description ?? '').includes(filters.description);
+      const matchesHideClosed = !(filters.hideClosed && /закры/i.test(c.statusName));
       const matchesPeriod = !filters.period || (c.registeredOn && c.registeredOn.isSameOrAfter(filters.period[0], 'day') && c.registeredOn.isSameOrBefore(filters.period[1], 'day'));
-      return matchesProject && matchesUnits && matchesStatus && matchesResponsible && matchesNumber && matchesIds && matchesPeriod;
+      return matchesProject && matchesUnits && matchesStatus && matchesResponsible && matchesNumber && matchesIds && matchesDescription && matchesHideClosed && matchesPeriod;
     });
   }, [claims, filters]);
 

@@ -90,6 +90,13 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [globalProjectId, form]);
 
+  // По умолчанию ставим текущую дату регистрации
+  useEffect(() => {
+    if (!form.getFieldValue('registered_on')) {
+      form.setFieldValue('registered_on', dayjs());
+    }
+  }, [form]);
+
   /**
    * Если статус не указан, подставляем первым из списка.
    */
