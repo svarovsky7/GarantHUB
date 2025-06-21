@@ -88,6 +88,31 @@ export function useRealtimeUpdates() {
         )
         .on(
           'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'claims', filter: `project_id=eq.${pid}` },
+          () => qc.invalidateQueries({ queryKey: ['claims'] }),
+        )
+        .on(
+          'postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'claims', filter: `project_id=eq.${pid}` },
+          () => qc.invalidateQueries({ queryKey: ['claims'] }),
+        )
+        .on(
+          'postgres_changes',
+          { event: 'DELETE', schema: 'public', table: 'claims', filter: `project_id=eq.${pid}` },
+          () => qc.invalidateQueries({ queryKey: ['claims'] }),
+        )
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'claim_links' },
+          () => qc.invalidateQueries({ queryKey: ['claims'] }),
+        )
+        .on(
+          'postgres_changes',
+          { event: 'DELETE', schema: 'public', table: 'claim_links' },
+          () => qc.invalidateQueries({ queryKey: ['claims'] }),
+        )
+        .on(
+          'postgres_changes',
           { event: 'INSERT', schema: 'public', table: 'unit_history', filter: `project_id=eq.${pid}` },
           () => qc.invalidateQueries({ queryKey: ['unit_history'] }),
         );
@@ -108,6 +133,32 @@ export function useRealtimeUpdates() {
           'postgres_changes',
           { event: 'DELETE', schema: 'public', table: 'letters' },
           () => qc.invalidateQueries({ queryKey: ['letters'] }),
+        );
+      channel
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'claims' },
+          () => qc.invalidateQueries({ queryKey: ['claims'] }),
+        )
+        .on(
+          'postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'claims' },
+          () => qc.invalidateQueries({ queryKey: ['claims'] }),
+        )
+        .on(
+          'postgres_changes',
+          { event: 'DELETE', schema: 'public', table: 'claims' },
+          () => qc.invalidateQueries({ queryKey: ['claims'] }),
+        )
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'claim_links' },
+          () => qc.invalidateQueries({ queryKey: ['claims'] }),
+        )
+        .on(
+          'postgres_changes',
+          { event: 'DELETE', schema: 'public', table: 'claim_links' },
+          () => qc.invalidateQueries({ queryKey: ['claims'] }),
         );
     }
     channel.subscribe();
