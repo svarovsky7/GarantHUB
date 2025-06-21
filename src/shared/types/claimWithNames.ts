@@ -12,14 +12,14 @@ export interface ClaimWithNames extends Claim {
   responsibleEngineerName: string | null;
   /** Список объектов одной строкой */
   unitNames?: string;
-  /** Дата претензии */
-  claimDate: Dayjs | null;
-  /** Дата получения претензии застройщиком */
-  receivedByDeveloperAt: Dayjs | null;
+  /** Дата обнаружения дефекта */
+  claimedOn: Dayjs | null;
+  /** Дата принятия претензии застройщиком */
+  acceptedOn: Dayjs | null;
   /** Дата регистрации претензии */
-  registeredAt: Dayjs | null;
-  /** Дата устранения претензии */
-  fixedAt: Dayjs | null;
+  registeredOn: Dayjs | null;
+  /** Дата фактического устранения */
+  resolvedOn: Dayjs | null;
   /** Загруженные файлы */
   attachments?: import('./claimFile').RemoteClaimFile[];
   /** Есть связанные дефекты со статусом "На проверке" */

@@ -19,13 +19,13 @@ export default function ExportClaimsButton({ claims, filters }: ExportClaimsButt
       ID: c.id,
       Проект: c.projectName,
       Объекты: c.unitNames,
-      '№ претензии': c.number,
-      'Дата претензии': c.claimDate ? c.claimDate.format('DD.MM.YYYY') : '',
-      'Дата получения Застройщиком': c.receivedByDeveloperAt
-        ? c.receivedByDeveloperAt.format('DD.MM.YYYY')
+      '№ претензии': c.claim_no,
+      'Дата претензии': c.claimedOn ? c.claimedOn.format('DD.MM.YYYY') : '',
+      'Дата получения Застройщиком': c.acceptedOn
+        ? c.acceptedOn.format('DD.MM.YYYY')
         : '',
-      'Дата регистрации претензии': c.registeredAt ? c.registeredAt.format('DD.MM.YYYY') : '',
-      'Дата устранения претензии': c.fixedAt ? c.fixedAt.format('DD.MM.YYYY') : '',
+      'Дата регистрации претензии': c.registeredOn ? c.registeredOn.format('DD.MM.YYYY') : '',
+      'Дата устранения претензии': c.resolvedOn ? c.resolvedOn.format('DD.MM.YYYY') : '',
       Статус: c.statusName,
       'Ответственный инженер': c.responsibleEngineerName ?? '',
     }));

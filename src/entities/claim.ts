@@ -49,24 +49,25 @@ function mapClaim(r: any): ClaimWithNames {
     id: r.id,
     project_id: r.project_id,
     unit_ids: r.unit_ids || [],
-    status_id: r.status_id ?? null,
-    number: r.number,
-    claim_date: r.claim_date,
-    received_by_developer_at: r.received_by_developer_at,
-    registered_at: r.registered_at,
-    fixed_at: r.fixed_at,
-    responsible_engineer_id: r.responsible_engineer_id,
-    defect_ids: r.defect_ids ?? [],
+    claim_status_id: r.claim_status_id ?? null,
+    claim_no: r.claim_no,
+    claimed_on: r.claimed_on,
+    accepted_on: r.accepted_on,
+    registered_on: r.registered_on,
+    resolved_on: r.resolved_on,
+    engineer_id: r.engineer_id,
+    ticket_ids: r.ticket_ids ?? [],
+    description: r.description ?? '',
     projectName: r.projects?.name ?? '—',
     statusName: r.claim_statuses?.name ?? '—',
     statusColor: r.claim_statuses?.color ?? null,
     responsibleEngineerName: null,
     unitNames: '',
     // convert strings to dayjs for consumer convenience
-    claimDate: toDayjs(r.claim_date),
-    receivedByDeveloperAt: toDayjs(r.received_by_developer_at),
-    registeredAt: toDayjs(r.registered_at),
-    fixedAt: toDayjs(r.fixed_at),
+    claimedOn: toDayjs(r.claimed_on),
+    acceptedOn: toDayjs(r.accepted_on),
+    registeredOn: toDayjs(r.registered_on),
+    resolvedOn: toDayjs(r.resolved_on),
     attachments,
   } as unknown as ClaimWithNames;
 }
@@ -82,9 +83,9 @@ export function useClaims() {
       let q = supabase
         .from(TABLE)
         .select(
-          `id, project_id, unit_ids, status_id, number, claim_date,
-          received_by_developer_at, registered_at, fixed_at,
-          responsible_engineer_id, defect_ids, created_at, attachment_ids,
+          `id, project_id, unit_ids, claim_status_id, claim_no, claimed_on,
+          accepted_on, registered_on, resolved_on,
+          engineer_id, ticket_ids, description, created_at, attachment_ids,
           projects (id, name),
           claim_statuses (id, name, color)`,
         );
@@ -145,9 +146,9 @@ export function useClaim(id?: number | string) {
       let q = supabase
         .from(TABLE)
         .select(
-          `id, project_id, unit_ids, status_id, number, claim_date,
-          received_by_developer_at, registered_at, fixed_at,
-          responsible_engineer_id, defect_ids, created_at, attachment_ids,
+          `id, project_id, unit_ids, claim_status_id, claim_no, claimed_on,
+          accepted_on, registered_on, resolved_on,
+          engineer_id, ticket_ids, description, created_at, attachment_ids,
           projects (id, name),
           claim_statuses (id, name, color)`,
         )
@@ -188,14 +189,14 @@ export function useClaim(id?: number | string) {
  * Получить список претензий по всем проектам (минимальный набор полей).
  */
 export function useClaimsSimpleAll() {
-  return useQuery<Array<{ id: number; project_id: number; unit_ids: number[]; defect_ids: number[] }>>({
+  return useQuery<Array<{ id: number; project_id: number; unit_ids: number[]; ticket_ids: number[] }>>({
     queryKey: ['claims-simple-all'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from(TABLE)
-        .select('id, project_id, unit_ids, defect_ids');
+        .select('id, project_id, unit_ids, ticket_ids');
       if (error) throw error;
-      return (data ?? []) as Array<{ id: number; project_id: number; unit_ids: number[]; defect_ids: number[] }>;
+      return (data ?? []) as Array<{ id: number; project_id: number; unit_ids: number[]; ticket_ids: number[] }>;
     },
     staleTime: 5 * 60_000,
   });
@@ -206,17 +207,17 @@ export function useClaimsSimpleAll() {
  */
 export function useClaimsSimple() {
   const { projectId, projectIds, onlyAssigned, enabled } = useProjectFilter();
-  return useQuery<Array<{ id: number; project_id: number; unit_ids: number[]; defect_ids: number[] }>>({
+  return useQuery<Array<{ id: number; project_id: number; unit_ids: number[]; ticket_ids: number[] }>>({
     queryKey: ['claims-simple', projectId, projectIds.join(',')],
     enabled,
     queryFn: async () => {
       let q = supabase
         .from(TABLE)
-        .select('id, project_id, unit_ids, defect_ids');
+        .select('id, project_id, unit_ids, ticket_ids');
       q = filterByProjects(q, projectId, projectIds, onlyAssigned);
       const { data, error } = await q;
       if (error) throw error;
-      return (data ?? []) as Array<{ id: number; project_id: number; unit_ids: number[]; defect_ids: number[] }>;
+      return (data ?? []) as Array<{ id: number; project_id: number; unit_ids: number[]; ticket_ids: number[] }>;
     },
     staleTime: 5 * 60_000,
   });
@@ -286,17 +287,17 @@ export function useDeleteClaim() {
      * Удаляет претензию вместе с загруженными файлами и связанными дефектами.
      * @param payload объект с идентификатором претензии и массивом дефектов
      */
-    mutationFn: async ({ id, defectIds = [] }) => {
+    mutationFn: async ({ id, ticketIds = [] }) => {
       const { data: claim } = await supabase
         .from(TABLE)
-        .select('attachment_ids, defect_ids')
+        .select('attachment_ids, ticket_ids')
         .eq('id', id)
         .single();
 
       const claimFiles = (claim?.attachment_ids ?? []) as number[];
-      const claimDefects = defectIds.length
-        ? defectIds
-        : ((claim?.defect_ids ?? []) as number[]);
+      const claimTickets = ticketIds.length
+        ? ticketIds
+        : ((claim?.ticket_ids ?? []) as number[]);
 
       if (claimFiles.length) {
         const files = await getAttachmentsByIds(claimFiles);
@@ -308,24 +309,8 @@ export function useDeleteClaim() {
         await supabase.from('attachments').delete().in('id', claimFiles);
       }
 
-      if (claimDefects.length) {
-        const { data: defects } = await supabase
-          .from('defects')
-          .select('id, attachment_ids')
-          .in('id', claimDefects);
-        const attIds = Array.from(
-          new Set((defects ?? []).flatMap((d) => d.attachment_ids || [])),
-        );
-        if (attIds.length) {
-          const files = await getAttachmentsByIds(attIds);
-          if (files?.length) {
-            await supabase.storage
-              .from(ATTACH_BUCKET)
-              .remove(files.map((f) => f.storage_path));
-          }
-          await supabase.from('attachments').delete().in('id', attIds);
-        }
-        await supabase.from('defects').delete().in('id', claimDefects);
+      if (claimTickets.length) {
+        await supabase.from('tickets').delete().in('id', claimTickets);
       }
 
       let q = supabase.from(TABLE).delete().eq('id', id);
