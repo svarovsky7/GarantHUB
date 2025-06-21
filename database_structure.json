@@ -98,6 +98,20 @@
     "column_default": null
   },
   {
+    "table_name": "claim_defects",
+    "column_name": "claim_id",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "claim_defects",
+    "column_name": "defect_id",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
     "table_name": "claim_links",
     "column_name": "id",
     "data_type": "bigint",
@@ -150,20 +164,6 @@
     "table_name": "claim_units",
     "column_name": "unit_id",
     "data_type": "integer",
-    "is_nullable": "NO",
-    "column_default": null
-  },
-  {
-    "table_name": "claim_defects",
-    "column_name": "claim_id",
-    "data_type": "bigint",
-    "is_nullable": "NO",
-    "column_default": null
-  },
-  {
-    "table_name": "claim_defects",
-    "column_name": "defect_id",
-    "data_type": "bigint",
     "is_nullable": "NO",
     "column_default": null
   },
