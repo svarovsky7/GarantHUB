@@ -7,6 +7,8 @@ import {
   DeleteOutlined,
   PlusOutlined,
   LinkOutlined,
+  PlusSquareOutlined,
+  MinusSquareOutlined,
   FileTextOutlined,
   BranchesOutlined,
 } from '@ant-design/icons';
@@ -179,9 +181,21 @@ export default function ClaimsTable({ claims, filters, loading, columns: columns
       pagination={{ pageSize: 25, showSizeChanger: true }}
       size="middle"
       expandable={{
-        expandRowByClick: true,
+        expandRowByClick: false,
         indentSize: 24,
         expandedRowKeys,
+        expandIcon: ({ expanded, onExpand, record }) => {
+          if (!record.children) return null;
+          const Icon = expanded ? MinusSquareOutlined : PlusSquareOutlined;
+          return (
+            <Button
+              type="text"
+              size="small"
+              icon={<Icon />}
+              onClick={(e) => onExpand(record, e)}
+            />
+          );
+        },
         onExpand: (expanded, record) => {
           setExpandedRowKeys((prev) => {
             const set = new Set(prev);
