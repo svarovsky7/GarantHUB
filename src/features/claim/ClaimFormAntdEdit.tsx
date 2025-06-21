@@ -1,4 +1,4 @@
-import React, { useEffect, useImperativeHandle } from 'react';
+import React, { useEffect } from 'react';
 import type { Dayjs } from 'dayjs';
 import {
   Form,
@@ -29,7 +29,6 @@ import AttachmentEditorTable from '@/shared/ui/AttachmentEditorTable';
 import FileDropZone from '@/shared/ui/FileDropZone';
 import { useClaimAttachments } from './model/useClaimAttachments';
 import type { RemoteClaimFile } from '@/shared/types/claimFile';
-import type { ClaimFormAntdEditRef } from '@/shared/types/claimFormAntdEditRef';
 
 export interface ClaimFormAntdEditProps {
   claimId: string | number;
@@ -40,8 +39,6 @@ export interface ClaimFormAntdEditProps {
   showAttachments?: boolean;
   /** Внешнее состояние вложений */
   attachmentsState?: ReturnType<typeof useClaimAttachments>;
-  /** Скрыть кнопки действия */
-  hideActions?: boolean;
 }
 
 export interface ClaimFormAntdEditValues {
@@ -56,21 +53,7 @@ export interface ClaimFormAntdEditValues {
   description: string | null;
 }
 
-const ClaimFormAntdEdit = React.forwardRef<
-  ClaimFormAntdEditRef,
-  ClaimFormAntdEditProps
->(function ClaimFormAntdEdit(
-  {
-    claimId,
-    onCancel,
-    onSaved,
-    embedded = false,
-    showAttachments = true,
-    attachmentsState,
-    hideActions = false,
-  }: ClaimFormAntdEditProps,
-  ref,
-) {
+export default function ClaimFormAntdEdit({
   claimId,
   onCancel,
   onSaved,
@@ -95,11 +78,6 @@ const ClaimFormAntdEdit = React.forwardRef<
   const attachments =
     attachmentsState ?? useClaimAttachments({ claim: claim as any });
   const { changedFields, handleValuesChange } = useChangedFields(form, [claim]);
-
-  useImperativeHandle(ref, () => ({
-    submit: () => form.submit(),
-    isSubmitting: update.isPending,
-  }));
 
   const highlight = (name: keyof ClaimFormAntdEditValues) =>
     changedFields[name as string]
@@ -304,20 +282,16 @@ const ClaimFormAntdEdit = React.forwardRef<
           />
         </Form.Item>
       )}
-      {!hideActions && (
-        <Form.Item style={{ textAlign: 'right' }}>
-          {onCancel && (
-            <Button style={{ marginRight: 8 }} onClick={onCancel} disabled={update.isPending}>
-              Отмена
-            </Button>
-          )}
-          <Button type="primary" htmlType="submit" loading={update.isPending}>
-            Сохранить
+      <Form.Item style={{ textAlign: 'right' }}>
+        {onCancel && (
+          <Button style={{ marginRight: 8 }} onClick={onCancel} disabled={update.isPending}>
+            Отмена
           </Button>
-        </Form.Item>
-      )}
+        )}
+        <Button type="primary" htmlType="submit" loading={update.isPending}>
+          Сохранить
+        </Button>
+      </Form.Item>
     </Form>
   );
-});
-
-export default ClaimFormAntdEdit;
+}
