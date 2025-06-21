@@ -1,5 +1,4 @@
-export interface LetterStatus {
-  id: number;
-  name: string;
-  color: string | null;
-}
+import type { Status } from './status';
+
+/** Статус письма */
+export interface LetterStatus extends Status {}
