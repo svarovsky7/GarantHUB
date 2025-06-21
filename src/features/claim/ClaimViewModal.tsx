@@ -4,6 +4,9 @@ import { useClaim, signedUrl } from '@/entities/claim';
 import ClaimFormAntdEdit from './ClaimFormAntdEdit';
 import ClaimAttachmentsBlock from './ClaimAttachmentsBlock';
 import TicketDefectsTable from '@/widgets/TicketDefectsTable';
+import DefectAddModal from '@/features/defect/DefectAddModal';
+import { useCreateDefects, useDeleteDefect, useDefectsWithNames, type NewDefect } from '@/entities/defect';
+import { supabase } from '@/shared/api/supabaseClient';
 import { useClaimAttachments } from './model/useClaimAttachments';
 import type { ClaimFormAntdEditRef } from '@/shared/types/claimFormAntdEditRef';
 
@@ -17,6 +20,90 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
   const { data: claim } = useClaim(claimId ?? undefined);
   const attachments = useClaimAttachments({ claim: claim as any });
   const formRef = React.useRef<ClaimFormAntdEditRef>(null);
+  const createDefs = useCreateDefects();
+  const deleteDef = useDeleteDefect();
+  const [defectIds, setDefectIds] = React.useState<number[]>([]);
+  const [newDefs, setNewDefs] = React.useState<Array<{ tmpId: number } & NewDefect>>([]);
+  const [removedIds, setRemovedIds] = React.useState<number[]>([]);
+  const [showAdd, setShowAdd] = React.useState(false);
+  const tmpIdRef = React.useRef(-1);
+
+  React.useEffect(() => {
+    if (claim && open) {
+      setDefectIds(claim.defect_ids || []);
+      setNewDefs([]);
+      setRemovedIds([]);
+    }
+  }, [claim, open]);
+
+  const { data: loadedDefs = [] } = useDefectsWithNames(defectIds);
+
+  const displayDefs = React.useMemo(() => {
+    return [
+      ...loadedDefs,
+      ...newDefs.map((d) => ({
+        id: d.tmpId,
+        description: d.description,
+        defect_type_id: d.defect_type_id,
+        defect_status_id: d.defect_status_id,
+        brigade_id: d.brigade_id,
+        contractor_id: d.contractor_id,
+        is_warranty: d.is_warranty,
+        received_at: d.received_at,
+        fixed_at: d.fixed_at,
+        fixed_by: null,
+        defectTypeName: null,
+        defectStatusName: null,
+        defectStatusColor: null,
+      })),
+    ];
+  }, [loadedDefs, newDefs]);
+
+  const handleRemove = (id: number) => {
+    if (id < 0) {
+      setNewDefs((p) => p.filter((d) => d.tmpId !== id));
+    } else {
+      setDefectIds((p) => p.filter((d) => d !== id));
+      setRemovedIds((p) => [...p, id]);
+    }
+  };
+
+  const handleAddDefs = (defs: NewDefect[]) => {
+    setNewDefs((p) => [
+      ...p,
+      ...defs.map((d) => ({ ...d, tmpId: tmpIdRef.current-- })),
+    ]);
+    setShowAdd(false);
+  };
+
+  const handleSaved = async () => {
+    if (!claim) return;
+    try {
+      const createdIds = newDefs.length
+        ? await createDefs.mutateAsync(
+            newDefs.map(({ tmpId, ...d }) => d),
+          )
+        : [];
+      if (createdIds.length) {
+        await supabase.from('claim_defects').insert(
+          createdIds.map((id) => ({ claim_id: claim.id, defect_id: id })),
+        );
+      }
+      if (removedIds.length) {
+        await supabase
+          .from('claim_defects')
+          .delete()
+          .eq('claim_id', claim.id)
+          .in('defect_id', removedIds);
+        for (const id of removedIds) {
+          await deleteDef.mutateAsync(id);
+        }
+      }
+      onClose();
+    } catch (e) {
+      console.error(e);
+    }
+  };
   if (!open || !claimId) return null;
   const titleText = claim
     ? `Претензия №${claim.claim_no}`
@@ -31,17 +118,22 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
             embedded
             claimId={String(claimId)}
             onCancel={onClose}
-            onSaved={onClose}
+            onSaved={handleSaved}
             showAttachments={false}
             hideActions
             attachmentsState={attachments}
           />
           <div style={{ marginTop: 16 }}>
-            {claim.defect_ids?.length ? (
-              <TicketDefectsTable defectIds={claim.defect_ids} />
+            {displayDefs.length ? (
+              <TicketDefectsTable items={displayDefs} onRemove={handleRemove} />
             ) : (
               <Typography.Text>Дефекты не указаны</Typography.Text>
             )}
+            <div style={{ textAlign: 'right', marginTop: 8 }}>
+              <Button size="small" type="primary" onClick={() => setShowAdd(true)}>
+                Добавить дефекты
+              </Button>
+            </div>
           </div>
           <ClaimAttachmentsBlock
             remoteFiles={attachments.remoteFiles}
@@ -63,6 +155,12 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
       ) : (
         <Skeleton active />
       )}
+      <DefectAddModal
+        open={showAdd}
+        projectId={claim?.project_id}
+        onClose={() => setShowAdd(false)}
+        onSubmit={handleAddDefs}
+      />
     </Modal>
   );
 }
