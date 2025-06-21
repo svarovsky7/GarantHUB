@@ -128,7 +128,7 @@ export async function addCaseAttachments(files, caseId) {
     const { data, error } = await supabase
         .from('attachments')
         .insert(rows)
-        .select('id, storage_path, path, mime_type, original_name');
+        .select('id, storage_path, path:file_url, mime_type:file_type, original_name');
 
     if (error) throw error;
     return data ?? [];
@@ -154,7 +154,7 @@ export async function addLetterAttachments(files, letterId) {
     const { data, error } = await supabase
         .from('attachments')
         .insert(rows)
-        .select('id, storage_path, path, mime_type, original_name');
+        .select('id, storage_path, path:file_url, mime_type:file_type, original_name');
 
     if (error) throw error;
     return data ?? [];
@@ -182,7 +182,7 @@ export async function addTicketAttachments(files, projectId, ticketId) {
     const { data, error } = await supabase
         .from('attachments')
         .insert(rows)
-        .select('id, storage_path, path, mime_type, original_name');
+        .select('id, storage_path, path:file_url, mime_type:file_type, original_name');
 
     if (error) throw error;
     return data ?? [];
@@ -209,7 +209,7 @@ export async function addClaimAttachments(files, claimId) {
     const { data, error } = await supabase
         .from('attachments')
         .insert(rows)
-        .select('id, storage_path, path, mime_type, original_name');
+        .select('id, storage_path, path:file_url, mime_type:file_type, original_name');
 
     if (error) throw error;
     return data ?? [];
@@ -236,7 +236,7 @@ export async function addDefectAttachments(files, defectId) {
     const { data, error } = await supabase
         .from('attachments')
         .insert(rows)
-        .select('id, storage_path, path, mime_type, original_name');
+        .select('id, storage_path, path:file_url, mime_type:file_type, original_name');
 
     if (error) throw error;
     return data ?? [];
@@ -250,7 +250,7 @@ export async function getAttachmentsByIds(ids) {
     if (!ids.length) return [];
     const { data, error } = await supabase
         .from('attachments')
-        .select('id, storage_path, path, mime_type, original_name')
+        .select('id, storage_path, path:file_url, mime_type:file_type, original_name')
         .in('id', ids);
 
     if (error) throw error;
