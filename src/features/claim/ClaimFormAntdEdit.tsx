@@ -35,6 +35,10 @@ export interface ClaimFormAntdEditProps {
   onCancel?: () => void;
   onSaved?: () => void;
   embedded?: boolean;
+  /** Показывать блок работы с файлами */
+  showAttachments?: boolean;
+  /** Внешнее состояние вложений */
+  attachmentsState?: ReturnType<typeof useClaimAttachments>;
 }
 
 export interface ClaimFormAntdEditValues {
@@ -54,6 +58,8 @@ export default function ClaimFormAntdEdit({
   onCancel,
   onSaved,
   embedded = false,
+  showAttachments = true,
+  attachmentsState,
 }: ClaimFormAntdEditProps) {
   const [form] = Form.useForm<ClaimFormAntdEditValues>();
   const { data: claim } = useClaim(claimId);
@@ -69,7 +75,8 @@ export default function ClaimFormAntdEdit({
   const removeAtt = useRemoveClaimAttachment();
   const notify = useNotify();
   const userId = useAuthStore((s) => s.profile?.id) ?? null;
-  const attachments = useClaimAttachments({ claim: claim as any });
+  const attachments =
+    attachmentsState ?? useClaimAttachments({ claim: claim as any });
   const { changedFields, handleValuesChange } = useChangedFields(form, [claim]);
 
   const highlight = (name: keyof ClaimFormAntdEditValues) =>
@@ -248,21 +255,33 @@ export default function ClaimFormAntdEdit({
           </Form.Item>
         </Col>
       </Row>
-      <Form.Item label="Файлы" style={attachments.attachmentsChanged ? { background: '#fffbe6', padding: 4, borderRadius: 2 } : {}}>
-        <FileDropZone onFiles={attachments.addFiles} />
-        <AttachmentEditorTable
-          remoteFiles={attachments.remoteFiles.map((f) => ({
-            id: String(f.id),
-            name: f.name,
-            path: f.path,
-            mime: f.mime_type,
-          }))}
-          newFiles={attachments.newFiles.map((f) => ({ file: f.file, mime: f.file.type }))}
-          onRemoveRemote={(id) => attachments.removeRemote(id)}
-          onRemoveNew={(idx) => attachments.removeNew(idx)}
-          getSignedUrl={(path, name) => signedUrl(path, name)}
-        />
-      </Form.Item>
+      {showAttachments && (
+        <Form.Item
+          label="Файлы"
+          style={
+            attachments.attachmentsChanged
+              ? { background: '#fffbe6', padding: 4, borderRadius: 2 }
+              : {}
+          }
+        >
+          <FileDropZone onFiles={attachments.addFiles} />
+          <AttachmentEditorTable
+            remoteFiles={attachments.remoteFiles.map((f) => ({
+              id: String(f.id),
+              name: f.name,
+              path: f.path,
+              mime: f.mime_type,
+            }))}
+            newFiles={attachments.newFiles.map((f) => ({
+              file: f.file,
+              mime: f.file.type,
+            }))}
+            onRemoveRemote={(id) => attachments.removeRemote(id)}
+            onRemoveNew={(idx) => attachments.removeNew(idx)}
+            getSignedUrl={(path, name) => signedUrl(path, name)}
+          />
+        </Form.Item>
+      )}
       <Form.Item style={{ textAlign: 'right' }}>
         {onCancel && (
           <Button style={{ marginRight: 8 }} onClick={onCancel} disabled={update.isPending}>

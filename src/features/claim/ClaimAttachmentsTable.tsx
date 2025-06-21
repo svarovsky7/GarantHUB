@@ -24,7 +24,6 @@ interface RowData {
   key: string;
   index: number;
   name: string;
-  size: number | null;
   remote: boolean;
   id?: string;
   path?: string;
@@ -32,8 +31,8 @@ interface RowData {
 }
 
 /**
- * Compact table displaying attachments of a claim.
- * Numbers files and shows size in MB.
+ * Компактная таблица вложений претензии.
+ * Показывает порядковый номер и название файла.
  */
 export default function ClaimAttachmentsTable({
   remoteFiles = [],
@@ -42,26 +41,13 @@ export default function ClaimAttachmentsTable({
   onRemoveNew,
   getSignedUrl,
 }: ClaimAttachmentsTableProps) {
-  const [sizes, setSizes] = React.useState<Record<string, number>>({});
-
-  React.useEffect(() => {
-    remoteFiles.forEach((f) => {
-      const id = String(f.id);
-      if (sizes[id] == null && f.size == null) {
-        fetch(f.url, { method: 'HEAD' })
-          .then((r) => Number(r.headers.get('content-length') || 0))
-          .then((s) => setSizes((p) => ({ ...p, [id]: s })))
-          .catch(() => {});
-      }
-    });
-  }, [remoteFiles, sizes]);
+  // размеры файлов для отображения не используются
 
   const rows: RowData[] = [
     ...remoteFiles.map((f, idx) => ({
       key: `r-${idx}`,
       index: idx + 1,
       name: f.original_name ?? f.name,
-      size: f.size ?? sizes[String(f.id)] ?? null,
       remote: true,
       id: String(f.id),
       path: f.path,
@@ -70,7 +56,6 @@ export default function ClaimAttachmentsTable({
       key: `n-${idx}`,
       index: remoteFiles.length + idx + 1,
       name: f.name,
-      size: f.size,
       remote: false,
       file: f,
     })),
@@ -81,12 +66,6 @@ export default function ClaimAttachmentsTable({
   const columns: ColumnsType<RowData> = [
     { dataIndex: 'index', width: 40 },
     { dataIndex: 'name', width: 200, ellipsis: true },
-    {
-      dataIndex: 'size',
-      width: 80,
-      render: (s: number | null) =>
-        s != null ? (s / 1024 / 1024).toFixed(2) : '—',
-    },
     {
       dataIndex: 'actions',
       width: 40,
