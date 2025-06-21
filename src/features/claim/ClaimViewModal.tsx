@@ -15,7 +15,7 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
   const { data: claim } = useClaim(claimId ?? undefined);
   if (!open || !claimId) return null;
   const titleText = claim
-    ? `Претензия №${claim.number}`
+    ? `Претензия №${claim.claim_no}`
     : 'Претензия';
 
   return (
@@ -27,9 +27,9 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
             onCreated={onClose}
             showDefectsForm={false}
           />
-          {claim.defect_ids?.length ? (
+          {claim.ticket_ids?.length ? (
             <div style={{ marginTop: 16 }}>
-              <TicketDefectsTable defectIds={claim.defect_ids} />
+              <TicketDefectsTable defectIds={claim.ticket_ids} />
             </div>
           ) : null}
           {claim.attachments?.length ? (
