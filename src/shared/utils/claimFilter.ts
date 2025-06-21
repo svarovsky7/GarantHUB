@@ -7,8 +7,8 @@ export function filterClaims<T extends {
   unitNames?: string;
   statusName?: string;
   responsibleEngineerName?: string | null;
-  claim_no?: string;
-  registeredOn?: Dayjs | null;
+  number?: string;
+  registeredAt?: Dayjs | null;
 }>(rows: T[], f: ClaimFilters): T[] {
   return rows.filter((r) => {
     if (f.id && f.id.length > 0 && !f.id.includes(r.id)) return false;
@@ -20,11 +20,11 @@ export function filterClaims<T extends {
     }
     if (f.status && r.statusName !== f.status) return false;
     if (f.responsible && r.responsibleEngineerName !== f.responsible) return false;
-    if (f.claim_no && (!r.claim_no || !r.claim_no.includes(f.claim_no))) return false;
+    if (f.number && (!r.number || !r.number.includes(f.number))) return false;
     if (f.period && f.period.length === 2) {
       const [from, to] = f.period;
-      if (!r.registeredOn) return false;
-      if (r.registeredOn.isBefore(from, 'day') || r.registeredOn.isAfter(to, 'day')) return false;
+      if (!r.registeredAt) return false;
+      if (r.registeredAt.isBefore(from, 'day') || r.registeredAt.isAfter(to, 'day')) return false;
     }
     return true;
   });
