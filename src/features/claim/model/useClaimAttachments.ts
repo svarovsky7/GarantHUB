@@ -13,7 +13,12 @@ export function useClaimAttachments(options: { claim?: Claim | null }) {
   const [removedIds, setRemovedIds] = useState<string[]>([]);
 
   useEffect(() => {
-    if (!claim) return;
+    if (!claim) {
+      setRemoteFiles([]);
+      setNewFiles([]);
+      setRemovedIds([]);
+      return;
+    }
     const attachments = (claim.attachments || []).map((file: any) => {
       const storagePath = file.storage_path ?? file.path;
       const fileUrl = file.file_url ?? file.url ?? '';
@@ -33,6 +38,8 @@ export function useClaimAttachments(options: { claim?: Claim | null }) {
       } as RemoteClaimFile;
     });
     setRemoteFiles(attachments);
+    setNewFiles([]);
+    setRemovedIds([]);
   }, [claim]);
 
   const addFiles = useCallback((files: File[]) => {

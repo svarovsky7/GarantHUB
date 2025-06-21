@@ -1,7 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { ConfigProvider, Alert, Card, Button, Tooltip, Popconfirm, message, Space } from 'antd';
 import ruRU from 'antd/locale/ru_RU';
-import { SettingOutlined, EyeOutlined, DeleteOutlined } from '@ant-design/icons';
+import {
+  SettingOutlined,
+  EyeOutlined,
+  DeleteOutlined,
+  PlusOutlined,
+  LinkOutlined,
+} from '@ant-design/icons';
 import ExportClaimsButton from '@/features/claim/ExportClaimsButton';
 import { useSnackbar } from 'notistack';
 import { useClaims, useDeleteClaim, useLinkClaims, useUnlinkClaim } from '@/entities/claim';

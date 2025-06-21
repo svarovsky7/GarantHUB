@@ -90,7 +90,6 @@ export default function ClaimFormAntdEdit({
       engineer_id: claim.engineer_id ?? null,
       description: claim.description ?? '',
     });
-    attachments.reset();
   }, [claim, form]);
 
   const onFinish = async (values: ClaimFormAntdEditValues) => {
