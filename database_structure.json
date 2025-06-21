@@ -49,11 +49,34 @@
     "column_default": null
   },
   {
-    "table_name": "attachments",
-    "column_name": "updated_at",
-    "data_type": "timestamp with time zone",
+
+    "table_name": "statuses",
+
+    "column_name": "id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": "nextval('statuses_id_seq'::regclass)"
+  },
+  {
+    "table_name": "statuses",
+    "column_name": "entity",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "statuses",
+    "column_name": "name",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "statuses",
+    "column_name": "color",
+    "data_type": "character varying",
     "is_nullable": "YES",
-    "column_default": "now()"
+    "column_default": null
   },
   {
     "table_name": "brigades",
@@ -82,27 +105,6 @@
     "data_type": "timestamp with time zone",
     "is_nullable": "YES",
     "column_default": "now()"
-  },
-  {
-    "table_name": "claim_statuses",
-    "column_name": "id",
-    "data_type": "integer",
-    "is_nullable": "NO",
-    "column_default": "nextval('claim_statuses_id_seq'::regclass)"
-  },
-  {
-    "table_name": "claim_statuses",
-    "column_name": "name",
-    "data_type": "text",
-    "is_nullable": "NO",
-    "column_default": null
-  },
-  {
-    "table_name": "claim_statuses",
-    "column_name": "color",
-    "data_type": "text",
-    "is_nullable": "YES",
-    "column_default": null
   },
   {
     "table_name": "claims",
@@ -539,27 +541,6 @@
     "column_default": null
   },
   {
-    "table_name": "court_cases_statuses",
-    "column_name": "id",
-    "data_type": "integer",
-    "is_nullable": "NO",
-    "column_default": "nextval('court_cases_statuses_id_seq'::regclass)"
-  },
-  {
-    "table_name": "court_cases_statuses",
-    "column_name": "name",
-    "data_type": "text",
-    "is_nullable": "NO",
-    "column_default": null
-  },
-  {
-    "table_name": "court_cases_statuses",
-    "column_name": "color",
-    "data_type": "character varying",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
     "table_name": "defect_deadlines",
     "column_name": "id",
     "data_type": "integer",
@@ -585,27 +566,6 @@
     "column_name": "fix_days",
     "data_type": "integer",
     "is_nullable": "NO",
-    "column_default": null
-  },
-  {
-    "table_name": "defect_statuses",
-    "column_name": "id",
-    "data_type": "integer",
-    "is_nullable": "NO",
-    "column_default": null
-  },
-  {
-    "table_name": "defect_statuses",
-    "column_name": "name",
-    "data_type": "text",
-    "is_nullable": "NO",
-    "column_default": null
-  },
-  {
-    "table_name": "defect_statuses",
-    "column_name": "color",
-    "data_type": "character varying",
-    "is_nullable": "YES",
     "column_default": null
   },
   {
@@ -747,27 +707,6 @@
     "data_type": "bigint",
     "is_nullable": "NO",
     "column_default": "nextval('letter_links_id_seq'::regclass)"
-  },
-  {
-    "table_name": "letter_statuses",
-    "column_name": "id",
-    "data_type": "integer",
-    "is_nullable": "NO",
-    "column_default": null
-  },
-  {
-    "table_name": "letter_statuses",
-    "column_name": "name",
-    "data_type": "text",
-    "is_nullable": "NO",
-    "column_default": null
-  },
-  {
-    "table_name": "letter_statuses",
-    "column_name": "color",
-    "data_type": "character varying",
-    "is_nullable": "YES",
-    "column_default": null
   },
   {
     "table_name": "letter_types",
@@ -1090,27 +1029,6 @@
     "data_type": "timestamp with time zone",
     "is_nullable": "YES",
     "column_default": "now()"
-  },
-  {
-    "table_name": "ticket_statuses",
-    "column_name": "id",
-    "data_type": "integer",
-    "is_nullable": "NO",
-    "column_default": "nextval('ticket_statuses_id_seq'::regclass)"
-  },
-  {
-    "table_name": "ticket_statuses",
-    "column_name": "name",
-    "data_type": "text",
-    "is_nullable": "NO",
-    "column_default": null
-  },
-  {
-    "table_name": "ticket_statuses",
-    "column_name": "color",
-    "data_type": "character varying",
-    "is_nullable": "YES",
-    "column_default": null
   },
   {
     "table_name": "tickets",
