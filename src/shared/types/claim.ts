@@ -1,6 +1,8 @@
 export interface Claim {
   /** Уникальный идентификатор претензии */
   id: number;
+  /** Идентификатор родительской претензии */
+  parent_id?: number | null;
   /** Проект, к которому относится претензия */
   project_id: number;
   /** Задействованные объекты */
@@ -33,4 +35,14 @@ export interface Claim {
   updated_by?: string;
   /** Дата обновления */
   updated_at?: string;
+}
+
+/** Связь претензий: parent_id - родительская, child_id - дочерняя */
+export interface ClaimLink {
+  /** Уникальный идентификатор связи */
+  id: string;
+  /** Идентификатор родительской претензии */
+  parent_id: string;
+  /** Идентификатор дочерней претензии */
+  child_id: string;
 }

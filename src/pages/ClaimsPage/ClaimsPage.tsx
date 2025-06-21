@@ -4,7 +4,8 @@ import ruRU from 'antd/locale/ru_RU';
 import { SettingOutlined, EyeOutlined, DeleteOutlined } from '@ant-design/icons';
 import ExportClaimsButton from '@/features/claim/ExportClaimsButton';
 import { useSnackbar } from 'notistack';
-import { useClaims, useDeleteClaim } from '@/entities/claim';
+import { useClaims, useDeleteClaim, useLinkClaims, useUnlinkClaim } from '@/entities/claim';
+import LinkClaimsDialog from '@/features/claim/LinkClaimsDialog';
 import { useUsers } from '@/entities/user';
 import { useUnitsByIds } from '@/entities/unit';
 import formatUnitName from '@/shared/utils/formatUnitName';
@@ -32,6 +33,9 @@ export default function ClaimsPage() {
   const checkingDefectMap = useMemo(() => new Map<number, boolean>(), []);
   const [filters, setFilters] = useState({});
   const [showAddForm, setShowAddForm] = useState(false);
+  const linkClaims = useLinkClaims();
+  const unlinkClaim = useUnlinkClaim();
+  const [linkFor, setLinkFor] = useState<ClaimWithNames | null>(null);
   const LS_SHOW_FILTERS = 'claims:showFilters';
   const [showFilters, setShowFilters] = useState<boolean>(() => {
     try {
@@ -103,25 +107,41 @@ export default function ClaimsPage() {
       registeredOn: { title: 'Дата регистрации претензии', dataIndex: 'registeredOn', width: 120, sorter: (a: any, b: any) => (a.registeredOn ? a.registeredOn.valueOf() : 0) - (b.registeredOn ? b.registeredOn.valueOf() : 0), render: (v: any) => fmt(v) },
       resolvedOn: { title: 'Дата устранения', dataIndex: 'resolvedOn', width: 120, sorter: (a: any, b: any) => (a.resolvedOn ? a.resolvedOn.valueOf() : 0) - (b.resolvedOn ? b.resolvedOn.valueOf() : 0), render: (v: any) => fmt(v) },
       responsibleEngineerName: { title: 'Ответственный инженер', dataIndex: 'responsibleEngineerName', width: 180, sorter: (a: any, b: any) => (a.responsibleEngineerName || '').localeCompare(b.responsibleEngineerName || '') },
-      actions: { title: 'Действия', key: 'actions', width: 100, render: (_: any, record: any) => (
-        <Space size="middle">
-          <Tooltip title="Просмотр">
-            <Button size="small" type="text" icon={<EyeOutlined />} onClick={() => setViewId(record.id)} />
-          </Tooltip>
-          <Popconfirm
-            title="Удалить претензию?"
-            okText="Да"
-            cancelText="Нет"
-            onConfirm={async () => {
-              await deleteClaimMutation.mutateAsync({ id: record.id, ticketIds: record.ticket_ids });
-              message.success('Удалено');
-            }}
-            disabled={deleteClaimMutation.isPending}
-          >
-            <Button size="small" type="text" danger icon={<DeleteOutlined />} loading={deleteClaimMutation.isPending} />
-          </Popconfirm>
-        </Space>
-      ) },
+      actions: {
+        title: 'Действия',
+        key: 'actions',
+        width: 120,
+        render: (_: any, record: ClaimWithNames) => (
+          <Space size="middle">
+            <Tooltip title="Просмотр">
+              <Button size="small" type="text" icon={<EyeOutlined />} onClick={() => setViewId(record.id)} />
+            </Tooltip>
+            <Button size="small" type="text" icon={<PlusOutlined />} onClick={() => setLinkFor(record)} />
+            {record.parent_id && (
+              <Tooltip title="Исключить из связи">
+                <Button
+                  size="small"
+                  type="text"
+                  icon={<LinkOutlined style={{ color: '#c41d7f', textDecoration: 'line-through', fontWeight: 700 }} />}
+                  onClick={() => unlinkClaim.mutate(record.id)}
+                />
+              </Tooltip>
+            )}
+            <Popconfirm
+              title="Удалить претензию?"
+              okText="Да"
+              cancelText="Нет"
+              onConfirm={async () => {
+                await deleteClaimMutation.mutateAsync({ id: record.id, ticketIds: record.ticket_ids });
+                message.success('Удалено');
+              }}
+              disabled={deleteClaimMutation.isPending}
+            >
+              <Button size="small" type="text" danger icon={<DeleteOutlined />} loading={deleteClaimMutation.isPending} />
+            </Popconfirm>
+          </Space>
+        ),
+      },
     } as Record<string, ColumnsType<any>[number]>;
   }
 
@@ -153,8 +173,31 @@ export default function ClaimsPage() {
               <ClaimsFilters options={options} onChange={setFilters} />
             </Card>
           )}
-          {error ? <Alert type="error" message={error.message} /> : <ClaimsTable claims={claimsWithNames} filters={filters} loading={isLoading} columns={columns} onView={(id) => setViewId(id)} />}
+          {error ? (
+            <Alert type="error" message={error.message} />
+          ) : (
+            <ClaimsTable
+              claims={claimsWithNames}
+              filters={filters}
+              loading={isLoading}
+              columns={columns}
+              onView={(id) => setViewId(id)}
+              onAddChild={setLinkFor}
+              onUnlink={(id) => unlinkClaim.mutate(id)}
+            />
+          )}
         </div>
+        <LinkClaimsDialog
+          open={!!linkFor}
+          parent={linkFor}
+          claims={claimsWithNames}
+          onClose={() => setLinkFor(null)}
+          onSubmit={(ids) => {
+            if (!linkFor) return;
+            linkClaims.mutate({ parentId: String(linkFor.id), childIds: ids });
+            setLinkFor(null);
+          }}
+        />
         <ClaimViewModal open={viewId !== null} claimId={viewId} onClose={() => setViewId(null)} />
       </>
     </ConfigProvider>
