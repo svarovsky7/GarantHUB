@@ -43,7 +43,6 @@ export interface TicketFormAntdValues {
   customer_request_no: string | null;
   customer_request_date: Dayjs | null;
   responsible_engineer_id: string | null;
-  is_warranty: boolean;
   received_at: Dayjs;
   fixed_at: Dayjs | null;
   defects?: Array<{
@@ -156,6 +155,7 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
         defect_status_id: d.status_id ?? null,
         brigade_id: d.brigade_id ?? null,
         contractor_id: d.contractor_id ?? null,
+        is_warranty: d.is_warranty ?? false,
         received_at: d.received_at ? d.received_at.format('YYYY-MM-DD') : null,
         fixed_at: d.fixed_at ? d.fixed_at.format('YYYY-MM-DD') : null,
         fixed_by: null,
@@ -251,11 +251,6 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
               }
               options={statuses.map((s) => ({ value: s.id, label: s.name }))}
             />
-          </Form.Item>
-        </Col>
-        <Col span={8}>
-          <Form.Item name="is_warranty" label="Гарантия" valuePropName="checked">
-            <Switch />
           </Form.Item>
         </Col>
       </Row>

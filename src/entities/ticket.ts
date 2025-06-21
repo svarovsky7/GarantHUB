@@ -167,7 +167,6 @@ function mapTicket(r) {
     customerRequestDate: toDayjs(r.customer_request_date),
     responsibleEngineerId: r.responsible_engineer_id,
     createdBy: r.created_by,
-    isWarranty: r.is_warranty,
     hasAttachments: attachments.length > 0,
     attachments,
     createdAt: toDayjs(r.created_at),
@@ -190,7 +189,7 @@ export function useTickets() {
           `
           id, project_id, unit_ids, defect_ids, status_id, title, description,
           customer_request_no, customer_request_date, responsible_engineer_id,
-          created_by, is_warranty, created_at, received_at, fixed_at,
+          created_by, created_at, received_at, fixed_at,
           attachment_ids,
           projects (id, name),
           ticket_statuses (id, name, color)
@@ -333,7 +332,7 @@ export function useTicket(ticketId) {
           `
           id, project_id, unit_ids, defect_ids, status_id, title, description,
           customer_request_no, customer_request_date, responsible_engineer_id,
-          created_by, is_warranty, created_at, received_at, fixed_at,
+          created_by, created_at, received_at, fixed_at,
           attachment_ids,
           projects (id, name),
           ticket_statuses (id, name, color)

@@ -5,6 +5,7 @@ export interface DefectWithNames {
   defect_status_id: number | null;
   brigade_id: number | null;
   contractor_id: number | null;
+  is_warranty: boolean;
   received_at: string | null;
   fixed_at: string | null;
   fixed_by: string | null;

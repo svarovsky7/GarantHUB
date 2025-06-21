@@ -13,6 +13,7 @@ import {
   Space,
   Radio,
   Upload,
+  Switch,
 } from 'antd';
 import { PlusOutlined, DeleteOutlined, UploadOutlined } from '@ant-design/icons';
 import { useDefectTypes } from '@/entities/defectType';
@@ -221,6 +222,16 @@ export default function DefectEditableTable({ fields, add, remove, projectId, fi
         ),
       },
       {
+        title: 'Гарантия',
+        dataIndex: 'is_warranty',
+        width: 100,
+        render: (_: any, field: any) => (
+          <Form.Item name={[field.name, 'is_warranty']} valuePropName="checked" noStyle initialValue={false}>
+            <Switch size="small" />
+          </Form.Item>
+        ),
+      },
+      {
         title: (
           <span>
             Дата получения<span style={{ color: 'red' }}>*</span>
@@ -384,6 +395,7 @@ export default function DefectEditableTable({ fields, add, remove, projectId, fi
               description: '',
               status_id: defectStatuses[0]?.id ?? null,
               type_id: null,
+              is_warranty: false,
               received_at: dayjs(),
               fixed_at: null,
               brigade_id: null,

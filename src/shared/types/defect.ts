@@ -12,6 +12,8 @@ export interface DefectRecord {
   brigade_id: number | null;
   /** Исполнитель - подрядчик */
   contractor_id: number | null;
+  /** Гарантийный дефект */
+  is_warranty: boolean;
   /** Дата получения */
   received_at: string | null;
   /** Дата устранения */

@@ -116,22 +116,6 @@ export default function TicketsTable({
         sorter: (a, b) => a.unitNames.localeCompare(b.unitNames),
       },
       {
-        title: "Гарантия",
-        dataIndex: "isWarranty",
-        width: 110,
-        sorter: (a, b) => Number(a.isWarranty) - Number(b.isWarranty),
-        render: (v) =>
-          v ? (
-            <Tag icon={<CheckCircleTwoTone twoToneColor="#52c41a" />} color="success">
-              Да
-            </Tag>
-          ) : (
-            <Tag icon={<CloseCircleTwoTone twoToneColor="#eb2f96" />} color="default">
-              Нет
-            </Tag>
-          ),
-      },
-      {
         title: "Статус",
         dataIndex: "statusId",
         width: 160,

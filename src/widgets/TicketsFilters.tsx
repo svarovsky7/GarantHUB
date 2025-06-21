@@ -99,12 +99,6 @@ export default function TicketsFilters({ options, onChange, initialValues = {} }
       <Form.Item name="id" label="ID">
         <Select mode="multiple" allowClear options={options.ids} />
       </Form.Item>
-      <Form.Item name="warranty" label="Гарантия">
-        <Select allowClear>
-          <Option value="yes">Да</Option>
-          <Option value="no">Нет</Option>
-        </Select>
-      </Form.Item>
       <Form.Item name="status" label="Статусы">
         <Select allowClear options={options.statuses} />
       </Form.Item>

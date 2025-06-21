@@ -5,7 +5,6 @@ import {
   Input,
   Select,
   DatePicker,
-  Switch,
   Button,
   Row,
   Col,
@@ -50,7 +49,6 @@ export interface TicketFormAntdEditValues {
   customer_request_no: string | null;
   customer_request_date: Dayjs | null;
   responsible_engineer_id: string | null;
-  is_warranty: boolean;
   received_at: Dayjs | null;
   fixed_at: Dayjs | null;
 }
@@ -114,7 +112,6 @@ export default function TicketFormAntdEdit({
         unit_ids: ticket.unitIds,
         responsible_engineer_id: ticket.responsibleEngineerId ?? undefined,
         status_id: ticket.statusId ?? undefined,
-        is_warranty: ticket.isWarranty,
         customer_request_no: ticket.customerRequestNo ?? undefined,
         customer_request_date: ticket.customerRequestDate ?? null,
         received_at: ticket.receivedAt ?? null,
@@ -187,7 +184,6 @@ export default function TicketFormAntdEdit({
         ? values.customer_request_date.format('YYYY-MM-DD')
         : null,
       responsible_engineer_id: values.responsible_engineer_id ?? null,
-      is_warranty: values.is_warranty,
       received_at: values.received_at
         ? values.received_at.format('YYYY-MM-DD')
         : dayjs().format('YYYY-MM-DD'),
@@ -309,18 +305,6 @@ export default function TicketFormAntdEdit({
             style={highlight('status_id')}
           >
             <Select options={statuses.map((s) => ({ value: s.id, label: s.name }))} />
-          </Form.Item>
-        </Col>
-      </Row>
-      <Row gutter={16}>
-        <Col span={12}>
-          <Form.Item
-            name="is_warranty"
-            label="Гарантия"
-            valuePropName="checked"
-            style={highlight('is_warranty')}
-          >
-            <Switch />
           </Form.Item>
         </Col>
       </Row>

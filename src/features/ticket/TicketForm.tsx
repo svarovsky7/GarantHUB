@@ -64,7 +64,6 @@ interface TicketFormValues {
   responsible_engineer_id: string | null;
   status_id: number | null;
   type_id: number | null;
-  is_warranty: boolean;
   customer_request_no: string;
   customer_request_date: Dayjs | null;
   received_at: Dayjs | null;
@@ -102,7 +101,6 @@ export default function TicketForm({
       responsible_engineer_id: null,
       status_id: null,
       type_id: null,
-      is_warranty: false,
       customer_request_no: "",
       customer_request_date: null,
       received_at: null,
@@ -160,7 +158,6 @@ export default function TicketForm({
         unit_ids: ticket.unitIds,
         responsible_engineer_id: ticket.responsibleEngineerId,
         status_id: ticket.statusId,
-        is_warranty: ticket.isWarranty,
         customer_request_no: ticket.customerRequestNo || "",
         customer_request_date: ticket.customerRequestDate,
         received_at: ticket.receivedAt,
@@ -224,7 +221,6 @@ export default function TicketForm({
         ? values.customer_request_date.format("YYYY-MM-DD")
         : null,
       responsible_engineer_id: values.responsible_engineer_id ?? null,
-      is_warranty: values.is_warranty,
       received_at: values.received_at
         ? values.received_at.format("YYYY-MM-DD")
         : dayjs().format("YYYY-MM-DD"),
@@ -452,17 +448,6 @@ export default function TicketForm({
                 ))}
               </Select>
               </FormControl>
-            )}
-          />
-          <Controller
-            name="is_warranty"
-            control={control}
-            render={({ field }) => (
-              <FormControlLabel
-                control={<Switch {...field} checked={field.value} />}
-                label="Гарантийный случай"
-                sx={highlight('is_warranty')}
-              />
             )}
           />
         </Stack>

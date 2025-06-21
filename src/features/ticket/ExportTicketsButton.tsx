@@ -27,7 +27,6 @@ export default function ExportTicketsButton({
       'ID родителя': t.parentId ?? '',
       Проект: t.projectName,
       Объекты: t.unitNames,
-      Гарантия: t.isWarranty ? 'Да' : 'Нет',
       Статус: t.statusName,
       'Замечание закрыто': /закры/i.test(t.statusName ?? '') ? 'Да' : 'Нет',
       'Дата получения': t.receivedAt ? t.receivedAt.format('DD.MM.YYYY') : '',
