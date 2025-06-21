@@ -33,7 +33,7 @@ export default function ClaimStatusSelect({
   );
 
   const handleChange = (value: number) => {
-    update.mutate({ id: claimId, updates: { status_id: value } });
+    update.mutate({ id: claimId, updates: { claim_status_id: value } });
     setEditing(false);
   };
 

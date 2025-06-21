@@ -339,6 +339,41 @@ export function useClaimAttachments(id?: number) {
   });
 }
 
+/** Удалить одно вложение претензии */
+export function useRemoveClaimAttachment() {
+  const qc = useQueryClient();
+  const { projectId, projectIds, onlyAssigned } = useProjectFilter();
+  return useMutation<void, Error, { claimId: number; attachmentId: number }>({
+    mutationFn: async ({ claimId, attachmentId }) => {
+      const { data: att } = await supabase
+        .from('attachments')
+        .select('storage_path')
+        .eq('id', attachmentId)
+        .single();
+      if (att?.storage_path) {
+        await supabase.storage.from(ATTACH_BUCKET).remove([att.storage_path]);
+      }
+      await supabase.from('attachments').delete().eq('id', attachmentId);
+      const { data } = await supabase
+        .from(TABLE)
+        .select('attachment_ids')
+        .eq('id', claimId)
+        .single();
+      const ids: number[] = (data?.attachment_ids ?? []).filter(
+        (i: number) => i !== attachmentId,
+      );
+      let q = supabase.from(TABLE).update({ attachment_ids: ids }).eq('id', claimId);
+      q = filterByProjects(q, projectId, projectIds, onlyAssigned);
+      const { error } = await q;
+      if (error) throw error;
+    },
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: [TABLE, vars.claimId] });
+      qc.invalidateQueries({ queryKey: [TABLE] });
+    },
+  });
+}
+
 export async function signedUrl(path: string, filename = ''): Promise<string> {
   const { data, error } = await supabase.storage
     .from(ATTACH_BUCKET)

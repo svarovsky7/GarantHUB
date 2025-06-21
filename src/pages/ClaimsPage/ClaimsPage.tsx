@@ -7,6 +7,7 @@ import { useSnackbar } from 'notistack';
 import { useClaims, useDeleteClaim } from '@/entities/claim';
 import { useUsers } from '@/entities/user';
 import { useUnitsByIds } from '@/entities/unit';
+import formatUnitName from '@/shared/utils/formatUnitName';
 import ClaimsTable from '@/widgets/ClaimsTable';
 import ClaimsFilters from '@/widgets/ClaimsFilters';
 import ClaimFormAntd from '@/features/claim/ClaimFormAntd';
@@ -63,7 +64,7 @@ export default function ClaimsPage() {
   const unitMap = useMemo(() => {
     const map = {} as Record<number, string>;
     (units ?? []).forEach((u) => {
-      map[u.id] = u.name;
+      map[u.id] = formatUnitName(u);
     });
     return map;
   }, [units]);
