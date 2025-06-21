@@ -417,10 +417,21 @@ export function useUpdateClaim() {
   const { projectId, projectIds, onlyAssigned } = useProjectFilter();
   return useMutation({
     mutationFn: async ({ id, updates }: { id: number; updates: Partial<Claim>; }) => {
-      let q = supabase.from(TABLE).update(updates).eq('id', id);
+      const { unit_ids, ...rest } = updates as Partial<Claim> & { unit_ids?: number[] };
+
+      let q = supabase.from(TABLE).update(rest).eq('id', id);
       q = filterByProjects(q, projectId, projectIds, onlyAssigned);
       const { data, error } = await q.select('*').single();
       if (error) throw error;
+
+      if (Array.isArray(unit_ids)) {
+        await supabase.from('claim_units').delete().eq('claim_id', id);
+        if (unit_ids.length) {
+          const rows = unit_ids.map((uid) => ({ claim_id: id, unit_id: uid }));
+          await supabase.from('claim_units').insert(rows);
+        }
+      }
+
       return data as Claim;
     },
     onSuccess: (_, { id }) => {
