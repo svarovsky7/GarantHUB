@@ -388,7 +388,7 @@ export default function DefectEditableTable({ fields, add, remove, projectId, fi
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
         <span style={{ fontWeight: 500 }}>Дефекты</span>
         <Button
-          type="dashed"
+          type="primary"
           icon={<PlusOutlined />}
           onClick={() =>
             add({
