@@ -21,7 +21,6 @@ import { useVisibleProjects } from '@/entities/project';
 import { useUnitsByProject } from '@/entities/unit';
 import { useContractors, useDeleteContractor } from '@/entities/contractor';
 import { usePersons, useDeletePerson } from '@/entities/person';
-import { useAttachmentTypes } from '@/entities/attachmentType';
 import PersonModal from '@/features/person/PersonModal';
 import ContractorModal from '@/features/contractor/ContractorModal';
 import { useLetterStatuses } from '@/entities/letterStatus';
@@ -42,7 +41,7 @@ export interface AddLetterFormData {
   unit_ids: number[];
   /** Статус письма */
   status_id: number | null;
-  attachments: { file: File; type_id: number | null }[];
+  attachments: { file: File }[];
   parent_id: string | null;
 }
 
@@ -60,7 +59,7 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
   const senderValue = Form.useWatch('sender', form);
   const receiverValue = Form.useWatch('receiver', form);
 
-  const { files, addFiles, setType, removeFile, reset: resetFiles } = useLetterFiles();
+  const { files, addFiles, removeFile, reset: resetFiles } = useLetterFiles();
   const [senderType, setSenderType] = React.useState<'person' | 'contractor'>('contractor');
   const [receiverType, setReceiverType] = React.useState<'person' | 'contractor'>('contractor');
   const [personModal, setPersonModal] = React.useState<{ target: 'sender' | 'receiver'; data?: any } | null>(null);
@@ -72,7 +71,6 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
   const { data: units = [], isLoading: loadingUnits } = useUnitsByProject(projectId);
   const { data: contractors = [], isLoading: loadingContractors } = useContractors();
   const { data: persons = [], isLoading: loadingPersons } = usePersons();
-  const { data: attachmentTypes = [], isLoading: loadingAttachmentTypes } = useAttachmentTypes();
   const { data: statuses = [] } = useLetterStatuses();
   const deletePerson = useDeletePerson();
   const deleteContractor = useDeleteContractor();
@@ -123,10 +121,6 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
   };
 
   const submit = (values: Omit<AddLetterFormData, 'attachments'>) => {
-    if (files.some((f) => f.type_id == null)) {
-      message.error('Укажите тип файла для всех документов');
-      return;
-    }
     onSubmit({
       ...values,
       date: values.date ?? dayjs(),
@@ -365,20 +359,6 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
           {files.map((f, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', marginTop: 4 }}>
                 <span style={{ marginRight: 8 }}>{f.file.name}</span>
-                <Select
-                    style={{ width: 220 }}
-                    placeholder="Тип файла"
-                    value={f.type_id ?? undefined}
-                    onChange={(v) => setType(i, v)}
-                    allowClear
-                    loading={loadingAttachmentTypes}
-                >
-                  {attachmentTypes.map((t) => (
-                      <Select.Option key={t.id} value={t.id}>
-                        {t.name}
-                      </Select.Option>
-                  ))}
-                </Select>
                 <Button type="text" danger onClick={() => removeFile(i)}>
                   Удалить
                 </Button>
