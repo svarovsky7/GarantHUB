@@ -39,9 +39,8 @@ function mapClaim(r: any): ClaimWithNames {
           path: a.storage_path,
           original_name: a.original_name ?? null,
           name,
-          url: a.file_url,
-          type: a.file_type,
-          attachment_type_id: a.attachment_type_id ?? null,
+          path: a.path,
+          mime_type: a.mime_type,
         } as import('@/shared/types/claimFile').RemoteClaimFile;
       })
     : [];
@@ -104,9 +103,8 @@ export function useClaims() {
             id: f.id,
             storage_path: f.storage_path,
             original_name: f.original_name,
-            file_url: f.file_url,
-            file_type: f.file_type,
-            attachment_type_id: f.attachment_type_id ?? null,
+            path: f.path,
+            mime_type: f.mime_type,
           };
         });
       }
@@ -164,9 +162,8 @@ export function useClaim(id?: number | string) {
           id: f.id,
           storage_path: f.storage_path,
           original_name: f.original_name,
-          file_url: f.file_url,
-          file_type: f.file_type,
-          attachment_type_id: f.attachment_type_id ?? null,
+          path: f.path,
+          mime_type: f.mime_type,
         }));
         const existIds = files.map((f) => f.id);
         if (existIds.length !== data.attachment_ids.length) {

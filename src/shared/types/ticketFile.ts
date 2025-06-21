@@ -4,14 +4,10 @@ export interface RemoteTicketFile {
   name: string;
   original_name?: string | null;
   path: string;
-  url: string;
-  type: string;
-  attachment_type_id: number | null;
-  attachment_type_name?: string;
+  mime_type: string;
 }
 
 /** Новый файл для вложения замечания */
 export interface NewTicketFile {
   file: File;
-  type_id: number | null;
 }

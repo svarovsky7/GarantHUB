@@ -2,12 +2,14 @@ export interface Attachment {
   id: number;
   /** Путь к файлу в Storage */
   storage_path: string;
-  /** Публичная ссылка на файл */
-  file_url: string;
+  /** Путь к файлу */
+  path: string;
   /** MIME‑тип файла */
-  file_type: string;
-  /** Тип вложения */
-  attachment_type_id: number | null;
+  mime_type: string;
   /** Исходное имя файла */
   original_name: string | null;
+  /** Кто загрузил */
+  uploaded_by?: string | null;
+  uploaded_at?: string | null;
+  updated_at?: string | null;
 }

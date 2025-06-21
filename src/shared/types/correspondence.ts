@@ -55,10 +55,8 @@ export interface CorrespondenceAttachment {
   file_type: string;
   /** Путь к файлу в хранилище */
   storage_path: string;
-  /** Публичная ссылка на файл */
-  file_url: string;
-  /** Тип вложения */
-  attachment_type_id: number | null;
+  /** MIME‑тип файла */
+  mime_type: string;
 }
 
 /** Связь писем: parent_id - родительское письмо, child_id - дочернее */
