@@ -62,9 +62,8 @@ export default function TicketListDialog({
       setTickets(t || []);
 
       const { data: s } = await supabase
-        .from("statuses")
+        .from("ticket_statuses")
         .select("id, name, color")
-        .eq('entity', 'ticket')
         .order("id", { ascending: true });
       setStatuses(s || []);
 

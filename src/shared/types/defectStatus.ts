@@ -1,4 +1,6 @@
-import type { Status } from './status';
-
-/** Статус дефекта */
-export interface DefectStatus extends Status {}
+export interface DefectStatus {
+  id: number;
+  name: string;
+  /** Цвет метки в HEX формате */
+  color: string | null;
+}

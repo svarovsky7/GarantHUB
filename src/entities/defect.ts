@@ -29,7 +29,7 @@ export function useDefects() {
         .from(TABLE)
         .select(
           'id, description, defect_type_id, defect_status_id, brigade_id, contractor_id, is_warranty, received_at, fixed_at, fixed_by, attachment_ids, created_at,' +
-          ' defect_type:defect_types(id,name), defect_status:statuses(id,name,color), fixed_by_user:profiles(id,name)'
+          ' defect_type:defect_types(id,name), defect_status:defect_statuses(id,name,color), fixed_by_user:profiles(id,name)'
         )
         .order('id');
       if (error) throw error;
@@ -55,7 +55,7 @@ export function useDefect(id?: number) {
         .from(TABLE)
         .select(
           'id, description, defect_type_id, defect_status_id, brigade_id, contractor_id, is_warranty, received_at, fixed_at, fixed_by, attachment_ids, created_at,' +
-          ' defect_type:defect_types(id,name), defect_status:statuses(id,name,color), fixed_by_user:profiles(id,name)'
+          ' defect_type:defect_types(id,name), defect_status:defect_statuses(id,name,color), fixed_by_user:profiles(id,name)'
         )
         .eq('id', id as number)
         .single();
@@ -82,7 +82,7 @@ export function useDefectsByIds(ids?: number[]) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from(TABLE)
-        .select('id, defect_status:statuses(name)')
+        .select('id, defect_status:defect_statuses(name)')
         .in('id', ids as number[]);
       if (error) throw error;
       return (data ?? []).map((d: any) => ({
@@ -106,7 +106,7 @@ export function useDefectsWithNames(ids?: number[]) {
       const { data, error } = await supabase
         .from(TABLE)
         .select(
-          'id, description, defect_type_id, defect_status_id, brigade_id, contractor_id, is_warranty, received_at, fixed_at, fixed_by, defect_type:defect_types(id,name), defect_status:statuses(id,name,color), fixed_by_user:profiles(id,name)'
+          'id, description, defect_type_id, defect_status_id, brigade_id, contractor_id, is_warranty, received_at, fixed_at, fixed_by, defect_type:defect_types(id,name), defect_status:defect_statuses(id,name,color), fixed_by_user:profiles(id,name)'
         )
         .in('id', ids as number[]);
       if (error) throw error;
@@ -242,10 +242,9 @@ export function useFixDefect() {
       }
       const userId = useAuthStore.getState().profile?.id ?? null;
       const { data: st } = await supabase
-        .from('statuses')
+        .from('defect_statuses')
         .select('id')
         .ilike('name', '%провер%')
-        .eq('entity', 'defect')
         .maybeSingle();
       const checkingId = st?.id ?? null;
       const { error } = await supabase

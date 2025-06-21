@@ -159,8 +159,8 @@ function mapTicket(r) {
     projectName: r.projects?.name ?? "—",
     unitNames: [],
     defectIds: r.defect_ids || [],
-    statusName: r.statuses?.name ?? "—",
-    statusColor: r.statuses?.color ?? null,
+    statusName: r.ticket_statuses?.name ?? "—",
+    statusColor: r.ticket_statuses?.color ?? null,
     title: r.title,
     description: r.description,
     customerRequestNo: r.customer_request_no,
@@ -192,7 +192,7 @@ export function useTickets() {
           created_by, created_at, received_at, fixed_at,
           attachment_ids,
           projects (id, name),
-          statuses (id, name, color)
+          ticket_statuses (id, name, color)
         `,
         );
       query = filterByProjects(query, keyProjectId, projectIds, onlyAssigned);
@@ -335,7 +335,7 @@ export function useTicket(ticketId) {
           created_by, created_at, received_at, fixed_at,
           attachment_ids,
           projects (id, name),
-          statuses (id, name, color)
+          ticket_statuses (id, name, color)
         `,
         )
         .eq("id", id);
@@ -634,18 +634,16 @@ export function useUpdateTicketStatus() {
       if (error) throw error;
 
       const { data: status } = await supabase
-        .from('statuses')
+        .from('ticket_statuses')
         .select('name')
         .eq('id', statusId)
-        .eq('entity', 'ticket')
         .maybeSingle();
       const closedTicket = /закры/i.test(status?.name ?? '');
 
       if (closedTicket && data?.defect_ids?.length) {
         const { data: statuses } = await supabase
-          .from('statuses')
-          .select('id, name')
-          .eq('entity', 'defect');
+          .from('defect_statuses')
+          .select('id, name');
         const closedId = statuses?.find((s) => /закры/i.test(s.name))?.id ?? null;
         const update = closedId ? { defect_status_id: closedId } : {};
         await supabase.from('defects').update(update).in('id', data.defect_ids);
