@@ -84,7 +84,8 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
     if (initialValues.accepted_on)
       form.setFieldValue('accepted_on', dayjs(initialValues.accepted_on));
     if (initialValues.registered_on) form.setFieldValue('registered_on', dayjs(initialValues.registered_on));
-  }, [globalProjectId, form, initialValues]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [globalProjectId, form]);
 
   /**
    * Если статус не указан, подставляем первым из списка.
@@ -97,13 +98,15 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
     ) {
       form.setFieldValue('claim_status_id', statuses[0].id);
     }
-  }, [statuses, form, initialValues.claim_status_id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statuses, form]);
 
   useEffect(() => {
     if (!initialValues.unit_ids) {
       form.setFieldValue('unit_ids', []);
     }
-  }, [projectId, form, initialValues.unit_ids]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId, form]);
 
   const onFinish = async (values: ClaimFormValues) => {
     if (!showDefectsForm) return;
