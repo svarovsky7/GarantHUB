@@ -22,7 +22,13 @@ import { useCreateDefects, type NewDefect } from '@/entities/defect';
 
 export interface ClaimFormAntdProps {
   onCreated?: () => void;
-  initialValues?: Partial<{ project_id: number; unit_ids: number[]; engineer_id: string; description: string }>;
+  initialValues?: Partial<{
+    project_id: number;
+    unit_ids: number[];
+    engineer_id: string;
+    description: string;
+    resolved_on: string;
+  }>;
   /** Показывать форму добавления дефектов */
   showDefectsForm?: boolean;
   /** Показывать блок загрузки файлов */
@@ -37,6 +43,8 @@ export interface ClaimFormValues {
   claimed_on: dayjs.Dayjs | null;
   accepted_on: dayjs.Dayjs | null;
   registered_on: dayjs.Dayjs | null;
+  /** Срок устранения всех дефектов */
+  resolved_on: dayjs.Dayjs | null;
   engineer_id: string | null;
   description: string | null;
   defects?: Array<{
@@ -65,6 +73,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
   const create = useCreateClaim();
   const notify = useNotify();
   const createDefects = useCreateDefects();
+  const defectsWatch = Form.useWatch('defects', form);
 
   const handleDropFiles = (dropped: File[]) => {
     setFiles((p) => [...p, ...dropped]);
@@ -86,6 +95,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
     if (initialValues.accepted_on)
       form.setFieldValue('accepted_on', dayjs(initialValues.accepted_on));
     if (initialValues.registered_on) form.setFieldValue('registered_on', dayjs(initialValues.registered_on));
+    if (initialValues.resolved_on) form.setFieldValue('resolved_on', dayjs(initialValues.resolved_on));
     if (initialValues.description) form.setFieldValue('description', initialValues.description);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [globalProjectId, form]);
@@ -118,6 +128,20 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId, form]);
 
+  // Вычисляем срок устранения как максимальную дату устранения дефектов
+  useEffect(() => {
+    if (!defectsWatch) return;
+    const dates = (defectsWatch as any[])
+      .map((d) => ('fixed_at' in d && d.fixed_at ? d.fixed_at : null))
+      .filter(Boolean) as dayjs.Dayjs[];
+    if (dates.length) {
+      const maxDate = dates.reduce((acc, cur) => (cur.isAfter(acc) ? cur : acc));
+      form.setFieldValue('resolved_on', maxDate);
+    } else {
+      form.setFieldValue('resolved_on', null);
+    }
+  }, [defectsWatch, form]);
+
   const onFinish = async (values: ClaimFormValues) => {
     if (!showDefectsForm) return;
     const { defects: defs, ...rest } = values;
@@ -143,6 +167,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
       claimed_on: values.claimed_on ? values.claimed_on.format('YYYY-MM-DD') : null,
       accepted_on: values.accepted_on ? values.accepted_on.format('YYYY-MM-DD') : null,
       registered_on: values.registered_on ? values.registered_on.format('YYYY-MM-DD') : null,
+      resolved_on: values.resolved_on ? values.resolved_on.format('YYYY-MM-DD') : null,
       defect_ids: defectIds,
     } as any);
     form.resetFields();
@@ -199,7 +224,12 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
           </Form.Item>
         </Col>
         <Col span={8}>
-          <Form.Item name="claim_status_id" label="Статус" rules={[{ required: true }]}> 
+          <Form.Item name="resolved_on" label="Устранить до">
+            <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
+          </Form.Item>
+        </Col>
+        <Col span={8}>
+          <Form.Item name="claim_status_id" label="Статус" rules={[{ required: true }]}>
             <Select showSearch options={statuses.map((s) => ({ value: s.id, label: s.name }))} />
           </Form.Item>
         </Col>
