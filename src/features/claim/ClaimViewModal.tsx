@@ -1,6 +1,7 @@
 import React from 'react';
 import { Modal, Skeleton, Typography } from 'antd';
-import { useClaim, signedUrl } from '@/entities/claim';
+import { useClaim, signedUrl, useRemoveClaimAttachment } from '@/entities/claim';
+import type { RemoteClaimFile } from '@/shared/types/claimFile';
 import AttachmentEditorTable from '@/shared/ui/AttachmentEditorTable';
 import TicketDefectsTable from '@/widgets/TicketDefectsTable';
 import ClaimFormAntd from './ClaimFormAntd';
@@ -13,6 +14,27 @@ interface Props {
 
 export default function ClaimViewModal({ open, claimId, onClose }: Props) {
   const { data: claim } = useClaim(claimId ?? undefined);
+  const removeAtt = useRemoveClaimAttachment();
+  const [files, setFiles] = React.useState<RemoteClaimFile[]>([]);
+
+  React.useEffect(() => {
+    setFiles(
+      claim?.attachments?.map((f) => ({
+        id: f.id,
+        name: f.original_name ?? f.name,
+        path: f.path ?? f.storage_path,
+        mime_type: f.type as any,
+      })) || [],
+    );
+  }, [claim]);
+
+  const handleRemove = async (id: string) => {
+    await removeAtt.mutateAsync({
+      claimId: claim!.id,
+      attachmentId: Number(id),
+    });
+    setFiles((p) => p.filter((f) => String(f.id) !== id));
+  };
   if (!open || !claimId) return null;
   const titleText = claim
     ? `Претензия №${claim.claim_no}`
@@ -26,22 +48,25 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
             initialValues={claim as any}
             onCreated={onClose}
             showDefectsForm={false}
+            showAttachments={false}
           />
           {claim.ticket_ids?.length ? (
             <div style={{ marginTop: 16 }}>
               <TicketDefectsTable defectIds={claim.ticket_ids} />
             </div>
           ) : null}
-          {claim.attachments?.length ? (
+          {files.length ? (
             <div style={{ marginTop: 16 }}>
               <AttachmentEditorTable
-                remoteFiles={claim.attachments.map((f) => ({
+                remoteFiles={files.map((f) => ({
                   id: String(f.id),
-                  name: f.original_name ?? f.name,
-                  path: f.path ?? f.storage_path,
-                  mime: f.type,
+                  name: f.name,
+                  path: f.path,
+                  mime: (f as any).mime_type,
                 }))}
+                onRemoveRemote={handleRemove}
                 getSignedUrl={(path, name) => signedUrl(path, name)}
+                showMime={false}
               />
             </div>
           ) : null}

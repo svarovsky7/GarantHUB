@@ -26,6 +26,8 @@ interface Props {
   onRemoveRemote?: (id: string) => void;
   onRemoveNew?: (idx: number) => void;
   getSignedUrl?: (path: string, name: string) => Promise<string>;
+  /** Показывать колонку MIME */
+  showMime?: boolean;
 }
 
 /**
@@ -39,6 +41,7 @@ export default function AttachmentEditorTable({
                                                 onRemoveRemote,
                                                 onRemoveNew,
                                                 getSignedUrl,
+                                                showMime = true,
                                               }: Props) {
   const [cache, setCache] = React.useState<Record<string, string>>({});
 
@@ -105,11 +108,9 @@ export default function AttachmentEditorTable({
       width: 200,
       ellipsis: true,
     },
-    {
-      title: 'MIME',
-      dataIndex: 'mime',
-      width: 200,
-    },
+    ...(showMime
+      ? [{ title: 'MIME', dataIndex: 'mime', width: 200 } as ColumnsType<Row>[number]]
+      : []),
     {
       title: 'Действия',
       dataIndex: 'actions',

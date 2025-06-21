@@ -26,6 +26,8 @@ export interface ClaimFormAntdProps {
   initialValues?: Partial<{ project_id: number; unit_ids: number[]; engineer_id: string }>;
   /** Показывать форму добавления дефектов */
   showDefectsForm?: boolean;
+  /** Показывать блок загрузки файлов */
+  showAttachments?: boolean;
 }
 
 export interface ClaimFormValues {
@@ -49,7 +51,7 @@ export interface ClaimFormValues {
   }>;
 }
 
-export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefectsForm = true }: ClaimFormAntdProps) {
+export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefectsForm = true, showAttachments = true }: ClaimFormAntdProps) {
   const [form] = Form.useForm<ClaimFormValues>();
   const [files, setFiles] = useState<File[]>([]);
   const globalProjectId = useProjectId();
@@ -207,13 +209,15 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
           )}
         </Form.List>
       )}
-      <Form.Item label="Файлы">
-        <FileDropZone onFiles={handleDropFiles} />
-        <AttachmentEditorTable
-          newFiles={files.map((f) => ({ file: f, mime: f.type }))}
-          onRemoveNew={removeFile}
-        />
-      </Form.Item>
+      {showAttachments && (
+        <Form.Item label="Файлы">
+          <FileDropZone onFiles={handleDropFiles} />
+          <AttachmentEditorTable
+            newFiles={files.map((f) => ({ file: f, mime: f.type }))}
+            onRemoveNew={removeFile}
+          />
+        </Form.Item>
+      )}
       {showDefectsForm && (
         <Form.Item style={{ textAlign: 'right' }}>
           <Button type="primary" htmlType="submit" loading={create.isPending}>
