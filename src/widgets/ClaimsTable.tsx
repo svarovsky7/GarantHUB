@@ -105,7 +105,7 @@ export default function ClaimsTable({ claims, filters, loading, columns: columns
   const columns = columnsProp ?? defaultColumns;
 
   const filtered = useMemo(() => {
-    const isMatch = (c: ClaimWithNames) => {
+    return claims.filter((c) => {
       const matchesProject = !filters.project || c.projectName === filters.project;
       const matchesUnits = !filters.units || (() => {
         const units = c.unitNumbers ? c.unitNumbers.split(',').map((n) => n.trim()) : [];
@@ -119,29 +119,7 @@ export default function ClaimsTable({ claims, filters, loading, columns: columns
       const matchesHideClosed = !(filters.hideClosed && /закры/i.test(c.statusName));
       const matchesPeriod = !filters.period || (c.registeredOn && c.registeredOn.isSameOrAfter(filters.period[0], 'day') && c.registeredOn.isSameOrBefore(filters.period[1], 'day'));
       return matchesProject && matchesUnits && matchesStatus && matchesResponsible && matchesNumber && matchesIds && matchesDescription && matchesHideClosed && matchesPeriod;
-    };
-
-    const childMap = new Map<number, ClaimWithNames[]>();
-    claims.forEach((c) => {
-      if (c.parent_id) {
-        const arr = childMap.get(c.parent_id) ?? [];
-        arr.push(c);
-        childMap.set(c.parent_id, arr);
-      }
     });
-
-    const include = new Set<number>();
-    const addWithChildren = (id: number) => {
-      if (include.has(id)) return;
-      include.add(id);
-      (childMap.get(id) ?? []).forEach((ch) => addWithChildren(ch.id));
-    };
-
-    claims.forEach((c) => {
-      if (isMatch(c)) addWithChildren(c.id);
-    });
-
-    return claims.filter((c) => include.has(c.id));
   }, [claims, filters]);
 
   const treeData = useMemo(() => {
