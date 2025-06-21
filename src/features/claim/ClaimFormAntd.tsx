@@ -22,7 +22,7 @@ import { useCreateDefects, type NewDefect } from '@/entities/defect';
 
 export interface ClaimFormAntdProps {
   onCreated?: () => void;
-  initialValues?: Partial<{ project_id: number; unit_ids: number[]; engineer_id: string }>;
+  initialValues?: Partial<{ project_id: number; unit_ids: number[]; engineer_id: string; description: string }>;
   /** Показывать форму добавления дефектов */
   showDefectsForm?: boolean;
   /** Показывать блок загрузки файлов */
@@ -38,6 +38,7 @@ export interface ClaimFormValues {
   accepted_on: dayjs.Dayjs | null;
   registered_on: dayjs.Dayjs | null;
   engineer_id: string | null;
+  description: string | null;
   defects?: Array<{
     type_id: number | null;
     fixed_at: dayjs.Dayjs | null;
@@ -85,6 +86,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
     if (initialValues.accepted_on)
       form.setFieldValue('accepted_on', dayjs(initialValues.accepted_on));
     if (initialValues.registered_on) form.setFieldValue('registered_on', dayjs(initialValues.registered_on));
+    if (initialValues.description) form.setFieldValue('description', initialValues.description);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [globalProjectId, form]);
 
@@ -191,6 +193,13 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
         <Col span={8}>
           <Form.Item name="claim_status_id" label="Статус" rules={[{ required: true }]}> 
             <Select showSearch options={statuses.map((s) => ({ value: s.id, label: s.name }))} />
+          </Form.Item>
+        </Col>
+      </Row>
+      <Row gutter={16}>
+        <Col span={24}>
+          <Form.Item name="description" label="Дополнительная информация">
+            <Input.TextArea rows={2} />
           </Form.Item>
         </Col>
       </Row>
