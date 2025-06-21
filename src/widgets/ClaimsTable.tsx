@@ -25,12 +25,12 @@ export default function ClaimsTable({ claims, filters, loading, columns: columns
       { title: 'ID', dataIndex: 'id', width: 80, sorter: (a, b) => a.id - b.id },
       { title: 'Проект', dataIndex: 'projectName', width: 180, sorter: (a, b) => a.projectName.localeCompare(b.projectName) },
       { title: 'Объекты', dataIndex: 'unitNames', width: 160, sorter: (a, b) => a.unitNames.localeCompare(b.unitNames) },
-      { title: 'Статус', dataIndex: 'claim_status_id', width: 160, sorter: (a, b) => a.statusName.localeCompare(b.statusName), render: (_: any, row: any) => <ClaimStatusSelect claimId={row.id} statusId={row.claim_status_id} statusColor={row.statusColor} statusName={row.statusName} /> },
-      { title: '№ претензии', dataIndex: 'claim_no', width: 160, sorter: (a, b) => a.claim_no.localeCompare(b.claim_no) },
-      { title: 'Дата претензии', dataIndex: 'claimedOn', width: 120, sorter: (a, b) => (a.claimedOn ? a.claimedOn.valueOf() : 0) - (b.claimedOn ? b.claimedOn.valueOf() : 0), render: (v) => fmt(v) },
-      { title: 'Дата получения Застройщиком', dataIndex: 'acceptedOn', width: 120, sorter: (a, b) => (a.acceptedOn ? a.acceptedOn.valueOf() : 0) - (b.acceptedOn ? b.acceptedOn.valueOf() : 0), render: (v) => fmt(v) },
-      { title: 'Дата регистрации претензии', dataIndex: 'registeredOn', width: 120, sorter: (a, b) => (a.registeredOn ? a.registeredOn.valueOf() : 0) - (b.registeredOn ? b.registeredOn.valueOf() : 0), render: (v) => fmt(v) },
-      { title: 'Дата устранения', dataIndex: 'resolvedOn', width: 120, sorter: (a, b) => (a.resolvedOn ? a.resolvedOn.valueOf() : 0) - (b.resolvedOn ? b.resolvedOn.valueOf() : 0), render: (v) => fmt(v) },
+      { title: 'Статус', dataIndex: 'status_id', width: 160, sorter: (a, b) => a.statusName.localeCompare(b.statusName), render: (_: any, row: any) => <ClaimStatusSelect claimId={row.id} statusId={row.status_id} statusColor={row.statusColor} statusName={row.statusName} /> },
+      { title: '№ претензии', dataIndex: 'number', width: 160, sorter: (a, b) => a.number.localeCompare(b.number) },
+      { title: 'Дата претензии', dataIndex: 'claimDate', width: 120, sorter: (a, b) => (a.claimDate ? a.claimDate.valueOf() : 0) - (b.claimDate ? b.claimDate.valueOf() : 0), render: (v) => fmt(v) },
+      { title: 'Дата получения Застройщиком', dataIndex: 'receivedByDeveloperAt', width: 120, sorter: (a, b) => (a.receivedByDeveloperAt ? a.receivedByDeveloperAt.valueOf() : 0) - (b.receivedByDeveloperAt ? b.receivedByDeveloperAt.valueOf() : 0), render: (v) => fmt(v) },
+      { title: 'Дата регистрации претензии', dataIndex: 'registeredAt', width: 120, sorter: (a, b) => (a.registeredAt ? a.registeredAt.valueOf() : 0) - (b.registeredAt ? b.registeredAt.valueOf() : 0), render: (v) => fmt(v) },
+      { title: 'Дата устранения', dataIndex: 'fixedAt', width: 120, sorter: (a, b) => (a.fixedAt ? a.fixedAt.valueOf() : 0) - (b.fixedAt ? b.fixedAt.valueOf() : 0), render: (v) => fmt(v) },
       { title: 'Ответственный инженер', dataIndex: 'responsibleEngineerName', width: 180, sorter: (a, b) => (a.responsibleEngineerName || '').localeCompare(b.responsibleEngineerName || '') },
       { title: 'Действия', key: 'actions', width: 100, render: (_: any, record) => (
         <Space size="middle">
@@ -63,9 +63,9 @@ export default function ClaimsTable({ claims, filters, loading, columns: columns
       const matchesUnits = !filters.units || filters.units.every((u) => c.unitNames.includes(u));
       const matchesStatus = !filters.status || c.statusName === filters.status;
       const matchesResponsible = !filters.responsible || c.responsibleEngineerName === filters.responsible;
-      const matchesNumber = !filters.claim_no || c.claim_no.includes(filters.claim_no);
+      const matchesNumber = !filters.number || c.number.includes(filters.number);
       const matchesIds = !filters.id || filters.id.includes(c.id);
-      const matchesPeriod = !filters.period || (c.registeredOn && c.registeredOn.isSameOrAfter(filters.period[0], 'day') && c.registeredOn.isSameOrBefore(filters.period[1], 'day'));
+      const matchesPeriod = !filters.period || (c.registeredAt && c.registeredAt.isSameOrAfter(filters.period[0], 'day') && c.registeredAt.isSameOrBefore(filters.period[1], 'day'));
       return matchesProject && matchesUnits && matchesStatus && matchesResponsible && matchesNumber && matchesIds && matchesPeriod;
     });
   }, [claims, filters]);
