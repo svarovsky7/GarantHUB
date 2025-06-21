@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import dayjs from 'dayjs';
 import { Table, Tooltip, Space, Button, Popconfirm, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
@@ -16,6 +16,9 @@ import type { ClaimWithNames } from '@/shared/types/claimWithNames';
 import ClaimStatusSelect from '@/features/claim/ClaimStatusSelect';
 
 const fmt = (d: any) => (d && dayjs.isDayjs(d) && d.isValid() ? d.format('DD.MM.YYYY') : '—');
+
+/** Ключ в localStorage для хранения раскрывшихся строк таблицы претензий */
+const LS_EXPANDED_KEY = 'claimsExpandedRows';
 
 interface Props {
   claims: ClaimWithNames[];
@@ -135,6 +138,27 @@ export default function ClaimsTable({ claims, filters, loading, columns: columns
     return roots;
   }, [filtered]);
 
+  const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(LS_EXPANDED_KEY);
+      if (saved) {
+        const parsed: React.Key[] = JSON.parse(saved);
+        const valid = parsed.filter((id) => filtered.some((c) => String(c.id) === String(id)));
+        setExpandedRowKeys(valid);
+        return;
+      }
+    } catch {}
+    setExpandedRowKeys(filtered.map((c) => c.id));
+  }, [filtered]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(LS_EXPANDED_KEY, JSON.stringify(expandedRowKeys));
+    } catch {}
+  }, [expandedRowKeys]);
+
   const rowClassName = (row: ClaimWithNames) => {
     const classes = [row.parent_id ? 'child-claim-row' : 'main-claim-row'];
     if (row.hasCheckingDefect) classes.push('claim-checking-row');
@@ -149,7 +173,22 @@ export default function ClaimsTable({ claims, filters, loading, columns: columns
       loading={loading}
       pagination={{ pageSize: 25, showSizeChanger: true }}
       size="middle"
-      expandable={{ expandRowByClick: true, indentSize: 24 }}
+      expandable={{
+        expandRowByClick: true,
+        indentSize: 24,
+        expandedRowKeys,
+        onExpand: (expanded, record) => {
+          setExpandedRowKeys((prev) => {
+            const set = new Set(prev);
+            if (expanded) {
+              set.add(record.id);
+            } else {
+              set.delete(record.id);
+            }
+            return Array.from(set);
+          });
+        },
+      }}
       rowClassName={rowClassName}
     />
   );
