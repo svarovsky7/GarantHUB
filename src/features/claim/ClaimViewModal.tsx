@@ -47,6 +47,7 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
           <ClaimFormAntd
             initialValues={claim as any}
             onCreated={onClose}
+            onCancel={onClose}
             showDefectsForm={false}
             showAttachments={false}
           />

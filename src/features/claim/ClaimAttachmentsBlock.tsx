@@ -1,27 +1,19 @@
-import React from 'react';
-import { Form } from 'antd';
-import FileDropZone from '@/shared/ui/FileDropZone';
-import AttachmentEditorTable from '@/shared/ui/AttachmentEditorTable';
+import React, { useEffect, useState } from 'react';
+import { Form, Upload } from 'antd';
+import { InboxOutlined } from '@ant-design/icons';
+import type { UploadProps } from 'antd';
+import FileUploadTable from '@/shared/ui/FileUploadTable';
 import type { RemoteClaimFile } from '@/shared/types/claimFile';
 import { signedUrl } from '@/entities/claim';
 
-/**
- * Блок загрузки и отображения файлов претензии.
- * Используется как в форме создания претензии, так и в просмотре.
- */
 export interface ClaimAttachmentsBlockProps {
-  /** Файлы, уже загруженные на сервер */
   remoteFiles?: RemoteClaimFile[];
-  /** Новые файлы, выбранные пользователем */
   newFiles?: File[];
-  /** Обработчик добавления новых файлов */
   onFiles?: (files: File[]) => void;
-  /** Удалить файл с сервера */
-  onRemoveRemote?: (id: string) => void;
-  /** Удалить локально выбранный файл */
+  onRemoveRemote?: (id: string) => Promise<void> | void;
   onRemoveNew?: (index: number) => void;
-  /** Показывать ли область загрузки */
   showUpload?: boolean;
+  loading?: boolean;
 }
 
 export default function ClaimAttachmentsBlock({
@@ -31,22 +23,52 @@ export default function ClaimAttachmentsBlock({
   onRemoveRemote,
   onRemoveNew,
   showUpload = true,
+  loading = false,
 }: ClaimAttachmentsBlockProps) {
+  const [files, setFiles] = useState<RemoteClaimFile[]>(remoteFiles);
+
+  useEffect(() => setFiles(remoteFiles), [remoteFiles]);
+
+  const handleRemoveRemote = async (id: string) => {
+    const cur = files;
+    setFiles((p) => p.filter((f) => String(f.id) !== id));
+    try {
+      await onRemoveRemote?.(id);
+    } catch (e) {
+      setFiles(cur);
+    }
+  };
+
+  const props: UploadProps = {
+    multiple: true,
+    showUploadList: false,
+    customRequest: (info) => {
+      onFiles?.([info.file as File]);
+      info.onSuccess?.({}, info.file);
+    },
+  };
+
   return (
     <Form.Item label="Файлы">
-      {showUpload && <FileDropZone onFiles={onFiles ?? (() => {})} />}
-      <AttachmentEditorTable
-        remoteFiles={remoteFiles.map((f) => ({
+      {showUpload && (
+        <Upload.Dragger {...props} style={{ height: 120 }} aria-label="Загрузить файлы">
+          <p className="ant-upload-drag-icon">
+            <InboxOutlined />
+          </p>
+          <p className="ant-upload-text">Перетащите файлы (до 50 MB)</p>
+        </Upload.Dragger>
+      )}
+      <FileUploadTable
+        remoteFiles={files.map((f) => ({
           id: String(f.id),
           name: f.original_name ?? f.name,
           path: f.path,
-          mime: f.mime_type,
         }))}
-        newFiles={newFiles.map((f) => ({ file: f, mime: f.type }))}
-        onRemoveRemote={onRemoveRemote}
+        newFiles={newFiles.map((f) => ({ file: f }))}
+        onRemoveRemote={handleRemoveRemote}
         onRemoveNew={onRemoveNew}
         getSignedUrl={(path, name) => signedUrl(path, name)}
-        showMime={false}
+        loading={loading}
       />
     </Form.Item>
   );

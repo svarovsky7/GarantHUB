@@ -143,7 +143,7 @@ export default function ClaimsPage() {
         </span>
         {showAddForm && (
           <div style={{ marginTop: 16 }}>
-            <ClaimFormAntd onCreated={() => setShowAddForm(false)} />
+            <ClaimFormAntd onCreated={() => setShowAddForm(false)} onCancel={() => setShowAddForm(false)} />
           </div>
         )}
         <TableColumnsDrawer open={showColumnsDrawer} columns={columnsState} onChange={setColumnsState} onClose={() => setShowColumnsDrawer(false)} />

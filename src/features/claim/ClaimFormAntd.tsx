@@ -7,7 +7,10 @@ import {
   Button,
   Row,
   Col,
+  Affix,
+  Space,
 } from 'antd';
+import { CheckOutlined } from '@ant-design/icons';
 import ClaimAttachmentsBlock from './ClaimAttachmentsBlock';
 import dayjs from 'dayjs';
 import { useVisibleProjects } from '@/entities/project';
@@ -17,11 +20,12 @@ import { useClaimStatuses } from '@/entities/claimStatus';
 import { useCreateClaim } from '@/entities/claim';
 import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useNotify } from '@/shared/hooks/useNotify';
-import DefectEditableTable from '@/widgets/DefectEditableTable';
+import ClaimDefectsTable from '@/widgets/ClaimDefectsTable';
 import { useCreateDefects, type NewDefect } from '@/entities/defect';
 
 export interface ClaimFormAntdProps {
   onCreated?: () => void;
+  onCancel?: () => void;
   initialValues?: Partial<{ project_id: number; unit_ids: number[]; engineer_id: string }>;
   /** Показывать форму добавления дефектов */
   showDefectsForm?: boolean;
@@ -50,7 +54,7 @@ export interface ClaimFormValues {
   }>;
 }
 
-export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefectsForm = true, showAttachments = true }: ClaimFormAntdProps) {
+export default function ClaimFormAntd({ onCreated, onCancel, initialValues = {}, showDefectsForm = true, showAttachments = true }: ClaimFormAntdProps) {
   const [form] = Form.useForm<ClaimFormValues>();
   const [files, setFiles] = useState<File[]>([]);
   const globalProjectId = useProjectId();
@@ -198,13 +202,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
       {showDefectsForm && (
         <Form.List name="defects">
           {(fields, { add, remove }) => (
-            <DefectEditableTable
-              fields={fields}
-              add={add}
-              remove={remove}
-              projectId={projectId}
-              showFiles={false}
-            />
+            <ClaimDefectsTable fields={fields} add={add} remove={remove} />
           )}
         </Form.List>
       )}
@@ -216,11 +214,23 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
         />
       )}
       {showDefectsForm && (
-        <Form.Item style={{ textAlign: 'right' }}>
-          <Button type="primary" htmlType="submit" loading={create.isPending}>
-            Создать
-          </Button>
-        </Form.Item>
+        <Affix offsetBottom={16}>
+          <Space>
+            <Button
+              type="primary"
+              size="large"
+              icon={<CheckOutlined />}
+              htmlType="submit"
+              aria-label="Создать претензию"
+              loading={create.isPending}
+            >
+              Создать
+            </Button>
+            <Button size="large" aria-label="Отмена" onClick={onCancel}>
+              Отмена
+            </Button>
+          </Space>
+        </Affix>
       )}
     </Form>
   );
