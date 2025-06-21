@@ -7,6 +7,7 @@ import { useSnackbar } from 'notistack';
 import { useClaims, useDeleteClaim } from '@/entities/claim';
 import { useUsers } from '@/entities/user';
 import { useUnitsByIds } from '@/entities/unit';
+import { useDefectsByIds } from '@/entities/defect';
 import ClaimsTable from '@/widgets/ClaimsTable';
 import ClaimsFilters from '@/widgets/ClaimsFilters';
 import ClaimFormAntd from '@/features/claim/ClaimFormAntd';
@@ -28,7 +29,19 @@ export default function ClaimsPage() {
     [claims],
   );
   const { data: units = [] } = useUnitsByIds(unitIds);
-  const checkingDefectMap = useMemo(() => new Map<number, boolean>(), []);
+  const defectIds = useMemo(
+    () => Array.from(new Set(claims.flatMap((c) => c.defect_ids || []))),
+    [claims],
+  );
+  const { data: defectsInfo = [] } = useDefectsByIds(defectIds);
+  const checkingDefectMap = useMemo(() => {
+    const map = new Map<number, boolean>();
+    defectsInfo.forEach((d) => {
+      const name = d.statusName?.toLowerCase() || '';
+      map.set(d.id, /провер/.test(name));
+    });
+    return map;
+  }, [defectsInfo]);
   const [filters, setFilters] = useState({});
   const [showAddForm, setShowAddForm] = useState(false);
   const LS_SHOW_FILTERS = 'claims:showFilters';
@@ -73,8 +86,8 @@ export default function ClaimsPage() {
       claims.map((c) => ({
         ...c,
         unitNames: c.unit_ids.map((id) => unitMap[id]).filter(Boolean).join(', '),
-        responsibleEngineerName: userMap[c.engineer_id] ?? null,
-        hasCheckingDefect: false,
+        responsibleEngineerName: userMap[c.responsible_engineer_id] ?? null,
+        hasCheckingDefect: (c.defect_ids || []).some((id) => checkingDefectMap.get(id)),
       })),
     [claims, unitMap, userMap, checkingDefectMap],
   );
@@ -95,12 +108,12 @@ export default function ClaimsPage() {
       id: { title: 'ID', dataIndex: 'id', width: 80, sorter: (a: any, b: any) => a.id - b.id },
       projectName: { title: 'Проект', dataIndex: 'projectName', width: 180, sorter: (a: any, b: any) => a.projectName.localeCompare(b.projectName) },
       unitNames: { title: 'Объекты', dataIndex: 'unitNames', width: 160, sorter: (a: any, b: any) => a.unitNames.localeCompare(b.unitNames) },
-      statusId: { title: 'Статус', dataIndex: 'claim_status_id', width: 160, sorter: (a: any, b: any) => a.statusName.localeCompare(b.statusName), render: (_: any, row: any) => <ClaimStatusSelect claimId={row.id} statusId={row.claim_status_id} statusColor={row.statusColor} statusName={row.statusName} /> },
-      claim_no: { title: '№ претензии', dataIndex: 'claim_no', width: 160, sorter: (a: any, b: any) => a.claim_no.localeCompare(b.claim_no) },
-      claimedOn: { title: 'Дата претензии', dataIndex: 'claimedOn', width: 120, sorter: (a: any, b: any) => (a.claimedOn ? a.claimedOn.valueOf() : 0) - (b.claimedOn ? b.claimedOn.valueOf() : 0), render: (v: any) => fmt(v) },
-      acceptedOn: { title: 'Дата получения Застройщиком', dataIndex: 'acceptedOn', width: 120, sorter: (a: any, b: any) => (a.acceptedOn ? a.acceptedOn.valueOf() : 0) - (b.acceptedOn ? b.acceptedOn.valueOf() : 0), render: (v: any) => fmt(v) },
-      registeredOn: { title: 'Дата регистрации претензии', dataIndex: 'registeredOn', width: 120, sorter: (a: any, b: any) => (a.registeredOn ? a.registeredOn.valueOf() : 0) - (b.registeredOn ? b.registeredOn.valueOf() : 0), render: (v: any) => fmt(v) },
-      resolvedOn: { title: 'Дата устранения', dataIndex: 'resolvedOn', width: 120, sorter: (a: any, b: any) => (a.resolvedOn ? a.resolvedOn.valueOf() : 0) - (b.resolvedOn ? b.resolvedOn.valueOf() : 0), render: (v: any) => fmt(v) },
+      statusId: { title: 'Статус', dataIndex: 'status_id', width: 160, sorter: (a: any, b: any) => a.statusName.localeCompare(b.statusName), render: (_: any, row: any) => <ClaimStatusSelect claimId={row.id} statusId={row.status_id} statusColor={row.statusColor} statusName={row.statusName} /> },
+      number: { title: '№ претензии', dataIndex: 'number', width: 160, sorter: (a: any, b: any) => a.number.localeCompare(b.number) },
+      claimDate: { title: 'Дата претензии', dataIndex: 'claimDate', width: 120, sorter: (a: any, b: any) => (a.claimDate ? a.claimDate.valueOf() : 0) - (b.claimDate ? b.claimDate.valueOf() : 0), render: (v: any) => fmt(v) },
+      receivedByDeveloperAt: { title: 'Дата получения Застройщиком', dataIndex: 'receivedByDeveloperAt', width: 120, sorter: (a: any, b: any) => (a.receivedByDeveloperAt ? a.receivedByDeveloperAt.valueOf() : 0) - (b.receivedByDeveloperAt ? b.receivedByDeveloperAt.valueOf() : 0), render: (v: any) => fmt(v) },
+      registeredAt: { title: 'Дата регистрации претензии', dataIndex: 'registeredAt', width: 120, sorter: (a: any, b: any) => (a.registeredAt ? a.registeredAt.valueOf() : 0) - (b.registeredAt ? b.registeredAt.valueOf() : 0), render: (v: any) => fmt(v) },
+      fixedAt: { title: 'Дата устранения', dataIndex: 'fixedAt', width: 120, sorter: (a: any, b: any) => (a.fixedAt ? a.fixedAt.valueOf() : 0) - (b.fixedAt ? b.fixedAt.valueOf() : 0), render: (v: any) => fmt(v) },
       responsibleEngineerName: { title: 'Ответственный инженер', dataIndex: 'responsibleEngineerName', width: 180, sorter: (a: any, b: any) => (a.responsibleEngineerName || '').localeCompare(b.responsibleEngineerName || '') },
       actions: { title: 'Действия', key: 'actions', width: 100, render: (_: any, record: any) => (
         <Space size="middle">
@@ -112,7 +125,7 @@ export default function ClaimsPage() {
             okText="Да"
             cancelText="Нет"
             onConfirm={async () => {
-              await deleteClaimMutation.mutateAsync({ id: record.id, ticketIds: record.ticket_ids });
+              await deleteClaimMutation.mutateAsync({ id: record.id, defectIds: record.defect_ids });
               message.success('Удалено');
             }}
             disabled={deleteClaimMutation.isPending}
