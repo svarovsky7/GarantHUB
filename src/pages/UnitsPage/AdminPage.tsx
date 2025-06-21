@@ -13,7 +13,6 @@ import UsersTable from "../../widgets/UsersTable";
 import CourtCaseStatusesAdmin from "../../widgets/CourtCaseStatusesAdmin";
 import LawsuitClaimTypesAdmin from "../../widgets/LawsuitClaimTypesAdmin";
 import LetterTypesAdmin from "../../widgets/LetterTypesAdmin";
-import AttachmentTypesAdmin from "../../widgets/AttachmentTypesAdmin";
 import LetterStatusesAdmin from "../../widgets/LetterStatusesAdmin";
 import RolePermissionsAdmin from "../../widgets/RolePermissionsAdmin";
 
@@ -72,10 +71,6 @@ export default function AdminPage() {
           rowsPerPageOptions={[10, 25, 50, 100]}
         />
 
-        <AttachmentTypesAdmin
-          pageSize={25}
-          rowsPerPageOptions={[10, 25, 50, 100]}
-        />
 
         <UsersTable pageSize={25} rowsPerPageOptions={[10, 25, 50, 100]} />
 
