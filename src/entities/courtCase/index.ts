@@ -340,12 +340,7 @@ export function useUpdateCourtCaseFull() {
         if (error) throw error;
       }
       if (updatedAttachments.length) {
-        for (const a of updatedAttachments) {
-          await supabase
-            .from('attachments')
-            .update({ attachment_type_id: a.type_id })
-            .eq('id', a.id);
-        }
+        // attachment type updates removed
       }
       let uploaded: any[] = [];
       if (newAttachments.length) {

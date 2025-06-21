@@ -73,7 +73,7 @@ export function useLetters() {
       if (allIds.length) {
         const { data: files, error: attErr } = await supabase
           .from(ATTACH_TABLE)
-          .select('id, storage_path, path:file_url, mime_type:file_type, attachment_type_id, original_name')
+          .select('id, storage_path, path:file_url, mime_type:file_type, original_name')
           .in('id', allIds);
         if (attErr) throw attErr;
         (files ?? []).forEach((a: any) => {
@@ -94,7 +94,6 @@ export function useLetters() {
             file_type: a.file_type,
             storage_path: a.storage_path,
             file_url: a.file_url,
-            attachment_type_id: a.attachment_type_id ?? null,
           } as CorrespondenceAttachment;
         });
       }
@@ -238,7 +237,6 @@ export function useAddLetter() {
           file_type: u.file_type,
           storage_path: u.storage_path,
           file_url: u.file_url,
-          attachment_type_id: u.attachment_type_id ?? null,
         }));
         attachmentIds = uploaded.map((u) => u.id);
         await supabase
@@ -543,12 +541,7 @@ export function useUpdateLetter() {
         if (error) throw error;
       }
       if (updatedAttachments.length) {
-        for (const a of updatedAttachments) {
-          await supabase
-            .from(ATTACH_TABLE)
-            .update({ attachment_type_id: a.type_id })
-            .eq('id', a.id);
-        }
+        // attachment type updates removed
       }
       let uploaded: any[] = [];
       if (newAttachments.length) {

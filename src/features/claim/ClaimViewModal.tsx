@@ -39,11 +39,8 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
                   id: String(f.id),
                   name: f.original_name ?? f.name,
                   path: f.path ?? f.storage_path,
-                  typeId: f.attachment_type_id,
-                  typeName: f.attachment_type_name,
                   mime: f.type,
                 }))}
-                attachmentTypes={[]}
                 getSignedUrl={(path, name) => signedUrl(path, name)}
               />
             </div>

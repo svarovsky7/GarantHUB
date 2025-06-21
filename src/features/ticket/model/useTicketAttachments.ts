@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { AttachmentType } from '@/shared/types/attachmentType';
 import type { Ticket } from '@/entities/ticket';
 import type { RemoteTicketFile, NewTicketFile } from '@/shared/types/ticketFile';
 
@@ -8,20 +7,16 @@ import type { RemoteTicketFile, NewTicketFile } from '@/shared/types/ticketFile'
  */
 export function useTicketAttachments(options: {
   ticket?: Ticket | null;
-  attachmentTypes: AttachmentType[];
 }) {
-  const { ticket, attachmentTypes } = options;
+  const { ticket } = options;
 
   const [remoteFiles, setRemoteFiles] = useState<RemoteTicketFile[]>([]);
-  const [changedTypes, setChangedTypes] = useState<Record<string, number | null>>({});
-  const [initialTypes, setInitialTypes] = useState<Record<string, number | null>>({});
   const [newFiles, setNewFiles] = useState<NewTicketFile[]>([]);
   const [removedIds, setRemovedIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (!ticket) return;
     const attachmentsWithType = (ticket.attachments || []).map((file) => {
-      const typeObj = attachmentTypes.find((t) => t.id === file.attachment_type_id);
       const storagePath = 'storage_path' in file ? (file as any).storage_path : (file as any).path;
       const fileUrl = (file as any).file_url ?? (file as any).url ?? '';
       const fileType = (file as any).file_type ?? (file as any).type ?? '';
@@ -37,22 +32,14 @@ export function useTicketAttachments(options: {
         path: storagePath ?? '',
         url: fileUrl,
         type: fileType,
-        attachment_type_id: file.attachment_type_id ?? null,
-        attachment_type_name: typeObj?.name || fileType || '',
       } as RemoteTicketFile;
     });
     setRemoteFiles(attachmentsWithType);
-    const map: Record<string, number | null> = {};
-    attachmentsWithType.forEach((f) => {
-      map[f.id] = f.attachment_type_id ?? null;
-    });
-    setChangedTypes(map);
-    setInitialTypes(map);
-  }, [ticket, attachmentTypes]);
+  }, [ticket]);
 
   const addFiles = useCallback(
     (files: File[]) =>
-      setNewFiles((p) => [...p, ...files.map((f) => ({ file: f, type_id: null }))]),
+      setNewFiles((p) => [...p, ...files.map((f) => ({ file: f }))]),
     [],
   );
 
@@ -66,59 +53,29 @@ export function useTicketAttachments(options: {
     setRemovedIds((p) => [...p, id]);
   }, []);
 
-  const changeRemoteType = useCallback(
-    (id: string, type: number | null) =>
-      setChangedTypes((p) => ({ ...p, [id]: type })),
-    [],
-  );
-
-  const changeNewType = useCallback(
-    (idx: number, type: number | null) =>
-      setNewFiles((p) => p.map((f, i) => (i === idx ? { ...f, type_id: type } : f))),
-    [],
-  );
+  const changeRemoteType = (_id: string, _type: number | null) => {};
+  const changeNewType = (_idx: number, _type: number | null) => {};
 
   const appendRemote = useCallback((files: RemoteTicketFile[]) => {
     setRemoteFiles((p) => [...p, ...files]);
-    setChangedTypes((prev) => {
-      const copy = { ...prev };
-      files.forEach((f) => {
-        copy[f.id] = f.attachment_type_id ?? null;
-      });
-      return copy;
-    });
-    setInitialTypes((prev) => {
-      const copy = { ...prev };
-      files.forEach((f) => {
-        copy[f.id] = f.attachment_type_id ?? null;
-      });
-      return copy;
-    });
   }, []);
 
   const markPersisted = useCallback(() => {
     setNewFiles([]);
     setRemovedIds([]);
-    setInitialTypes((prev) => ({ ...prev, ...changedTypes }));
-  }, [changedTypes]);
+  }, []);
 
-  const attachmentsChanged =
-    newFiles.length > 0 ||
-    removedIds.length > 0 ||
-    Object.keys(changedTypes).some((id) => changedTypes[id] !== initialTypes[id]);
+  const attachmentsChanged = newFiles.length > 0 || removedIds.length > 0;
 
   const resetAll = useCallback(() => {
     setNewFiles([]);
     setRemoteFiles([]);
-    setChangedTypes({});
-    setInitialTypes({});
     setRemovedIds([]);
   }, []);
 
   return {
     remoteFiles,
     newFiles,
-    changedTypes,
     removedIds,
     addFiles,
     removeNew,

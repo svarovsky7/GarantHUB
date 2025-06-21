@@ -23,7 +23,6 @@ import { useUsers } from '@/entities/user';
 import { useCourtCaseStatuses } from '@/entities/courtCaseStatus';
 import { usePersons, useDeletePerson } from '@/entities/person';
 import { useAddCourtCase, useUpdateCourtCase } from '@/entities/courtCase';
-import { useAttachmentTypes } from '@/entities/attachmentType';
 import { addCaseAttachments } from '@/entities/attachment';
 import { useAddCaseClaims } from '@/entities/courtCaseClaim';
 import CourtCaseClaimsTable from '@/widgets/CourtCaseClaimsTable';
@@ -100,7 +99,6 @@ export default function AddCourtCaseFormAntd({
   const { data: users = [], isPending: usersLoading } = useUsers();
   const { data: stages = [], isPending: stagesLoading } = useCourtCaseStatuses();
   const { data: personsList = [] } = usePersons();
-  const { data: attachmentTypes = [] } = useAttachmentTypes();
   const addCaseMutation = useAddCourtCase();
   const updateCaseMutation = useUpdateCourtCase();
   const addClaimsMutation = useAddCaseClaims();
@@ -146,10 +144,6 @@ export default function AddCourtCaseFormAntd({
   const handleCaseFiles = (files: File[]) => addCaseFiles(files);
 
   const handleAddCase = async (values: any) => {
-    if (caseFiles.some((f) => f.type_id == null)) {
-      notify.error('Укажите тип файла для всех документов');
-      return;
-    }
     try {
       const newCase = await addCaseMutation.mutateAsync({
         project_id: values.project_id,
@@ -423,21 +417,7 @@ export default function AddCourtCaseFormAntd({
                 <Col flex="auto">
                   <span>{f.file.name}</span>
                 </Col>
-                <Col flex="220px">
-                  <Select
-                    style={{ width: '100%' }}
-                    placeholder="Тип файла"
-                    value={f.type_id ?? undefined}
-                    onChange={(v) => setCaseFileType(i, v)}
-                    allowClear
-                  >
-                    {attachmentTypes.map((t) => (
-                      <Select.Option key={t.id} value={t.id}>
-                        {t.name}
-                      </Select.Option>
-                    ))}
-                  </Select>
-                </Col>
+                <Col flex="220px" />
                 <Col>
                   <Button type="text" danger onClick={() => removeCaseFile(i)}>
                     Удалить

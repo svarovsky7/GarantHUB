@@ -16,7 +16,6 @@ import { useUnitsByProject } from '@/entities/unit';
 import { useUsers } from '@/entities/user';
 import { useVisibleProjects } from '@/entities/project';
 import { useCreateTicket, useTicket } from '@/entities/ticket';
-import { useAttachmentTypes } from '@/entities/attachmentType';
 import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useAuthStore } from '@/shared/store/authStore';
 import FileDropZone from '@/shared/ui/FileDropZone';
@@ -72,7 +71,6 @@ export default function TicketFormAntdEdit({
   const projectIdWatch = Form.useWatch('project_id', form) ?? globalProjectId;
   const projectId = projectIdWatch != null ? Number(projectIdWatch) : null;
   const { data: units = [] } = useUnitsByProject(projectId);
-  const { data: attachmentTypes = [] } = useAttachmentTypes();
   const create = useCreateTicket();
   const notify = useNotify();
   const profileId = useAuthStore((s) => s.profile?.id);
@@ -86,18 +84,15 @@ export default function TicketFormAntdEdit({
   const {
     remoteFiles,
     newFiles,
-    changedTypes,
     removedIds,
     addFiles,
     removeNew,
     removeRemote,
-    changeRemoteType,
-    changeNewType,
     appendRemote,
     markPersisted,
     attachmentsChanged,
     reset: resetAttachments,
-  } = useTicketAttachments({ ticket, attachmentTypes });
+  } = useTicketAttachments({ ticket });
 
   const highlight = (name: keyof TicketFormAntdEditValues) =>
     changedFields[name as string]
@@ -165,13 +160,6 @@ export default function TicketFormAntdEdit({
   };
 
   const handleSubmit = async (values: TicketFormAntdEditValues) => {
-    if (
-      newFiles.some((f) => f.type_id == null) ||
-      remoteFiles.some((f) => (changedTypes[f.id] ?? null) == null)
-    ) {
-      notify.error('Выберите тип файла для всех документов');
-      return;
-    }
 
     const payload = {
       project_id: values.project_id ?? globalProjectId,
@@ -197,10 +185,6 @@ export default function TicketFormAntdEdit({
           ...payload,
           newAttachments: newFiles,
           removedAttachmentIds: removedIds,
-          updatedAttachments: Object.entries(changedTypes).map(([id, type]) => ({
-            id,
-            type_id: type,
-          })),
         });
         if (uploaded?.length) {
           appendRemote(
@@ -211,7 +195,6 @@ export default function TicketFormAntdEdit({
               path: u.storage_path,
               url: u.file_url,
               type: u.file_type,
-              attachment_type_id: u.attachment_type_id ?? null,
             })),
           );
         }
@@ -221,7 +204,7 @@ export default function TicketFormAntdEdit({
       } else {
         await create.mutateAsync({
           ...payload,
-          attachments: newFiles.map((f) => ({ file: f.file, type_id: f.type_id })),
+          attachments: newFiles.map((f) => ({ file: f.file })),
         } as any);
         try {
           localStorage.setItem(
@@ -399,16 +382,11 @@ export default function TicketFormAntdEdit({
             id: String(f.id),
             name: f.original_name ?? f.name,
             path: f.path,
-            typeId: changedTypes[f.id] ?? f.attachment_type_id,
-            typeName: f.attachment_type_name,
             mime: f.type,
           }))}
-          newFiles={newFiles.map((f) => ({ file: f.file, typeId: f.type_id, mime: f.file.type }))}
-          attachmentTypes={attachmentTypes}
+          newFiles={newFiles.map((f) => ({ file: f.file, mime: f.file.type }))}
           onRemoveRemote={removeRemote}
           onRemoveNew={removeNew}
-          onChangeRemoteType={changeRemoteType}
-          onChangeNewType={changeNewType}
           getSignedUrl={(path, name) => signedUrl(path, name)}
         />
       </Form.Item>

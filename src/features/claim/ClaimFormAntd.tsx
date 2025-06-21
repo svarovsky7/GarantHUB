@@ -11,7 +11,6 @@ import {
 } from 'antd';
 import FileDropZone from '@/shared/ui/FileDropZone';
 import AttachmentEditorTable from '@/shared/ui/AttachmentEditorTable';
-import { useAttachmentTypes } from '@/entities/attachmentType';
 import dayjs from 'dayjs';
 import { useVisibleProjects } from '@/entities/project';
 import { useUnitsByProject } from '@/entities/unit';
@@ -54,8 +53,7 @@ export interface ClaimFormValues {
 
 export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefectsForm = true }: ClaimFormAntdProps) {
   const [form] = Form.useForm<ClaimFormValues>();
-  const [files, setFiles] = useState<{ file: File; type_id: number | null }[]>([]);
-  const { data: attachmentTypes = [] } = useAttachmentTypes();
+  const [files, setFiles] = useState<File[]>([]);
   const globalProjectId = useProjectId();
   const projectIdWatch = Form.useWatch('project_id', form) ?? globalProjectId;
   const projectId = projectIdWatch != null ? Number(projectIdWatch) : null;
@@ -69,10 +67,8 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
   const createDefects = useCreateDefects();
 
   const handleDropFiles = (dropped: File[]) => {
-    setFiles((p) => [...p, ...dropped.map((f) => ({ file: f, type_id: null }))]);
+    setFiles((p) => [...p, ...dropped]);
   };
-  const setType = (idx: number, val: number | null) =>
-    setFiles((p) => p.map((f, i) => (i === idx ? { ...f, type_id: val } : f)));
   const removeFile = (idx: number) => setFiles((p) => p.filter((_, i) => i !== idx));
 
   useEffect(() => {
@@ -124,10 +120,6 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
       fixed_at: d.fixed_at ? d.fixed_at.format('YYYY-MM-DD') : null,
     }));
     const defectIds = await createDefects.mutateAsync(newDefs);
-    if (files.some((f) => f.type_id == null)) {
-      notify.error('Выберите тип файла для всех документов');
-      return;
-    }
     await create.mutateAsync({
       ...rest,
       ticket_ids: defectIds,
@@ -238,10 +230,8 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
       <Form.Item label="Файлы">
         <FileDropZone onFiles={handleDropFiles} />
         <AttachmentEditorTable
-          newFiles={files.map((f) => ({ file: f.file, typeId: f.type_id, mime: f.file.type }))}
-          attachmentTypes={attachmentTypes.map((t) => ({ id: t.id, name: t.name }))}
+          newFiles={files.map((f) => ({ file: f, mime: f.type }))}
           onRemoveNew={removeFile}
-          onChangeNewType={setType}
         />
       </Form.Item>
       {showDefectsForm && (

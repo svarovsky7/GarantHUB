@@ -233,12 +233,7 @@ export function useFixDefect() {
         ids = ids.concat(uploaded.map((u) => u.id));
       }
       if (updatedAttachments.length) {
-        for (const a of updatedAttachments) {
-          await supabase
-            .from('attachments')
-            .update({ attachment_type_id: a.type_id })
-            .eq('id', a.id);
-        }
+        // attachment type updates removed
       }
       const userId = useAuthStore.getState().profile?.id ?? null;
       const { data: st } = await supabase

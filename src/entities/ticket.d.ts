@@ -12,10 +12,6 @@ export interface TicketAttachment {
   url: string;
   /** MIME‑тип */
   type: string;
-  /** Тип вложения */
-  attachment_type_id: number | null;
-  /** Название типа вложения */
-  attachment_type_name?: string;
 }
 
 export interface Ticket {
