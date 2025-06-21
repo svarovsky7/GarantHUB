@@ -20,59 +20,59 @@ export default function AdminPage() {
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
       <Stack spacing={4}>
-        <ProjectsTable pageSize={25} rowsPerPageOptions={[10, 25, 50, 100]} />
+        <ProjectsTable pageSize={5} rowsPerPageOptions={[5, 10, 25, 50, 100]} />
 
-        <ContractorAdmin pageSize={25} rowsPerPageOptions={[10, 25, 50, 100]} />
-        <BrigadesAdmin pageSize={25} rowsPerPageOptions={[10, 25, 50, 100]} />
+        <ContractorAdmin pageSize={5} rowsPerPageOptions={[5, 10, 25, 50, 100]} />
+        <BrigadesAdmin pageSize={5} rowsPerPageOptions={[5, 10, 25, 50, 100]} />
 
         <TicketStatusesAdmin
-          pageSize={25}
-          rowsPerPageOptions={[10, 25, 50, 100]}
+          pageSize={5}
+          rowsPerPageOptions={[5, 10, 25, 50, 100]}
         />
 
         <ClaimStatusesAdmin
-          pageSize={25}
-          rowsPerPageOptions={[10, 25, 50, 100]}
+          pageSize={5}
+          rowsPerPageOptions={[5, 10, 25, 50, 100]}
         />
 
         <DefectTypesAdmin
-          pageSize={25}
-          rowsPerPageOptions={[10, 25, 50, 100]}
+          pageSize={5}
+          rowsPerPageOptions={[5, 10, 25, 50, 100]}
         />
 
         <DefectStatusesAdmin
-          pageSize={25}
-          rowsPerPageOptions={[10, 25, 50, 100]}
+          pageSize={5}
+          rowsPerPageOptions={[5, 10, 25, 50, 100]}
         />
 
         <DefectDeadlinesAdmin
-          pageSize={25}
-          rowsPerPageOptions={[10, 25, 50, 100]}
+          pageSize={5}
+          rowsPerPageOptions={[5, 10, 25, 50, 100]}
         />
 
         <CourtCaseStatusesAdmin
-          pageSize={25}
-          rowsPerPageOptions={[10, 25, 50, 100]}
+          pageSize={5}
+          rowsPerPageOptions={[5, 10, 25, 50, 100]}
         />
 
         <LawsuitClaimTypesAdmin
-          pageSize={25}
-          rowsPerPageOptions={[10, 25, 50, 100]}
+          pageSize={5}
+          rowsPerPageOptions={[5, 10, 25, 50, 100]}
         />
 
 
         <LetterTypesAdmin
-          pageSize={25}
-          rowsPerPageOptions={[10, 25, 50, 100]}
+          pageSize={5}
+          rowsPerPageOptions={[5, 10, 25, 50, 100]}
         />
 
         <LetterStatusesAdmin
-          pageSize={25}
-          rowsPerPageOptions={[10, 25, 50, 100]}
+          pageSize={5}
+          rowsPerPageOptions={[5, 10, 25, 50, 100]}
         />
 
 
-        <UsersTable pageSize={25} rowsPerPageOptions={[10, 25, 50, 100]} />
+        <UsersTable pageSize={5} rowsPerPageOptions={[5, 10, 25, 50, 100]} />
 
         <RolePermissionsAdmin />
       </Stack>
