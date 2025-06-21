@@ -1,8 +1,10 @@
 import React from 'react';
 import { Modal, Skeleton, Typography } from 'antd';
-import { useClaim } from '@/entities/claim';
-import ClaimFormAntdEdit from './ClaimFormAntdEdit';
+import { useClaim, useRemoveClaimAttachment, useAddClaimAttachments, signedUrl } from '@/entities/claim';
+import type { RemoteClaimFile } from '@/shared/types/claimFile';
+import ClaimAttachmentsBlock from './ClaimAttachmentsBlock';
 import TicketDefectsTable from '@/widgets/TicketDefectsTable';
+import ClaimFormAntd from './ClaimFormAntd';
 
 interface Props {
   open: boolean;
@@ -12,6 +14,41 @@ interface Props {
 
 export default function ClaimViewModal({ open, claimId, onClose }: Props) {
   const { data: claim } = useClaim(claimId ?? undefined);
+  const removeAtt = useRemoveClaimAttachment();
+  const addAtt = useAddClaimAttachments();
+  const [files, setFiles] = React.useState<RemoteClaimFile[]>([]);
+
+  React.useEffect(() => {
+    setFiles(
+      claim?.attachments?.map((f) => ({
+        id: f.id,
+        name: f.original_name ?? f.name,
+        path: f.path ?? f.storage_path,
+        mime_type: f.type as any,
+      })) || [],
+    );
+  }, [claim]);
+
+  const handleAddFiles = async (fls: File[]) => {
+    if (!claim) return;
+    const uploaded = await addAtt.mutateAsync({ claimId: claim.id, files: fls });
+    const newFiles = uploaded.map((u) => ({
+      id: u.id,
+      name: u.original_name ?? u.storage_path.split('/').pop() ?? 'file',
+      path: u.storage_path,
+      mime_type: u.file_type,
+      url: u.file_url,
+    })) as RemoteClaimFile[];
+    setFiles((p) => [...p, ...newFiles]);
+  };
+
+  const handleRemove = async (id: string) => {
+    await removeAtt.mutateAsync({
+      claimId: claim!.id,
+      attachmentId: Number(id),
+    });
+    setFiles((p) => p.filter((f) => String(f.id) !== id));
+  };
   if (!open || !claimId) return null;
   const titleText = claim
     ? `Претензия №${claim.claim_no}`
@@ -21,13 +58,26 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
     <Modal open={open} onCancel={onClose} footer={null} width="80%" title={<Typography.Title level={4} style={{ margin: 0 }}>{titleText}</Typography.Title>}>
       {claim ? (
         <>
-          <ClaimFormAntdEdit embedded claimId={String(claimId)} onCancel={onClose} onSaved={onClose} />
+          <ClaimFormAntd
+            initialValues={claim as any}
+            onCreated={onClose}
+            showDefectsForm={false}
+            showAttachments={false}
+          />
           <div style={{ marginTop: 16 }}>
             {claim.ticket_ids?.length ? (
               <TicketDefectsTable defectIds={claim.ticket_ids} />
             ) : (
               <Typography.Text>Дефекты не указаны</Typography.Text>
             )}
+          </div>
+          <div style={{ marginTop: 16 }}>
+            <ClaimAttachmentsBlock
+              remoteFiles={files}
+              onRemoveRemote={handleRemove}
+              onFiles={handleAddFiles}
+              getSignedUrl={signedUrl}
+            />
           </div>
         </>
       ) : (
