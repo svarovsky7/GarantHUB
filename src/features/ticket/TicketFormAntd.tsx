@@ -10,7 +10,6 @@ import { useUsers } from '@/entities/user';
 import { useVisibleProjects } from '@/entities/project';
 import { useCreateTicket } from '@/entities/ticket';
 import { useCreateDefects, type NewDefect } from '@/entities/defect';
-import { useAttachmentTypes } from '@/entities/attachmentType';
 import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useAuthStore } from '@/shared/store/authStore';
 import FileDropZone from '@/shared/ui/FileDropZone';
@@ -68,11 +67,10 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
   const { data: projects = [] } = useVisibleProjects();
   const { data: units = [] } = useUnitsByProject(projectId);
   const { data: users = [] } = useUsers();
-  const { data: attachmentTypes = [] } = useAttachmentTypes();
   const create = useCreateTicket();
   const createDefects = useCreateDefects();
   const notify = useNotify();
-  const [files, setFiles] = useState<{ file: File; type_id: number | null }[]>([]);
+  const [files, setFiles] = useState<{ file: File }[]>([]);
   const profileId = useAuthStore((s) => s.profile?.id);
   const [fixedAtManual, setFixedAtManual] = useState(false);
   const defectsWatch = Form.useWatch('defects', form);
@@ -131,18 +129,13 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
   }, [profileId, form]);
 
   const handleDropFiles = (dropped: File[]) => {
-    const arr = dropped.map((f) => ({ file: f, type_id: null }));
+    const arr = dropped.map((f) => ({ file: f }));
     setFiles((p) => [...p, ...arr]);
   };
-  const setType = (idx: number, val: number | null) =>
-    setFiles((p) => p.map((f, i) => (i === idx ? { ...f, type_id: val } : f)));
+  const setType = (_idx: number, _val: number | null) => {};
   const removeFile = (idx: number) => setFiles((p) => p.filter((_, i) => i !== idx));
 
   const onFinish = async (values: TicketFormAntdValues) => {
-    if (files.some((f) => f.type_id == null)) {
-      notify.error('Выберите тип файла для всех документов');
-      return;
-    }
     try {
       const { pins, defects: _defects, ...rest } = values;
       if (!_defects || _defects.length === 0) {
@@ -326,21 +319,7 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
             <Col flex="auto">
               <span>{f.file.name}</span>
             </Col>
-            <Col flex="160px">
-              <Select
-                style={{ width: '100%' }}
-                placeholder="Тип файла"
-                value={f.type_id ?? undefined}
-                onChange={(v) => setType(i, v)}
-                allowClear
-              >
-                {attachmentTypes.map((t) => (
-                  <Select.Option key={t.id} value={t.id}>
-                    {t.name}
-                  </Select.Option>
-                ))}
-              </Select>
-            </Col>
+            <Col flex="160px">{f.file.type}</Col>
             <Col>
               <Button type="text" danger onClick={() => removeFile(i)}>
                 Удалить

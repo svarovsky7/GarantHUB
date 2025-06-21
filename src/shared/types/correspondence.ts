@@ -52,13 +52,11 @@ export interface CorrespondenceAttachment {
   /** Имя файла */
   name: string;
   /** MIME‑тип файла */
-  file_type: string;
+  mime_type: string;
   /** Путь к файлу в хранилище */
   storage_path: string;
   /** Публичная ссылка на файл */
-  file_url: string;
-  /** Тип вложения */
-  attachment_type_id: number | null;
+  path: string;
 }
 
 /** Связь писем: parent_id - родительское письмо, child_id - дочернее */
