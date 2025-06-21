@@ -23,8 +23,8 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
         <>
           <ClaimFormAntdEdit embedded claimId={String(claimId)} onCancel={onClose} onSaved={onClose} />
           <div style={{ marginTop: 16 }}>
-            {claim.ticket_ids?.length ? (
-              <TicketDefectsTable defectIds={claim.ticket_ids} />
+            {claim.defect_ids?.length ? (
+              <TicketDefectsTable defectIds={claim.defect_ids} />
             ) : (
               <Typography.Text>Дефекты не указаны</Typography.Text>
             )}
