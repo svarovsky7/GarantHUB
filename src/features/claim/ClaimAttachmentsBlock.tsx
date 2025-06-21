@@ -1,9 +1,8 @@
 import React from 'react';
-import { Form } from 'antd';
+import { Form, Row, Col } from 'antd';
 import FileDropZone from '@/shared/ui/FileDropZone';
-import AttachmentEditorTable from '@/shared/ui/AttachmentEditorTable';
+import ClaimAttachmentsTable from './ClaimAttachmentsTable';
 import type { RemoteClaimFile } from '@/shared/types/claimFile';
-import { signedUrl } from '@/entities/claim';
 
 /**
  * Блок загрузки и отображения файлов претензии.
@@ -34,20 +33,21 @@ export default function ClaimAttachmentsBlock({
 }: ClaimAttachmentsBlockProps) {
   return (
     <Form.Item label="Файлы">
-      {showUpload && <FileDropZone onFiles={onFiles ?? (() => {})} />}
-      <AttachmentEditorTable
-        remoteFiles={remoteFiles.map((f) => ({
-          id: String(f.id),
-          name: f.original_name ?? f.name,
-          path: f.path,
-          mime: f.mime_type,
-        }))}
-        newFiles={newFiles.map((f) => ({ file: f, mime: f.type }))}
-        onRemoveRemote={onRemoveRemote}
-        onRemoveNew={onRemoveNew}
-        getSignedUrl={(path, name) => signedUrl(path, name)}
-        showMime={false}
-      />
+      <Row gutter={16} align="top">
+        {showUpload && (
+          <Col flex="auto">
+            <FileDropZone onFiles={onFiles ?? (() => {})} />
+          </Col>
+        )}
+        <Col>
+          <ClaimAttachmentsTable
+            remoteFiles={remoteFiles}
+            newFiles={newFiles}
+            onRemoveRemote={onRemoveRemote}
+            onRemoveNew={onRemoveNew}
+          />
+        </Col>
+      </Row>
     </Form.Item>
   );
 }

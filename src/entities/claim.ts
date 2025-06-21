@@ -322,10 +322,7 @@ export function useCreateClaim() {
         await supabase.from('claim_units').insert(rows);
       }
 
-      if (ticket_ids.length) {
-        const rows = ticket_ids.map((tid: number) => ({ claim_id: created.id, ticket_id: tid }));
-        await supabase.from('claim_tickets').insert(rows);
-      }
+      // Связь с замечаниями пока не используется
 
       let ids: number[] = [];
       if (attachments.length) {
