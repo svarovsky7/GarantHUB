@@ -1,8 +1,8 @@
 import React from 'react';
 import { Modal, Skeleton, Typography } from 'antd';
-import { useClaim, signedUrl, useRemoveClaimAttachment } from '@/entities/claim';
+import { useClaim, useRemoveClaimAttachment } from '@/entities/claim';
 import type { RemoteClaimFile } from '@/shared/types/claimFile';
-import AttachmentEditorTable from '@/shared/ui/AttachmentEditorTable';
+import ClaimAttachmentsBlock from './ClaimAttachmentsBlock';
 import TicketDefectsTable from '@/widgets/TicketDefectsTable';
 import ClaimFormAntd from './ClaimFormAntd';
 
@@ -57,16 +57,10 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
           ) : null}
           {files.length ? (
             <div style={{ marginTop: 16 }}>
-              <AttachmentEditorTable
-                remoteFiles={files.map((f) => ({
-                  id: String(f.id),
-                  name: f.name,
-                  path: f.path,
-                  mime: (f as any).mime_type,
-                }))}
+              <ClaimAttachmentsBlock
+                remoteFiles={files}
                 onRemoveRemote={handleRemove}
-                getSignedUrl={(path, name) => signedUrl(path, name)}
-                showMime={false}
+                showUpload={false}
               />
             </div>
           ) : null}

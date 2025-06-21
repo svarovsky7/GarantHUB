@@ -8,8 +8,7 @@ import {
   Row,
   Col,
 } from 'antd';
-import FileDropZone from '@/shared/ui/FileDropZone';
-import AttachmentEditorTable from '@/shared/ui/AttachmentEditorTable';
+import ClaimAttachmentsBlock from './ClaimAttachmentsBlock';
 import dayjs from 'dayjs';
 import { useVisibleProjects } from '@/entities/project';
 import { useUnitsByProject } from '@/entities/unit';
@@ -210,13 +209,11 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
         </Form.List>
       )}
       {showAttachments && (
-        <Form.Item label="Файлы">
-          <FileDropZone onFiles={handleDropFiles} />
-          <AttachmentEditorTable
-            newFiles={files.map((f) => ({ file: f, mime: f.type }))}
-            onRemoveNew={removeFile}
-          />
-        </Form.Item>
+        <ClaimAttachmentsBlock
+          newFiles={files}
+          onFiles={handleDropFiles}
+          onRemoveNew={removeFile}
+        />
       )}
       {showDefectsForm && (
         <Form.Item style={{ textAlign: 'right' }}>

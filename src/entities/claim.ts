@@ -124,7 +124,7 @@ export function useClaims() {
         ? await supabase
             .from('claim_attachments')
             .select(
-              'claim_id, attachments(id, storage_path, path:file_url, mime_type:file_type, original_name)',
+              'claim_id, attachments(id, storage_path, file_url:path, mime_type:file_type, original_name)',
             )
             .in('claim_id', ids)
         : { data: [], error: null };
@@ -190,7 +190,7 @@ export function useClaim(id?: number | string) {
       const { data: attachRows } = await supabase
         .from('claim_attachments')
         .select(
-          'attachments(id, storage_path, path:file_url, mime_type:file_type, original_name)'
+          'attachments(id, storage_path, file_url:path, mime_type:file_type, original_name)'
         )
         .eq('claim_id', claimId);
       const attachments = (attachRows ?? []).map((row: any) => row.attachments);
@@ -431,7 +431,7 @@ export function useClaimAttachments(id?: number) {
     queryFn: async () => {
       const { data } = await supabase
         .from('claim_attachments')
-        .select('attachments(id, storage_path, path:file_url, mime_type:file_type, original_name)')
+        .select('attachments(id, storage_path, file_url:path, mime_type:file_type, original_name)')
         .eq('claim_id', id as number);
       return (data ?? []).map((r: any) => r.attachments);
     },
