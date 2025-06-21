@@ -99,13 +99,6 @@
   },
   {
     "table_name": "claims",
-    "column_name": "unit_ids",
-    "data_type": "ARRAY",
-    "is_nullable": "YES",
-    "column_default": "ARRAY[]::bigint[]"
-  },
-  {
-    "table_name": "claims",
     "column_name": "claim_status_id",
     "data_type": "integer",
     "is_nullable": "YES",
@@ -155,24 +148,10 @@
   },
   {
     "table_name": "claims",
-    "column_name": "ticket_ids",
-    "data_type": "ARRAY",
-    "is_nullable": "YES",
-    "column_default": "ARRAY[]::bigint[]"
-  },
-  {
-    "table_name": "claims",
     "column_name": "description",
     "data_type": "text",
     "is_nullable": "YES",
     "column_default": null
-  },
-  {
-    "table_name": "claims",
-    "column_name": "attachment_ids",
-    "data_type": "ARRAY",
-    "is_nullable": "YES",
-    "column_default": "ARRAY[]::bigint[]"
   },
   {
     "table_name": "claims",
@@ -477,20 +456,6 @@
   },
   {
     "table_name": "court_cases",
-    "column_name": "unit_ids",
-    "data_type": "ARRAY",
-    "is_nullable": "YES",
-    "column_default": "ARRAY[]::integer[]"
-  },
-  {
-    "table_name": "court_cases",
-    "column_name": "attachment_ids",
-    "data_type": "ARRAY",
-    "is_nullable": "YES",
-    "column_default": "ARRAY[]::integer[]"
-  },
-  {
-    "table_name": "court_cases",
     "column_name": "plaintiff_person_id",
     "data_type": "bigint",
     "is_nullable": "YES",
@@ -624,13 +589,6 @@
   },
   {
     "table_name": "defects",
-    "column_name": "attachment_ids",
-    "data_type": "ARRAY",
-    "is_nullable": "YES",
-    "column_default": "ARRAY[]::integer[]"
-  },
-  {
-    "table_name": "defects",
     "column_name": "fixed_by",
     "data_type": "uuid",
     "is_nullable": "YES",
@@ -754,20 +712,6 @@
     "data_type": "uuid",
     "is_nullable": "YES",
     "column_default": null
-  },
-  {
-    "table_name": "letters",
-    "column_name": "unit_ids",
-    "data_type": "ARRAY",
-    "is_nullable": "YES",
-    "column_default": "ARRAY[]::integer[]"
-  },
-  {
-    "table_name": "letters",
-    "column_name": "attachment_ids",
-    "data_type": "ARRAY",
-    "is_nullable": "YES",
-    "column_default": "ARRAY[]::integer[]"
   },
   {
     "table_name": "letters",
@@ -1120,27 +1064,6 @@
     "column_default": null
   },
   {
-    "table_name": "tickets",
-    "column_name": "attachment_ids",
-    "data_type": "ARRAY",
-    "is_nullable": "YES",
-    "column_default": "ARRAY[]::integer[]"
-  },
-  {
-    "table_name": "tickets",
-    "column_name": "unit_ids",
-    "data_type": "ARRAY",
-    "is_nullable": "YES",
-    "column_default": "ARRAY[]::integer[]"
-  },
-  {
-    "table_name": "tickets",
-    "column_name": "defect_ids",
-    "data_type": "ARRAY",
-    "is_nullable": "YES",
-    "column_default": "ARRAY[]::integer[]"
-  },
-  {
     "table_name": "unit_history",
     "column_name": "id",
     "data_type": "bigint",
@@ -1243,6 +1166,146 @@
     "column_name": "person_id",
     "data_type": "uuid",
     "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "ticket_units",
+    "column_name": "ticket_id",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "ticket_units",
+    "column_name": "unit_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "ticket_attachments",
+    "column_name": "ticket_id",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "ticket_attachments",
+    "column_name": "attachment_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "defect_attachments",
+    "column_name": "defect_id",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "defect_attachments",
+    "column_name": "attachment_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "letter_units",
+    "column_name": "letter_id",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "letter_units",
+    "column_name": "unit_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "letter_attachments",
+    "column_name": "letter_id",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "letter_attachments",
+    "column_name": "attachment_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "court_case_units",
+    "column_name": "court_case_id",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "court_case_units",
+    "column_name": "unit_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "court_case_attachments",
+    "column_name": "court_case_id",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "court_case_attachments",
+    "column_name": "attachment_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "claim_units",
+    "column_name": "claim_id",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "claim_units",
+    "column_name": "unit_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "claim_tickets",
+    "column_name": "claim_id",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "claim_tickets",
+    "column_name": "ticket_id",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "claim_attachments",
+    "column_name": "claim_id",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "claim_attachments",
+    "column_name": "attachment_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
     "column_default": null
   }
 ]
