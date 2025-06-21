@@ -114,9 +114,9 @@
   {
     "table_name": "claims",
     "column_name": "id",
-    "data_type": "integer",
+    "data_type": "bigint",
     "is_nullable": "NO",
-    "column_default": "nextval('claims_id_seq'::regclass)"
+    "column_default": null
   },
   {
     "table_name": "claims",
@@ -130,7 +130,7 @@
     "column_name": "unit_ids",
     "data_type": "ARRAY",
     "is_nullable": "YES",
-    "column_default": "ARRAY[]::integer[]"
+    "column_default": "ARRAY[]::bigint[]"
   },
   {
     "table_name": "claims",
@@ -200,7 +200,7 @@
     "column_name": "attachment_ids",
     "data_type": "ARRAY",
     "is_nullable": "YES",
-    "column_default": "ARRAY[]::integer[]"
+    "column_default": "ARRAY[]::bigint[]"
   },
   {
     "table_name": "claims",
@@ -229,13 +229,6 @@
     "data_type": "timestamp with time zone",
     "is_nullable": "YES",
     "column_default": "now()"
-  },
-  {
-    "table_name": "claims",
-    "column_name": "attachment_ids",
-    "data_type": "ARRAY",
-    "is_nullable": "YES",
-    "column_default": "ARRAY[]::integer[]"
   },
   {
     "table_name": "contractors",
