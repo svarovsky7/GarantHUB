@@ -14,7 +14,6 @@ import { useDeleteClaim } from '@/entities/claim';
 import type { ClaimFilters } from '@/shared/types/claimFilters';
 import type { ClaimWithNames } from '@/shared/types/claimWithNames';
 import ClaimStatusSelect from '@/features/claim/ClaimStatusSelect';
-import ClaimAttachmentsList from './ClaimAttachmentsList';
 
 const fmt = (d: any) => (d && dayjs.isDayjs(d) && d.isValid() ? d.format('DD.MM.YYYY') : '—');
 
@@ -150,14 +149,7 @@ export default function ClaimsTable({ claims, filters, loading, columns: columns
       loading={loading}
       pagination={{ pageSize: 25, showSizeChanger: true }}
       size="middle"
-      expandable={{
-        expandRowByClick: true,
-        indentSize: 24,
-        rowExpandable: (record) => (record.attachments?.length ?? 0) > 0,
-        expandedRowRender: (record) => (
-          <ClaimAttachmentsList files={record.attachments || []} />
-        ),
-      }}
+      expandable={{ expandRowByClick: true, indentSize: 24 }}
       rowClassName={rowClassName}
     />
   );
