@@ -7,7 +7,6 @@ import {
   Button,
   Row,
   Col,
-  Tag,
 } from 'antd';
 import FileDropZone from '@/shared/ui/FileDropZone';
 import AttachmentEditorTable from '@/shared/ui/AttachmentEditorTable';
@@ -38,7 +37,6 @@ export interface ClaimFormValues {
   claimed_on: dayjs.Dayjs | null;
   accepted_on: dayjs.Dayjs | null;
   registered_on: dayjs.Dayjs | null;
-  resolved_on: dayjs.Dayjs | null;
   engineer_id: string | null;
   defects?: Array<{
     type_id: number | null;
@@ -90,7 +88,6 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
     if (initialValues.accepted_on)
       form.setFieldValue('accepted_on', dayjs(initialValues.accepted_on));
     if (initialValues.registered_on) form.setFieldValue('registered_on', dayjs(initialValues.registered_on));
-    if (initialValues.resolved_on) form.setFieldValue('resolved_on', dayjs(initialValues.resolved_on));
   }, [globalProjectId, form, initialValues]);
 
   /**
@@ -105,6 +102,12 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
       form.setFieldValue('claim_status_id', statuses[0].id);
     }
   }, [statuses, form, initialValues.claim_status_id]);
+
+  useEffect(() => {
+    if (!initialValues.unit_ids) {
+      form.setFieldValue('unit_ids', []);
+    }
+  }, [projectId, form, initialValues.unit_ids]);
 
   const onFinish = async (values: ClaimFormValues) => {
     if (!showDefectsForm) return;
@@ -136,7 +139,6 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
       claimed_on: values.claimed_on ? values.claimed_on.format('YYYY-MM-DD') : null,
       accepted_on: values.accepted_on ? values.accepted_on.format('YYYY-MM-DD') : null,
       registered_on: values.registered_on ? values.registered_on.format('YYYY-MM-DD') : null,
-      resolved_on: values.resolved_on ? values.resolved_on.format('YYYY-MM-DD') : null,
     } as any);
     form.resetFields();
     setFiles([]);
@@ -163,7 +165,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
           </Form.Item>
         </Col>
         <Col span={8}>
-          <Form.Item name="engineer_id" label="Ответственный инженер" rules={[{ required: true }]}> 
+          <Form.Item name="engineer_id" label="Закрепленный инженер" rules={[{ required: true }]}> 
             <Select allowClear showSearch options={users.map((u) => ({ value: u.id, label: u.name }))} />
           </Form.Item>
         </Col>
@@ -187,32 +189,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
       </Row>
       <Row gutter={16}>
         <Col span={8}>
-          <Form.Item
-            name="registered_on"
-            label={
-              <span>
-                Дата регистрации претензии
-                <Tag
-                  color="blue"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => {
-                    const val = form.getFieldValue('registered_on');
-                    if (val) {
-                      form.setFieldValue('resolved_on', dayjs(val).add(45, 'day'));
-                    }
-                  }}
-                  style={{ cursor: 'pointer', marginLeft: 8 }}
-                >
-                  +45 дней
-                </Tag>
-              </span>
-            }
-          >
-            <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
-          </Form.Item>
-        </Col>
-        <Col span={8}>
-          <Form.Item name="resolved_on" label="Дата устранения претензии">
+          <Form.Item name="registered_on" label="Дата регистрации претензии GARANTHUB">
             <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
           </Form.Item>
         </Col>

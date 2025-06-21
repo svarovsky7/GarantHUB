@@ -329,8 +329,14 @@ export default function TicketFormAntd({ onCreated, initialValues = {} }: Ticket
         ))}
       </Form.Item>
       <Form.Item style={{ textAlign: 'right' }}>
-        <Button type="primary" htmlType="submit" loading={create.isPending}>
-          Создать
+        <Button
+          type="primary"
+          htmlType="submit"
+          loading={create.isPending}
+          size="large"
+          block
+        >
+          Создать замечание
         </Button>
       </Form.Item>
     </Form>
