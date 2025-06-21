@@ -6,6 +6,6 @@ export interface ClaimFilters {
   units?: string[];
   status?: string;
   responsible?: string;
-  number?: string;
+  claim_no?: string;
   period?: [Dayjs, Dayjs];
 }
