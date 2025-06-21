@@ -126,10 +126,9 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
       received_at: d.received_at ? d.received_at.format('YYYY-MM-DD') : null,
       fixed_at: d.fixed_at ? d.fixed_at.format('YYYY-MM-DD') : null,
     }));
-    const defectIds = await createDefects.mutateAsync(newDefs);
+    await createDefects.mutateAsync(newDefs);
     await create.mutateAsync({
       ...rest,
-      ticket_ids: defectIds,
       attachments: files,
       project_id: values.project_id ?? globalProjectId,
       claimed_on: values.claimed_on ? values.claimed_on.format('YYYY-MM-DD') : null,
