@@ -7,6 +7,8 @@ import {
   DeleteOutlined,
   PlusOutlined,
   LinkOutlined,
+  PlusSquareOutlined,
+  MinusSquareOutlined,
   FileTextOutlined,
   BranchesOutlined,
 } from '@ant-design/icons';
@@ -150,12 +152,14 @@ export default function ClaimsTable({ claims, filters, loading, columns: columns
       const saved = localStorage.getItem(LS_EXPANDED_KEY);
       if (saved) {
         const parsed: React.Key[] = JSON.parse(saved);
-        const valid = parsed.filter((id) => filtered.some((c) => String(c.id) === String(id)));
+        const valid = parsed.filter((id) =>
+          filtered.some((c) => String(c.id) === String(id)),
+        );
         setExpandedRowKeys(valid);
         return;
       }
     } catch {}
-    setExpandedRowKeys(filtered.map((c) => c.id));
+    setExpandedRowKeys([]);
   }, [filtered]);
 
   useEffect(() => {
@@ -179,9 +183,19 @@ export default function ClaimsTable({ claims, filters, loading, columns: columns
       pagination={{ pageSize: 25, showSizeChanger: true }}
       size="middle"
       expandable={{
-        expandRowByClick: true,
         indentSize: 24,
         expandedRowKeys,
+        expandIcon: ({ expanded, onExpand, record }) =>
+          record.children ? (
+            <Tooltip title={expanded ? 'Свернуть' : 'Показать связанные претензии'}>
+              <Button
+                type="text"
+                size="small"
+                icon={expanded ? <MinusSquareOutlined /> : <PlusSquareOutlined />}
+                onClick={(e) => onExpand(record, e)}
+              />
+            </Tooltip>
+          ) : null,
         onExpand: (expanded, record) => {
           setExpandedRowKeys((prev) => {
             const set = new Set(prev);
