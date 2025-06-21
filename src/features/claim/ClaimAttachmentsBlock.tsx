@@ -21,6 +21,8 @@ export interface ClaimAttachmentsBlockProps {
   onRemoveNew?: (index: number) => void;
   /** Показывать ли область загрузки */
   showUpload?: boolean;
+  /** Получить подписанную ссылку */
+  getSignedUrl?: (path: string, name: string) => Promise<string>;
 }
 
 export default function ClaimAttachmentsBlock({
@@ -30,6 +32,7 @@ export default function ClaimAttachmentsBlock({
   onRemoveRemote,
   onRemoveNew,
   showUpload = true,
+  getSignedUrl,
 }: ClaimAttachmentsBlockProps) {
   return (
     <Form.Item label="Файлы">
@@ -45,6 +48,7 @@ export default function ClaimAttachmentsBlock({
             newFiles={newFiles}
             onRemoveRemote={onRemoveRemote}
             onRemoveNew={onRemoveNew}
+            getSignedUrl={getSignedUrl}
           />
         </Col>
       </Row>

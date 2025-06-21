@@ -186,7 +186,7 @@ export default function DefectEditableTable({ fields, add, remove, projectId, fi
               size="small"
               placeholder="Статус"
               style={{ minWidth: 160 }}
-              dropdownMatchSelectWidth={false}
+              popupMatchSelectWidth={false}
               options={defectStatuses.map((s) => ({ value: s.id, label: s.name }))}
             />
           </Form.Item>
@@ -215,7 +215,7 @@ export default function DefectEditableTable({ fields, add, remove, projectId, fi
                 (o?.label ?? '').toLowerCase().includes(i.toLowerCase())
               }
               style={{ minWidth: 160, width: '100%' }}
-              dropdownMatchSelectWidth={false}
+              popupMatchSelectWidth={false}
               options={defectTypes.map((d) => ({ value: d.id, label: d.name }))}
             />
           </Form.Item>
