@@ -286,14 +286,6 @@ export function useClaimsSimpleAll() {
         defectMap[d.claim_id].push(d.defect_id);
       });
 
-      const { data: defectRows } = ids.length
-        ? await supabase.from('claim_defects').select('claim_id, defect_id').in('claim_id', ids)
-        : { data: [] };
-      const defectMap: Record<number, number[]> = {};
-      (defectRows ?? []).forEach((d: any) => {
-        if (!defectMap[d.claim_id]) defectMap[d.claim_id] = [];
-        defectMap[d.claim_id].push(d.defect_id);
-      });
 
       return (data ?? []).map((r: any) => ({
         id: r.id,
@@ -342,6 +334,14 @@ export function useClaimsSimple() {
         ticketMap[t.claim_id].push(t.ticket_id);
       });
 
+      const { data: defectRows } = ids.length
+        ? await supabase.from('claim_defects').select('claim_id, defect_id').in('claim_id', ids)
+        : { data: [] };
+      const defectMap: Record<number, number[]> = {};
+      (defectRows ?? []).forEach((d: any) => {
+        if (!defectMap[d.claim_id]) defectMap[d.claim_id] = [];
+        defectMap[d.claim_id].push(d.defect_id);
+      });
       return (data ?? []).map((r: any) => ({
         id: r.id,
         project_id: r.project_id,
