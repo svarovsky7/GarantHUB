@@ -70,6 +70,19 @@ export default function ClaimsPage() {
     return defaults;
   });
 
+  /**
+   * Сброс колонок к начальному состоянию
+   */
+  const handleResetColumns = () => {
+    const base = getBaseColumns();
+    const defaults = Object.keys(base).map((key) => ({
+      key,
+      title: base[key].title as string,
+      visible: true,
+    }));
+    setColumnsState(defaults);
+  };
+
   const userMap = useMemo(() => {
     const map = {} as Record<string, string>;
     (users ?? []).forEach((u) => {
@@ -284,6 +297,7 @@ export default function ClaimsPage() {
           columns={columnsState}
           onChange={setColumnsState}
           onClose={() => setShowColumnsDrawer(false)}
+
         />
         <div style={{ marginTop: 24 }}>
           {showFilters && (
