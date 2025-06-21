@@ -128,7 +128,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
       received_at: d.received_at ? d.received_at.format('YYYY-MM-DD') : null,
       fixed_at: d.fixed_at ? d.fixed_at.format('YYYY-MM-DD') : null,
     }));
-    await createDefects.mutateAsync(newDefs);
+    const defectIds = await createDefects.mutateAsync(newDefs);
     await create.mutateAsync({
       ...rest,
       attachments: files,
@@ -136,6 +136,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
       claimed_on: values.claimed_on ? values.claimed_on.format('YYYY-MM-DD') : null,
       accepted_on: values.accepted_on ? values.accepted_on.format('YYYY-MM-DD') : null,
       registered_on: values.registered_on ? values.registered_on.format('YYYY-MM-DD') : null,
+      defect_ids: defectIds,
     } as any);
     form.resetFields();
     setFiles([]);

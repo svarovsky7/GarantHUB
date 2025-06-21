@@ -23,6 +23,8 @@ export interface Claim {
   engineer_id: string | null;
   /** Связанные тикеты-дефекты */
   ticket_ids?: number[];
+  /** Связанные дефекты */
+  defect_ids?: number[];
   /** Дополнительное описание */
   description?: string;
   /** Идентификаторы файлов */
