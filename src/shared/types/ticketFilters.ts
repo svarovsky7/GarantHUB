@@ -9,7 +9,6 @@ export interface TicketFilters {
   requestNo?: string;
   project?: string;
   units?: string[];
-  warranty?: 'yes' | 'no';
   status?: string;
   responsible?: string;
 }

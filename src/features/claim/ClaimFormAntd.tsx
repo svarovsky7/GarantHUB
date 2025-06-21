@@ -40,7 +40,16 @@ export interface ClaimFormValues {
   registered_at: dayjs.Dayjs | null;
   fixed_at: dayjs.Dayjs | null;
   responsible_engineer_id: string | null;
-  defects?: Array<{ type_id: number | null; fixed_at: dayjs.Dayjs | null; brigade_id: number | null; contractor_id: number | null; description?: string; status_id?: number | null; received_at?: dayjs.Dayjs | null; }>;
+  defects?: Array<{
+    type_id: number | null;
+    fixed_at: dayjs.Dayjs | null;
+    brigade_id: number | null;
+    contractor_id: number | null;
+    is_warranty: boolean;
+    description?: string;
+    status_id?: number | null;
+    received_at?: dayjs.Dayjs | null;
+  }>;
 }
 
 export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefectsForm = true }: ClaimFormAntdProps) {
@@ -110,6 +119,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
       defect_status_id: d.status_id ?? null,
       brigade_id: d.brigade_id ?? null,
       contractor_id: d.contractor_id ?? null,
+      is_warranty: d.is_warranty ?? false,
       received_at: d.received_at ? d.received_at.format('YYYY-MM-DD') : null,
       fixed_at: d.fixed_at ? d.fixed_at.format('YYYY-MM-DD') : null,
     }));

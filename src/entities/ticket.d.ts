@@ -36,7 +36,6 @@ export interface Ticket {
   customerRequestDate: Dayjs | null;
   responsibleEngineerId: string | null;
   createdBy: string | null;
-  isWarranty: boolean;
   hasAttachments: boolean;
   attachments: TicketAttachment[];
   createdAt: Dayjs | null;

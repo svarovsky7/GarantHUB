@@ -12,6 +12,7 @@ export interface NewDefect {
   defect_status_id: number | null;
   brigade_id: number | null;
   contractor_id: number | null;
+  is_warranty: boolean;
   received_at: string | null;
   fixed_at: string | null;
   fixed_by: string | null;
@@ -27,7 +28,7 @@ export function useDefects() {
       const { data, error } = await supabase
         .from(TABLE)
         .select(
-          'id, description, defect_type_id, defect_status_id, brigade_id, contractor_id, received_at, fixed_at, fixed_by, attachment_ids, created_at,' +
+          'id, description, defect_type_id, defect_status_id, brigade_id, contractor_id, is_warranty, received_at, fixed_at, fixed_by, attachment_ids, created_at,' +
           ' defect_type:defect_types(id,name), defect_status:defect_statuses(id,name,color), fixed_by_user:profiles(id,name)'
         )
         .order('id');
@@ -53,7 +54,7 @@ export function useDefect(id?: number) {
       const { data, error } = await supabase
         .from(TABLE)
         .select(
-          'id, description, defect_type_id, defect_status_id, brigade_id, contractor_id, received_at, fixed_at, fixed_by, attachment_ids, created_at,' +
+          'id, description, defect_type_id, defect_status_id, brigade_id, contractor_id, is_warranty, received_at, fixed_at, fixed_by, attachment_ids, created_at,' +
           ' defect_type:defect_types(id,name), defect_status:defect_statuses(id,name,color), fixed_by_user:profiles(id,name)'
         )
         .eq('id', id as number)
@@ -105,7 +106,7 @@ export function useDefectsWithNames(ids?: number[]) {
       const { data, error } = await supabase
         .from(TABLE)
         .select(
-          'id, description, defect_type_id, defect_status_id, brigade_id, contractor_id, received_at, fixed_at, fixed_by, defect_type:defect_types(id,name), defect_status:defect_statuses(id,name,color), fixed_by_user:profiles(id,name)'
+          'id, description, defect_type_id, defect_status_id, brigade_id, contractor_id, is_warranty, received_at, fixed_at, fixed_by, defect_type:defect_types(id,name), defect_status:defect_statuses(id,name,color), fixed_by_user:profiles(id,name)'
         )
         .in('id', ids as number[]);
       if (error) throw error;
@@ -116,6 +117,7 @@ export function useDefectsWithNames(ids?: number[]) {
         defect_status_id: d.defect_status_id,
         brigade_id: d.brigade_id,
         contractor_id: d.contractor_id,
+        is_warranty: d.is_warranty,
         received_at: d.received_at,
         fixed_at: d.fixed_at,
         fixed_by: d.fixed_by,

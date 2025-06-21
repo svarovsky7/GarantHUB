@@ -17,7 +17,6 @@ export function filterTickets<T extends {
   customerRequestNo?: string | null;
   projectName?: string;
   unitNames?: string;
-  isWarranty?: boolean;
   statusName?: string;
   defectIds?: number[];
   responsibleEngineerName?: string | null;
@@ -50,10 +49,6 @@ export function filterTickets<T extends {
       const rowUnits = r.unitNames.split(',').map((u) => u.trim());
       const hasMatch = f.units.some((u) => rowUnits.includes(u));
       if (!hasMatch) return false;
-    }
-    if (f.warranty) {
-      const want = f.warranty === 'yes';
-      if (r.isWarranty !== want) return false;
     }
     if (f.status && r.statusName !== f.status) return false;
     if (f.responsible && r.responsibleEngineerName !== f.responsible) {
