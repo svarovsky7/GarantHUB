@@ -82,9 +82,9 @@ export function useClaims() {
       let q = supabase
         .from(TABLE)
         .select(
-          `id, project_id, unit_ids, claim_status_id, claim_no, claimed_on,
+          `id, project_id, claim_status_id, claim_no, claimed_on,
           accepted_on, registered_on, resolved_on,
-          engineer_id, ticket_ids, description, created_at, attachment_ids,
+          engineer_id, description, created_at,
           projects (id, name),
           statuses (id, name, color)`,
         );
@@ -92,40 +92,60 @@ export function useClaims() {
       q = q.order('created_at', { ascending: false });
       const { data, error } = await q;
       if (error) throw error;
-      const allIds = Array.from(
-        new Set((data ?? []).flatMap((c) => c.attachment_ids || [])),
+      const ids = (data ?? []).map((r: any) => r.id) as number[];
+
+      const { data: unitRows, error: unitErr } = ids.length
+        ? await supabase
+            .from('claim_units')
+            .select('claim_id, unit_id')
+            .in('claim_id', ids)
+        : { data: [], error: null };
+      if (unitErr) throw unitErr;
+      const unitMap: Record<number, number[]> = {};
+      (unitRows ?? []).forEach((u: any) => {
+        if (!unitMap[u.claim_id]) unitMap[u.claim_id] = [];
+        unitMap[u.claim_id].push(u.unit_id);
+      });
+
+      const { data: ticketRows, error: ticketErr } = ids.length
+        ? await supabase
+            .from('claim_tickets')
+            .select('claim_id, ticket_id')
+            .in('claim_id', ids)
+        : { data: [], error: null };
+      if (ticketErr) throw ticketErr;
+      const ticketMap: Record<number, number[]> = {};
+      (ticketRows ?? []).forEach((t: any) => {
+        if (!ticketMap[t.claim_id]) ticketMap[t.claim_id] = [];
+        ticketMap[t.claim_id].push(t.ticket_id);
+      });
+
+      const { data: attachRows, error: attErr } = ids.length
+        ? await supabase
+            .from('claim_attachments')
+            .select(
+              'claim_id, attachments(id, storage_path, path:file_url, mime_type:file_type, original_name)',
+            )
+            .in('claim_id', ids)
+        : { data: [], error: null };
+      if (attErr) throw attErr;
+      const attachMap: Record<number, any[]> = {};
+      (attachRows ?? []).forEach((row: any) => {
+        const file = row.attachments;
+        if (!file) return;
+        const arr = attachMap[row.claim_id] ?? [];
+        arr.push(file);
+        attachMap[row.claim_id] = arr;
+      });
+
+      return (data ?? []).map((r: any) =>
+        mapClaim({
+          ...r,
+          unit_ids: unitMap[r.id] ?? [],
+          ticket_ids: ticketMap[r.id] ?? [],
+          attachments: attachMap[r.id] ?? [],
+        }),
       );
-      let filesMap: Record<number, any> = {};
-      if (allIds.length) {
-        const files = await getAttachmentsByIds(allIds);
-        files.forEach((f) => {
-          filesMap[f.id] = {
-            id: f.id,
-            storage_path: f.storage_path,
-            original_name: f.original_name,
-            file_url: f.file_url,
-            file_type: f.file_type,
-          };
-        });
-      }
-      const result: ClaimWithNames[] = [];
-      for (const r of data ?? []) {
-        const atts = (r.attachment_ids || [])
-          .map((i: number) => filesMap[i])
-          .filter(Boolean);
-        if (atts.length !== (r.attachment_ids || []).length) {
-          const existIds = atts.map((a: any) => a.id);
-          let upq = supabase
-            .from(TABLE)
-            .update({ attachment_ids: existIds })
-            .eq('id', r.id);
-          upq = filterByProjects(upq, projectId, projectIds, onlyAssigned);
-          await upq;
-          r.attachment_ids = existIds;
-        }
-        result.push(mapClaim({ ...r, attachments: atts }));
-      }
-      return result;
     },
     staleTime: 5 * 60_000,
   });
@@ -144,9 +164,9 @@ export function useClaim(id?: number | string) {
       let q = supabase
         .from(TABLE)
         .select(
-          `id, project_id, unit_ids, claim_status_id, claim_no, claimed_on,
+          `id, project_id, claim_status_id, claim_no, claimed_on,
           accepted_on, registered_on, resolved_on,
-          engineer_id, ticket_ids, description, created_at, attachment_ids,
+          engineer_id, description, created_at,
           projects (id, name),
           statuses (id, name, color)`,
         )
@@ -155,28 +175,32 @@ export function useClaim(id?: number | string) {
       q = q.single();
       const { data, error } = await q;
       if (error) throw error;
-      let attachments: any[] = [];
-      if (data?.attachment_ids?.length) {
-        const files = await getAttachmentsByIds(data.attachment_ids);
-        attachments = files.map((f) => ({
-          id: f.id,
-          storage_path: f.storage_path,
-          original_name: f.original_name,
-          file_url: f.file_url,
-          file_type: f.file_type,
-        }));
-        const existIds = files.map((f) => f.id);
-        if (existIds.length !== data.attachment_ids.length) {
-          let uq = supabase
-            .from(TABLE)
-            .update({ attachment_ids: existIds })
-            .eq('id', claimId);
-          uq = filterByProjects(uq, projectId, projectIds, onlyAssigned);
-          await uq;
-          data.attachment_ids = existIds;
-        }
-      }
-      return mapClaim({ ...data, attachments });
+      const { data: units } = await supabase
+        .from('claim_units')
+        .select('unit_id')
+        .eq('claim_id', claimId);
+      const unitIds = (units ?? []).map((u: any) => u.unit_id);
+
+      const { data: tickets } = await supabase
+        .from('claim_tickets')
+        .select('ticket_id')
+        .eq('claim_id', claimId);
+      const ticketIds = (tickets ?? []).map((t: any) => t.ticket_id);
+
+      const { data: attachRows } = await supabase
+        .from('claim_attachments')
+        .select(
+          'attachments(id, storage_path, path:file_url, mime_type:file_type, original_name)'
+        )
+        .eq('claim_id', claimId);
+      const attachments = (attachRows ?? []).map((row: any) => row.attachments);
+
+      return mapClaim({
+        ...data,
+        unit_ids: unitIds,
+        ticket_ids: ticketIds,
+        attachments,
+      });
     },
     staleTime: 5 * 60_000,
   });
@@ -191,9 +215,34 @@ export function useClaimsSimpleAll() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from(TABLE)
-        .select('id, project_id, unit_ids, ticket_ids');
+        .select('id, project_id');
       if (error) throw error;
-      return (data ?? []) as Array<{ id: number; project_id: number; unit_ids: number[]; ticket_ids: number[] }>;
+      const ids = (data ?? []).map((r: any) => r.id) as number[];
+
+      const { data: unitRows } = ids.length
+        ? await supabase.from('claim_units').select('claim_id, unit_id').in('claim_id', ids)
+        : { data: [] };
+      const unitMap: Record<number, number[]> = {};
+      (unitRows ?? []).forEach((u: any) => {
+        if (!unitMap[u.claim_id]) unitMap[u.claim_id] = [];
+        unitMap[u.claim_id].push(u.unit_id);
+      });
+
+      const { data: ticketRows } = ids.length
+        ? await supabase.from('claim_tickets').select('claim_id, ticket_id').in('claim_id', ids)
+        : { data: [] };
+      const ticketMap: Record<number, number[]> = {};
+      (ticketRows ?? []).forEach((t: any) => {
+        if (!ticketMap[t.claim_id]) ticketMap[t.claim_id] = [];
+        ticketMap[t.claim_id].push(t.ticket_id);
+      });
+
+      return (data ?? []).map((r: any) => ({
+        id: r.id,
+        project_id: r.project_id,
+        unit_ids: unitMap[r.id] ?? [],
+        ticket_ids: ticketMap[r.id] ?? [],
+      }));
     },
     staleTime: 5 * 60_000,
   });
@@ -210,11 +259,36 @@ export function useClaimsSimple() {
     queryFn: async () => {
       let q = supabase
         .from(TABLE)
-        .select('id, project_id, unit_ids, ticket_ids');
+        .select('id, project_id');
       q = filterByProjects(q, projectId, projectIds, onlyAssigned);
       const { data, error } = await q;
       if (error) throw error;
-      return (data ?? []) as Array<{ id: number; project_id: number; unit_ids: number[]; ticket_ids: number[] }>;
+      const ids = (data ?? []).map((r: any) => r.id) as number[];
+
+      const { data: unitRows } = ids.length
+        ? await supabase.from('claim_units').select('claim_id, unit_id').in('claim_id', ids)
+        : { data: [] };
+      const unitMap: Record<number, number[]> = {};
+      (unitRows ?? []).forEach((u: any) => {
+        if (!unitMap[u.claim_id]) unitMap[u.claim_id] = [];
+        unitMap[u.claim_id].push(u.unit_id);
+      });
+
+      const { data: ticketRows } = ids.length
+        ? await supabase.from('claim_tickets').select('claim_id, ticket_id').in('claim_id', ids)
+        : { data: [] };
+      const ticketMap: Record<number, number[]> = {};
+      (ticketRows ?? []).forEach((t: any) => {
+        if (!ticketMap[t.claim_id]) ticketMap[t.claim_id] = [];
+        ticketMap[t.claim_id].push(t.ticket_id);
+      });
+
+      return (data ?? []).map((r: any) => ({
+        id: r.id,
+        project_id: r.project_id,
+        unit_ids: unitMap[r.id] ?? [],
+        ticket_ids: ticketMap[r.id] ?? [],
+      }));
     },
     staleTime: 5 * 60_000,
   });
@@ -228,13 +302,31 @@ export function useCreateClaim() {
   const userId = useAuthStore((s) => s.profile?.id ?? null);
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ attachments = [], ...payload }: Omit<Claim, 'id'> & { attachments?: any[] }) => {
+    mutationFn: async ({ attachments = [], unit_ids = [], ticket_ids = [], ...payload }: Omit<Claim, 'id'> & { attachments?: any[] }) => {
+      const insertData: any = {
+        ...payload,
+        project_id: payload.project_id ?? projectId,
+        created_by: userId,
+      };
+      delete insertData.unit_ids;
+      delete insertData.ticket_ids;
       const { data: created, error } = await supabase
         .from(TABLE)
-        .insert({ ...payload, project_id: payload.project_id ?? projectId, created_by: userId })
+        .insert(insertData)
         .select('id, project_id')
         .single();
       if (error) throw error;
+
+      if (unit_ids.length) {
+        const rows = unit_ids.map((uid: number) => ({ claim_id: created.id, unit_id: uid }));
+        await supabase.from('claim_units').insert(rows);
+      }
+
+      if (ticket_ids.length) {
+        const rows = ticket_ids.map((tid: number) => ({ claim_id: created.id, ticket_id: tid }));
+        await supabase.from('claim_tickets').insert(rows);
+      }
+
       let ids: number[] = [];
       if (attachments.length) {
         const uploaded = await addClaimAttachments(
@@ -244,9 +336,13 @@ export function useCreateClaim() {
           created.id,
         );
         ids = uploaded.map((u: any) => u.id);
-        await supabase.from(TABLE).update({ attachment_ids: ids }).eq('id', created.id);
+        if (ids.length) {
+          const rows = ids.map((aid) => ({ claim_id: created.id, attachment_id: aid }));
+          await supabase.from('claim_attachments').insert(rows);
+        }
       }
-      return { ...created, attachment_ids: ids } as Claim;
+
+      return { ...created, attachment_ids: ids, unit_ids, ticket_ids } as Claim;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: [TABLE] }),
   });
@@ -285,30 +381,37 @@ export function useDeleteClaim() {
      * @param payload объект с идентификатором претензии и массивом дефектов
      */
     mutationFn: async ({ id, ticketIds = [] }) => {
-      const { data: claim } = await supabase
-        .from(TABLE)
-        .select('attachment_ids, ticket_ids')
-        .eq('id', id)
-        .single();
+      const { data: attachRows } = await supabase
+        .from('claim_attachments')
+        .select('attachment_id, attachments(storage_path)')
+        .eq('claim_id', id);
+      const claimFiles = (attachRows ?? []).map((r: any) => r.attachment_id);
+      const paths = (attachRows ?? [])
+        .map((r: any) => r.attachments?.storage_path)
+        .filter(Boolean);
 
-      const claimFiles = (claim?.attachment_ids ?? []) as number[];
+      const { data: ticketRows } = await supabase
+        .from('claim_tickets')
+        .select('ticket_id')
+        .eq('claim_id', id);
       const claimTickets = ticketIds.length
         ? ticketIds
-        : ((claim?.ticket_ids ?? []) as number[]);
+        : (ticketRows ?? []).map((t: any) => t.ticket_id);
 
-      if (claimFiles.length) {
-        const files = await getAttachmentsByIds(claimFiles);
-        if (files?.length) {
-          await supabase.storage
-            .from(ATTACH_BUCKET)
-            .remove(files.map((f) => f.storage_path));
-        }
+      if (paths.length) {
+        await supabase.storage.from(ATTACH_BUCKET).remove(paths);
         await supabase.from('attachments').delete().in('id', claimFiles);
+      }
+      if (claimFiles.length) {
+        await supabase.from('claim_attachments').delete().eq('claim_id', id);
       }
 
       if (claimTickets.length) {
         await supabase.from('tickets').delete().in('id', claimTickets);
+        await supabase.from('claim_tickets').delete().eq('claim_id', id);
       }
+
+      await supabase.from('claim_units').delete().eq('claim_id', id);
 
       let q = supabase.from(TABLE).delete().eq('id', id);
       q = filterByProjects(q, projectId, projectIds, onlyAssigned);
@@ -327,13 +430,10 @@ export function useClaimAttachments(id?: number) {
     enabled: !!id,
     queryFn: async () => {
       const { data } = await supabase
-        .from(TABLE)
-        .select('attachment_ids')
-        .eq('id', id as number)
-        .single();
-      const ids: number[] = data?.attachment_ids ?? [];
-      if (!ids.length) return [];
-      return getAttachmentsByIds(ids);
+        .from('claim_attachments')
+        .select('attachments(id, storage_path, path:file_url, mime_type:file_type, original_name)')
+        .eq('claim_id', id as number);
+      return (data ?? []).map((r: any) => r.attachments);
     },
     staleTime: 5 * 60_000,
   });
@@ -354,18 +454,11 @@ export function useRemoveClaimAttachment() {
         await supabase.storage.from(ATTACH_BUCKET).remove([att.storage_path]);
       }
       await supabase.from('attachments').delete().eq('id', attachmentId);
-      const { data } = await supabase
-        .from(TABLE)
-        .select('attachment_ids')
-        .eq('id', claimId)
-        .single();
-      const ids: number[] = (data?.attachment_ids ?? []).filter(
-        (i: number) => i !== attachmentId,
-      );
-      let q = supabase.from(TABLE).update({ attachment_ids: ids }).eq('id', claimId);
-      q = filterByProjects(q, projectId, projectIds, onlyAssigned);
-      const { error } = await q;
-      if (error) throw error;
+      await supabase
+        .from('claim_attachments')
+        .delete()
+        .eq('claim_id', claimId)
+        .eq('attachment_id', attachmentId);
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: [TABLE, vars.claimId] });
