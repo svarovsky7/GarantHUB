@@ -291,23 +291,13 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
                     }}
                   >
                     <Button danger icon={<DeleteOutlined />} disabled={!receiverValue} />
-                  </Popconfirm>
+          </Popconfirm>
                 </Space.Compact>
               </Space>
             </Form.Item>
           </Col>
-          <Col span={8}>
-            <Form.Item name="responsible_user_id" label="Ответственный">
-              <Select
-                showSearch
-                loading={loadingUsers}
-                options={users.map((u) => ({ value: u.id, label: u.name }))}
-                allowClear
-                placeholder="Выберите ответственного"
-              />
-            </Form.Item>
-          </Col>
         </Row>
+        <div style={{ height: 16 }} />
         <Row gutter={16}>
           <Col span={8}>
             <Form.Item name="letter_type_id" label="Категория письма">
@@ -359,9 +349,7 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
           {files.map((f, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', marginTop: 4 }}>
                 <span style={{ marginRight: 8 }}>{f.file.name}</span>
-                <Button type="text" danger onClick={() => removeFile(i)}>
-                  Удалить
-                </Button>
+                <Button type="text" danger icon={<DeleteOutlined />} onClick={() => removeFile(i)} />
               </div>
           ))}
         </Form.Item>
