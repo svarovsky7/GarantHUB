@@ -4,6 +4,7 @@ import { useProjectFilter } from '@/shared/hooks/useProjectFilter';
 import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useAuthStore } from '@/shared/store/authStore';
 import { filterByProjects } from '@/shared/utils/projectQuery';
+import { useNotify } from '@/shared/hooks/useNotify';
 import type { Claim } from '@/shared/types/claim';
 import type { ClaimWithNames } from '@/shared/types/claimWithNames';
 import type { ClaimDeleteParams } from '@/shared/types/claimDelete';
@@ -461,6 +462,31 @@ export function useRemoveClaimAttachment() {
       qc.invalidateQueries({ queryKey: [TABLE, vars.claimId] });
       qc.invalidateQueries({ queryKey: [TABLE] });
     },
+  });
+}
+
+/** Добавить вложения к существующей претензии */
+export function useAddClaimAttachments() {
+  const qc = useQueryClient();
+  const notify = useNotify();
+  return useMutation({
+    mutationFn: async ({ claimId, files }: { claimId: number; files: File[] }) => {
+      const uploaded = await addClaimAttachments(
+        files.map((f) => ({ file: f, type_id: null })),
+        claimId,
+      );
+      if (uploaded.length) {
+        const rows = uploaded.map((u) => ({ claim_id: claimId, attachment_id: u.id }));
+        await supabase.from('claim_attachments').insert(rows);
+      }
+      return uploaded;
+    },
+    onSuccess: (_res, vars) => {
+      qc.invalidateQueries({ queryKey: [TABLE, vars.claimId] });
+      qc.invalidateQueries({ queryKey: [TABLE] });
+      notify.success('Файлы загружены');
+    },
+    onError: (e) => notify.error(`Ошибка загрузки файлов: ${e.message}`),
   });
 }
 

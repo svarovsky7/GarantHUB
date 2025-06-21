@@ -6,6 +6,8 @@ export interface RemoteClaimFile {
   path: string;
   url: string;
   mime_type: string;
+  /** Размер файла в байтах */
+  size?: number;
 }
 
 /** Новый файл для вложения претензии */
