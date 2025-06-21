@@ -7,7 +7,6 @@ import { useContractors } from '@/entities/contractor';
 import { useUsers } from '@/entities/user';
 import { useCourtCaseStatuses } from '@/entities/courtCaseStatus';
 import { usePersons } from '@/entities/person';
-import { useAttachmentTypes } from '@/entities/attachmentType';
 import { useCourtCase, useUpdateCourtCaseFull } from '@/entities/courtCase';
 import FileDropZone from '@/shared/ui/FileDropZone';
 import AttachmentEditorTable from '@/shared/ui/AttachmentEditorTable';
@@ -40,10 +39,9 @@ export default function CourtCaseFormAntdEdit({
   const { data: users = [] } = useUsers();
   const { data: stages = [] } = useCourtCaseStatuses();
   const { data: personsList = [] } = usePersons();
-  const { data: attachmentTypes = [] } = useAttachmentTypes();
   const update = useUpdateCourtCaseFull();
   const notify = useNotify();
-  const attachments = useCaseAttachments({ courtCase, attachmentTypes });
+  const attachments = useCaseAttachments({ courtCase });
   const { changedFields, handleValuesChange: handleChanged } = useChangedFields(
     form,
     [courtCase],
@@ -101,13 +99,6 @@ export default function CourtCaseFormAntdEdit({
   };
 
   const onFinish = async (values: any) => {
-    if (
-      attachments.newFiles.some((f) => f.type_id == null) ||
-      attachments.remoteFiles.some((f) => (attachments.changedTypes[f.id] ?? null) == null)
-    ) {
-      notify.error('Укажите тип файла для всех документов');
-      return;
-    }
     try {
       const uploaded = await update.mutateAsync({
         id: Number(caseId),
@@ -128,10 +119,6 @@ export default function CourtCaseFormAntdEdit({
         },
         newAttachments: attachments.newFiles,
         removedAttachmentIds: attachments.removedIds.map(Number),
-        updatedAttachments: Object.entries(attachments.changedTypes).map(([id, t]) => ({
-          id: Number(id),
-          type_id: t,
-        })),
       });
       if (uploaded?.length) {
         attachments.appendRemote(
@@ -142,7 +129,6 @@ export default function CourtCaseFormAntdEdit({
             path: u.storage_path,
             url: u.file_url,
             type: u.file_type,
-            attachment_type_id: u.attachment_type_id ?? null,
           })),
         );
       }
@@ -360,16 +346,11 @@ export default function CourtCaseFormAntdEdit({
             id: String(f.id),
             name: f.name,
             path: f.path,
-            typeId: attachments.changedTypes[f.id] ?? f.attachment_type_id,
-            typeName: f.attachment_type_name,
             mime: f.type,
           }))}
-          newFiles={attachments.newFiles.map((f) => ({ file: f.file, typeId: f.type_id, mime: f.file.type }))}
-          attachmentTypes={attachmentTypes}
+          newFiles={attachments.newFiles.map((f) => ({ file: f.file, mime: f.file.type }))}
           onRemoveRemote={(id) => attachments.removeRemote(id)}
           onRemoveNew={(idx) => attachments.removeNew(idx)}
-          onChangeRemoteType={(id, t) => attachments.changeRemoteType(id, t)}
-          onChangeNewType={(idx, t) => attachments.changeNewType(idx, t)}
           getSignedUrl={(path, name) => signedUrl(path, name)}
         />
       </Form.Item>

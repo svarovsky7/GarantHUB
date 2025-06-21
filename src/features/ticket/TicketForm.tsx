@@ -24,7 +24,6 @@ import { useUnitsByProject } from "@/entities/unit";
 import { useUsers } from "@/entities/user";
 import { useVisibleProjects } from "@/entities/project";
 import { useDefectDeadlines } from "@/entities/defectDeadline";
-import { useAttachmentTypes } from "@/entities/attachmentType";
 import { useCreateTicket, useTicket, signedUrl } from "@/entities/ticket";
 import { useProjectId } from "@/shared/hooks/useProjectId";
 import { useUnsavedChangesWarning } from "@/shared/hooks/useUnsavedChangesWarning";
@@ -40,13 +39,10 @@ interface Attachment {
   path: string;
   url: string;
   type: string;
-  attachment_type_id: number | null;
-  attachment_type_name?: string;
 }
 
 interface NewFile {
   file: File;
-  type_id: number | null;
 }
 
 interface TicketFormProps {
@@ -114,7 +110,6 @@ export default function TicketForm({
   const { data: types = [] } = useDefectTypes();
   const { data: statuses = [] } = useTicketStatuses();
   const { data: users = [] } = useUsers();
-  const { data: attachmentTypes = [] } = useAttachmentTypes();
   const { data: deadlines = [] } = useDefectDeadlines();
   const projectIdWatch =
     watch("project_id") ?? (globalProjectId != null ? Number(globalProjectId) : null);
@@ -138,18 +133,15 @@ export default function TicketForm({
   const {
     remoteFiles,
     newFiles,
-    changedTypes,
     removedIds,
     addFiles,
     removeNew,
     removeRemote,
-    changeRemoteType,
-    changeNewType,
     appendRemote,
     markPersisted,
     attachmentsChanged,
     reset: resetAttachments,
-  } = useTicketAttachments({ ticket, attachmentTypes });
+  } = useTicketAttachments({ ticket });
 
   useEffect(() => {
     if (ticket) {
@@ -201,13 +193,6 @@ export default function TicketForm({
 
 
   const submit = async (values: TicketFormValues) => {
-    if (
-      newFiles.some((f) => f.type_id == null) ||
-      remoteFiles.some((f) => (changedTypes[f.id] ?? null) == null)
-    ) {
-      notify.error('Выберите тип файла для всех документов');
-      return;
-    }
     const payload = {
       project_id:
         values.project_id ?? (globalProjectId != null ? Number(globalProjectId) : null),
@@ -233,10 +218,6 @@ export default function TicketForm({
         ...payload,
         newAttachments: newFiles,
         removedAttachmentIds: removedIds,
-        updatedAttachments: Object.entries(changedTypes).map(([id, type]) => ({
-          id,
-          type_id: type,
-        })),
       });
         if (uploaded?.length) {
           appendRemote(
@@ -250,7 +231,6 @@ export default function TicketForm({
               path: u.storage_path,
               url: u.file_url,
               type: u.file_type,
-              attachment_type_id: u.attachment_type_id ?? null,
             }))
           );
         }
@@ -259,7 +239,7 @@ export default function TicketForm({
     } else {
       await (create.mutateAsync as any)({
         ...payload,
-        attachments: newFiles.map((f) => ({ file: f.file, type_id: f.type_id })),
+        attachments: newFiles.map((f) => ({ file: f.file })),
       });
       onCreated?.();
       reset();
@@ -604,20 +584,11 @@ export default function TicketForm({
               id: String(f.id),
               name: f.original_name ?? f.name,
               path: f.path,
-              typeId: changedTypes[f.id] ?? f.attachment_type_id,
-              typeName: f.attachment_type_name,
               mime: f.type,
             }))}
-            newFiles={newFiles.map((f) => ({
-              file: f.file,
-              typeId: f.type_id,
-              mime: f.file.type,
-            }))}
-            attachmentTypes={attachmentTypes}
+            newFiles={newFiles.map((f) => ({ file: f.file, mime: f.file.type }))}
             onRemoveRemote={(id) => removeRemote(String(id))}
             onRemoveNew={removeNew}
-            onChangeRemoteType={changeRemoteType}
-            onChangeNewType={changeNewType}
             getSignedUrl={(path, name) => signedUrl(path, name)}
           />
           <Button variant="outlined" size="small" component="label" sx={{ mt: 1 }}>

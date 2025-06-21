@@ -144,7 +144,6 @@ function mapTicket(r) {
       name,
       url: a.file_url,
       type: a.file_type,
-      attachment_type_id: a.attachment_type_id ?? null,
     };
   });
 
@@ -214,7 +213,6 @@ export function useTickets() {
             original_name: f.original_name,
             file_url: f.file_url,
             file_type: f.file_type,
-            attachment_type_id: f.attachment_type_id ?? null,
           };
         });
       }
@@ -352,7 +350,6 @@ export function useTicket(ticketId) {
           original_name: f.original_name,
           file_url: f.file_url,
           file_type: f.file_type,
-          attachment_type_id: f.attachment_type_id ?? null,
         }));
         const existIds = files.map((f) => f.id);
         if (existIds.length !== data.attachment_ids.length) {
@@ -423,12 +420,7 @@ export function useTicket(ticketId) {
       }
 
       if (updatedAttachments.length) {
-        for (const a of updatedAttachments) {
-          await supabase
-            .from("attachments")
-            .update({ attachment_type_id: a.type_id })
-            .eq("id", Number(a.id));
-        }
+        // attachment types are no longer used
       }
 
       // новые вложения
