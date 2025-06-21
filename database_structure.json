@@ -1,5 +1,19 @@
 [
   {
+    "table_name": "attachment_types",
+    "column_name": "id",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": "nextval('attachment_types_id_seq'::regclass)"
+  },
+  {
+    "table_name": "attachment_types",
+    "column_name": "name",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
     "table_name": "attachments",
     "column_name": "id",
     "data_type": "integer",
@@ -8,14 +22,14 @@
   },
   {
     "table_name": "attachments",
-    "column_name": "path",
+    "column_name": "file_url",
     "data_type": "text",
     "is_nullable": "NO",
     "column_default": null
   },
   {
     "table_name": "attachments",
-    "column_name": "mime_type",
+    "column_name": "file_type",
     "data_type": "text",
     "is_nullable": "NO",
     "column_default": null
@@ -23,20 +37,6 @@
   {
     "table_name": "attachments",
     "column_name": "uploaded_at",
-    "data_type": "timestamp with time zone",
-    "is_nullable": "YES",
-    "column_default": "now()"
-  },
-  {
-    "table_name": "attachments",
-    "column_name": "uploaded_by",
-    "data_type": "uuid",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
-    "table_name": "attachments",
-    "column_name": "updated_at",
     "data_type": "timestamp with time zone",
     "is_nullable": "YES",
     "column_default": "now()"

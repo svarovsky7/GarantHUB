@@ -42,6 +42,7 @@ import { useUsers } from '@/entities/user';
 import { useLetterTypes } from '@/entities/letterType';
 import { useVisibleProjects } from '@/entities/project';
 import { useUnitsByProject, useUnitsByIds } from '@/entities/unit';
+import { useAttachmentTypes } from '@/entities/attachmentType';
 import { useNotify } from '@/shared/hooks/useNotify';
 import { useLetterStatuses } from '@/entities/letterStatus';
 import { useContractors } from '@/entities/contractor';
@@ -188,6 +189,7 @@ export default function CorrespondencePage() {
   const { data: contractors = [] } = useContractors();
   const { data: persons = [] } = usePersons();
   const { data: projects = [] } = useVisibleProjects();
+  const { data: attachmentTypes = [] } = useAttachmentTypes();
   const { data: projectUnits = [] } = useUnitsByProject(
     filters.project ? Number(filters.project) : null,
   );

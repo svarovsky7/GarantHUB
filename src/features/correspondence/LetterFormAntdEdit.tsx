@@ -19,6 +19,7 @@ import { useUsers } from '@/entities/user';
 import { useLetterTypes } from '@/entities/letterType';
 import { useVisibleProjects } from '@/entities/project';
 import { useUnitsByProject } from '@/entities/unit';
+import { useAttachmentTypes } from '@/entities/attachmentType';
 import { useContractors, useDeleteContractor } from '@/entities/contractor';
 import { usePersons, useDeletePerson } from '@/entities/person';
 import { useLetter, useUpdateLetter, signedUrl } from '@/entities/correspondence';
@@ -46,13 +47,14 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
   const { data: projects = [] } = useVisibleProjects();
   const projectId = Form.useWatch('project_id', form);
   const { data: units = [] } = useUnitsByProject(projectId); 
+  const { data: attachmentTypes = [] } = useAttachmentTypes();
   const { data: contractors = [] } = useContractors();
   const { data: persons = [] } = usePersons();
   const deletePerson = useDeletePerson();
   const deleteContractor = useDeleteContractor();
   const update = useUpdateLetter();
   const notify = useNotify();
-  const attachments = useLetterAttachments({ letter });
+  const attachments = useLetterAttachments({ letter, attachmentTypes });
   const { changedFields, handleValuesChange: handleChanged } = useChangedFields(
     form,
     [letter],
@@ -130,6 +132,13 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
   };
 
   const onFinish = async (values: any) => {
+    if (
+      attachments.newFiles.some((f) => f.type_id == null) ||
+      attachments.remoteFiles.some((f) => (attachments.changedTypes[f.id] ?? null) == null)
+    ) {
+      notify.error('Укажите тип файла для всех вложений');
+      return;
+    }
     try {
       const uploaded = await update.mutateAsync({
         id: Number(letterId),
@@ -148,6 +157,10 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
         } as any,
         newAttachments: attachments.newFiles,
         removedAttachmentIds: attachments.removedIds.map(Number),
+        updatedAttachments: Object.entries(attachments.changedTypes).map(([id, t]) => ({
+          id: Number(id),
+          type_id: t,
+        })),
       });
       if (uploaded?.length) {
         attachments.appendRemote(
@@ -156,8 +169,9 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
             name: u.original_name || u.storage_path.split('/').pop() || 'file',
             original_name: u.original_name ?? null,
             path: u.storage_path,
-            url: u.path,
-            mime_type: u.mime_type,
+            url: u.file_url,
+            type: u.file_type,
+            attachment_type_id: u.attachment_type_id ?? null,
           }))
         );
       }
@@ -399,11 +413,16 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
             id: String(f.id),
             name: f.original_name ?? f.name,
             path: f.path,
-            mime: f.mime_type,
+            typeId: attachments.changedTypes[f.id] ?? f.attachment_type_id,
+            typeName: f.attachment_type_name,
+            mime: f.type,
           }))}
-          newFiles={attachments.newFiles.map((f) => ({ file: f.file, mime: f.file.type }))}
+          newFiles={attachments.newFiles.map((f) => ({ file: f.file, typeId: f.type_id, mime: f.file.type }))}
+          attachmentTypes={attachmentTypes}
           onRemoveRemote={attachments.removeRemote}
           onRemoveNew={attachments.removeNew}
+          onChangeRemoteType={attachments.changeRemoteType}
+          onChangeNewType={attachments.changeNewType}
           getSignedUrl={(path, name) => signedUrl(path, name)}
         />
       </Form.Item>

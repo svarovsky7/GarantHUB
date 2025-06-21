@@ -5,10 +5,13 @@ export interface RemoteTicketFile {
   original_name?: string | null;
   path: string;
   url: string;
-  mime_type: string;
+  type: string;
+  attachment_type_id: number | null;
+  attachment_type_name?: string;
 }
 
 /** Новый файл для вложения замечания */
 export interface NewTicketFile {
   file: File;
+  type_id: number | null;
 }
