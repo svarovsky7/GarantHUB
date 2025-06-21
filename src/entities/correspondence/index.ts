@@ -89,7 +89,7 @@ export function useLetters() {
         ? await supabase
             .from(LETTER_ATTACH_TABLE)
             .select(
-              'letter_id, attachments(id, storage_path, path:file_url, mime_type:file_type, original_name)'
+              'letter_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name)'
             )
             .in('letter_id', letterIds)
         : { data: [], error: null };
@@ -485,7 +485,7 @@ export function useLetter(letterId: number | string | undefined) {
 
       const { data: attachRows } = await supabase
         .from(LETTER_ATTACH_TABLE)
-        .select('attachment_id, attachments(id, storage_path, path:file_url, mime_type:file_type, original_name)')
+        .select('attachment_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name)')
         .eq('letter_id', id);
       const attachments = (attachRows ?? []).map((row: any) => {
         const f = row.attachments;
