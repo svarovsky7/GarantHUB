@@ -10,25 +10,13 @@ import DefectFixModal from '@/features/defect/DefectFixModal';
 import type { DefectWithNames } from '@/shared/types/defectWithNames';
 
 interface Props {
-  /** Идентификаторы дефектов для загрузки */
-  defectIds?: number[];
-  /** Готовые данные для отображения (если есть) */
-  items?: DefectWithNames[];
-  /** Обработчик удаления строки */
-  onRemove?: (id: number) => void;
+  defectIds: number[];
 }
 
 /** Таблица дефектов конкретного замечания */
-export default function TicketDefectsTable({ defectIds = [], items, onRemove }: Props) {
-  const { data: fetched = [], isLoading: loadingDefects } = useDefectsWithNames(defectIds);
+export default function TicketDefectsTable({ defectIds }: Props) {
+  const { data: defects = [], isLoading } = useDefectsWithNames(defectIds);
   const { mutateAsync: removeDefect, isPending } = useDeleteDefect();
-  const [data, setData] = React.useState<DefectWithNames[]>(items ?? fetched);
-
-  React.useEffect(() => {
-    setData(items ?? fetched);
-  }, [items, fetched]);
-
-  const isLoading = items ? false : loadingDefects;
   const [viewId, setViewId] = React.useState<number | null>(null);
   const [fixId, setFixId] = React.useState<number | null>(null);
 
@@ -83,14 +71,8 @@ export default function TicketDefectsTable({ defectIds = [], items, onRemove }: 
             okText="Да"
             cancelText="Нет"
             onConfirm={async () => {
-              if (onRemove) {
-                onRemove(row.id);
-                setData((p) => p.filter((d) => d.id !== row.id));
-              } else {
-                await removeDefect(row.id);
-                setData((p) => p.filter((d) => d.id !== row.id));
-                message.success('Удалено');
-              }
+              await removeDefect(row.id);
+              message.success('Удалено');
             }}
             disabled={isPending}
           >
@@ -108,7 +90,7 @@ export default function TicketDefectsTable({ defectIds = [], items, onRemove }: 
         size="small"
         pagination={false}
         columns={columns}
-        dataSource={data}
+        dataSource={defects}
         loading={isLoading}
       />
       <DefectViewModal open={viewId !== null} defectId={viewId} onClose={() => setViewId(null)} />
