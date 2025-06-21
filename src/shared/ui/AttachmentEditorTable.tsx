@@ -7,33 +7,24 @@ import {
   DownloadOutlined,
 } from '@ant-design/icons';
 
-interface Option { id: number | string; name: string; }
-
 interface RemoteFile {
   id: string;
   name: string;
   path: string;
-  typeId: number | null;
-  /** Имя типа из attachments_types */
-  typeName?: string;
   /** MIME-тип файла */
   mime?: string;
 }
 
 interface NewFile {
   file: File;
-  typeId: number | null;
   mime?: string;
 }
 
 interface Props {
   remoteFiles?: RemoteFile[];
   newFiles?: NewFile[];
-  attachmentTypes: Option[];
   onRemoveRemote?: (id: string) => void;
   onRemoveNew?: (idx: number) => void;
-  onChangeRemoteType?: (id: string, type: number | null) => void;
-  onChangeNewType?: (idx: number, type: number | null) => void;
   getSignedUrl?: (path: string, name: string) => Promise<string>;
 }
 
@@ -45,11 +36,8 @@ interface Props {
 export default function AttachmentEditorTable({
                                                 remoteFiles = [],
                                                 newFiles = [],
-                                                attachmentTypes,
                                                 onRemoveRemote,
                                                 onRemoveNew,
-                                                onChangeRemoteType,
-                                                onChangeNewType,
                                                 getSignedUrl,
                                               }: Props) {
   const [cache, setCache] = React.useState<Record<string, string>>({});
@@ -81,8 +69,6 @@ export default function AttachmentEditorTable({
     key: string;
     id?: string;
     name: string;
-    typeId: number | null;
-    typeName?: string;
     mime?: string;
     file?: File;
     path?: string;
@@ -94,8 +80,6 @@ export default function AttachmentEditorTable({
       key: `r-${f.id}`,
       id: f.id,
       name: f.name,
-      typeId: f.typeId,
-      typeName: f.typeName,
       mime: f.mime,
       path: f.path,
       isRemote: true,
@@ -103,7 +87,6 @@ export default function AttachmentEditorTable({
     ...newFiles.map<Row>((f, i) => ({
       key: `n-${i}`,
       name: f.file.name,
-      typeId: f.typeId,
       mime: f.mime,
       file: f.file,
       isRemote: false,
@@ -123,34 +106,9 @@ export default function AttachmentEditorTable({
       ellipsis: true,
     },
     {
-      title: 'Тип',
-      dataIndex: 'typeId',
-      width: 420,
-      render: (_: number | null, row) => (
-        <Space size={4}>
-          {onChangeRemoteType && row.isRemote ? (
-            <Select
-              size="small"
-              style={{ width: 400 }}
-              value={row.typeId ?? undefined}
-              onChange={(v) => onChangeRemoteType(row.id as string, v ?? null)}
-              options={[{ value: undefined, label: 'Тип не указан' }, ...attachmentTypes.map((t) => ({ value: t.id, label: t.name }))]}
-            />
-          ) : onChangeNewType && !row.isRemote ? (
-            <Select
-              size="small"
-              style={{ width: 400 }}
-              value={row.typeId ?? undefined}
-              onChange={(v) => onChangeNewType(Number(row.key.split('-')[1]), v ?? null)}
-              options={[{ value: undefined, label: 'Тип не указан' }, ...attachmentTypes.map((t) => ({ value: t.id, label: t.name }))]}
-            />
-          ) : row.typeName ? (
-            row.typeName
-          ) : (
-            row.mime
-          )}
-        </Space>
-      ),
+      title: 'MIME',
+      dataIndex: 'mime',
+      width: 200,
     },
     {
       title: 'Действия',
@@ -173,8 +131,6 @@ export default function AttachmentEditorTable({
                       id: row.id,
                       name: row.name,
                       path: row.path,
-                      typeId: row.typeId,
-                      typeName: row.typeName,
                       mime: row.mime,
                     })
                   }

@@ -5,13 +5,10 @@ export interface RemoteCaseFile {
   original_name?: string | null;
   path: string;
   url: string;
-  type: string;
-  attachment_type_id: number | null;
-  attachment_type_name?: string;
+  mime_type: string;
 }
 
 /** Новый файл для вложения судебного дела */
 export interface NewCaseFile {
   file: File;
-  type_id: number | null;
 }
