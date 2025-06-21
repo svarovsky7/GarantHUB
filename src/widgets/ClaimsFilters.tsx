@@ -40,7 +40,7 @@ export default function ClaimsFilters({ options, onChange, initialValues = {} }:
       <Form.Item name="status" label="Статусы">
         <Select allowClear options={options.statuses} />
       </Form.Item>
-      <Form.Item name="number" label="№ претензии">
+      <Form.Item name="claim_no" label="№ претензии">
         <Input />
       </Form.Item>
       <Form.Item name="responsible" label="Ответственный инженер">

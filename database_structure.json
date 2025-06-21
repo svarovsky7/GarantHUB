@@ -134,56 +134,70 @@
   },
   {
     "table_name": "claims",
-    "column_name": "status_id",
+    "column_name": "claim_status_id",
     "data_type": "integer",
     "is_nullable": "YES",
     "column_default": null
   },
   {
     "table_name": "claims",
-    "column_name": "number",
+    "column_name": "claim_no",
     "data_type": "text",
     "is_nullable": "NO",
     "column_default": null
   },
   {
     "table_name": "claims",
-    "column_name": "claim_date",
+    "column_name": "claimed_on",
     "data_type": "date",
     "is_nullable": "YES",
     "column_default": null
   },
   {
     "table_name": "claims",
-    "column_name": "received_by_developer_at",
+    "column_name": "accepted_on",
     "data_type": "date",
     "is_nullable": "YES",
     "column_default": null
   },
   {
     "table_name": "claims",
-    "column_name": "registered_at",
+    "column_name": "registered_on",
     "data_type": "date",
     "is_nullable": "YES",
     "column_default": null
   },
   {
     "table_name": "claims",
-    "column_name": "fixed_at",
+    "column_name": "resolved_on",
     "data_type": "date",
     "is_nullable": "YES",
     "column_default": null
   },
   {
     "table_name": "claims",
-    "column_name": "responsible_engineer_id",
+    "column_name": "engineer_id",
     "data_type": "uuid",
     "is_nullable": "YES",
     "column_default": null
   },
   {
     "table_name": "claims",
-    "column_name": "defect_ids",
+    "column_name": "ticket_ids",
+    "data_type": "ARRAY",
+    "is_nullable": "YES",
+    "column_default": "ARRAY[]::bigint[]"
+  },
+  {
+    "table_name": "claims",
+    "column_name": "description",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "claims",
+    "column_name": "attachment_ids",
     "data_type": "ARRAY",
     "is_nullable": "YES",
     "column_default": "ARRAY[]::integer[]"
@@ -198,6 +212,20 @@
   {
     "table_name": "claims",
     "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "claims",
+    "column_name": "updated_by",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "claims",
+    "column_name": "updated_at",
     "data_type": "timestamp with time zone",
     "is_nullable": "YES",
     "column_default": "now()"
