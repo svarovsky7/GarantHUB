@@ -59,8 +59,8 @@ function mapClaim(r: any): ClaimWithNames {
     ticket_ids: r.ticket_ids ?? [],
     description: r.description ?? '',
     projectName: r.projects?.name ?? '—',
-    statusName: r.statuses?.name ?? '—',
-    statusColor: r.statuses?.color ?? null,
+    statusName: r.claim_statuses?.name ?? '—',
+    statusColor: r.claim_statuses?.color ?? null,
     responsibleEngineerName: null,
     unitNames: '',
     // convert strings to dayjs for consumer convenience
@@ -87,7 +87,7 @@ export function useClaims() {
           accepted_on, registered_on, resolved_on,
           engineer_id, ticket_ids, description, created_at, attachment_ids,
           projects (id, name),
-          statuses (id, name, color)`,
+          claim_statuses (id, name, color)`,
         );
       q = filterByProjects(q, projectId, projectIds, onlyAssigned);
       q = q.order('created_at', { ascending: false });
@@ -150,7 +150,7 @@ export function useClaim(id?: number | string) {
           accepted_on, registered_on, resolved_on,
           engineer_id, ticket_ids, description, created_at, attachment_ids,
           projects (id, name),
-          statuses (id, name, color)`,
+          claim_statuses (id, name, color)`,
         )
         .eq('id', claimId);
       q = filterByProjects(q, projectId, projectIds, onlyAssigned);

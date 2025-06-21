@@ -1,4 +1,6 @@
-import type { Status } from './status';
-
-/** Статус судебного дела */
-export interface CourtCaseStatus extends Status {}
+export interface CourtCaseStatus {
+  id: number;
+  name: string;
+  /** Цвет статуса */
+  color: string | null;
+}

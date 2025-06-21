@@ -1,4 +1,5 @@
-import type { Status } from './status';
-
-/** Статус претензии */
-export interface ClaimStatus extends Status {}
+export interface ClaimStatus {
+  id: number;
+  name: string;
+  color: string | null;
+}
