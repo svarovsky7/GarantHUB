@@ -204,7 +204,7 @@ export function useAddLetter() {
         attachments?: { file: File; type_id: number | null }[];
       }
     ) => {
-      const { attachments = [], parent_id, ...data } = payload as any;
+      const { attachments = [], parent_id, unit_ids = [], ...data } = payload as any;
 
       const senderIds = await getContactIds(data.sender);
       const receiverIds = await getContactIds(data.receiver);
@@ -264,8 +264,8 @@ export function useAddLetter() {
           await supabase.from(LETTER_ATTACH_TABLE).insert(rows);
         }
       }
-      if (data.unit_ids?.length) {
-        const rows = data.unit_ids.map((uid: number) => ({
+      if (unit_ids?.length) {
+        const rows = unit_ids.map((uid: number) => ({
           letter_id: letterId,
           unit_id: uid,
         }));
@@ -287,7 +287,7 @@ export function useAddLetter() {
         status_id: data.status_id ?? null,
         letter_type_id: data.letter_type_id ?? null,
         project_id: data.project_id ?? null,
-        unit_ids: data.unit_ids ?? [],
+        unit_ids: unit_ids ?? [],
         attachment_ids: attachmentIds,
         number: data.number,
         date: data.date,
