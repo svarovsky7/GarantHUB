@@ -2,6 +2,6 @@
 export interface ClaimDeleteParams {
   /** Идентификатор претензии */
   id: number;
-  /** Идентификаторы связанных тикетов */
-  ticketIds?: number[];
+  /** Идентификаторы связанных дефектов */
+  defectIds?: number[];
 }
