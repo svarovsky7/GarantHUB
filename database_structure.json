@@ -673,13 +673,6 @@
   },
   {
     "table_name": "defects",
-    "column_name": "is_warranty",
-    "data_type": "boolean",
-    "is_nullable": "NO",
-    "column_default": "false"
-  },
-  {
-    "table_name": "defects",
     "column_name": "attachment_ids",
     "data_type": "ARRAY",
     "is_nullable": "YES",
@@ -691,6 +684,13 @@
     "data_type": "uuid",
     "is_nullable": "YES",
     "column_default": null
+  },
+  {
+    "table_name": "defects",
+    "column_name": "is_warranty",
+    "data_type": "boolean",
+    "is_nullable": "NO",
+    "column_default": "false"
   },
   {
     "table_name": "lawsuit_claim_types",
