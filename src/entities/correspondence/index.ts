@@ -73,7 +73,7 @@ export function useLetters() {
       if (allIds.length) {
         const { data: files, error: attErr } = await supabase
           .from(ATTACH_TABLE)
-          .select('id, storage_path, path:file_url, mime_type:file_type, original_name')
+          .select('id, storage_path, file_url:path, file_type:mime_type, original_name')
           .in('id', allIds);
         if (attErr) throw attErr;
         (files ?? []).forEach((a: any) => {
