@@ -58,7 +58,7 @@ export default function useUnitsMatrix(projectId, building, section) {
                     id,
                     unit_ids,
                     status_id,
-                    ticket_statuses(color)
+                    statuses(color)
                 `)
                 .overlaps('unit_ids', unitIds);
             const byUnit = {};
@@ -68,7 +68,7 @@ export default function useUnitsMatrix(projectId, building, section) {
                     byUnit[uid].push({
                         id: t.id,
                         status_id: t.status_id,
-                        color: t.ticket_statuses?.color || null,
+                        color: t.statuses?.color || null,
                     });
                 });
             });
