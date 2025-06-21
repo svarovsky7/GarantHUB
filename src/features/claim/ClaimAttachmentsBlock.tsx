@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, Row, Col } from 'antd';
+import { Form } from 'antd';
 import FileDropZone from '@/shared/ui/FileDropZone';
 import ClaimAttachmentsTable from './ClaimAttachmentsTable';
 import type { RemoteClaimFile } from '@/shared/types/claimFile';
@@ -36,22 +36,14 @@ export default function ClaimAttachmentsBlock({
 }: ClaimAttachmentsBlockProps) {
   return (
     <Form.Item label="Файлы">
-      <Row gutter={16} align="top">
-        {showUpload && (
-          <Col flex="auto">
-            <FileDropZone onFiles={onFiles ?? (() => {})} />
-          </Col>
-        )}
-        <Col>
-          <ClaimAttachmentsTable
-            remoteFiles={remoteFiles}
-            newFiles={newFiles}
-            onRemoveRemote={onRemoveRemote}
-            onRemoveNew={onRemoveNew}
-            getSignedUrl={getSignedUrl}
-          />
-        </Col>
-      </Row>
+      {showUpload && <FileDropZone onFiles={onFiles ?? (() => {})} />}
+      <ClaimAttachmentsTable
+        remoteFiles={remoteFiles}
+        newFiles={newFiles}
+        onRemoveRemote={onRemoveRemote}
+        onRemoveNew={onRemoveNew}
+        getSignedUrl={getSignedUrl}
+      />
     </Form.Item>
   );
 }
