@@ -1,8 +1,8 @@
-import React from 'react';
-import { Form, Row, Col } from 'antd';
-import FileDropZone from '@/shared/ui/FileDropZone';
-import ClaimAttachmentsTable from './ClaimAttachmentsTable';
-import type { RemoteClaimFile } from '@/shared/types/claimFile';
+import React from "react";
+import { Form, Row, Col, Upload, Skeleton, notification } from "antd";
+import { InboxOutlined } from "@ant-design/icons";
+import ClaimAttachmentsTable from "./ClaimAttachmentsTable";
+import type { RemoteClaimFile } from "@/shared/types/claimFile";
 
 /**
  * Блок загрузки и отображения файлов претензии.
@@ -23,6 +23,8 @@ export interface ClaimAttachmentsBlockProps {
   showUpload?: boolean;
   /** Получить подписанную ссылку */
   getSignedUrl?: (path: string, name: string) => Promise<string>;
+  /** Показывать скелетон во время загрузки */
+  loading?: boolean;
 }
 
 export default function ClaimAttachmentsBlock({
@@ -33,23 +35,50 @@ export default function ClaimAttachmentsBlock({
   onRemoveNew,
   showUpload = true,
   getSignedUrl,
+  loading,
 }: ClaimAttachmentsBlockProps) {
+  const handleChange = (info: any) => {
+    const files = info.fileList
+      .map((f: any) => f.originFileObj as File)
+      .filter(Boolean);
+    if (info.file.size > 50 * 1024 * 1024) {
+      notification.error({ message: "Файл слишком большой" });
+      return;
+    }
+    onFiles?.(files);
+  };
+
   return (
     <Form.Item label="Файлы">
       <Row gutter={16} align="top">
         {showUpload && (
           <Col flex="auto">
-            <FileDropZone onFiles={onFiles ?? (() => {})} />
+            <Upload.Dragger
+              multiple
+              showUploadList={false}
+              beforeUpload={() => false}
+              onChange={handleChange}
+              style={{ height: 120 }}
+            >
+              <p className="ant-upload-drag-icon">
+                <InboxOutlined />
+              </p>
+              <p className="ant-upload-text">Перетащите файлы (до 50 MB)</p>
+            </Upload.Dragger>
           </Col>
         )}
-        <Col>
-          <ClaimAttachmentsTable
-            remoteFiles={remoteFiles}
-            newFiles={newFiles}
-            onRemoveRemote={onRemoveRemote}
-            onRemoveNew={onRemoveNew}
-            getSignedUrl={getSignedUrl}
-          />
+        <Col flex="auto">
+          {loading ? (
+            <Skeleton active paragraph={{ rows: 2 }} />
+          ) : (
+            <ClaimAttachmentsTable
+              remoteFiles={remoteFiles}
+              newFiles={newFiles}
+              onRemoveRemote={onRemoveRemote}
+              onRemoveNew={onRemoveNew}
+              getSignedUrl={getSignedUrl}
+            />
+          )}
         </Col>
       </Row>
     </Form.Item>
