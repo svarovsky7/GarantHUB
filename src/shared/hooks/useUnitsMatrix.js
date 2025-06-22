@@ -5,7 +5,10 @@ import { useCourtCaseStatuses } from '@/entities/courtCaseStatus';
 
 /**
  * Универсальный хук для шахматки квартир.
- * Загружает объекты проекта, связанные тикеты и активные судебные дела.
+ * Загружает объекты проекта и связанные сущности:
+ * - активные судебные дела
+ * - письма, связанные с объектами
+ * - претензии с их статусами
  *
  * @param {number} projectId ID проекта
  * @param {string} building  Корпус
@@ -15,6 +18,8 @@ export default function useUnitsMatrix(projectId, building) {
     const [floors, setFloors] = useState([]);
     const [unitsByFloor, setUnitsByFloor] = useState({});
     const [casesByUnit, setCasesByUnit] = useState({});
+    const [lettersByUnit, setLettersByUnit] = useState({});
+    const [claimsByUnit, setClaimsByUnit] = useState({});
     const [filteredUnits, setFilteredUnits] = useState([]);
 
     const { data: stages = [] } = useCourtCaseStatuses();
@@ -44,7 +49,7 @@ export default function useUnitsMatrix(projectId, building) {
         if (building) filtered = filtered.filter(u => String(u.building) === String(building));
         setFilteredUnits(filtered);
 
-        // Грузим замечания и судебные дела только для отображаемых юнитов
+        // Грузим замечания, письма и судебные дела только для отображаемых юнитов
         if (filtered.length > 0) {
             const unitIds = filtered.map(u => u.id);
 
@@ -67,8 +72,43 @@ export default function useUnitsMatrix(projectId, building) {
                     casesMap[uid].push({ id: c.id });
                 });
             setCasesByUnit(casesMap);
+
+            // Letters linked with units
+            const { data: letterRows } = await supabase
+                .from('letter_units')
+                .select('unit_id, letters!inner(id, project_id)')
+                .in('unit_id', unitIds)
+                .eq('letters.project_id', projectId);
+            const letterMap = {};
+            (letterRows || []).forEach(row => {
+                letterMap[row.unit_id] = true;
+            });
+            setLettersByUnit(letterMap);
+
+            // Claims linked with units
+            const { data: claimRows } = await supabase
+                .from('claim_units')
+                .select(
+                    'unit_id, claims!inner(id, project_id, is_official, claim_status_id, statuses(color))'
+                )
+                .in('unit_id', unitIds)
+                .eq('claims.project_id', projectId);
+            const claimMap = {};
+            (claimRows || []).forEach(row => {
+                const cl = row.claims;
+                if (!cl) return;
+                if (!claimMap[row.unit_id]) {
+                    claimMap[row.unit_id] = {
+                        color: cl.statuses?.color ?? null,
+                        official: cl.is_official ?? false,
+                    };
+                }
+            });
+            setClaimsByUnit(claimMap);
         } else {
             setCasesByUnit({});
+            setLettersByUnit({});
+            setClaimsByUnit({});
         }
     }, [projectId, building, closedStageId]);
 
@@ -145,6 +185,7 @@ export default function useUnitsMatrix(projectId, building) {
         await handleAddUnit(candidate);
     };
 
+    // Возвращаем данные для визуализации шахматки
     return {
         // Для шахматки (только по выбранному building)
         floors,
@@ -156,5 +197,7 @@ export default function useUnitsMatrix(projectId, building) {
         setUnits,
         fetchUnits,
         casesByUnit,
+        lettersByUnit,
+        claimsByUnit,
     };
 }

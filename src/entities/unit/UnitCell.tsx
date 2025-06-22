@@ -1,5 +1,7 @@
 import React from "react";
 import { Paper, Box, Tooltip, IconButton, Typography } from "@mui/material";
+import MailIcon from "@mui/icons-material/Mail";
+import type { UnitClaimInfo } from "@/shared/types/unitClaimInfo";
 import EditOutlined from "@mui/icons-material/EditOutlined";
 import DeleteOutline from "@mui/icons-material/DeleteOutline";
 
@@ -19,17 +21,32 @@ function getSemiTransparent(color, alpha = 0.3) {
 
 /**
  * Ячейка объекта на шахматке.
- * Подсвечивает наличие тикетов и судебных дел.
+ * Подсвечивает наличие писем, претензий и судебных дел.
+ * Используется в шахматке на странице структуры проекта.
  */
+interface Props {
+  unit: any;
+  cases?: any[];
+  hasLetter?: boolean;
+  claimInfo?: UnitClaimInfo | null;
+  onEditUnit?: (unit: any) => void;
+  onDeleteUnit?: (unit: any) => void;
+  onAction?: (unit: any) => void;
+}
+
 export default function UnitCell({
   unit,
   cases = [],
+  hasLetter = false,
+  claimInfo = null,
   onEditUnit,
   onDeleteUnit,
   onAction,
-}) {
+}: Props) {
   const bgColor = "#fff";
   const hasCases = Array.isArray(cases) && cases.length > 0;
+  const hasOfficial = claimInfo?.official ?? false;
+  const claimColor = claimInfo?.color ?? null;
 
   return (
     <Paper
@@ -41,7 +58,9 @@ export default function UnitCell({
         flexDirection: "column",
         alignItems: "stretch",
         justifyContent: "flex-start",
-        border: `1.5px solid ${hasCases ? "#e53935" : "#dde2ee"}`,
+        border: `${hasCases ? 2 : 1.5}px solid ${
+          hasCases || hasOfficial ? "#e53935" : "#dde2ee"
+        }`,
         background: bgColor,
         borderRadius: "12px",
         boxShadow: hasCases ? "0 0 0 2px rgba(229,57,53,0.25)" : "0 1px 6px 0 #E3ECFB",
@@ -54,7 +73,7 @@ export default function UnitCell({
           boxShadow: hasCases
             ? "0 0 0 2px rgba(211,47,47,0.4)"
             : "0 4px 16px 0 #b5d2fa",
-          borderColor: hasCases ? "#d32f2f" : "#1976d2",
+          borderColor: hasCases || hasOfficial ? "#d32f2f" : "#1976d2",
           background: "#f6faff",
         },
         position: "relative",
@@ -71,6 +90,26 @@ export default function UnitCell({
       }}
       data-oid="21x1tb3"
     >
+      {claimColor && (
+        <Box
+          sx={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 6,
+            bgcolor: claimColor,
+            borderTopLeftRadius: "12px",
+            borderTopRightRadius: "12px",
+          }}
+        />
+      )}
+      {hasLetter && (
+        <MailIcon
+          fontSize="small"
+          sx={{ position: "absolute", top: 2, right: 2, color: "#f0b400" }}
+        />
+      )}
       <Box
         sx={{
           flexGrow: 1,

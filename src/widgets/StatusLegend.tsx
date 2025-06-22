@@ -1,5 +1,7 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
+import MailIcon from '@mui/icons-material/Mail';
+import { useClaimStatuses } from '@/entities/claimStatus';
 
 
 /**
@@ -7,7 +9,7 @@ import { Box, Typography } from '@mui/material';
  * Отображает цвета статусов замечаний и пояснение к красной обводке.
  */
 export default function StatusLegend() {
-  const statuses: any[] = [];
+  const { data: statuses = [] } = useClaimStatuses();
 
   return (
     <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -29,7 +31,13 @@ export default function StatusLegend() {
         ))}
       </Box>
       <Typography variant="body2" color="text.secondary">
-        Красная обводка — квартиры с судебными делами
+        <MailIcon fontSize="small" sx={{ mr: 0.5, color: '#f0b400' }} /> — есть связанные письма
+      </Typography>
+      <Typography variant="body2" color="text.secondary">
+        Тонкая красная обводка — официальная претензия
+      </Typography>
+      <Typography variant="body2" color="text.secondary">
+        Жирная красная обводка — судебное дело
       </Typography>
     </Box>
   );
