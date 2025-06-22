@@ -231,14 +231,6 @@ export function useClaimsSimpleAll() {
         unitMap[u.claim_id].push(u.unit_id);
       });
 
-      const { data: ticketRows } = ids.length
-        ? await supabase.from('claim_tickets').select('claim_id, ticket_id').in('claim_id', ids)
-        : { data: [] };
-      const ticketMap: Record<number, number[]> = {};
-      (ticketRows ?? []).forEach((t: any) => {
-        if (!ticketMap[t.claim_id]) ticketMap[t.claim_id] = [];
-        ticketMap[t.claim_id].push(t.ticket_id);
-      });
 
       const { data: defectRows } = ids.length
         ? await supabase
@@ -291,14 +283,6 @@ export function useClaimsSimple() {
         unitMap[u.claim_id].push(u.unit_id);
       });
 
-      const { data: ticketRows } = ids.length
-        ? await supabase.from('claim_tickets').select('claim_id, ticket_id').in('claim_id', ids)
-        : { data: [] };
-      const ticketMap: Record<number, number[]> = {};
-      (ticketRows ?? []).forEach((t: any) => {
-        if (!ticketMap[t.claim_id]) ticketMap[t.claim_id] = [];
-        ticketMap[t.claim_id].push(t.ticket_id);
-      });
 
       const { data: defectRows } = ids.length
         ? await supabase
@@ -430,10 +414,10 @@ export function useDeleteClaim() {
   const { projectId, projectIds, onlyAssigned } = useProjectFilter();
   return useMutation<number, Error, ClaimDeleteParams>({
     /**
-     * Удаляет претензию вместе с загруженными файлами и связанными дефектами.
-     * @param payload объект с идентификатором претензии и массивом дефектов
+     * Удаляет претензию вместе с её файлами и всеми связанными дефектами.
+     * @param payload объект с идентификатором претензии
      */
-    mutationFn: async ({ id, ticketIds = [] }) => {
+    mutationFn: async ({ id }) => {
       const { data: attachRows } = await supabase
         .from('claim_attachments')
         .select('attachment_id, attachments(storage_path)')
@@ -443,13 +427,6 @@ export function useDeleteClaim() {
         .map((r: any) => r.attachments?.storage_path)
         .filter(Boolean);
 
-      const { data: ticketRows } = await supabase
-        .from('claim_tickets')
-        .select('ticket_id')
-        .eq('claim_id', id);
-      const claimTickets = ticketIds.length
-        ? ticketIds
-        : (ticketRows ?? []).map((t: any) => t.ticket_id);
 
       if (paths.length) {
         await supabase.storage.from(ATTACH_BUCKET).remove(paths);
@@ -459,9 +436,33 @@ export function useDeleteClaim() {
         await supabase.from('claim_attachments').delete().eq('claim_id', id);
       }
 
-      if (claimTickets.length) {
-        await supabase.from('tickets').delete().in('id', claimTickets);
-        await supabase.from('claim_tickets').delete().eq('claim_id', id);
+      const { data: defectRows } = await supabase
+        .from('claim_defects')
+        .select('defect_id')
+        .eq('claim_id', id);
+      const defectIds = (defectRows ?? []).map((d: any) => d.defect_id);
+
+      if (defectIds.length) {
+        const { data: defAttachRows } = await supabase
+          .from('defect_attachments')
+          .select('attachment_id, attachments(storage_path)')
+          .in('defect_id', defectIds);
+        const defFiles = (defAttachRows ?? []).map((r: any) => r.attachment_id);
+        const defPaths = (defAttachRows ?? [])
+          .map((r: any) => r.attachments?.storage_path)
+          .filter(Boolean);
+        if (defPaths.length) {
+          await supabase.storage.from(ATTACH_BUCKET).remove(defPaths);
+          await supabase.from('attachments').delete().in('id', defFiles);
+        }
+        if (defFiles.length) {
+          await supabase
+            .from('defect_attachments')
+            .delete()
+            .in('attachment_id', defFiles);
+        }
+        await supabase.from('defects').delete().in('id', defectIds);
+        await supabase.from('claim_defects').delete().eq('claim_id', id);
       }
 
       await supabase.from('claim_units').delete().eq('claim_id', id);
