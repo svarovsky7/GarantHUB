@@ -73,10 +73,27 @@ export default function DefectFixModal({ defectId, open, onClose }: Props) {
     setRemovedIds((p) => [...p, id]);
   };
 
+  /**
+   * Подтверждение устранения дефекта.
+   * Проверяет заполненность обязательных полей и наличие хотя бы одного файла.
+   */
   const handleOk = async () => {
     if (!defectId) return;
+    if (!fixBy.brigade_id && !fixBy.contractor_id) {
+      notify.error("Укажите исполнителя");
+      return;
+    }
+    if (!fixedAt) {
+      notify.error("Укажите дату устранения");
+      return;
+    }
+    if (remoteFiles.length + files.length === 0) {
+      notify.error("Загрузите хотя бы один файл");
+      return;
+    }
+
     const updated: any[] = [];
-    const uploaded = await fix.mutateAsync({
+    await fix.mutateAsync({
       id: defectId,
       brigade_id: fixBy.brigade_id,
       contractor_id: fixBy.contractor_id,
