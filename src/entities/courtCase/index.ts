@@ -9,6 +9,10 @@ const CASES_TABLE = 'court_cases';
 const DEFECTS_TABLE = 'defects';
 const CASE_DEFECTS_TABLE = 'court_case_defects';
 const CASE_LINKS_TABLE = 'court_case_links';
+/** Связующая таблица "дело - объект" */
+const CASE_UNITS_TABLE = 'court_case_units';
+/** Связующая таблица "дело - вложение" */
+const CASE_ATTACH_TABLE = 'court_case_attachments';
 
 export function useCourtCases() {
   const { projectId, projectIds, onlyAssigned } = useProjectFilter();
@@ -41,14 +45,44 @@ export function useCourtCases() {
 export function useAddCourtCase() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: Omit<CourtCase, 'id' | 'created_at' | 'updated_at'>) => {
-      const { data, error } = await supabase
+    /**
+     * Создать новое судебное дело и привязать его к выбранным объектам.
+     */
+    mutationFn: async (
+      payload: Omit<CourtCase, 'id' | 'created_at' | 'updated_at'>,
+    ) => {
+      const { unit_ids = [], attachment_ids = [], ...rest } =
+        payload as unknown as {
+          unit_ids?: number[];
+          attachment_ids?: number[];
+          [k: string]: any;
+        };
+
+      const { data: inserted, error } = await supabase
         .from(CASES_TABLE)
-        .insert(payload)
+        .insert(rest)
         .select('*')
         .single();
       if (error) throw error;
-      return data as CourtCase;
+
+      const caseId = inserted.id as number;
+      if (unit_ids.length) {
+        const rows = unit_ids.map((uid) => ({
+          court_case_id: caseId,
+          unit_id: uid,
+        }));
+        await supabase.from(CASE_UNITS_TABLE).insert(rows);
+      }
+
+      if (attachment_ids.length) {
+        const rows = attachment_ids.map((aid) => ({
+          court_case_id: caseId,
+          attachment_id: aid,
+        }));
+        await supabase.from(CASE_ATTACH_TABLE).insert(rows);
+      }
+
+      return { ...inserted, unit_ids, attachment_ids } as CourtCase;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: [CASES_TABLE] }),
   });
@@ -58,13 +92,44 @@ export function useUpdateCourtCase() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, updates }: { id: number; updates: Partial<CourtCase> }) => {
-      const { data, error } = await supabase
+      const { unit_ids, attachment_ids, ...rest } = updates as unknown as {
+        unit_ids?: number[];
+        attachment_ids?: number[];
+        [k: string]: any;
+      };
+
+      if (Object.keys(rest).length) {
+        const { error } = await supabase
+          .from(CASES_TABLE)
+          .update(rest)
+          .eq('id', id);
+        if (error) throw error;
+      }
+
+      if (Array.isArray(unit_ids)) {
+        await supabase.from(CASE_UNITS_TABLE).delete().eq('court_case_id', id);
+        if (unit_ids.length) {
+          const rows = unit_ids.map((uid) => ({ court_case_id: id, unit_id: uid }));
+          await supabase.from(CASE_UNITS_TABLE).insert(rows);
+        }
+      }
+
+      if (Array.isArray(attachment_ids)) {
+        await supabase.from(CASE_ATTACH_TABLE).delete().eq('court_case_id', id);
+        if (attachment_ids.length) {
+          const rows = attachment_ids.map((aid) => ({
+            court_case_id: id,
+            attachment_id: aid,
+          }));
+          await supabase.from(CASE_ATTACH_TABLE).insert(rows);
+        }
+      }
+
+      const { data } = await supabase
         .from(CASES_TABLE)
-        .update(updates)
-        .eq('id', id)
         .select('*')
+        .eq('id', id)
         .single();
-      if (error) throw error;
       return data as CourtCase;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: [CASES_TABLE] }),
@@ -78,20 +143,25 @@ export function useDeleteCourtCase() {
     mutationFn: async ({ id, project_id }: { id: number; project_id?: number }) => {
       const { data: courtCase } = await supabase
         .from(CASES_TABLE)
-        .select('attachment_ids, project_id')
+        .select('project_id')
         .eq('id', id)
         .single();
 
-      const ids = (courtCase?.attachment_ids ?? []) as number[];
+      const { data: attachRows } = await supabase
+        .from(CASE_ATTACH_TABLE)
+        .select('attachment_id, attachments(storage_path)')
+        .eq('court_case_id', id);
+      const ids = (attachRows ?? []).map((r: any) => r.attachment_id);
 
       if (ids.length) {
-        const files = await getAttachmentsByIds(ids);
-        if (files?.length) {
-          await supabase.storage
-            .from(ATTACH_BUCKET)
-            .remove(files.map((f) => f.storage_path));
+        const paths = (attachRows ?? [])
+          .map((r: any) => r.attachments?.storage_path)
+          .filter(Boolean);
+        if (paths.length) {
+          await supabase.storage.from(ATTACH_BUCKET).remove(paths);
         }
         await supabase.from('attachments').delete().in('id', ids);
+        await supabase.from(CASE_ATTACH_TABLE).delete().eq('court_case_id', id);
       }
 
       const projectIdToMatch = project_id ?? projectId ?? courtCase.project_id;
@@ -282,12 +352,29 @@ export function useCourtCase(caseId: number | string | undefined) {
         .eq('id', id)
         .single();
       if (error) throw error;
+
+      const { data: unitRows } = await supabase
+        .from(CASE_UNITS_TABLE)
+        .select('unit_id')
+        .eq('court_case_id', id);
+      const unitIds = (unitRows ?? []).map((r: any) => r.unit_id);
+
+      const { data: attachRows } = await supabase
+        .from(CASE_ATTACH_TABLE)
+        .select('attachment_id')
+        .eq('court_case_id', id);
+      const attIds = (attachRows ?? []).map((r: any) => r.attachment_id);
       let attachments: any[] = [];
-      if (data?.attachment_ids?.length) {
-        const files = await getAttachmentsByIds(data.attachment_ids);
+      if (attIds.length) {
+        const files = await getAttachmentsByIds(attIds);
         attachments = files;
       }
-      const result = { ...(data as any), attachments } as CourtCase & { attachments: any[] };
+      const result = {
+        ...(data as any),
+        unit_ids: unitIds,
+        attachment_ids: attIds,
+        attachments,
+      } as CourtCase & { attachments: any[] };
       return result;
     },
     staleTime: 5 * 60_000,
@@ -311,11 +398,11 @@ export function useUpdateCourtCaseFull() {
       updates?: Partial<CourtCase>;
     }) => {
       const { data: current } = await supabase
-        .from(CASES_TABLE)
-        .select('attachment_ids')
-        .eq('id', id)
-        .single();
-      let ids: number[] = current?.attachment_ids ?? [];
+        .from(CASE_ATTACH_TABLE)
+        .select('attachment_id, attachments(storage_path)')
+        .eq('court_case_id', id);
+      let ids: number[] = (current ?? []).map((r: any) => r.attachment_id);
+
       if (removedAttachmentIds.length) {
         const { data: atts } = await supabase
           .from('attachments')
@@ -326,35 +413,52 @@ export function useUpdateCourtCaseFull() {
             .from(ATTACH_BUCKET)
             .remove(atts.map((a) => a.storage_path));
         await supabase.from('attachments').delete().in('id', removedAttachmentIds);
+        await supabase
+          .from(CASE_ATTACH_TABLE)
+          .delete()
+          .eq('court_case_id', id)
+          .in('attachment_id', removedAttachmentIds);
         ids = ids.filter((i) => !removedAttachmentIds.includes(Number(i)));
       }
+
       if (Object.keys(updates).length) {
+        const upd: any = { ...updates };
+        if (Object.prototype.hasOwnProperty.call(updates, 'unit_ids')) {
+          await supabase
+            .from(CASE_UNITS_TABLE)
+            .delete()
+            .eq('court_case_id', id);
+          const uids = updates.unit_ids as number[] | undefined;
+          if (uids?.length) {
+            const rows = uids.map((uid) => ({ court_case_id: id, unit_id: uid }));
+            await supabase.from(CASE_UNITS_TABLE).insert(rows);
+          }
+          delete upd.unit_ids;
+        }
         const { error } = await supabase
           .from(CASES_TABLE)
-          .update(updates)
+          .update(upd)
           .eq('id', id);
         if (error) throw error;
       }
+
       if (updatedAttachments.length) {
         // attachment type updates removed
       }
+
       let uploaded: any[] = [];
       if (newAttachments.length) {
         uploaded = await addCaseAttachments(newAttachments, id);
         ids = ids.concat(uploaded.map((u) => u.id));
+        if (uploaded.length) {
+          const rows = uploaded.map((u: any) => ({
+            court_case_id: id,
+            attachment_id: u.id,
+          }));
+          await supabase.from(CASE_ATTACH_TABLE).insert(rows);
+        }
       }
-      if (
-        Object.keys(updates).length ||
-        removedAttachmentIds.length ||
-        newAttachments.length ||
-        updatedAttachments.length
-      ) {
-        const { error } = await supabase
-          .from(CASES_TABLE)
-          .update({ attachment_ids: ids })
-          .eq('id', id);
-        if (error) throw error;
-      }
+
       return uploaded;
     },
     onSuccess: (_res, vars) => {
