@@ -98,7 +98,17 @@ export default function CourtCasesPage() {
   const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
   const { data: perm } = useRolePermission(role);
 
-  const unitIds = React.useMemo(() => Array.from(new Set(cases.flatMap((c) => c.unit_ids).filter(Boolean))), [cases]);
+  const unitIds = React.useMemo(
+    () =>
+      Array.from(
+        new Set(
+          cases
+            .flatMap((c) => c.unit_ids ?? [])
+            .filter((id): id is number => Boolean(id)),
+        ),
+      ),
+    [cases],
+  );
   const { data: caseUnits = [] } = useUnitsByIds(unitIds);
   const { data: allUnits = [] } = useQuery({
     queryKey: ['allUnits'],
@@ -176,7 +186,7 @@ export default function CourtCasesPage() {
   const casesData = cases.map((c: any) => ({
     ...c,
     projectName: projects.find((p) => p.id === c.project_id)?.name ?? '',
-    projectObject: c.unit_ids
+    projectObject: (c.unit_ids ?? [])
       .map((id: number) => caseUnits.find((u) => u.id === id)?.name)
       .filter(Boolean)
       .join(', '),
@@ -202,7 +212,8 @@ export default function CourtCasesPage() {
   const filteredCases = casesData.filter((c: any) => {
     const matchesStatus = !filters.status || c.status === filters.status;
     const matchesProject = !filters.projectId || c.project_id === filters.projectId;
-    const matchesObject = !filters.objectId || c.unit_ids.includes(filters.objectId);
+    const matchesObject =
+      !filters.objectId || (c.unit_ids ?? []).includes(filters.objectId);
     const matchesNumber = !filters.number || c.number.toLowerCase().includes(filters.number.toLowerCase());
     const matchesDate =
       !filters.dateRange ||
