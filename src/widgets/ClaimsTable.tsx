@@ -85,6 +85,7 @@ export default function ClaimsTable({ claims, filters, loading, columns: columns
   }, [claims, filters]);
 
   const rowClassName = (row: ClaimWithNames) => {
+    if (row.is_official) return 'claim-official-row';
     return row.hasCheckingDefect ? 'claim-checking-row' : '';
   };
 
