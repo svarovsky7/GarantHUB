@@ -462,7 +462,7 @@ export function useCancelDefectFix() {
         }
       }
 
-      return id;
+  return id;
     },
     onSuccess: (_id) => {
       qc.invalidateQueries({ queryKey: [TABLE] });
@@ -473,6 +473,25 @@ export function useCancelDefectFix() {
     },
     onError: (e: any) => notify.error(`Ошибка обновления: ${e.message}`),
   });
+}
+
+/**
+ * Получить краткую информацию о дефектах по их идентификаторам.
+ */
+export async function getDefectsInfo(ids: number[]) {
+  if (!ids.length) {
+    return [] as Array<{ id: number; description: string; statusName: string | null }>;
+  }
+  const { data, error } = await supabase
+    .from('defects')
+    .select('id, description, statuses!fk_defects_status(name)')
+    .in('id', ids);
+  if (error) throw error;
+  return (data ?? []).map((d: any) => ({
+    id: d.id as number,
+    description: d.description as string,
+    statusName: d.statuses?.name ?? null,
+  }));
 }
 
 export async function signedUrl(path: string, filename = ''): Promise<string> {
