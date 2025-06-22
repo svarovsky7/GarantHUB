@@ -190,44 +190,6 @@ export function useDeleteDefect() {
   });
 }
 
-/**
- * Обновить данные дефекта
- */
-export function useUpdateDefect() {
-  const qc = useQueryClient();
-  const notify = useNotify();
-  return useMutation({
-    mutationFn: async ({
-      id,
-      updates,
-    }: {
-      id: number;
-      updates: Partial<
-        Pick<
-          DefectRecord,
-          | 'description'
-          | 'type_id'
-          | 'status_id'
-          | 'brigade_id'
-          | 'contractor_id'
-          | 'is_warranty'
-          | 'received_at'
-          | 'fixed_at'
-        >
-      >;
-    }) => {
-      const { error } = await supabase
-        .from(TABLE)
-        .update(updates)
-        .eq('id', id);
-      if (error) throw error;
-      return { id, ...updates };
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: [TABLE] }),
-    onError: (e: any) => notify.error(`Ошибка обновления дефекта: ${e.message}`),
-  });
-}
-
 /** Обновить статус дефекта */
 export function useUpdateDefectStatus() {
   const qc = useQueryClient();
