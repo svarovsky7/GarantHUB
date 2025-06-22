@@ -5,13 +5,10 @@ import {
   SettingOutlined,
   EyeOutlined,
   DeleteOutlined,
-  PlusOutlined,
-  LinkOutlined,
 } from '@ant-design/icons';
 import ExportClaimsButton from '@/features/claim/ExportClaimsButton';
 import { useSnackbar } from 'notistack';
-import { useClaims, useDeleteClaim, useLinkClaims, useUnlinkClaim } from '@/entities/claim';
-import LinkClaimsDialog from '@/features/claim/LinkClaimsDialog';
+import { useClaims, useDeleteClaim } from '@/entities/claim';
 import { useUsers } from '@/entities/user';
 import { useUnitsByIds } from '@/entities/unit';
 import formatUnitName from '@/shared/utils/formatUnitName';
@@ -39,9 +36,6 @@ export default function ClaimsPage() {
   const checkingDefectMap = useMemo(() => new Map<number, boolean>(), []);
   const [filters, setFilters] = useState({});
   const [showAddForm, setShowAddForm] = useState(false);
-  const linkClaims = useLinkClaims();
-  const unlinkClaim = useUnlinkClaim();
-  const [linkFor, setLinkFor] = useState<ClaimWithNames | null>(null);
   const LS_SHOW_FILTERS = 'claims:showFilters';
   const [showFilters, setShowFilters] = useState<boolean>(() => {
     try {
@@ -144,17 +138,6 @@ export default function ClaimsPage() {
             <Tooltip title="Просмотр">
               <Button size="small" type="text" icon={<EyeOutlined />} onClick={() => setViewId(record.id)} />
             </Tooltip>
-            <Button size="small" type="text" icon={<PlusOutlined />} onClick={() => setLinkFor(record)} />
-            {record.parent_id && (
-              <Tooltip title="Исключить из связи">
-                <Button
-                  size="small"
-                  type="text"
-                  icon={<LinkOutlined style={{ color: '#c41d7f', textDecoration: 'line-through', fontWeight: 700 }} />}
-                  onClick={() => unlinkClaim.mutate(record.id)}
-                />
-              </Tooltip>
-            )}
             <Popconfirm
               title="Удалить претензию?"
               okText="Да"
@@ -216,22 +199,9 @@ export default function ClaimsPage() {
               loading={isLoading}
               columns={columns}
               onView={(id) => setViewId(id)}
-              onAddChild={setLinkFor}
-              onUnlink={(id) => unlinkClaim.mutate(id)}
             />
           )}
         </div>
-        <LinkClaimsDialog
-          open={!!linkFor}
-          parent={linkFor}
-          claims={claimsWithNames}
-          onClose={() => setLinkFor(null)}
-          onSubmit={(ids) => {
-            if (!linkFor) return;
-            linkClaims.mutate({ parentId: String(linkFor.id), childIds: ids });
-            setLinkFor(null);
-          }}
-        />
         <ClaimViewModal open={viewId !== null} claimId={viewId} onClose={() => setViewId(null)} />
       </>
     </ConfigProvider>
