@@ -446,14 +446,16 @@ export function useCreateClaim() {
  */
 export function useUpdateClaim() {
   const qc = useQueryClient();
-  const { projectId, projectIds, onlyAssigned } = useProjectFilter();
   return useMutation({
     mutationFn: async ({ id, updates }: { id: number; updates: Partial<Claim>; }) => {
       const { unit_ids, ...rest } = updates as Partial<Claim> & { unit_ids?: number[] };
 
-      let q = supabase.from(TABLE).update(rest).eq('id', id);
-      q = filterByProjects(q, projectId, projectIds, onlyAssigned);
-      const { data, error } = await q.select('*').single();
+      const { data, error } = await supabase
+        .from(TABLE)
+        .update(rest)
+        .eq('id', id)
+        .select('*')
+        .maybeSingle();
       if (error) throw error;
 
       if (Array.isArray(unit_ids)) {
