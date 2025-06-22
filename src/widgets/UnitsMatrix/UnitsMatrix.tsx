@@ -6,11 +6,13 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Button,
+  Button as MuiButton,
   TextField,
   Typography,
   Tooltip,
 } from "@mui/material";
+import { Modal, Button as AntButton, ConfigProvider } from 'antd';
+import ruRU from 'antd/locale/ru_RU';
 import AddIcon from "@mui/icons-material/Add";
 import FloorCell from "@/entities/floor/FloorCell";
 import useUnitsMatrix from "@/shared/hooks/useUnitsMatrix";
@@ -251,7 +253,7 @@ export default function UnitsMatrix({
             />
           </DialogContent>
           <DialogActions>
-            <Button
+            <MuiButton
               onClick={() =>
                 setEditDialog({
                   open: false,
@@ -262,10 +264,10 @@ export default function UnitsMatrix({
               }
             >
               Отмена
-            </Button>
-            <Button variant="contained" onClick={handleSaveEdit}>
+            </MuiButton>
+            <MuiButton variant="contained" onClick={handleSaveEdit}>
               Сохранить
-            </Button>
+            </MuiButton>
           </DialogActions>
         </Dialog>
         <Dialog
@@ -285,90 +287,94 @@ export default function UnitsMatrix({
               : "Квартира будет удалена безвозвратно."}
           </DialogContent>
           <DialogActions>
-            <Button
+            <MuiButton
               onClick={() =>
                 setConfirmDialog({ open: false, type: "", target: null })
               }
             >
               Отмена
-            </Button>
-            <Button
+            </MuiButton>
+            <MuiButton
               color="error"
               variant="contained"
               onClick={handleConfirmDelete}
             >
               Удалить
-            </Button>
+            </MuiButton>
           </DialogActions>
         </Dialog>
       </Box>
 
       {/* Модальное меню по ячейке квартиры */}
-      <Dialog
-        open={actionDialog.open}
-        onClose={() => setActionDialog({ open: false, unit: null, action: "" })}
-        maxWidth="md"
-        fullWidth
-        PaperProps={{
-          sx: { minWidth: 540, maxWidth: 900 },
-        }}
-      >
-        <DialogTitle sx={{ fontWeight: 600, textAlign: "center" }}>
-          Квартира {actionDialog.unit?.name}
-        </DialogTitle>
-        {!actionDialog.action && (
-          <DialogContent
-            sx={{ display: "flex", flexDirection: "column", gap: 2 }}
-          >
-            <Button
-              variant="contained"
-              color="secondary"
-              fullWidth
-              onClick={() => {
-                const id = actionDialog.unit?.id;
-                const search = createSearchParams({
-                  project_id: String(projectId),
-                  unit_id: String(id ?? ''),
-                  responsible_lawyer_id: String(profileId ?? ''),
-                  open_form: '1',
-                }).toString();
-                navigate(`/court-cases?${search}`);
-                setActionDialog({ open: false, unit: null, action: '' });
-              }}
-            >
-              Добавить судебное дело
-            </Button>
-            <Button
-              variant="contained"
-              color="info"
-              fullWidth
-              onClick={() => {
-                const id = actionDialog.unit?.id;
-                const search = createSearchParams({
-                  project_id: String(projectId),
-                  unit_id: String(id ?? ''),
-                  responsible_user_id: String(profileId ?? ''),
-                  open_form: '1',
-                }).toString();
-                navigate(`/correspondence?${search}`);
-                setActionDialog({ open: false, unit: null, action: '' });
-              }}
-            >
-              Добавить письмо
-            </Button>
-            <Button
-              variant="contained"
-              color="inherit"
-              fullWidth
-              onClick={() =>
-                setActionDialog((ad) => ({ ...ad, action: 'history' }))
-              }
-            >
-              Показать историю
-            </Button>
-          </DialogContent>
-        )}
-      </Dialog>
+      <ConfigProvider locale={ruRU}>
+        <Modal
+          open={actionDialog.open}
+          onCancel={() =>
+            setActionDialog({ open: false, unit: null, action: "" })
+          }
+          footer={null}
+          title={`Квартира ${actionDialog.unit?.name}`}
+          width={600}
+        >
+          {!actionDialog.action && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <AntButton
+                type="primary"
+                onClick={() => {
+                  const id = actionDialog.unit?.id;
+                  const search = createSearchParams({
+                    project_id: String(projectId),
+                    unit_id: String(id ?? ''),
+                    engineer_id: String(profileId ?? ''),
+                    open_form: '1',
+                  }).toString();
+                  navigate(`/claims?${search}`);
+                  setActionDialog({ open: false, unit: null, action: '' });
+                }}
+              >
+                Добавить претензию
+              </AntButton>
+              <AntButton
+                onClick={() => {
+                  const id = actionDialog.unit?.id;
+                  const search = createSearchParams({
+                    project_id: String(projectId),
+                    unit_id: String(id ?? ''),
+                    responsible_lawyer_id: String(profileId ?? ''),
+                    open_form: '1',
+                  }).toString();
+                  navigate(`/court-cases?${search}`);
+                  setActionDialog({ open: false, unit: null, action: '' });
+                }}
+              >
+                Добавить судебное дело
+              </AntButton>
+              <AntButton
+                onClick={() => {
+                  const id = actionDialog.unit?.id;
+                  const search = createSearchParams({
+                    project_id: String(projectId),
+                    unit_id: String(id ?? ''),
+                    responsible_user_id: String(profileId ?? ''),
+                    open_form: '1',
+                  }).toString();
+                  navigate(`/correspondence?${search}`);
+                  setActionDialog({ open: false, unit: null, action: '' });
+                }}
+              >
+                Добавить письмо
+              </AntButton>
+              <AntButton
+                onClick={() =>
+                  setActionDialog((ad) => ({ ...ad, action: 'history' }))
+                }
+              >
+                Показать историю
+              </AntButton>
+            </div>
+          )}
+        </Modal>
+      </ConfigProvider>
       {/* Диалог со всеми замечаниями */}
       <HistoryDialog
         open={actionDialog.action === "history"}

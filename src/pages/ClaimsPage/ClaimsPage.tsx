@@ -21,6 +21,7 @@ import dayjs from "dayjs";
 import TableColumnsDrawer from '@/widgets/TableColumnsDrawer';
 import type { TableColumnSetting } from '@/shared/types/tableColumnSetting';
 import type { ColumnsType } from 'antd/es/table';
+import { useSearchParams } from 'react-router-dom';
 import type { ClaimWithNames } from '@/shared/types/claimWithNames';
 
 export default function ClaimsPage() {
@@ -34,8 +35,20 @@ export default function ClaimsPage() {
   );
   const { data: units = [] } = useUnitsByIds(unitIds);
   const checkingDefectMap = useMemo(() => new Map<number, boolean>(), []);
+  const [searchParams] = useSearchParams();
+  const initialValues = {
+    project_id: searchParams.get('project_id')
+      ? Number(searchParams.get('project_id')!)
+      : undefined,
+    unit_ids: searchParams.get('unit_id')
+      ? [Number(searchParams.get('unit_id')!)]
+      : [],
+    engineer_id: searchParams.get('engineer_id') || undefined,
+  };
   const [filters, setFilters] = useState({});
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(
+    searchParams.get('open_form') === '1',
+  );
   const LS_SHOW_FILTERS = 'claims:showFilters';
   const [showFilters, setShowFilters] = useState<boolean>(() => {
     try {
@@ -44,6 +57,11 @@ export default function ClaimsPage() {
       return true;
     }
   });
+  React.useEffect(() => {
+    if (searchParams.get('open_form') === '1') {
+      setShowAddForm(true);
+    }
+  }, [searchParams]);
   React.useEffect(() => {
     try {
       localStorage.setItem(LS_SHOW_FILTERS, JSON.stringify(showFilters));
@@ -174,7 +192,10 @@ export default function ClaimsPage() {
         </span>
         {showAddForm && (
           <div style={{ marginTop: 16 }}>
-            <ClaimFormAntd onCreated={() => setShowAddForm(false)} />
+            <ClaimFormAntd
+              onCreated={() => setShowAddForm(false)}
+              initialValues={initialValues}
+            />
           </div>
         )}
         <TableColumnsDrawer
