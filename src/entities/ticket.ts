@@ -186,10 +186,9 @@ export function useTickets() {
         .from("tickets")
         .select(
           `
-          id, project_id, unit_ids, defect_ids, status_id, title, description,
+          id, project_id, status_id, title, description,
           customer_request_no, customer_request_date, responsible_engineer_id,
           created_by, created_at, received_at, fixed_at,
-          attachment_ids,
           projects (id, name),
           statuses (id, name, color)
         `,
@@ -200,22 +199,36 @@ export function useTickets() {
 
       if (error) throw error;
 
-      const allIds = Array.from(
-        new Set((data ?? []).flatMap((t) => t.attachment_ids || [])),
-      );
-      let filesMap = {};
-      if (allIds.length) {
-        const files = await getAttachmentsByIds(allIds);
-        files.forEach((f) => {
-          filesMap[f.id] = {
-            id: f.id,
-            storage_path: f.storage_path,
-            original_name: f.original_name,
-            file_url: f.file_url,
-            file_type: f.file_type,
-          };
-        });
-      }
+      const ids = (data ?? []).map((t: any) => t.id) as number[];
+
+      const { data: unitRows } = ids.length
+        ? await supabase
+            .from('ticket_units')
+            .select('ticket_id, unit_id')
+            .in('ticket_id', ids)
+        : { data: [] };
+      const unitMap: Record<number, number[]> = {};
+      (unitRows ?? []).forEach((u: any) => {
+        if (!unitMap[u.ticket_id]) unitMap[u.ticket_id] = [];
+        unitMap[u.ticket_id].push(u.unit_id);
+      });
+
+      const { data: attachRows } = ids.length
+        ? await supabase
+            .from('ticket_attachments')
+            .select(
+              'ticket_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name)'
+            )
+            .in('ticket_id', ids)
+        : { data: [] };
+      const attachMap: Record<number, any[]> = {};
+      (attachRows ?? []).forEach((row: any) => {
+        const file = row.attachments;
+        if (!file) return;
+        const arr = attachMap[row.ticket_id] ?? [];
+        arr.push(file);
+        attachMap[row.ticket_id] = arr;
+      });
 
       const { data: links, error: linkErr } = await supabase
         .from(LINKS_TABLE)
@@ -226,21 +239,15 @@ export function useTickets() {
 
       const result = [];
       for (const r of data ?? []) {
-        const atts = (r.attachment_ids || [])
-          .map((i) => filesMap[i])
-          .filter(Boolean);
-        if (atts.length !== (r.attachment_ids || []).length) {
-          const existIds = atts.map((a) => a.id);
-          let upq = supabase
-            .from("tickets")
-            .update({ attachment_ids: existIds })
-            .eq("id", r.id);
-          upq = filterByProjects(upq, keyProjectId, projectIds, onlyAssigned);
-          await upq;
-          r.attachment_ids = existIds;
-        }
+        const atts = attachMap[r.id] ?? [];
         result.push(
-          mapTicket({ ...r, attachments: atts, parent_id: linkMap.get(r.id) })
+          mapTicket({
+            ...r,
+            unit_ids: unitMap[r.id] ?? [],
+            defect_ids: [],
+            attachments: atts,
+            parent_id: linkMap.get(r.id),
+          })
         );
       }
       return result;
@@ -328,10 +335,9 @@ export function useTicket(ticketId) {
         .from("tickets")
         .select(
           `
-          id, project_id, unit_ids, defect_ids, status_id, title, description,
+          id, project_id, status_id, title, description,
           customer_request_no, customer_request_date, responsible_engineer_id,
           created_by, created_at, received_at, fixed_at,
-          attachment_ids,
           projects (id, name),
           statuses (id, name, color)
         `,
@@ -341,33 +347,32 @@ export function useTicket(ticketId) {
       tQuery = tQuery.single();
       const { data, error } = await tQuery;
       if (error) throw error;
-      let atts = [];
-      if (data?.attachment_ids?.length) {
-        const files = await getAttachmentsByIds(data.attachment_ids);
-        atts = files.map((f) => ({
-          id: f.id,
-          storage_path: f.storage_path,
-          original_name: f.original_name,
-          file_url: f.file_url,
-          file_type: f.file_type,
-        }));
-        const existIds = files.map((f) => f.id);
-        if (existIds.length !== data.attachment_ids.length) {
-          let uq = supabase
-            .from("tickets")
-            .update({ attachment_ids: existIds })
-            .eq("id", id);
-          uq = filterByProjects(uq, projectId, projectIds, perm?.only_assigned_project);
-          await uq;
-          data.attachment_ids = existIds;
-        }
-      }
+
+      const { data: units } = await supabase
+        .from('ticket_units')
+        .select('unit_id')
+        .eq('ticket_id', id);
+      const unitIds = (units ?? []).map((u: any) => u.unit_id);
+
+      const { data: attachRows } = await supabase
+        .from('ticket_attachments')
+        .select('attachments(id, storage_path, file_url:path, file_type:mime_type, original_name)')
+        .eq('ticket_id', id);
+      const atts = (attachRows ?? []).map((row: any) => row.attachments);
       const { data: link } = await supabase
         .from(LINKS_TABLE)
         .select('parent_id')
         .eq('child_id', id)
         .maybeSingle();
-      return data ? mapTicket({ ...data, attachments: atts, parent_id: link?.parent_id }) : null;
+      return data
+        ? mapTicket({
+            ...data,
+            unit_ids: unitIds,
+            defect_ids: [],
+            attachments: atts,
+            parent_id: link?.parent_id,
+          })
+        : null;
     },
     staleTime: 5 * 60_000,
     gcTime: 10 * 60_000,
@@ -573,9 +578,26 @@ export function useTicketsSimpleAll() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("tickets")
-        .select("id, project_id, unit_ids, defect_ids");
+        .select("id, project_id");
       if (error) throw error;
-      return data ?? [];
+      const ids = (data ?? []).map((r: any) => r.id) as number[];
+      const { data: unitRows } = ids.length
+        ? await supabase
+            .from('ticket_units')
+            .select('ticket_id, unit_id')
+            .in('ticket_id', ids)
+        : { data: [] };
+      const unitMap: Record<number, number[]> = {};
+      (unitRows ?? []).forEach((u: any) => {
+        if (!unitMap[u.ticket_id]) unitMap[u.ticket_id] = [];
+        unitMap[u.ticket_id].push(u.unit_id);
+      });
+      return (data ?? []).map((r: any) => ({
+        id: r.id,
+        project_id: r.project_id,
+        unit_ids: unitMap[r.id] ?? [],
+        defect_ids: [],
+      }));
     },
     staleTime: 5 * 60_000,
   });
@@ -592,11 +614,28 @@ export function useTicketsSimple() {
     queryFn: async () => {
       let q = supabase
         .from("tickets")
-        .select("id, project_id, unit_ids, defect_ids");
+        .select("id, project_id");
       q = filterByProjects(q, projectId, projectIds, onlyAssigned);
       const { data, error } = await q;
       if (error) throw error;
-      return data ?? [];
+      const ids = (data ?? []).map((r: any) => r.id) as number[];
+      const { data: unitRows } = ids.length
+        ? await supabase
+            .from('ticket_units')
+            .select('ticket_id, unit_id')
+            .in('ticket_id', ids)
+        : { data: [] };
+      const unitMap: Record<number, number[]> = {};
+      (unitRows ?? []).forEach((u: any) => {
+        if (!unitMap[u.ticket_id]) unitMap[u.ticket_id] = [];
+        unitMap[u.ticket_id].push(u.unit_id);
+      });
+      return (data ?? []).map((r: any) => ({
+        id: r.id,
+        project_id: r.project_id,
+        unit_ids: unitMap[r.id] ?? [],
+        defect_ids: [],
+      }));
     },
     staleTime: 5 * 60_000,
   });
