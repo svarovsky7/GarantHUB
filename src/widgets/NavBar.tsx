@@ -32,13 +32,13 @@ const NavBar: React.FC = () => {
       key: 'structure',
       label: <RouterLink to="/structure">Структура проекта</RouterLink>,
     },
-    perm?.pages.includes('defects') && {
-      key: 'defects',
-      label: <RouterLink to="/defects">Дефекты</RouterLink>,
-    },
     perm?.pages.includes('claims') && {
       key: 'claims',
       label: <RouterLink to="/claims">Претензии</RouterLink>,
+    },
+    perm?.pages.includes('defects') && {
+      key: 'defects',
+      label: <RouterLink to="/defects">Дефекты</RouterLink>,
     },
     perm?.pages.includes('court-cases') && {
       key: 'court-cases',
