@@ -7,6 +7,7 @@ import {
   Button,
   Row,
   Col,
+  Switch,
 } from 'antd';
 import ClaimAttachmentsBlock from './ClaimAttachmentsBlock';
 import dayjs from 'dayjs';
@@ -46,6 +47,7 @@ export interface ClaimFormValues {
   /** Срок устранения всех дефектов */
   resolved_on: dayjs.Dayjs | null;
   engineer_id: string | null;
+  is_official: boolean;
   description: string | null;
   defects?: Array<{
     type_id: number | null;
@@ -97,6 +99,11 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
     if (initialValues.registered_on) form.setFieldValue('registered_on', dayjs(initialValues.registered_on));
     if (initialValues.resolved_on) form.setFieldValue('resolved_on', dayjs(initialValues.resolved_on));
     if (initialValues.description) form.setFieldValue('description', initialValues.description);
+    if (initialValues.is_official != null) {
+      form.setFieldValue('is_official', initialValues.is_official);
+    } else {
+      form.setFieldValue('is_official', false);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [globalProjectId, form]);
 
@@ -238,6 +245,17 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
         <Col span={24}>
           <Form.Item name="description" label="Дополнительная информация">
             <Input.TextArea rows={2} />
+          </Form.Item>
+        </Col>
+      </Row>
+      <Row gutter={16}>
+        <Col span={8}>
+          <Form.Item
+            name="is_official"
+            label="Официальная претензия"
+            valuePropName="checked"
+          >
+            <Switch />
           </Form.Item>
         </Col>
       </Row>

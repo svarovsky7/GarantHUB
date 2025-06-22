@@ -21,6 +21,8 @@ export interface Claim {
   resolved_on: string | null;
   /** Ответственный инженер */
   engineer_id: string | null;
+  /** Официальная претензия */
+  is_official?: boolean;
   /** Связанные дефекты */
   defect_ids?: number[];
   /** Дополнительное описание */

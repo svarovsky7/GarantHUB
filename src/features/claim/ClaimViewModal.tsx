@@ -86,7 +86,11 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
         : [];
       if (createdIds.length) {
         await supabase.from('claim_defects').insert(
-          createdIds.map((id) => ({ claim_id: claim.id, defect_id: id })),
+          createdIds.map((id) => ({
+            claim_id: claim.id,
+            defect_id: id,
+            is_official: claim.is_official,
+          })),
         );
       }
       if (removedIds.length) {

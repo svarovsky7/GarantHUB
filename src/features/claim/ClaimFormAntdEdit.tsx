@@ -9,6 +9,7 @@ import {
   Col,
   Button,
   Skeleton,
+  Switch,
 } from 'antd';
 import {
   useClaim,
@@ -53,6 +54,7 @@ export interface ClaimFormAntdEditValues {
   accepted_on: Dayjs | null;
   registered_on: Dayjs | null;
   engineer_id: string | null;
+  is_official: boolean;
   description: string | null;
 }
 
@@ -111,6 +113,7 @@ const ClaimFormAntdEdit = React.forwardRef<
       registered_on: claim.registeredOn ?? null,
       engineer_id: claim.engineer_id ?? null,
       description: claim.description ?? '',
+      is_official: claim.is_official ?? false,
     });
   }, [claim, form]);
 
@@ -134,6 +137,7 @@ const ClaimFormAntdEdit = React.forwardRef<
             ? values.registered_on.format('YYYY-MM-DD')
             : null,
           engineer_id: values.engineer_id ?? null,
+          is_official: values.is_official,
           description: values.description ?? '',
           updated_by: userId ?? undefined,
         } as any,
@@ -267,6 +271,18 @@ const ClaimFormAntdEdit = React.forwardRef<
         <Col span={24}>
           <Form.Item name="description" label="Дополнительная информация" style={highlight('description')}>
             <Input.TextArea rows={2} />
+          </Form.Item>
+        </Col>
+      </Row>
+      <Row gutter={16}>
+        <Col span={8}>
+          <Form.Item
+            name="is_official"
+            label="Официальная претензия"
+            valuePropName="checked"
+            style={highlight('is_official')}
+          >
+            <Switch />
           </Form.Item>
         </Col>
       </Row>

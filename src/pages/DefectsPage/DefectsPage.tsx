@@ -68,7 +68,7 @@ export default function DefectsPage() {
     // замена: no tickets
     const claimsMap = new Map<
       number,
-      { id: number; unit_ids: number[]; project_id: number }[]
+      { id: number; unit_ids: number[]; project_id: number; is_official: boolean }[]
     >();
     claims.forEach((c: any) => {
       (c.defect_ids || []).forEach((id: number) => {
@@ -77,6 +77,7 @@ export default function DefectsPage() {
           id: c.id,
           unit_ids: c.unit_ids || [],
           project_id: c.project_id,
+          is_official: c.is_official ?? false,
         });
         claimsMap.set(id, arr);
       });
@@ -103,6 +104,7 @@ export default function DefectsPage() {
           contractors.find((c) => c.id === d.contractor_id)?.name ||
           "Подрядчик";
       }
+      const isOfficial = linked.some((l) => l.is_official);
       return {
         ...d,
         claimIds: claimLinked.map((l) => l.id),
@@ -118,6 +120,7 @@ export default function DefectsPage() {
         defectTypeName: d.defect_type?.name ?? "",
         defectStatusName: d.defect_status?.name ?? "",
         defectStatusColor: d.defect_status?.color ?? null,
+        isOfficial,
       } as DefectWithInfo;
     });
   }, [defects, claims, units, projects]);

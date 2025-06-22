@@ -50,4 +50,6 @@ export interface DefectWithInfo extends DefectRecord {
   projectNames?: string;
   /** Прошло дней с даты получения */
   days?: number | null;
+  /** Дефект из официальной претензии */
+  isOfficial?: boolean;
 }

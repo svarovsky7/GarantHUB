@@ -56,6 +56,7 @@ function mapClaim(r: any): ClaimWithNames {
     registered_on: r.registered_on,
     resolved_on: r.resolved_on,
     engineer_id: r.engineer_id,
+    is_official: r.is_official ?? false,
     defect_ids: r.defect_ids ?? [],
     description: r.description ?? '',
     projectName: r.projects?.name ?? '—',
@@ -85,7 +86,7 @@ export function useClaims() {
         .select(
           `id, project_id, claim_status_id, claim_no, claimed_on,
           accepted_on, registered_on, resolved_on,
-          engineer_id, description, created_at,
+          engineer_id, description, is_official, created_at,
           projects (id, name),
           statuses (id, name, color)`,
         );
@@ -112,7 +113,7 @@ export function useClaims() {
       const { data: defectRows, error: defectErr } = ids.length
         ? await supabase
             .from('claim_defects')
-            .select('claim_id, defect_id')
+            .select('claim_id, defect_id, is_official')
             .in('claim_id', ids)
         : { data: [], error: null };
       if (defectErr) throw defectErr;
@@ -168,7 +169,7 @@ export function useClaim(id?: number | string) {
         .select(
           `id, project_id, claim_status_id, claim_no, claimed_on,
           accepted_on, registered_on, resolved_on,
-          engineer_id, description, created_at,
+          engineer_id, description, is_official, created_at,
           projects (id, name),
           statuses (id, name, color)`,
         )
@@ -217,7 +218,7 @@ export function useClaimsSimpleAll() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from(TABLE)
-        .select('id, project_id');
+        .select('id, project_id, is_official');
       if (error) throw error;
       const ids = (data ?? []).map((r: any) => r.id) as number[];
 
@@ -240,7 +241,10 @@ export function useClaimsSimpleAll() {
       });
 
       const { data: defectRows } = ids.length
-        ? await supabase.from('claim_defects').select('claim_id, defect_id').in('claim_id', ids)
+        ? await supabase
+            .from('claim_defects')
+            .select('claim_id, defect_id, is_official')
+            .in('claim_id', ids)
         : { data: [] };
       const defectMap: Record<number, number[]> = {};
       (defectRows ?? []).forEach((d: any) => {
@@ -252,6 +256,7 @@ export function useClaimsSimpleAll() {
       return (data ?? []).map((r: any) => ({
         id: r.id,
         project_id: r.project_id,
+        is_official: r.is_official ?? false,
         unit_ids: unitMap[r.id] ?? [],
         defect_ids: defectMap[r.id] ?? [],
       }));
@@ -271,7 +276,7 @@ export function useClaimsSimple() {
     queryFn: async () => {
       let q = supabase
         .from(TABLE)
-        .select('id, project_id');
+        .select('id, project_id, is_official');
       q = filterByProjects(q, projectId, projectIds, onlyAssigned);
       const { data, error } = await q;
       if (error) throw error;
@@ -296,7 +301,10 @@ export function useClaimsSimple() {
       });
 
       const { data: defectRows } = ids.length
-        ? await supabase.from('claim_defects').select('claim_id, defect_id').in('claim_id', ids)
+        ? await supabase
+            .from('claim_defects')
+            .select('claim_id, defect_id, is_official')
+            .in('claim_id', ids)
         : { data: [] };
       const defectMap: Record<number, number[]> = {};
       (defectRows ?? []).forEach((d: any) => {
@@ -306,6 +314,7 @@ export function useClaimsSimple() {
       return (data ?? []).map((r: any) => ({
         id: r.id,
         project_id: r.project_id,
+        is_official: r.is_official ?? false,
         unit_ids: unitMap[r.id] ?? [],
         defect_ids: defectMap[r.id] ?? [],
       }));
@@ -331,6 +340,7 @@ export function useCreateClaim() {
 
       const insertData: any = {
         ...rest,
+        is_official: rest.is_official ?? false,
         project_id: rest.project_id ?? projectId,
         created_by: userId,
       };
@@ -338,7 +348,7 @@ export function useCreateClaim() {
       const { data: created, error } = await supabase
         .from(TABLE)
         .insert(insertData)
-        .select('id, project_id')
+        .select('id, project_id, is_official')
         .single();
       if (error) throw error;
 
@@ -348,7 +358,11 @@ export function useCreateClaim() {
       }
 
       if (defect_ids.length) {
-        const rows = defect_ids.map((did: number) => ({ claim_id: created.id, defect_id: did }));
+        const rows = defect_ids.map((did: number) => ({
+          claim_id: created.id,
+          defect_id: did,
+          is_official: insertData.is_official ?? false,
+        }));
         await supabase.from('claim_defects').insert(rows);
       }
 
@@ -366,7 +380,11 @@ export function useCreateClaim() {
         }
       }
 
-      return { id: created.id, project_id: created.project_id } as Claim;
+      return {
+        id: created.id,
+        project_id: created.project_id,
+        is_official: created.is_official,
+      } as Claim;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: [TABLE] }),
   });
