@@ -52,18 +52,21 @@ export default function useUnitsMatrix(projectId, building, section) {
 
             // Court cases (не закрытые)
             const { data: casesData } = await supabase
-                .from('court_cases')
-                .select('id, unit_ids, status')
-                .eq('project_id', projectId)
-                .overlaps('unit_ids', unitIds);
+                .from('court_case_units')
+                .select('unit_id, court_cases!inner(id,status,project_id)')
+                .in('unit_id', unitIds)
+                .eq('court_cases.project_id', projectId);
             const casesMap = {};
             (casesData || [])
-                .filter(c => !closedStageId || c.status !== closedStageId)
-                .forEach(c => {
-                    (c.unit_ids || []).forEach(uid => {
-                        if (!casesMap[uid]) casesMap[uid] = [];
-                        casesMap[uid].push({ id: c.id });
-                    });
+                .filter(row =>
+                    row.court_cases &&
+                    (!closedStageId || row.court_cases.status !== closedStageId)
+                )
+                .forEach(row => {
+                    const uid = row.unit_id;
+                    const c = row.court_cases;
+                    if (!casesMap[uid]) casesMap[uid] = [];
+                    casesMap[uid].push({ id: c.id });
                 });
             setCasesByUnit(casesMap);
         } else {

@@ -69,8 +69,18 @@ export default function useProjectStructure() {
             .from('units')
             .select('building')
             .eq('project_id', projectId);
-        setBuildings(Array.from(new Set((bld || []).map((u: any) => u.building).filter(Boolean))));
-        if (!building) {
+        const bldList = Array.from(new Set((bld || []).map((u: any) => u.building).filter(Boolean)));
+        setBuildings(bldList);
+        if (building && !bldList.includes(building)) {
+            setBuildingState(bldList[0] ?? '');
+            setSectionState('');
+        }
+        if (!building && bldList.length) {
+            setBuildingState(bldList[0]);
+        }
+
+        const currBuilding = building && bldList.includes(building) ? building : bldList[0];
+        if (!currBuilding) {
             setSections([]);
             return;
         }
@@ -78,8 +88,12 @@ export default function useProjectStructure() {
             .from('units')
             .select('section')
             .eq('project_id', projectId)
-            .eq('building', building);
-        setSections(Array.from(new Set((sec || []).map((u: any) => u.section).filter(Boolean))));
+            .eq('building', currBuilding);
+        const secList = Array.from(new Set((sec || []).map((u: any) => u.section).filter(Boolean)));
+        setSections(secList);
+        if (section && !secList.includes(section)) {
+            setSectionState(secList[0] ?? '');
+        }
     }, [projectId, building]);
 
     useEffect(() => {
