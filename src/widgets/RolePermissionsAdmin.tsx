@@ -18,8 +18,9 @@ const PAGES = [
   'admin',
 ];
 
-// Список таблиц, для которых можно настроить права на редактирование и удаление
+// Таблицы, для которых можно назначать права на редактирование и удаление
 // Дополнен таблицей "claims" для управления претензиями
+const TABLES = ['defects', 'court_cases', 'letters', 'claims'];
 
 export default function RolePermissionsAdmin() {
   const { data = [], isLoading } = useRolePermissions();
