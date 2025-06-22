@@ -182,6 +182,40 @@ export function useClaim(id?: number | string) {
 }
 
 /**
+ * Получить список претензий по всем проектам.
+ */
+export function useClaimsAll() {
+  return useQuery({
+    queryKey: ['claims-all'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from(TABLE)
+        .select(
+          `id, project_id, claim_status_id, claim_no, claimed_on,
+          accepted_on, registered_on, resolved_on,
+          engineer_id, description, is_official, created_at,
+          projects (id, name),
+          statuses (id, name, color),
+          claim_units(unit_id),
+          claim_defects(defect_id),
+          claim_attachments(attachments(id, storage_path, file_url:path, file_type:mime_type, original_name))`,
+        )
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data ?? []).map((r: any) =>
+        mapClaim({
+          ...r,
+          unit_ids: (r.claim_units ?? []).map((u: any) => u.unit_id),
+          defect_ids: (r.claim_defects ?? []).map((d: any) => d.defect_id),
+          attachments: (r.claim_attachments ?? []).map((a: any) => a.attachments),
+        }),
+      );
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
+/**
  * Получить список претензий по всем проектам (минимальный набор полей).
  */
 export function useClaimsSimpleAll() {
@@ -365,6 +399,7 @@ export function useCreateClaim() {
       qc.invalidateQueries({ queryKey: ['defects'] });
       qc.invalidateQueries({ queryKey: ['claims-simple'] });
       qc.invalidateQueries({ queryKey: ['claims-simple-all'] });
+      qc.invalidateQueries({ queryKey: ['claims-all'] });
     },
   });
 }
@@ -401,6 +436,7 @@ export function useUpdateClaim() {
       qc.invalidateQueries({ queryKey: [TABLE, id] });
       qc.invalidateQueries({ queryKey: ['claims-simple'] });
       qc.invalidateQueries({ queryKey: ['claims-simple-all'] });
+      qc.invalidateQueries({ queryKey: ['claims-all'] });
       qc.invalidateQueries({ queryKey: ['defects'] });
     },
   });
@@ -478,6 +514,7 @@ export function useDeleteClaim() {
       qc.invalidateQueries({ queryKey: ['defects'] });
       qc.invalidateQueries({ queryKey: ['claims-simple'] });
       qc.invalidateQueries({ queryKey: ['claims-simple-all'] });
+      qc.invalidateQueries({ queryKey: ['claims-all'] });
     },
   });
 }

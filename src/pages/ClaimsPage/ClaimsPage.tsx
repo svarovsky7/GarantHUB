@@ -8,9 +8,12 @@ import {
 } from '@ant-design/icons';
 import ExportClaimsButton from '@/features/claim/ExportClaimsButton';
 import { useSnackbar } from 'notistack';
-import { useClaims, useDeleteClaim } from '@/entities/claim';
+import { useClaims, useClaimsAll, useDeleteClaim } from '@/entities/claim';
 import { useUsers } from '@/entities/user';
 import { useUnitsByIds } from '@/entities/unit';
+import { useRolePermission } from '@/entities/rolePermission';
+import { useAuthStore } from '@/shared/store/authStore';
+import type { RoleName } from '@/shared/types/rolePermission';
 import formatUnitName from '@/shared/utils/formatUnitName';
 import ClaimsTable from '@/widgets/ClaimsTable';
 import ClaimsFilters from '@/widgets/ClaimsFilters';
@@ -26,7 +29,21 @@ import type { ClaimWithNames } from '@/shared/types/claimWithNames';
 
 export default function ClaimsPage() {
   const { enqueueSnackbar } = useSnackbar();
-  const { data: claims = [], isLoading, error } = useClaims();
+  const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
+  const { data: perm } = useRolePermission(role);
+  const {
+    data: claimsAssigned = [],
+    isLoading: loadingAssigned,
+    error: errorAssigned,
+  } = useClaims();
+  const {
+    data: claimsAll = [],
+    isLoading: loadingAll,
+    error: errorAll,
+  } = useClaimsAll();
+  const claims = perm?.only_assigned_project ? claimsAssigned : claimsAll;
+  const isLoading = perm?.only_assigned_project ? loadingAssigned : loadingAll;
+  const error = errorAssigned || errorAll;
   const deleteClaimMutation = useDeleteClaim();
   const { data: users = [] } = useUsers();
   const unitIds = useMemo(
