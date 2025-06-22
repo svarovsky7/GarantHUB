@@ -6,6 +6,8 @@ import ClaimAttachmentsBlock from './ClaimAttachmentsBlock';
 import TicketDefectsTable from '@/widgets/TicketDefectsTable';
 import DefectAddModal from '@/features/defect/DefectAddModal';
 import { useCreateDefects, useDeleteDefect, useDefectsWithNames, type NewDefect } from '@/entities/defect';
+import { useDefectTypes } from '@/entities/defectType';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/shared/api/supabaseClient';
 import { useClaimAttachments } from './model/useClaimAttachments';
 import type { ClaimFormAntdEditRef } from '@/shared/types/claimFormAntdEditRef';
@@ -22,6 +24,8 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
   const formRef = React.useRef<ClaimFormAntdEditRef>(null);
   const createDefs = useCreateDefects();
   const deleteDef = useDeleteDefect();
+  const { data: defectTypes = [] } = useDefectTypes();
+  const qc = useQueryClient();
   const [defectIds, setDefectIds] = React.useState<number[]>([]);
   const [newDefs, setNewDefs] = React.useState<Array<{ tmpId: number } & NewDefect>>([]);
   const [removedIds, setRemovedIds] = React.useState<number[]>([]);
@@ -38,6 +42,14 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
 
   const { data: loadedDefs = [] } = useDefectsWithNames(defectIds);
 
+  const defectTypeMap = React.useMemo(() => {
+    const map: Record<number, string> = {};
+    defectTypes.forEach((t) => {
+      map[t.id] = t.name;
+    });
+    return map;
+  }, [defectTypes]);
+
   const displayDefs = React.useMemo(() => {
     return [
       ...loadedDefs,
@@ -52,12 +64,13 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
         received_at: d.received_at,
         fixed_at: d.fixed_at,
         fixed_by: null,
-        defectTypeName: null,
+        defectTypeName:
+          d.defect_type_id != null ? defectTypeMap[d.defect_type_id] ?? null : null,
         defectStatusName: null,
         defectStatusColor: null,
       })),
     ];
-  }, [loadedDefs, newDefs]);
+  }, [loadedDefs, newDefs, defectTypeMap]);
 
   const handleRemove = (id: number) => {
     if (id < 0) {
@@ -103,6 +116,9 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
           await deleteDef.mutateAsync(id);
         }
       }
+      qc.invalidateQueries({ queryKey: ['defects'] });
+      qc.invalidateQueries({ queryKey: ['claims'] });
+      qc.invalidateQueries({ queryKey: ['claims', claim.id] });
       onClose();
     } catch (e) {
       console.error(e);
