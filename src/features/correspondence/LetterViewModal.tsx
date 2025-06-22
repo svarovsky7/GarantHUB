@@ -26,7 +26,7 @@ export default function LetterViewModal({ open, letterId, onClose }: Props) {
       onCancel={onClose}
       footer={null}
       width="80%"
-      destroyOnClose
+      destroyOnHidden
       title={<Typography.Title level={4} style={{ margin: 0 }}>{titleText}</Typography.Title>}
     >
       {letter ? (

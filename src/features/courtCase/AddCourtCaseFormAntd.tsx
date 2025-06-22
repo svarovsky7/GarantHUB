@@ -85,13 +85,17 @@ export default function AddCourtCaseFormAntd({
     }
   }, [initialValues, globalProjectId, profileId, form]);
 
+  /**
+   * Reset selected units when project changes to avoid inconsistent data
+   * as units are linked to a specific project.
+   */
   useEffect(() => {
     const prev = prevProjectIdRef.current;
     if (prev != null && projectId != null && prev !== projectId) {
-      form.setFieldValue('unit_ids', []);
+      form.setFieldsValue({ unit_ids: [] });
     }
     prevProjectIdRef.current = projectId ?? null;
-  }, [projectId, form]);
+  }, [projectId]);
 
   const { data: projects = [] } = useVisibleProjects();
   const { data: units = [], isPending: unitsLoading } = useUnitsByProject(projectId);
