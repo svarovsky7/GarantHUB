@@ -108,8 +108,6 @@ export function useClaims() {
         unitMap[u.claim_id].push(u.unit_id);
       });
 
-      const { data: ticketRows, error: ticketErr } = ids.length
-      });
 
       const { data: defectRows, error: defectErr } = ids.length
         ? await supabase
@@ -185,10 +183,7 @@ export function useClaim(id?: number | string) {
         .eq('claim_id', claimId);
       const unitIds = (units ?? []).map((u: any) => u.unit_id);
 
-      const { data: tickets } = await supabase
-        .from('claim_tickets')
-        .select('ticket_id')
-        .eq('claim_id', claimId);
+      const { data: defects } = await supabase
         .from('claim_defects')
         .select('defect_id')
         .eq('claim_id', claimId);

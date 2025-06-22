@@ -70,6 +70,7 @@ body {
   border-left: 3px solid #52c41a;
 }
 
+.main-case-row {
   background: #eaf4ff !important;
   font-weight: 600;
   box-shadow: 0 1px 0 #b5d3f7;

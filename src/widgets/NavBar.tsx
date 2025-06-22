@@ -66,7 +66,6 @@ const NavBar: React.FC = () => {
               Структура проекта
             </Button>
           )}
-          )}
           {perm?.pages.includes('defects') && (
             <Button
               color="inherit"
