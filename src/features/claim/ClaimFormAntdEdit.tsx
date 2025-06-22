@@ -10,6 +10,7 @@ import {
   Button,
   Skeleton,
   Switch,
+  Tooltip,
 } from 'antd';
 import {
   useClaim,
@@ -309,7 +310,9 @@ const ClaimFormAntdEdit = React.forwardRef<
             valuePropName="checked"
             style={highlight('is_official')}
           >
-            <Switch />
+            <Tooltip title="Доступно юристам и администраторам">
+              <Switch disabled={role !== 'ADMIN' && role !== 'LAWYER'} />
+            </Tooltip>
           </Form.Item>
         </Col>
       </Row>
