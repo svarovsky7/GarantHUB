@@ -8,6 +8,7 @@ import {
   Row,
   Col,
   Switch,
+  Tooltip,
 } from 'antd';
 import ClaimAttachmentsBlock from './ClaimAttachmentsBlock';
 import dayjs from 'dayjs';
@@ -21,6 +22,7 @@ import { useNotify } from '@/shared/hooks/useNotify';
 import DefectEditableTable from '@/widgets/DefectEditableTable';
 import { useCreateDefects, type NewDefect } from '@/entities/defect';
 import { useAuthStore } from '@/shared/store/authStore';
+import type { RoleName } from '@/shared/types/rolePermission';
 
 export interface ClaimFormAntdProps {
   onCreated?: () => void;
@@ -76,6 +78,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
   const create = useCreateClaim();
   const notify = useNotify();
   const createDefects = useCreateDefects();
+  const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
   const defectsWatch = Form.useWatch('defects', form);
 
   const handleDropFiles = (dropped: File[]) => {
@@ -265,7 +268,9 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
             label="Официальная претензия"
             valuePropName="checked"
           >
-            <Switch />
+            <Tooltip title="Доступно юристам и администраторам">
+              <Switch disabled={role !== 'ADMIN' && role !== 'LAWYER'} />
+            </Tooltip>
           </Form.Item>
         </Col>
       </Row>
