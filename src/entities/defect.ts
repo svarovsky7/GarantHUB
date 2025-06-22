@@ -177,11 +177,20 @@ export function useDeleteDefect() {
   const notify = useNotify();
   return useMutation<number, Error, number>({
     mutationFn: async (id: number) => {
+      // Remove defect from related claims to keep data consistent
+      await supabase.from('claim_defects').delete().eq('defect_id', id);
+
       const { error } = await supabase.from(TABLE).delete().eq('id', id);
       if (error) throw error;
       return id;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: [TABLE] }),
+    onSuccess: (id) => {
+      qc.invalidateQueries({ queryKey: [TABLE] });
+      qc.invalidateQueries({ queryKey: ['defect', id] });
+      qc.invalidateQueries({ queryKey: ['defects-with-names'] });
+      qc.invalidateQueries({ queryKey: ['defects-by-ids'] });
+      qc.invalidateQueries({ queryKey: ['claims'] });
+    },
     onError: (e) => notify.error(e.message),
   });
 }
