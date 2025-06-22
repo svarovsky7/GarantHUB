@@ -15,7 +15,7 @@ export interface Claim {
   claimed_on: string | null;
   /** Дата принятия претензии застройщиком */
   accepted_on: string | null;
-  /** Дата регистрации претензии в системе */
+  /** Дата регистрации претензии GARANTHUB */
   registered_on: string | null;
   /** Дата фактического устранения */
   resolved_on: string | null;
