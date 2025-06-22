@@ -2,8 +2,7 @@
 
 import React, { useState } from 'react';
 import { GridActionsCellItem } from '@mui/x-data-grid';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { Edit2, Trash2 } from 'lucide-react';
 
 import {
     useCourtCaseStatuses,
@@ -14,7 +13,7 @@ import {
 
 import CourtCaseStatusForm from '@/features/courtCaseStatus/CourtCaseStatusForm';
 import AdminDataGrid from '@/shared/ui/AdminDataGrid';
-import { Dialog, DialogTitle, DialogContent, Box } from '@mui/material';
+import { Modal } from 'antd';
 import { useNotify } from '@/shared/hooks/useNotify';
 
 // Интерфейс пропсов для поддержки пагинации
@@ -46,13 +45,13 @@ export default function CourtCaseStatusesAdmin({
             headerName: 'Цвет',
             width: 90,
             renderCell: (params: any) => (
-                <Box
-                    sx={{
+                <div
+                    style={{
                         width: 32,
                         height: 24,
-                        bgcolor: params.value,
+                        background: params.value,
                         border: '1px solid #bbb',
-                        borderRadius: 0.5,
+                        borderRadius: 4,
                     }}
                 />
             ),
@@ -64,13 +63,13 @@ export default function CourtCaseStatusesAdmin({
             getActions: ({ row }) => [
                 <GridActionsCellItem
                     key="edit"
-                    icon={<EditIcon />}
+                    icon={<Edit2 size={16} />}
                     label="Редактировать"
                     onClick={() => setModal({ mode: 'edit', data: row })}
                 />,
                 <GridActionsCellItem
                     key="del"
-                    icon={<DeleteIcon color="error" />}
+                    icon={<Trash2 color="red" size={16} />}
                     label="Удалить"
                     onClick={() => {
                         if (!window.confirm('Удалить стадию?')) return;
@@ -92,31 +91,32 @@ export default function CourtCaseStatusesAdmin({
     return (
         <>
             {modal && (
-                <Dialog open onClose={close} maxWidth="xs" fullWidth>
-                    <DialogTitle>
-                        {modal.mode === 'add' ? 'Новая стадия' : 'Редактировать стадию'}
-                    </DialogTitle>
-                    <DialogContent dividers>
-                        <CourtCaseStatusForm
-                            initialData={modal.mode === 'edit' ? modal.data : undefined}
-                            onSubmit={(d) =>
-                                (modal.mode === 'add'
-                                    ? add.mutate(d, {
-                                          onSuccess: () => ok('Стадия создана'),
+                <Modal
+                    open
+                    onCancel={close}
+                    title={modal.mode === 'add' ? 'Новая стадия' : 'Редактировать стадию'}
+                    footer={null}
+                    destroyOnClose
+                >
+                    <CourtCaseStatusForm
+                        initialData={modal.mode === 'edit' ? modal.data : undefined}
+                        onSubmit={(d) =>
+                            (modal.mode === 'add'
+                                ? add.mutate(d, {
+                                      onSuccess: () => ok('Стадия создана'),
+                                      onError: (e) => notify.error(e.message),
+                                  })
+                                : update.mutate(
+                                      { id: modal.data.id, updates: d },
+                                      {
+                                          onSuccess: () => ok('Стадия обновлена'),
                                           onError: (e) => notify.error(e.message),
-                                      })
-                                    : update.mutate(
-                                          { id: modal.data.id, updates: d },
-                                          {
-                                              onSuccess: () => ok('Стадия обновлена'),
-                                              onError: (e) => notify.error(e.message),
-                                          },
-                                      ))
-                            }
-                            onCancel={close}
-                        />
-                    </DialogContent>
-                </Dialog>
+                                      },
+                                  ))
+                        }
+                        onCancel={close}
+                    />
+                </Modal>
             )}
 
             <AdminDataGrid
