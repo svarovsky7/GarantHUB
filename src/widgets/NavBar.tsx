@@ -63,7 +63,7 @@ const NavBar: React.FC = () => {
       </RouterLink>
       <Menu theme="dark" mode="horizontal" selectable={false} items={items as any} style={{ flex: 1 }} />
       {profile && (
-        <Space direction="horizontal" size="middle" style={{ marginLeft: 'auto' }}>
+        <Space direction="horizontal" size="middle" style={{ marginLeft: 16 }}>
           <Space direction="vertical" size={0} align="end">
             <Typography.Text style={{ color: '#fff' }}>
               {profile.name ? `${profile.name} (${profile.email})` : profile.email}
