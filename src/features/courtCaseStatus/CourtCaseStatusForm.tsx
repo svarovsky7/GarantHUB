@@ -4,14 +4,23 @@
 // -----------------------------------------------------------------------------
 
 import React, { useState } from 'react';
-import { Stack, TextField, Button, DialogActions } from '@mui/material';
+import { Form, Input, Button, Space } from 'antd';
 
+/**
+ * Свойства формы стадии судебного дела.
+ */
 interface CourtCaseStatusFormProps {
+    /** Начальные данные для редактирования */
     initialData?: { id?: number; name?: string; color?: string | null };
+    /** Обработчик отправки формы */
     onSubmit: (values: { name: string; color: string }) => void;
+    /** Закрытие формы без сохранения */
     onCancel: () => void;
 }
 
+/**
+ * Форма создания или редактирования стадии судебного дела.
+ */
 export default function CourtCaseStatusForm({ initialData, onSubmit, onCancel }: CourtCaseStatusFormProps) {
     const [name, setName] = useState(initialData?.name ?? '');
     const [color, setColor] = useState(initialData?.color ?? '#1976d2');
@@ -23,33 +32,30 @@ export default function CourtCaseStatusForm({ initialData, onSubmit, onCancel }:
     };
 
     return (
-        <form onSubmit={handleSave} noValidate>
-            <Stack spacing={2} sx={{ minWidth: 320 }}>
-                <TextField
-                    label="Название"
+        <Form onSubmitCapture={handleSave} layout="vertical" style={{ minWidth: 320 }}>
+            <Form.Item label="Название" required>
+                <Input
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     autoFocus
-                    required
-                    size="small"
-                    fullWidth
                 />
-                <TextField
-                    label="Цвет"
+            </Form.Item>
+            <Form.Item label="Цвет" required>
+                <Input
                     type="color"
                     value={color}
                     onChange={(e) => setColor(e.target.value)}
-                    required
-                    fullWidth
-                    inputProps={{ style: { height: 48, padding: 0 } }}
+                    style={{ height: 48 }}
                 />
-                <DialogActions sx={{ px: 0 }}>
+            </Form.Item>
+            <Form.Item>
+                <Space>
                     <Button onClick={onCancel}>Отмена</Button>
-                    <Button type="submit" variant="contained">
+                    <Button type="primary" htmlType="submit">
                         Сохранить
                     </Button>
-                </DialogActions>
-            </Stack>
-        </form>
+                </Space>
+            </Form.Item>
+        </Form>
     );
 }
