@@ -7,6 +7,7 @@ import dayjs from 'dayjs';
 import type { ClaimWithNames } from '@/shared/types/claimWithNames';
 import type { ClaimFilters } from '@/shared/types/claimFilters';
 import { filterClaims } from '@/shared/utils/claimFilter';
+import { getDefectsInfo } from '@/entities/defect';
 
 export interface ExportClaimsButtonProps {
   claims: ClaimWithNames[];
@@ -15,20 +16,63 @@ export interface ExportClaimsButtonProps {
 
 export default function ExportClaimsButton({ claims, filters }: ExportClaimsButtonProps) {
   const handleClick = React.useCallback(async () => {
-    const rows = filterClaims(claims, filters).map((c) => ({
-      ID: c.id,
-      Проект: c.projectName,
-      Объекты: c.unitNames,
-      '№ претензии': c.claim_no,
-      'Дата претензии': c.claimedOn ? c.claimedOn.format('DD.MM.YYYY') : '',
-      'Дата получения Застройщиком': c.acceptedOn
-        ? c.acceptedOn.format('DD.MM.YYYY')
-        : '',
-      'Дата регистрации претензии': c.registeredOn ? c.registeredOn.format('DD.MM.YYYY') : '',
-      'Дата устранения претензии': c.resolvedOn ? c.resolvedOn.format('DD.MM.YYYY') : '',
-      Статус: c.statusName,
-      'Ответственный инженер': c.responsibleEngineerName ?? '',
-    }));
+    const filtered = filterClaims(claims, filters);
+    const allDefectIds = Array.from(
+      new Set(filtered.flatMap((c) => c.defect_ids || [])),
+    );
+    let defectMap: Record<number, { description: string; statusName: string | null }> = {};
+    if (allDefectIds.length) {
+      const defs = await getDefectsInfo(allDefectIds);
+      defectMap = defs.reduce<Record<number, { description: string; statusName: string | null }>>(
+        (acc, d) => {
+          acc[d.id] = { description: d.description, statusName: d.statusName };
+          return acc;
+        },
+        {},
+      );
+    }
+
+    const rows: Record<string, any>[] = [];
+    filtered.forEach((c) => {
+      rows.push({
+        'Тип записи': 'Претензия',
+        ID: c.id,
+        Проект: c.projectName,
+        Объекты: c.unitNames,
+        '№ претензии': c.claim_no,
+        'Дата претензии': c.claimedOn ? c.claimedOn.format('DD.MM.YYYY') : '',
+        'Дата получения Застройщиком': c.acceptedOn ? c.acceptedOn.format('DD.MM.YYYY') : '',
+        'Дата регистрации претензии': c.registeredOn ? c.registeredOn.format('DD.MM.YYYY') : '',
+        'Дата устранения претензии': c.resolvedOn ? c.resolvedOn.format('DD.MM.YYYY') : '',
+        Статус: c.statusName,
+        'Ответственный инженер': c.responsibleEngineerName ?? '',
+        Описание: '',
+        'Статус дефекта': '',
+        'Ссылки на файлы': (c.attachments ?? []).map((a) => a.url).join('\n'),
+      });
+
+      (c.defect_ids || []).forEach((id) => {
+        const def = defectMap[id];
+        if (!def) return;
+        rows.push({
+          'Тип записи': 'Дефект',
+          ID: id,
+          Проект: '',
+          Объекты: '',
+          '№ претензии': '',
+          'Дата претензии': '',
+          'Дата получения Застройщиком': '',
+          'Дата регистрации претензии': '',
+          'Дата устранения претензии': '',
+          Статус: '',
+          'Ответственный инженер': '',
+          Описание: def.description,
+          'Статус дефекта': def.statusName ?? '',
+          'Ссылки на файлы': '',
+        });
+      });
+    });
+
     const wb = new ExcelJS.Workbook();
     const ws = wb.addWorksheet('Claims');
     if (rows.length) {
