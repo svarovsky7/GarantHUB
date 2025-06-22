@@ -13,6 +13,7 @@ import {
 } from 'antd';
 import {
   useClaim,
+  useClaimAll,
   useUpdateClaim,
   useAddClaimAttachments,
   useRemoveClaimAttachment,
@@ -26,6 +27,8 @@ import { useClaimStatuses } from '@/entities/claimStatus';
 import { useNotify } from '@/shared/hooks/useNotify';
 import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useAuthStore } from '@/shared/store/authStore';
+import { useRolePermission } from '@/entities/rolePermission';
+import type { RoleName } from '@/shared/types/rolePermission';
 import { useChangedFields } from '@/shared/hooks/useChangedFields';
 import AttachmentEditorTable from '@/shared/ui/AttachmentEditorTable';
 import FileDropZone from '@/shared/ui/FileDropZone';
@@ -79,7 +82,11 @@ const ClaimFormAntdEdit = React.forwardRef<
   ref,
 ) {
   const [form] = Form.useForm<ClaimFormAntdEditValues>();
-  const { data: claim } = useClaim(claimId);
+  const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
+  const { data: perm } = useRolePermission(role);
+  const claimAssigned = useClaim(claimId);
+  const claimAll = useClaimAll(claimId);
+  const claim = perm?.only_assigned_project ? claimAssigned.data : claimAll.data;
   const { data: projects = [] } = useVisibleProjects();
   const globalProjectId = useProjectId();
   const projectIdWatch = Form.useWatch('project_id', form);
