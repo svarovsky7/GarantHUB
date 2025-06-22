@@ -88,65 +88,21 @@ export function useClaims() {
           accepted_on, registered_on, resolved_on,
           engineer_id, description, is_official, created_at,
           projects (id, name),
-          statuses (id, name, color)`,
+          statuses (id, name, color),
+          claim_units(unit_id),
+          claim_defects(defect_id),
+          claim_attachments(attachments(id, storage_path, file_url:path, file_type:mime_type, original_name))`,
         );
       q = filterByProjects(q, projectId, projectIds, onlyAssigned);
       q = q.order('created_at', { ascending: false });
       const { data, error } = await q;
       if (error) throw error;
-      const ids = (data ?? []).map((r: any) => r.id) as number[];
-
-      const { data: unitRows, error: unitErr } = ids.length
-        ? await supabase
-            .from('claim_units')
-            .select('claim_id, unit_id')
-            .in('claim_id', ids)
-        : { data: [], error: null };
-      if (unitErr) throw unitErr;
-      const unitMap: Record<number, number[]> = {};
-      (unitRows ?? []).forEach((u: any) => {
-        if (!unitMap[u.claim_id]) unitMap[u.claim_id] = [];
-        unitMap[u.claim_id].push(u.unit_id);
-      });
-
-
-      const { data: defectRows, error: defectErr } = ids.length
-        ? await supabase
-            .from('claim_defects')
-            .select('claim_id, defect_id, is_official')
-            .in('claim_id', ids)
-        : { data: [], error: null };
-      if (defectErr) throw defectErr;
-      const defectMap: Record<number, number[]> = {};
-      (defectRows ?? []).forEach((d: any) => {
-        if (!defectMap[d.claim_id]) defectMap[d.claim_id] = [];
-        defectMap[d.claim_id].push(d.defect_id);
-      });
-
-      const { data: attachRows, error: attErr } = ids.length
-        ? await supabase
-            .from('claim_attachments')
-            .select(
-              'claim_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name)',
-            )
-            .in('claim_id', ids)
-        : { data: [], error: null };
-      if (attErr) throw attErr;
-      const attachMap: Record<number, any[]> = {};
-      (attachRows ?? []).forEach((row: any) => {
-        const file = row.attachments;
-        if (!file) return;
-        const arr = attachMap[row.claim_id] ?? [];
-        arr.push(file);
-        attachMap[row.claim_id] = arr;
-      });
-
       return (data ?? []).map((r: any) =>
         mapClaim({
           ...r,
-          unit_ids: unitMap[r.id] ?? [],
-          defect_ids: defectMap[r.id] ?? [],
-          attachments: attachMap[r.id] ?? [],
+          unit_ids: (r.claim_units ?? []).map((u: any) => u.unit_id),
+          defect_ids: (r.claim_defects ?? []).map((d: any) => d.defect_id),
+          attachments: (r.claim_attachments ?? []).map((a: any) => a.attachments),
         }),
       );
     },
@@ -171,38 +127,21 @@ export function useClaim(id?: number | string) {
           accepted_on, registered_on, resolved_on,
           engineer_id, description, is_official, created_at,
           projects (id, name),
-          statuses (id, name, color)`,
+          statuses (id, name, color),
+          claim_units(unit_id),
+          claim_defects(defect_id),
+          claim_attachments(attachments(id, storage_path, file_url:path, file_type:mime_type, original_name))`,
         )
         .eq('id', claimId);
       q = filterByProjects(q, projectId, projectIds, onlyAssigned);
       q = q.single();
       const { data, error } = await q;
       if (error) throw error;
-      const { data: units } = await supabase
-        .from('claim_units')
-        .select('unit_id')
-        .eq('claim_id', claimId);
-      const unitIds = (units ?? []).map((u: any) => u.unit_id);
-
-      const { data: defects } = await supabase
-        .from('claim_defects')
-        .select('defect_id')
-        .eq('claim_id', claimId);
-      const defectIds = (defects ?? []).map((d: any) => d.defect_id);
-
-      const { data: attachRows } = await supabase
-        .from('claim_attachments')
-        .select(
-          'attachments(id, storage_path, file_url:path, file_type:mime_type, original_name)'
-        )
-        .eq('claim_id', claimId);
-      const attachments = (attachRows ?? []).map((row: any) => row.attachments);
-
       return mapClaim({
         ...data,
-        unit_ids: unitIds,
-        defect_ids: defectIds,
-        attachments,
+        unit_ids: (data?.claim_units ?? []).map((u: any) => u.unit_id),
+        defect_ids: (data?.claim_defects ?? []).map((d: any) => d.defect_id),
+        attachments: (data?.claim_attachments ?? []).map((a: any) => a.attachments),
       });
     },
     staleTime: 5 * 60_000,
