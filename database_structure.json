@@ -109,7 +109,7 @@
     "column_name": "defect_id",
     "data_type": "bigint",
     "is_nullable": "NO",
-  "column_default": null
+    "column_default": null
   },
   {
     "table_name": "claim_defects",
@@ -228,7 +228,7 @@
     "column_name": "updated_at",
     "data_type": "timestamp with time zone",
     "is_nullable": "YES",
-  "column_default": "now()"
+    "column_default": "now()"
   },
   {
     "table_name": "claims",
