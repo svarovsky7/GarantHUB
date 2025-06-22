@@ -153,7 +153,8 @@ export default function ClaimsTable({
   const [pageSize, setPageSize] = React.useState(25);
 
   React.useEffect(() => {
-    setExpandedRowKeys(filtered.map((c) => c.id));
+    // По умолчанию все строки свернуты
+    setExpandedRowKeys([]);
   }, [filtered]);
 
   const rowClassName = (row: ClaimWithNames) => {

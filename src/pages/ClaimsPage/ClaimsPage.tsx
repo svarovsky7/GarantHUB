@@ -262,9 +262,19 @@ export default function ClaimsPage() {
           open={!!linkFor}
           parent={linkFor}
           claims={claimsWithNames}
+          loading={linkClaims.isPending}
           onClose={() => setLinkFor(null)}
           onSubmit={(ids) =>
-            linkClaims.mutate({ parentId: String(linkFor!.id), childIds: ids })
+            linkClaims.mutate(
+              { parentId: String(linkFor!.id), childIds: ids },
+              {
+                onSuccess: () => {
+                  message.success('Претензии связаны');
+                  setLinkFor(null);
+                },
+                onError: (e) => message.error(e.message),
+              },
+            )
           }
         />
         <TableColumnsDrawer
