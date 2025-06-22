@@ -119,7 +119,6 @@ export default function ClaimsPage() {
         unitNames: c.unit_ids.map((id) => unitMap[id]).filter(Boolean).join(', '),
         unitNumbers: c.unit_ids.map((id) => unitNumberMap[id]).filter(Boolean).join(', '),
         responsibleEngineerName: userMap[c.engineer_id] ?? null,
-        hasCheckingDefect: false,
       })),
     [claims, unitMap, unitNumberMap, userMap, checkingDefectMap],
   );
