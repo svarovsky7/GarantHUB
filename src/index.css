@@ -98,6 +98,10 @@ body {
 .claim-official-row {
   background: #fff1f0 !important;
 }
+.claim-closed-row {
+  color: #aaa;
+  background: inherit !important;
+}
 .defect-closed-row {
   color: #aaa;
   background: inherit !important;
