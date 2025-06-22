@@ -322,13 +322,19 @@ export function useCreateClaim() {
   const userId = useAuthStore((s) => s.profile?.id ?? null);
   const qc = useQueryClient();
   return useMutation({
+    mutationFn: async (
+      payload: Omit<Claim, 'id' | 'created_at' | 'created_by' | 'updated_at' | 'updated_by'> & {
+        attachments?: Array<File | { file: File; type_id?: number | null }>;
+      },
+    ) => {
+      const { unit_ids = [], defect_ids = [], attachments = [], ...rest } = payload as any;
+
       const insertData: any = {
-        ...payload,
-        project_id: payload.project_id ?? projectId,
+        ...rest,
+        project_id: rest.project_id ?? projectId,
         created_by: userId,
       };
-      delete insertData.unit_ids;
-      delete insertData.defect_ids;
+
       const { data: created, error } = await supabase
         .from(TABLE)
         .insert(insertData)
@@ -346,7 +352,6 @@ export function useCreateClaim() {
         await supabase.from('claim_defects').insert(rows);
       }
 
-      let ids: number[] = [];
       if (attachments.length) {
         const uploaded = await addClaimAttachments(
           attachments.map((f: any) =>
@@ -354,13 +359,14 @@ export function useCreateClaim() {
           ),
           created.id,
         );
-        ids = uploaded.map((u: any) => u.id);
+        const ids = uploaded.map((u: any) => u.id);
         if (ids.length) {
           const rows = ids.map((aid) => ({ claim_id: created.id, attachment_id: aid }));
           await supabase.from('claim_attachments').insert(rows);
         }
       }
 
+      return { id: created.id, project_id: created.project_id } as Claim;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: [TABLE] }),
   });
