@@ -4,9 +4,9 @@ export interface Defect {
   /** Наименование недостатка */
   description: string;
   /** Тип дефекта */
-  type_id: number | null;
+  defect_type_id: number | null;
   /** Статус дефекта */
-  status_id: number | null;
+  defect_status_id: number | null;
   /** Дата получения */
   received_at: string | null;
   /** Дата устранения */
