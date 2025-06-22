@@ -26,7 +26,8 @@ export interface ClaimFormAntdProps {
   onCreated?: () => void;
   initialValues?: Partial<{
     project_id: number;
-    unit_ids: number[];
+    /** Идентификатор выбранного объекта */
+    unit_id: number;
     engineer_id: string;
     description: string;
     resolved_on: string;
@@ -39,7 +40,8 @@ export interface ClaimFormAntdProps {
 
 export interface ClaimFormValues {
   project_id: number | null;
-  unit_ids: number[];
+  /** Идентификатор выбранного объекта */
+  unit_id: number | null;
   claim_status_id: number | null;
   claim_no: string;
   claimed_on: dayjs.Dayjs | null;
@@ -89,7 +91,11 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
     } else if (globalProjectId) {
       form.setFieldValue('project_id', Number(globalProjectId));
     }
-    if (initialValues.unit_ids) form.setFieldValue('unit_ids', initialValues.unit_ids);
+    if (initialValues.unit_id != null) {
+      form.setFieldValue('unit_id', initialValues.unit_id);
+    } else if (Array.isArray((initialValues as any).unit_ids)) {
+      form.setFieldValue('unit_id', (initialValues as any).unit_ids[0]);
+    }
     if (initialValues.engineer_id)
       form.setFieldValue('engineer_id', initialValues.engineer_id);
     if (initialValues.claim_status_id != null) form.setFieldValue('claim_status_id', initialValues.claim_status_id);
@@ -130,8 +136,8 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
   }, [statuses, form]);
 
   useEffect(() => {
-    if (!initialValues.unit_ids) {
-      form.setFieldValue('unit_ids', []);
+    if (initialValues.unit_id == null) {
+      form.setFieldValue('unit_id', null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId, form]);
@@ -152,12 +158,12 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
 
   const onFinish = async (values: ClaimFormValues) => {
     if (!showDefectsForm) return;
-    const { defects: defs, ...rest } = values;
+    const { defects: defs, unit_id, ...rest } = values;
     if (!defs || defs.length === 0) {
       notify.error('Добавьте хотя бы один дефект');
       return;
     }
-    const unitId = values.unit_ids?.[0] ?? null;
+    const unitId = unit_id ?? null;
     const userId = useAuthStore.getState().profile?.id ?? null;
     const newDefs: NewDefect[] = defs.map((d) => ({
       description: d.description || '',
@@ -175,6 +181,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
     const defectIds = await createDefects.mutateAsync(newDefs);
     await create.mutateAsync({
       ...rest,
+      unit_ids: unitId != null ? [unitId] : [],
       attachments: files,
       project_id: values.project_id ?? globalProjectId,
       claimed_on: values.claimed_on ? values.claimed_on.format('YYYY-MM-DD') : null,
@@ -197,10 +204,10 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
           </Form.Item>
         </Col>
         <Col span={8}>
-          <Form.Item name="unit_ids" label="Объекты" rules={[{ required: true }]}> 
+          <Form.Item name="unit_id" label="Объект" rules={[{ required: true }]}> 
             <Select
-              mode="multiple"
               showSearch
+              allowClear
               filterOption={(i, o) => (o?.label ?? '').toLowerCase().includes(i.toLowerCase())}
               options={units.map((u) => ({ value: u.id, label: u.name }))}
               disabled={!projectId}
