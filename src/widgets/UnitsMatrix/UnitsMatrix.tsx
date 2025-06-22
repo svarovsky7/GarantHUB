@@ -20,12 +20,11 @@ import { useNavigate, createSearchParams } from 'react-router-dom';
 import { useAuthStore } from '@/shared/store/authStore';
 
 /**
- * Шахматка квартир/этажей для заданного проекта/корпуса/секции.
+ * Шахматка квартир/этажей для заданного проекта и корпуса.
  */
 export default function UnitsMatrix({
   projectId,
   building,
-  section,
   onUnitsChanged,
 }) {
   const {
@@ -36,7 +35,7 @@ export default function UnitsMatrix({
     fetchUnits,
     casesByUnit,
     units,
-  } = useUnitsMatrix(projectId, building, section);
+  } = useUnitsMatrix(projectId, building);
   const navigate = useNavigate();
   const profileId = useAuthStore((s) => s.profile?.id);
 

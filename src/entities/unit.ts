@@ -13,7 +13,7 @@ import { useNotify } from '@/shared/hooks/useNotify';
 
 /* ---------- базовый SELECT ---------- */
 const SELECT = `
-  id, name, building, section, floor,
+  id, name, building, floor,
   project_id,
   project:projects ( id, name ),
   person_id
@@ -21,7 +21,7 @@ const SELECT = `
 
 // sanitize теперь включает person_id!
 const sanitize = (obj) => {
-    const allowed = ['name', 'building', 'section', 'floor', 'project_id', 'person_id'];
+    const allowed = ['name', 'building', 'floor', 'project_id', 'person_id'];
     return Object.fromEntries(
         Object.entries(obj)
             .filter(([k]) => allowed.includes(k))
@@ -81,7 +81,7 @@ export const useUnitsByIds = (ids) =>
         queryFn : async () => {
             const { data, error } = await supabase
                 .from('units')
-                .select('id, name, building, section, floor')
+                .select('id, name, building, floor')
                 .in('id', ids);
             if (error) throw error;
             return data ?? [];
@@ -229,23 +229,3 @@ export const useDeleteUnitsByBuilding = () => {
 };
 
 /** Удалить все квартиры в секции корпуса */
-export const useDeleteUnitsBySection = () => {
-    const qc = useQueryClient();
-    const notify = useNotify();
-    return useMutation({
-        mutationFn: async ({ projectId, building, section }: { projectId: string | number; building: string; section: string }) => {
-            const { error } = await supabase
-                .from('units')
-                .delete()
-                .eq('project_id', projectId)
-                .eq('building', building)
-                .eq('section', section);
-            if (error) throw error;
-        },
-        onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ['units'] });
-            notify.success('Секция удалена');
-        },
-        onError: (e: Error) => notify.error(e.message),
-    });
-};

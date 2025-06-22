@@ -1,0 +1,2 @@
+ALTER TABLE IF EXISTS public.units
+    DROP COLUMN IF EXISTS section;
