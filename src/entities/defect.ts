@@ -33,7 +33,7 @@ export function useDefects() {
         .from(TABLE)
         .select(
           'id, description, type_id, status_id, project_id, unit_id, created_by, updated_by, updated_at, brigade_id, contractor_id, is_warranty, received_at, fixed_at, fixed_by, created_at,' +
-          ' defect_type:defect_types!fk_defects_type(id,name), defect_status:statuses(id,name,color), fixed_by_user:profiles(id,name)'
+          ' defect_type:defect_types!fk_defects_type(id,name), defect_status:statuses!fk_defects_status(id,name,color), fixed_by_user:profiles(id,name)'
         )
         .order('id');
       if (error) throw error;
@@ -63,7 +63,7 @@ export function useDefect(id?: number) {
         .from(TABLE)
         .select(
           'id, description, type_id, status_id, project_id, unit_id, created_by, updated_by, updated_at, brigade_id, contractor_id, is_warranty, received_at, fixed_at, fixed_by, created_at,' +
-          ' defect_type:defect_types!fk_defects_type(id,name), defect_status:statuses(id,name,color), fixed_by_user:profiles(id,name)'
+          ' defect_type:defect_types!fk_defects_type(id,name), defect_status:statuses!fk_defects_status(id,name,color), fixed_by_user:profiles(id,name)'
         )
         .eq('id', id as number)
         .single();
@@ -93,7 +93,7 @@ export function useDefectsByIds(ids?: number[]) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from(TABLE)
-        .select('id, defect_status:statuses(name)')
+        .select('id, defect_status:statuses!fk_defects_status(name)')
         .in('id', ids as number[]);
       if (error) throw error;
       return (data ?? []).map((d: any) => ({
@@ -117,7 +117,7 @@ export function useDefectsWithNames(ids?: number[]) {
       const { data, error } = await supabase
         .from(TABLE)
         .select(
-          'id, description, type_id, status_id, project_id, unit_id, created_by, updated_by, updated_at, brigade_id, contractor_id, is_warranty, received_at, fixed_at, fixed_by, defect_type:defect_types!fk_defects_type(id,name), defect_status:statuses(id,name,color), fixed_by_user:profiles(id,name)'
+          'id, description, type_id, status_id, project_id, unit_id, created_by, updated_by, updated_at, brigade_id, contractor_id, is_warranty, received_at, fixed_at, fixed_by, defect_type:defect_types!fk_defects_type(id,name), defect_status:statuses!fk_defects_status(id,name,color), fixed_by_user:profiles(id,name)'
         )
         .in('id', ids as number[]);
       if (error) throw error;
