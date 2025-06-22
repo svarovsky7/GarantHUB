@@ -162,14 +162,14 @@ export default function ClaimsPage() {
   return (
     <ConfigProvider locale={ruRU}>
       <>
-        <Button type="primary" onClick={() => setShowAddForm((p) => !p)} style={{ marginTop: 16, marginRight: 8 }}>
+        <Button type="primary" onClick={() => setShowAddForm((p) => !p)} style={{ marginRight: 8 }}>
           {showAddForm ? 'Скрыть форму' : 'Добавить претензию'}
         </Button>
-        <Button onClick={() => setShowFilters((p) => !p)} style={{ marginTop: 16 }}>
+        <Button onClick={() => setShowFilters((p) => !p)}>
           {showFilters ? 'Скрыть фильтры' : 'Показать фильтры'}
         </Button>
-        <Button icon={<SettingOutlined />} style={{ marginTop: 16, marginLeft: 8 }} onClick={() => setShowColumnsDrawer(true)} />
-        <span style={{ marginTop: 16, marginLeft: 8, display: 'inline-block' }}>
+        <Button icon={<SettingOutlined />} style={{ marginLeft: 8 }} onClick={() => setShowColumnsDrawer(true)} />
+        <span style={{ marginLeft: 8, display: 'inline-block' }}>
           <ExportClaimsButton claims={claimsWithNames} filters={filters} />
         </span>
         {showAddForm && (

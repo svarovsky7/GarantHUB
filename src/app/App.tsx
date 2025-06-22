@@ -73,11 +73,9 @@ export default function App() {
       data-oid=":l5ev61"
     >
       {!hideNavBar && <NavBar data-oid="fyv_m5h" />}
-      {!hideNavBar && <Toolbar data-oid="xulvruw" />}{" "}
-      {/* Компенсация высоты фиксированной шапки */}
       <Container
         maxWidth={false}
-        sx={{ flexGrow: 1, py: 3 }}
+        sx={{ flexGrow: 1, py: 2 }}
         data-oid=".x4sl-p"
       >
         <AppRouter data-oid="ozp552w" />

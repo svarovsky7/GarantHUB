@@ -444,20 +444,20 @@ export default function CourtCasesPage() {
           <Button
             type="primary"
             onClick={() => setShowAddForm((p) => !p)}
-            style={{ marginTop: 16, marginRight: 8 }}
+            style={{ marginRight: 8 }}
           >
             {showAddForm ? 'Скрыть форму' : 'Добавить дело'}
           </Button>
         )}
-        <Button onClick={() => setShowFilters((p) => !p)} style={{ marginTop: 16 }}>
+        <Button onClick={() => setShowFilters((p) => !p)}>
           {showFilters ? 'Скрыть фильтры' : 'Показать фильтры'}
         </Button>
         <Button
           icon={<SettingOutlined />}
-          style={{ marginTop: 16, marginLeft: 8 }}
+          style={{ marginLeft: 8 }}
           onClick={() => setShowColumnsDrawer(true)}
         />
-        <span style={{ marginTop: 16, marginLeft: 8, display: 'inline-block' }}>
+        <span style={{ marginLeft: 8, display: 'inline-block' }}>
           <ExportCourtCasesButton
             cases={filteredCases}
             stages={Object.fromEntries(stages.map((s) => [s.id, s.name]))}

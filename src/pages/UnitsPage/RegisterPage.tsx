@@ -80,7 +80,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div style={{ maxWidth: 440, margin: '24px auto' }}>
+    <div style={{ maxWidth: 440, margin: '16px auto' }}>
       <Form form={form} layout="vertical" onFinish={signUp} autoComplete="off">
         <Form.Item>
           <Typography.Title level={3} style={{ textAlign: 'center' }}>
