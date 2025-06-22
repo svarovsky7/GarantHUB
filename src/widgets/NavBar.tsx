@@ -72,7 +72,10 @@ const NavBar: React.FC = () => {
               isPending ? (
                 <Skeleton active title={false} paragraph={false} style={{ width: 120 }} />
               ) : (
-                <Typography.Text type="secondary">
+                <Typography.Text
+                  type="secondary"
+                  style={{ color: 'rgba(255, 255, 255, 0.85)' }}
+                >
                   {projects.map((p) => p.name).join('; ') || '—'}
                 </Typography.Text>
               )
