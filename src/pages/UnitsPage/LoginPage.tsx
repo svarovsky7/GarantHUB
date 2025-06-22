@@ -54,7 +54,7 @@ export default function LoginPage() {
   };
 
   return (
-    <Paper sx={{ p: 4, maxWidth: 380, mx: "auto", mt: 6 }}>
+    <Paper sx={{ p: 4, maxWidth: 380, mx: "auto", mt: 4 }}>
       <form onSubmit={login}>
         <Stack spacing={2}>
           <Typography variant="h5" align="center">
