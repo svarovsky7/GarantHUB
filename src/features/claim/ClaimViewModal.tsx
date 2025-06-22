@@ -3,7 +3,7 @@ import { Modal, Skeleton, Typography, Button } from 'antd';
 import { useClaim, signedUrl, closeDefectsForClaim } from '@/entities/claim';
 import ClaimFormAntdEdit from './ClaimFormAntdEdit';
 import ClaimAttachmentsBlock from './ClaimAttachmentsBlock';
-import TicketDefectsTable from '@/widgets/TicketDefectsTable';
+import TicketDefectsEditorTable from '@/widgets/TicketDefectsEditorTable';
 import DefectAddModal from '@/features/defect/DefectAddModal';
 import DefectViewModal from '@/features/defect/DefectViewModal';
 import {
@@ -42,6 +42,7 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
   const [defectIds, setDefectIds] = React.useState<number[]>([]);
   const [newDefs, setNewDefs] = React.useState<Array<{ tmpId: number } & NewDefect>>([]);
   const [removedIds, setRemovedIds] = React.useState<number[]>([]);
+  const [editedDefs, setEditedDefs] = React.useState<Record<number, Partial<NewDefect>>>({});
   const [showAdd, setShowAdd] = React.useState(false);
   const [viewDefId, setViewDefId] = React.useState<number | null>(null);
   const tmpIdRef = React.useRef(-1);
@@ -99,10 +100,11 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
   );
 
   const displayDefs = React.useMemo(() => {
-    const existing = loadedDefs.map((d) => ({
-      ...d,
-      fixByName: getFixByName(d),
-    }));
+    const existing = loadedDefs.map((d) => {
+      const changes = editedDefs[d.id] ?? {};
+      const rec = { ...d, ...changes } as any;
+      return { ...rec, fixByName: getFixByName(rec) };
+    });
     const created = newDefs.map((d) => ({
       id: d.tmpId,
       description: d.description,
@@ -122,7 +124,7 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
       fixByName: getFixByName(d),
     }));
     return [...existing, ...created];
-  }, [loadedDefs, newDefs, defectTypeMap, statusMap, getFixByName]);
+  }, [loadedDefs, newDefs, defectTypeMap, statusMap, getFixByName, editedDefs]);
 
   const handleRemove = (id: number) => {
     if (id < 0) {
@@ -146,6 +148,23 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
       })),
     ]);
     setShowAdd(false);
+  };
+
+  const handleChangeDef = (
+    id: number,
+    field: keyof NewDefect,
+    value: any,
+  ) => {
+    if (id < 0) {
+      setNewDefs((p) =>
+        p.map((d) => (d.tmpId === id ? { ...d, [field]: value } : d)),
+      );
+    } else {
+      setEditedDefs((p) => ({
+        ...p,
+        [id]: { ...(p[id] ?? {}), [field]: value },
+      }));
+    }
   };
 
   const handleSaved = async (isOfficial: boolean) => {
@@ -177,11 +196,21 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
         }
         await closeDefectsForClaim(claim.id, claim.claim_status_id ?? null);
       }
+      const updates = Object.entries(editedDefs).map(([id, upd]) => ({
+        id: Number(id),
+        ...upd,
+      }));
+      if (updates.length) {
+        await supabase.from('defects').upsert(updates, { onConflict: 'id' });
+      }
       qc.invalidateQueries({ queryKey: ['defects'] });
       qc.invalidateQueries({ queryKey: ['claims'] });
       qc.invalidateQueries({ queryKey: ['claims', claim.id] });
       qc.invalidateQueries({ queryKey: ['claims-simple'] });
       qc.invalidateQueries({ queryKey: ['claims-simple-all'] });
+      setEditedDefs({});
+      setNewDefs([]);
+      setRemovedIds([]);
       onClose();
     } catch (e) {
       console.error(e);
@@ -215,8 +244,13 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
           />
           <div style={{ marginTop: 16 }}>
             {displayDefs.length ? (
-              <TicketDefectsTable
+              <TicketDefectsEditorTable
                 items={displayDefs}
+                defectTypes={defectTypes}
+                statuses={defectStatuses}
+                brigades={brigades}
+                contractors={contractors}
+                onChange={handleChangeDef}
                 onRemove={handleRemove}
                 onView={setViewDefId}
               />
