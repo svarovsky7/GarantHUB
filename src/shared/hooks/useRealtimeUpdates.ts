@@ -82,6 +82,23 @@ export function useRealtimeUpdates() {
           () => qc.invalidateQueries({ queryKey: ['unit_history'] }),
         );
     });
+
+    channel
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'defects' },
+        () => qc.invalidateQueries({ queryKey: ['defects'] }),
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'defects' },
+        () => qc.invalidateQueries({ queryKey: ['defects'] }),
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'defects' },
+        () => qc.invalidateQueries({ queryKey: ['defects'] }),
+      );
     if (subscribeAllLetters) {
       channel
         .on(

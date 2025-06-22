@@ -309,7 +309,10 @@ export function useCreateClaim() {
         is_official: created.is_official,
       } as Claim;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: [TABLE] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [TABLE] });
+      qc.invalidateQueries({ queryKey: ['defects'] });
+    },
   });
 }
 
@@ -412,7 +415,10 @@ export function useDeleteClaim() {
       if (error) throw error;
       return id;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: [TABLE] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [TABLE] });
+      qc.invalidateQueries({ queryKey: ['defects'] });
+    },
   });
 }
 
