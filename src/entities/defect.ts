@@ -348,6 +348,46 @@ export function useFixDefect() {
   });
 }
 
+/**
+ * Снять подтверждение об устранении дефекта и вернуть статус "В РАБОТЕ".
+ */
+export function useCancelDefectFix() {
+  const qc = useQueryClient();
+  const notify = useNotify();
+  return useMutation<number, Error, number>({
+    async mutationFn(id) {
+      const { data: st } = await supabase
+        .from('statuses')
+        .select('id')
+        .ilike('name', '%работ%')
+        .eq('entity', 'defect')
+        .maybeSingle();
+      const inWorkId = st?.id ?? null;
+
+      const { error } = await supabase
+        .from(TABLE)
+        .update({
+          brigade_id: null,
+          contractor_id: null,
+          fixed_at: null,
+          fixed_by: null,
+          status_id: inWorkId,
+        })
+        .eq('id', id);
+      if (error) throw error;
+      return id;
+    },
+    onSuccess: (_id) => {
+      qc.invalidateQueries({ queryKey: [TABLE] });
+      qc.invalidateQueries({ queryKey: ['defect', _id] });
+      qc.invalidateQueries({ queryKey: ['defects-by-ids'] });
+      qc.invalidateQueries({ queryKey: ['claims'] });
+      notify.success('Подтверждение снято');
+    },
+    onError: (e: any) => notify.error(`Ошибка обновления: ${e.message}`),
+  });
+}
+
 export async function signedUrl(path: string, filename = ''): Promise<string> {
   const { data, error } = await supabase.storage
     .from(ATTACH_BUCKET)

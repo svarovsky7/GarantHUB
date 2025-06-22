@@ -14,6 +14,7 @@ import {
   EyeOutlined,
   DeleteOutlined,
   CheckOutlined,
+  CloseOutlined,
 } from "@ant-design/icons";
 
 import ruRU from "antd/locale/ru_RU";
@@ -34,6 +35,7 @@ import DefectViewModal from "@/features/defect/DefectViewModal";
 import DefectStatusSelect from "@/features/defect/DefectStatusSelect";
 import ExportDefectsButton from "@/features/defect/ExportDefectsButton";
 import DefectFixModal from "@/features/defect/DefectFixModal";
+import { useCancelDefectFix } from "@/entities/defect";
 import { filterDefects } from "@/shared/utils/defectFilter";
 import formatUnitName from "@/shared/utils/formatUnitName";
 import type { DefectWithInfo } from "@/shared/types/defect";
@@ -161,6 +163,7 @@ export default function DefectsPage() {
   const [viewId, setViewId] = useState<number | null>(null);
   const [fixId, setFixId] = useState<number | null>(null);
   const { mutateAsync: removeDefect, isPending: removing } = useDeleteDefect();
+  const cancelFix = useCancelDefectFix();
 
   const LS_FILTERS_VISIBLE_KEY = "defectsFiltersVisible";
   const LS_COLUMNS_KEY = "defectsColumns";
@@ -282,16 +285,38 @@ export default function DefectsPage() {
                 onClick={() => setViewId(row.id)}
               />
             </Tooltip>
-            <Tooltip title="Устранён">
-              <Button
-                size="small"
-                type="text"
-                icon={
-                  <CheckOutlined style={{ color: "#52c41a", fontSize: 16 }} />
-                }
-                onClick={() => setFixId(row.id)}
-              />
-            </Tooltip>
+            {row.defectStatusName?.toLowerCase().includes("провер") ? (
+              <Tooltip title="Отменить подтверждение">
+                <Popconfirm
+                  title="Отменить подтверждение устранения?"
+                  okText="Да"
+                  cancelText="Нет"
+                  onConfirm={() => cancelFix.mutate(row.id)}
+                  disabled={cancelFix.isPending}
+                >
+                  <Button
+                    size="small"
+                    type="text"
+                    danger
+                    icon={
+                      <CloseOutlined style={{ color: "#ff4d4f", fontSize: 16 }} />
+                    }
+                    loading={cancelFix.isPending}
+                  />
+                </Popconfirm>
+              </Tooltip>
+            ) : (
+              <Tooltip title="Устранён">
+                <Button
+                  size="small"
+                  type="text"
+                  icon={
+                    <CheckOutlined style={{ color: "#52c41a", fontSize: 16 }} />
+                  }
+                  onClick={() => setFixId(row.id)}
+                />
+              </Tooltip>
+            )}
             {perm?.delete_tables.includes('defects') && (
               <Popconfirm
                 title="Удалить дефект?"
