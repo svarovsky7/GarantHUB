@@ -1,6 +1,6 @@
 import React from 'react';
 import { Modal, Skeleton, Typography, Button } from 'antd';
-import { useClaim, signedUrl, closeDefectsForClaim } from '@/entities/claim';
+import { useClaim, useClaimAll, signedUrl, closeDefectsForClaim } from '@/entities/claim';
 import ClaimFormAntdEdit from './ClaimFormAntdEdit';
 import ClaimAttachmentsBlock from './ClaimAttachmentsBlock';
 import TicketDefectsEditorTable from '@/widgets/TicketDefectsEditorTable';
@@ -22,6 +22,8 @@ import { supabase } from '@/shared/api/supabaseClient';
 import { useClaimAttachments } from './model/useClaimAttachments';
 import type { ClaimFormAntdEditRef } from '@/shared/types/claimFormAntdEditRef';
 import { useAuthStore } from '@/shared/store/authStore';
+import { useRolePermission } from '@/entities/rolePermission';
+import type { RoleName } from '@/shared/types/rolePermission';
 
 interface Props {
   open: boolean;
@@ -30,7 +32,11 @@ interface Props {
 }
 
 export default function ClaimViewModal({ open, claimId, onClose }: Props) {
-  const { data: claim } = useClaim(claimId ?? undefined);
+  const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
+  const { data: perm } = useRolePermission(role);
+  const claimAssigned = useClaim(claimId ?? undefined);
+  const claimAll = useClaimAll(claimId ?? undefined);
+  const claim = perm?.only_assigned_project ? claimAssigned.data : claimAll.data;
   const attachments = useClaimAttachments({ claim: claim as any });
   const formRef = React.useRef<ClaimFormAntdEditRef>(null);
   const createDefs = useCreateDefects();

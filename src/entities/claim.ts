@@ -182,6 +182,41 @@ export function useClaim(id?: number | string) {
 }
 
 /**
+ * Получить претензию без фильтрации по проекту.
+ */
+export function useClaimAll(id?: number | string) {
+  const claimId = Number(id);
+  return useQuery({
+    queryKey: ['claim-all', claimId],
+    enabled: !!claimId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from(TABLE)
+        .select(
+          `id, project_id, claim_status_id, claim_no, claimed_on,
+          accepted_on, registered_on, resolved_on,
+          engineer_id, description, is_official, created_at,
+          projects (id, name),
+          statuses (id, name, color),
+          claim_units(unit_id),
+          claim_defects(defect_id),
+          claim_attachments(attachments(id, storage_path, file_url:path, file_type:mime_type, original_name))`,
+        )
+        .eq('id', claimId)
+        .single();
+      if (error) throw error;
+      return mapClaim({
+        ...data,
+        unit_ids: (data?.claim_units ?? []).map((u: any) => u.unit_id),
+        defect_ids: (data?.claim_defects ?? []).map((d: any) => d.defect_id),
+        attachments: (data?.claim_attachments ?? []).map((a: any) => a.attachments),
+      });
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
+/**
  * Получить список претензий по всем проектам.
  */
 export function useClaimsAll() {
