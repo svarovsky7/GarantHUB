@@ -8,6 +8,8 @@ import { useNotify } from '@/shared/hooks/useNotify';
 import type { Claim } from '@/shared/types/claim';
 import type { ClaimWithNames } from '@/shared/types/claimWithNames';
 import type { ClaimDeleteParams } from '@/shared/types/claimDelete';
+import type { ClaimDefect } from '@/shared/types/claimDefect';
+import type { ClaimSimple } from '@/shared/types/claimSimple';
 import {
   addClaimAttachments,
   getAttachmentsByIds,
@@ -152,7 +154,7 @@ export function useClaim(id?: number | string) {
  * Получить список претензий по всем проектам (минимальный набор полей).
  */
 export function useClaimsSimpleAll() {
-  return useQuery({
+  return useQuery<ClaimSimple[]>({
     queryKey: ['claims-simple-all'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -178,9 +180,16 @@ export function useClaimsSimpleAll() {
             .in('claim_id', ids)
         : { data: [] };
       const defectMap: Record<number, number[]> = {};
+      const claimDefectMap: Record<number, ClaimDefect[]> = {};
       (defectRows ?? []).forEach((d: any) => {
         if (!defectMap[d.claim_id]) defectMap[d.claim_id] = [];
         defectMap[d.claim_id].push(d.defect_id);
+        if (!claimDefectMap[d.claim_id]) claimDefectMap[d.claim_id] = [];
+        claimDefectMap[d.claim_id].push({
+          claim_id: d.claim_id,
+          defect_id: d.defect_id,
+          is_official: d.is_official ?? false,
+        });
       });
 
 
@@ -190,7 +199,8 @@ export function useClaimsSimpleAll() {
         is_official: r.is_official ?? false,
         unit_ids: unitMap[r.id] ?? [],
         defect_ids: defectMap[r.id] ?? [],
-      }));
+        claim_defects: claimDefectMap[r.id] ?? [],
+      })) as ClaimSimple[];
     },
     staleTime: 5 * 60_000,
   });
@@ -201,7 +211,7 @@ export function useClaimsSimpleAll() {
  */
 export function useClaimsSimple() {
   const { projectId, projectIds, onlyAssigned, enabled } = useProjectFilter();
-  return useQuery({
+  return useQuery<ClaimSimple[]>({
     queryKey: ['claims-simple', projectId, projectIds.join(',')],
     enabled,
     queryFn: async () => {
@@ -230,9 +240,16 @@ export function useClaimsSimple() {
             .in('claim_id', ids)
         : { data: [] };
       const defectMap: Record<number, number[]> = {};
+      const claimDefectMap: Record<number, ClaimDefect[]> = {};
       (defectRows ?? []).forEach((d: any) => {
         if (!defectMap[d.claim_id]) defectMap[d.claim_id] = [];
         defectMap[d.claim_id].push(d.defect_id);
+        if (!claimDefectMap[d.claim_id]) claimDefectMap[d.claim_id] = [];
+        claimDefectMap[d.claim_id].push({
+          claim_id: d.claim_id,
+          defect_id: d.defect_id,
+          is_official: d.is_official ?? false,
+        });
       });
       return (data ?? []).map((r: any) => ({
         id: r.id,
@@ -240,7 +257,8 @@ export function useClaimsSimple() {
         is_official: r.is_official ?? false,
         unit_ids: unitMap[r.id] ?? [],
         defect_ids: defectMap[r.id] ?? [],
-      }));
+        claim_defects: claimDefectMap[r.id] ?? [],
+      })) as ClaimSimple[];
     },
     staleTime: 5 * 60_000,
   });

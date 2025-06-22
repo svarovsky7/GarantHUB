@@ -173,7 +173,6 @@ export default function DefectsTable({
 
   const rowClassName = (row: DefectWithInfo) => {
     const classes = ["main-defect-row"];
-    if (row.claimIds?.length) classes.push("defect-claim-row");
     if (row.isOfficial) classes.push("defect-official-row");
     const checking = row.defectStatusName?.toLowerCase().includes("провер");
     const closed = row.defectStatusName?.toLowerCase().includes("закры");

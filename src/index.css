@@ -86,9 +86,6 @@ body {
   font-weight: 600;
   box-shadow: 0 1px 0 #b5d3f7;
 }
-.defect-claim-row {
-  background: #fff1f0 !important;
-}
 .defect-confirmed-row {
   background: #f6ffed !important;
 }

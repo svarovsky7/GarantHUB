@@ -71,15 +71,15 @@ export default function DefectsPage() {
       { id: number; unit_ids: number[]; project_id: number; is_official: boolean }[]
     >();
     claims.forEach((c: any) => {
-      (c.defect_ids || []).forEach((id: number) => {
-        const arr = claimsMap.get(id) || [];
+      (c.claim_defects || []).forEach((cd: any) => {
+        const arr = claimsMap.get(cd.defect_id) || [];
         arr.push({
           id: c.id,
           unit_ids: c.unit_ids || [],
           project_id: c.project_id,
-          is_official: c.is_official ?? false,
+          is_official: cd.is_official ?? false,
         });
-        claimsMap.set(id, arr);
+        claimsMap.set(cd.defect_id, arr);
       });
     });
     return defects.map((d: any) => {
