@@ -32,8 +32,11 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
   const [showAdd, setShowAdd] = React.useState(false);
   const tmpIdRef = React.useRef(-1);
 
+  const lastClaimIdRef = React.useRef<number | null>(null);
+
   React.useEffect(() => {
-    if (claim && open) {
+    if (claim && open && lastClaimIdRef.current !== claim.id) {
+      lastClaimIdRef.current = claim.id;
       setDefectIds(claim.defect_ids || []);
       setNewDefs([]);
       setRemovedIds([]);

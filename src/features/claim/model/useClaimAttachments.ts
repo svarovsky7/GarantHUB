@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Claim } from '@/shared/types/claim';
 import type { RemoteClaimFile, NewClaimFile } from '@/shared/types/claimFile';
 
@@ -12,13 +12,19 @@ export function useClaimAttachments(options: { claim?: Claim | null }) {
   const [newFiles, setNewFiles] = useState<NewClaimFile[]>([]);
   const [removedIds, setRemovedIds] = useState<string[]>([]);
 
+  const lastIdRef = useRef<number | null>(null);
+
   useEffect(() => {
     if (!claim) {
       setRemoteFiles([]);
       setNewFiles([]);
       setRemovedIds([]);
+      lastIdRef.current = null;
       return;
     }
+    if (lastIdRef.current === claim.id) return;
+    lastIdRef.current = claim.id;
+
     const attachments = (claim.attachments || []).map((file: any) => {
       const storagePath = file.storage_path ?? file.path;
       const fileUrl = file.file_url ?? file.url ?? '';
