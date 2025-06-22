@@ -89,7 +89,6 @@ export default function AddCourtCaseForm({
         fix_start_date: null,
         fix_end_date: null,
         description: values.description || '',
-        attachment_ids: [],
       } as any);
       notify.success('Дело успешно добавлено!');
       onSuccess?.();
