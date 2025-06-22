@@ -64,11 +64,12 @@ export default function ClaimAttachmentsTable({
   if (!rows.length) return null;
 
   const columns: ColumnsType<RowData> = [
-    { dataIndex: 'index', width: 40 },
-    { dataIndex: 'name', width: 200, ellipsis: true },
+    { title: '№', dataIndex: 'index', width: 60 },
+    { title: 'Наименование файла', dataIndex: 'name', width: 200, ellipsis: true },
     {
+      title: 'Действия',
       dataIndex: 'actions',
-      width: 40,
+      width: 80,
       render: (_: unknown, row) => (
         <div style={{ display: 'flex', gap: 4 }}>
           {row.remote ? (
@@ -121,11 +122,13 @@ export default function ClaimAttachmentsTable({
   return (
     <Table
       rowKey="key"
+      rowClassName={(row) => (!row.remote ? 'new-row' : '')}
       size="small"
       pagination={false}
       columns={columns}
       dataSource={rows}
-      showHeader={false}
+      showHeader
+      style={{ width: 'fit-content' }}
     />
   );
 }

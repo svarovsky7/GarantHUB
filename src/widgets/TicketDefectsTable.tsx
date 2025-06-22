@@ -46,6 +46,7 @@ export default function TicketDefectsTable({ items, onRemove }: Props) {
   return (
     <Table
       rowKey="id"
+      rowClassName={(row) => (row.id < 0 ? 'new-row' : '')}
       columns={columns}
       dataSource={items}
       pagination={false}

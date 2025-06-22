@@ -105,6 +105,11 @@ body {
   color: #aaa;
   background: inherit !important;
 }
+
+/* Подсветка новых элементов */
+.new-row {
+  background-color: #fffbe6 !important;
+}
 /* Skeleton эффекты были выше (оставил без изменений) */
 .changed-field {
   background-color: #fffbe6;
