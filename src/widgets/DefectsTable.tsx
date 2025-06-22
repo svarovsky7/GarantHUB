@@ -97,13 +97,13 @@ export default function DefectsTable({
     },
     {
       title: "Статус",
-      dataIndex: "status_id",
+      dataIndex: "defect_status_id",
       sorter: (a, b) =>
         (a.defectStatusName || "").localeCompare(b.defectStatusName || ""),
       render: (_: number, row) => (
         <DefectStatusSelect
           defectId={row.id}
-          statusId={row.status_id}
+          statusId={row.defect_status_id}
           statusName={row.defectStatusName}
           statusColor={row.defectStatusColor}
         />

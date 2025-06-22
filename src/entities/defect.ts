@@ -8,9 +8,8 @@ import type { DefectWithNames } from '@/shared/types/defectWithNames';
 
 export interface NewDefect {
   description: string;
-  type_id: number | null;
-  status_id: number | null;
-  project_id: number | null;
+  defect_type_id: number | null;
+  defect_status_id: number | null;
   brigade_id: number | null;
   contractor_id: number | null;
   is_warranty: boolean;
@@ -32,7 +31,7 @@ export function useDefects() {
       const { data, error } = await supabase
         .from(TABLE)
         .select(
-          'id, description, type_id, status_id, project_id, unit_id, created_by, updated_by, updated_at, brigade_id, contractor_id, is_warranty, received_at, fixed_at, fixed_by, created_at,' +
+          'id, description, defect_type_id, defect_status_id, brigade_id, contractor_id, is_warranty, received_at, fixed_at, fixed_by, created_at,' +
           ' defect_type:defect_types(id,name), defect_status:statuses(id,name,color), fixed_by_user:profiles(id,name)'
         )
         .order('id');
@@ -62,7 +61,7 @@ export function useDefect(id?: number) {
       const { data, error } = await supabase
         .from(TABLE)
         .select(
-          'id, description, type_id, status_id, project_id, unit_id, created_by, updated_by, updated_at, brigade_id, contractor_id, is_warranty, received_at, fixed_at, fixed_by, created_at,' +
+          'id, description, defect_type_id, defect_status_id, brigade_id, contractor_id, is_warranty, received_at, fixed_at, fixed_by, created_at,' +
           ' defect_type:defect_types(id,name), defect_status:statuses(id,name,color), fixed_by_user:profiles(id,name)'
         )
         .eq('id', id as number)
@@ -117,20 +116,15 @@ export function useDefectsWithNames(ids?: number[]) {
       const { data, error } = await supabase
         .from(TABLE)
         .select(
-          'id, description, type_id, status_id, project_id, unit_id, created_by, updated_by, updated_at, brigade_id, contractor_id, is_warranty, received_at, fixed_at, fixed_by, defect_type:defect_types(id,name), defect_status:statuses(id,name,color), fixed_by_user:profiles(id,name)'
+          'id, description, defect_type_id, defect_status_id, brigade_id, contractor_id, is_warranty, received_at, fixed_at, fixed_by, defect_type:defect_types(id,name), defect_status:statuses(id,name,color), fixed_by_user:profiles(id,name)'
         )
         .in('id', ids as number[]);
       if (error) throw error;
       return (data ?? []).map((d: any) => ({
         id: d.id,
         description: d.description,
-        type_id: d.type_id,
-        status_id: d.status_id,
-        project_id: d.project_id,
-        unit_id: d.unit_id,
-        created_by: d.created_by,
-        updated_by: d.updated_by,
-        updated_at: d.updated_at,
+        defect_type_id: d.defect_type_id,
+        defect_status_id: d.defect_status_id,
         brigade_id: d.brigade_id,
         contractor_id: d.contractor_id,
         is_warranty: d.is_warranty,
@@ -185,16 +179,16 @@ export function useDeleteDefect() {
 export function useUpdateDefectStatus() {
   const qc = useQueryClient();
   const notify = useNotify();
-  return useMutation<{ id: number; status_id: number | null }, Error, { id: number; statusId: number | null }>({
+  return useMutation<{ id: number; defect_status_id: number | null }, Error, { id: number; statusId: number | null }>({
     mutationFn: async ({ id, statusId }) => {
       const { data, error } = await supabase
         .from(TABLE)
-        .update({ status_id: statusId })
+        .update({ defect_status_id: statusId })
         .eq('id', id)
-        .select('id, status_id')
+        .select('id, defect_status_id')
         .single();
       if (error) throw error;
-      return data as { id: number; status_id: number | null };
+      return data as { id: number; defect_status_id: number | null };
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: [TABLE] }),
     onError: (e) => notify.error(`Ошибка обновления статуса: ${e.message}`),
@@ -275,7 +269,7 @@ export function useFixDefect() {
           contractor_id,
           fixed_at,
           fixed_by: userId,
-          status_id: checkingId,
+          defect_status_id: checkingId,
         })
         .eq('id', id);
       if (error) throw error;

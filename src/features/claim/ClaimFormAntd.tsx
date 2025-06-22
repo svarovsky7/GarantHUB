@@ -158,9 +158,8 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
     }
     const newDefs: NewDefect[] = defs.map((d) => ({
       description: d.description || '',
-      type_id: d.type_id ?? null,
-      status_id: d.status_id ?? null,
-      project_id: projectId ?? null,
+      defect_type_id: d.type_id ?? null,
+      defect_status_id: d.status_id ?? null,
       brigade_id: d.brigade_id ?? null,
       contractor_id: d.contractor_id ?? null,
       is_warranty: d.is_warranty ?? false,

@@ -11,8 +11,8 @@ export function filterDefects<T extends {
   created_at: string | null;
   received_at: string | null;
   projectIds?: number[];
-  type_id: number | null;
-  status_id: number | null;
+  defect_type_id: number | null;
+  defect_status_id: number | null;
   defectStatusName?: string;
   fixByName?: string;
 }>(rows: T[], f: DefectFilters): T[] {
@@ -37,14 +37,14 @@ export function filterDefects<T extends {
     if (
       Array.isArray(f.typeId) &&
       f.typeId.length > 0 &&
-      (d.type_id == null || !f.typeId.includes(d.type_id))
+      (d.defect_type_id == null || !f.typeId.includes(d.defect_type_id))
     ) {
       return false;
     }
     if (
       Array.isArray(f.statusId) &&
       f.statusId.length > 0 &&
-      (d.status_id == null || !f.statusId.includes(d.status_id))
+      (d.defect_status_id == null || !f.statusId.includes(d.defect_status_id))
     ) {
       return false;
     }

@@ -149,8 +149,8 @@ export default function DefectsPage() {
       })),
       units: units.map((u) => ({ label: u.name, value: u.id })),
       projects: projects.map((p) => ({ label: p.name, value: p.id })),
-      types: uniq(filteredData.map((d) => [d.type_id, d.defectTypeName])),
-      statuses: uniq(filteredData.map((d) => [d.status_id, d.defectStatusName])),
+      types: uniq(filteredData.map((d) => [d.defect_type_id, d.defectTypeName])),
+      statuses: uniq(filteredData.map((d) => [d.defect_status_id, d.defectStatusName])),
       fixBy: Array.from(new Set(filteredData.map((d) => d.fixByName).filter(Boolean))).map(
         (name) => ({ label: String(name), value: String(name) })
       ),
@@ -234,13 +234,13 @@ export default function DefectsPage() {
       },
       status: {
         title: "Статус",
-        dataIndex: "status_id",
+        dataIndex: "defect_status_id",
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           (a.defectStatusName || "").localeCompare(b.defectStatusName || ""),
         render: (_: number, row: DefectWithInfo) => (
           <DefectStatusSelect
             defectId={row.id}
-            statusId={row.status_id}
+            statusId={row.defect_status_id}
             statusName={row.defectStatusName}
             statusColor={row.defectStatusColor}
           />
