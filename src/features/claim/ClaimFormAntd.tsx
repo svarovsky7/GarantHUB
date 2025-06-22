@@ -83,38 +83,57 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
   const removeFile = (idx: number) => setFiles((p) => p.filter((_, i) => i !== idx));
 
   useEffect(() => {
-    const defaults: Partial<ClaimFormValues> = {
-      project_id:
-        initialValues.project_id ?? (globalProjectId ? Number(globalProjectId) : null),
-      unit_ids: initialValues.unit_ids ?? [],
-      engineer_id: initialValues.engineer_id ?? null,
-      claim_status_id:
-        initialValues.claim_status_id ?? (statuses.length ? statuses[0].id : null),
-      claim_no: initialValues.claim_no ?? '',
-      claimed_on: initialValues.claimed_on ? dayjs(initialValues.claimed_on) : null,
-      accepted_on: initialValues.accepted_on ? dayjs(initialValues.accepted_on) : null,
-      registered_on:
-        initialValues.registered_on ? dayjs(initialValues.registered_on) : dayjs(),
-      resolved_on: initialValues.resolved_on ? dayjs(initialValues.resolved_on) : null,
-      description: initialValues.description ?? '',
-      is_official: initialValues.is_official ?? false,
-    };
-    form.setFieldsValue(defaults);
-  }, [form, initialValues, globalProjectId, statuses]);
+    if (initialValues.project_id != null) {
+      form.setFieldValue('project_id', initialValues.project_id);
+    } else if (globalProjectId) {
+      form.setFieldValue('project_id', Number(globalProjectId));
+    }
+    if (initialValues.unit_ids) form.setFieldValue('unit_ids', initialValues.unit_ids);
+    if (initialValues.engineer_id)
+      form.setFieldValue('engineer_id', initialValues.engineer_id);
+    if (initialValues.claim_status_id != null) form.setFieldValue('claim_status_id', initialValues.claim_status_id);
+    if (initialValues.claim_no) form.setFieldValue('claim_no', initialValues.claim_no);
+    if (initialValues.claimed_on) form.setFieldValue('claimed_on', dayjs(initialValues.claimed_on));
+    if (initialValues.accepted_on)
+      form.setFieldValue('accepted_on', dayjs(initialValues.accepted_on));
+    if (initialValues.registered_on) form.setFieldValue('registered_on', dayjs(initialValues.registered_on));
+    if (initialValues.resolved_on) form.setFieldValue('resolved_on', dayjs(initialValues.resolved_on));
+    if (initialValues.description) form.setFieldValue('description', initialValues.description);
+    if (initialValues.is_official != null) {
+      form.setFieldValue('is_official', initialValues.is_official);
+    } else {
+      form.setFieldValue('is_official', false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [globalProjectId, form]);
 
-  // Обновление статуса после загрузки списка
+  // По умолчанию ставим текущую дату регистрации
   useEffect(() => {
-    if (statuses.length && !form.getFieldValue('claim_status_id')) {
+    if (!form.getFieldValue('registered_on')) {
+      form.setFieldValue('registered_on', dayjs());
+    }
+  }, [form]);
+
+  /**
+   * Если статус не указан, подставляем первым из списка.
+   */
+  useEffect(() => {
+    if (
+      statuses.length &&
+      !initialValues.claim_status_id &&
+      !form.getFieldValue('claim_status_id')
+    ) {
       form.setFieldValue('claim_status_id', statuses[0].id);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statuses, form]);
 
-  // При смене проекта сбрасываем выбранные объекты
   useEffect(() => {
     if (!initialValues.unit_ids) {
       form.setFieldValue('unit_ids', []);
     }
-  }, [projectId, form, initialValues.unit_ids]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId, form]);
 
   // Вычисляем срок устранения как максимальную дату устранения дефектов
   useEffect(() => {
