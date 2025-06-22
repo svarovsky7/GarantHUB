@@ -5,6 +5,7 @@ import { addDefectAttachments, getAttachmentsByIds, ATTACH_BUCKET } from '@/enti
 import { useAuthStore } from '@/shared/store/authStore';
 import type { DefectRecord } from '@/shared/types/defect';
 import type { DefectWithNames } from '@/shared/types/defectWithNames';
+import type { DefectWithFiles } from '@/shared/types/defectWithFiles';
 
 export interface NewDefect {
   description: string;
@@ -48,11 +49,6 @@ export function useDefects() {
 }
 
 /** Получить дефект по ID */
-export interface DefectWithFiles extends DefectRecord {
-  attachments: any[];
-  defect_type?: { id: number; name: string } | null;
-  defect_status?: { id: number; name: string; color: string | null } | null;
-}
 
 /**
  * Получить один дефект с вложениями и связными названиями
@@ -443,4 +439,59 @@ export async function signedUrl(path: string, filename = ''): Promise<string> {
     .createSignedUrl(path, 60, { download: filename || undefined });
   if (error) throw error;
   return data.signedUrl;
+}
+
+/** Добавить вложения к существующему дефекту */
+export function useAddDefectAttachments() {
+  const qc = useQueryClient();
+  const notify = useNotify();
+  return useMutation({
+    mutationFn: async ({ defectId, files }: { defectId: number; files: File[] }) => {
+      const uploaded = await addDefectAttachments(
+        files.map((f) => ({ file: f, type_id: null })),
+        defectId,
+      );
+      if (uploaded.length) {
+        const rows = uploaded.map((u) => ({ defect_id: defectId, attachment_id: u.id }));
+        await supabase.from('defect_attachments').insert(rows);
+      }
+      return uploaded;
+    },
+    onSuccess: (_res, vars) => {
+      qc.invalidateQueries({ queryKey: ['defect', vars.defectId] });
+      qc.invalidateQueries({ queryKey: [TABLE] });
+      notify.success('Файлы загружены');
+    },
+    onError: (e: any) => notify.error(`Ошибка загрузки файлов: ${e.message}`),
+  });
+}
+
+/** Удалить одно вложение дефекта */
+export function useRemoveDefectAttachment() {
+  const qc = useQueryClient();
+  const notify = useNotify();
+  return useMutation<void, Error, { defectId: number; attachmentId: number }>({
+    mutationFn: async ({ defectId, attachmentId }) => {
+      const { data: att } = await supabase
+        .from('attachments')
+        .select('storage_path')
+        .eq('id', attachmentId)
+        .single();
+      if (att?.storage_path) {
+        await supabase.storage.from(ATTACH_BUCKET).remove([att.storage_path]);
+      }
+      await supabase.from('attachments').delete().eq('id', attachmentId);
+      await supabase
+        .from('defect_attachments')
+        .delete()
+        .eq('defect_id', defectId)
+        .eq('attachment_id', attachmentId);
+    },
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ['defect', vars.defectId] });
+      qc.invalidateQueries({ queryKey: [TABLE] });
+      notify.success('Файл удалён');
+    },
+    onError: (e) => notify.error(`Ошибка удаления файла: ${e.message}`),
+  });
 }
