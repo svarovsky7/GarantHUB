@@ -167,14 +167,15 @@ export function useClaim(id?: number | string) {
         )
         .eq('id', claimId);
       q = filterByProjects(q, projectId, projectIds, onlyAssigned);
-      q = q.single();
+      q = q.maybeSingle();
       const { data, error } = await q;
       if (error) throw error;
+      if (!data) return null;
       return mapClaim({
         ...data,
-        unit_ids: (data?.claim_units ?? []).map((u: any) => u.unit_id),
-        defect_ids: (data?.claim_defects ?? []).map((d: any) => d.defect_id),
-        attachments: (data?.claim_attachments ?? []).map((a: any) => a.attachments),
+        unit_ids: (data.claim_units ?? []).map((u: any) => u.unit_id),
+        defect_ids: (data.claim_defects ?? []).map((d: any) => d.defect_id),
+        attachments: (data.claim_attachments ?? []).map((a: any) => a.attachments),
       });
     },
     staleTime: 5 * 60_000,
@@ -203,13 +204,14 @@ export function useClaimAll(id?: number | string) {
           claim_attachments(attachments(id, storage_path, file_url:path, file_type:mime_type, original_name))`,
         )
         .eq('id', claimId)
-        .single();
+        .maybeSingle();
       if (error) throw error;
+      if (!data) return null;
       return mapClaim({
         ...data,
-        unit_ids: (data?.claim_units ?? []).map((u: any) => u.unit_id),
-        defect_ids: (data?.claim_defects ?? []).map((d: any) => d.defect_id),
-        attachments: (data?.claim_attachments ?? []).map((a: any) => a.attachments),
+        unit_ids: (data.claim_units ?? []).map((u: any) => u.unit_id),
+        defect_ids: (data.claim_defects ?? []).map((d: any) => d.defect_id),
+        attachments: (data.claim_attachments ?? []).map((a: any) => a.attachments),
       });
     },
     staleTime: 5 * 60_000,
