@@ -96,7 +96,7 @@ export default function CourtCaseStatusesAdmin({
                     onCancel={close}
                     title={modal.mode === 'add' ? 'Новая стадия' : 'Редактировать стадию'}
                     footer={null}
-                    destroyOnClose
+                    destroyOnHidden
                 >
                     <CourtCaseStatusForm
                         initialData={modal.mode === 'edit' ? modal.data : undefined}
