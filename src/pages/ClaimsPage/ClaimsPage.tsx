@@ -5,10 +5,20 @@ import {
   SettingOutlined,
   EyeOutlined,
   DeleteOutlined,
+  PlusOutlined,
+  LinkOutlined,
+  FileTextOutlined,
+  BranchesOutlined,
 } from '@ant-design/icons';
 import ExportClaimsButton from '@/features/claim/ExportClaimsButton';
 import { useSnackbar } from 'notistack';
-import { useClaims, useClaimsAll, useDeleteClaim } from '@/entities/claim';
+import {
+  useClaims,
+  useClaimsAll,
+  useDeleteClaim,
+  useLinkClaims,
+  useUnlinkClaim,
+} from '@/entities/claim';
 import { useUsers } from '@/entities/user';
 import { useUnitsByIds } from '@/entities/unit';
 import { useRolePermission } from '@/entities/rolePermission';
@@ -21,6 +31,7 @@ import ClaimFormAntd from '@/features/claim/ClaimFormAntd';
 import ClaimViewModal from '@/features/claim/ClaimViewModal';
 import ClaimStatusSelect from "@/features/claim/ClaimStatusSelect";
 import dayjs from "dayjs";
+import LinkClaimsDialog from '@/features/claim/LinkClaimsDialog';
 import TableColumnsDrawer from '@/widgets/TableColumnsDrawer';
 import type { TableColumnSetting } from '@/shared/types/tableColumnSetting';
 import type { ColumnsType } from 'antd/es/table';
@@ -85,6 +96,9 @@ export default function ClaimsPage() {
     } catch {}
   }, [showFilters]);
   const [viewId, setViewId] = useState<number | null>(null);
+  const [linkFor, setLinkFor] = useState<ClaimWithNames | null>(null);
+  const linkClaims = useLinkClaims();
+  const unlinkClaim = useUnlinkClaim();
   const [showColumnsDrawer, setShowColumnsDrawer] = useState(false);
   const [columnsState, setColumnsState] = useState<TableColumnSetting[]>(() => {
     const base = getBaseColumns();
@@ -153,6 +167,25 @@ export default function ClaimsPage() {
 
   function getBaseColumns() {
     return {
+      treeIcon: {
+        title: '',
+        dataIndex: 'treeIcon',
+        width: 40,
+        render: (_: any, record: any) => {
+          if (!record.parent_id) {
+            return (
+              <Tooltip title="Основная претензия">
+                <FileTextOutlined style={{ color: '#1890ff', fontSize: 17 }} />
+              </Tooltip>
+            );
+          }
+          return (
+            <Tooltip title="Связанная претензия">
+              <BranchesOutlined style={{ color: '#52c41a', fontSize: 16 }} />
+            </Tooltip>
+          );
+        },
+      },
       id: { title: 'ID', dataIndex: 'id', width: 80, sorter: (a: any, b: any) => a.id - b.id },
       projectName: { title: 'Проект', dataIndex: 'projectName', width: 180, sorter: (a: any, b: any) => a.projectName.localeCompare(b.projectName) },
       unitNames: { title: 'Объекты', dataIndex: 'unitNames', width: 160, sorter: (a: any, b: any) => a.unitNames.localeCompare(b.unitNames) },
@@ -166,12 +199,23 @@ export default function ClaimsPage() {
       actions: {
         title: 'Действия',
         key: 'actions',
-        width: 120,
+        width: 140,
         render: (_: any, record: ClaimWithNames) => (
           <Space size="middle">
             <Tooltip title="Просмотр">
               <Button size="small" type="text" icon={<EyeOutlined />} onClick={() => setViewId(record.id)} />
             </Tooltip>
+            <Button size="small" type="text" icon={<PlusOutlined />} onClick={() => setLinkFor(record)} />
+            {record.parent_id && (
+              <Tooltip title="Исключить из связи">
+                <Button
+                  size="small"
+                  type="text"
+                  icon={<LinkOutlined style={{ color: '#c41d7f', textDecoration: 'line-through', fontWeight: 700 }} />}
+                  onClick={() => unlinkClaim.mutate(record.id)}
+                />
+              </Tooltip>
+            )}
             <Popconfirm
               title="Удалить претензию?"
               okText="Да"
@@ -214,6 +258,15 @@ export default function ClaimsPage() {
             />
           </div>
         )}
+        <LinkClaimsDialog
+          open={!!linkFor}
+          parent={linkFor}
+          claims={claimsWithNames}
+          onClose={() => setLinkFor(null)}
+          onSubmit={(ids) =>
+            linkClaims.mutate({ parentId: String(linkFor!.id), childIds: ids })
+          }
+        />
         <TableColumnsDrawer
           open={showColumnsDrawer}
           columns={columnsState}
@@ -236,6 +289,8 @@ export default function ClaimsPage() {
               loading={isLoading}
               columns={columns}
               onView={(id) => setViewId(id)}
+              onAddChild={setLinkFor}
+              onUnlink={(id) => unlinkClaim.mutate(id)}
             />
           )}
         </div>

@@ -18,6 +18,7 @@ import {
 import dayjs from 'dayjs';
 
 const TABLE = 'claims';
+const LINK_TABLE = 'claim_links';
 
 /**
  * Преобразует запись Supabase в объект претензии с удобными полями.
@@ -49,6 +50,7 @@ function mapClaim(r: any): ClaimWithNames {
     : [];
   return {
     id: r.id,
+    parent_id: r.parent_id ?? null,
     project_id: r.project_id,
     unit_ids: r.unit_ids || [],
     claim_status_id: r.claim_status_id ?? null,
@@ -130,9 +132,19 @@ export function useClaims() {
       q = q.order('created_at', { ascending: false });
       const { data, error } = await q;
       if (error) throw error;
+      const ids = (data ?? []).map((r: any) => r.id);
+      const { data: links } = ids.length
+        ? await supabase
+            .from(LINK_TABLE)
+            .select('parent_id, child_id')
+            .in('child_id', ids)
+        : { data: [] };
+      const linkMap = new Map<number, number>();
+      (links ?? []).forEach((l: any) => linkMap.set(l.child_id, l.parent_id));
       return (data ?? []).map((r: any) =>
         mapClaim({
           ...r,
+          parent_id: linkMap.get(r.id) ?? null,
           unit_ids: (r.claim_units ?? []).map((u: any) => u.unit_id),
           defect_ids: (r.claim_defects ?? []).map((d: any) => d.defect_id),
           attachments: (r.claim_attachments ?? []).map((a: any) => a.attachments),
@@ -171,8 +183,14 @@ export function useClaim(id?: number | string) {
       const { data, error } = await q;
       if (error) throw error;
       if (!data) return null;
+      const { data: link } = await supabase
+        .from(LINK_TABLE)
+        .select('parent_id')
+        .eq('child_id', claimId)
+        .maybeSingle();
       return mapClaim({
         ...data,
+        parent_id: link?.parent_id ?? null,
         unit_ids: (data.claim_units ?? []).map((u: any) => u.unit_id),
         defect_ids: (data.claim_defects ?? []).map((d: any) => d.defect_id),
         attachments: (data.claim_attachments ?? []).map((a: any) => a.attachments),
@@ -207,8 +225,14 @@ export function useClaimAll(id?: number | string) {
         .maybeSingle();
       if (error) throw error;
       if (!data) return null;
+      const { data: link } = await supabase
+        .from(LINK_TABLE)
+        .select('parent_id')
+        .eq('child_id', claimId)
+        .maybeSingle();
       return mapClaim({
         ...data,
+        parent_id: link?.parent_id ?? null,
         unit_ids: (data.claim_units ?? []).map((u: any) => u.unit_id),
         defect_ids: (data.claim_defects ?? []).map((d: any) => d.defect_id),
         attachments: (data.claim_attachments ?? []).map((a: any) => a.attachments),
@@ -239,9 +263,19 @@ export function useClaimsAll() {
         )
         .order('created_at', { ascending: false });
       if (error) throw error;
+      const ids = (data ?? []).map((r: any) => r.id);
+      const { data: links } = ids.length
+        ? await supabase
+            .from(LINK_TABLE)
+            .select('parent_id, child_id')
+            .in('child_id', ids)
+        : { data: [] };
+      const linkMap = new Map<number, number>();
+      (links ?? []).forEach((l: any) => linkMap.set(l.child_id, l.parent_id));
       return (data ?? []).map((r: any) =>
         mapClaim({
           ...r,
+          parent_id: linkMap.get(r.id) ?? null,
           unit_ids: (r.claim_units ?? []).map((u: any) => u.unit_id),
           defect_ids: (r.claim_defects ?? []).map((d: any) => d.defect_id),
           attachments: (r.claim_attachments ?? []).map((a: any) => a.attachments),
@@ -633,6 +667,47 @@ export async function signedUrl(path: string, filename = ''): Promise<string> {
     .createSignedUrl(path, 60, { download: filename || undefined });
   if (error) throw error;
   return data.signedUrl;
+}
+
+export function useClaimLinks() {
+  return useQuery({
+    queryKey: [LINK_TABLE],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from(LINK_TABLE)
+        .select('id, parent_id, child_id');
+      if (error) throw error;
+      return (data ?? []) as import('@/shared/types/claimLink').ClaimLink[];
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
+export function useLinkClaims() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ parentId, childIds }: { parentId: string; childIds: string[] }) => {
+      const ids = childIds.map((c) => Number(c));
+      if (ids.length === 0) return;
+      await supabase.from(LINK_TABLE).delete().in('child_id', ids);
+      const rows = ids.map((child_id) => ({ parent_id: Number(parentId), child_id }));
+      await supabase.from(LINK_TABLE).insert(rows);
+      qc.invalidateQueries({ queryKey: [LINK_TABLE] });
+      qc.invalidateQueries({ queryKey: [TABLE] });
+    },
+  });
+}
+
+export function useUnlinkClaim() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number | string) => {
+      const childId = Number(id);
+      await supabase.from(LINK_TABLE).delete().eq('child_id', childId);
+      qc.invalidateQueries({ queryKey: [LINK_TABLE] });
+      qc.invalidateQueries({ queryKey: [TABLE] });
+    },
+  });
 }
 
 export { closeDefectsForClaim };

@@ -5,6 +5,10 @@ import type { ColumnsType } from 'antd/es/table';
 import {
   EyeOutlined,
   DeleteOutlined,
+  PlusOutlined,
+  BranchesOutlined,
+  FileTextOutlined,
+  LinkOutlined,
 } from '@ant-design/icons';
 import { useDeleteClaim } from '@/entities/claim';
 import type { ClaimFilters } from '@/shared/types/claimFilters';
@@ -20,12 +24,41 @@ interface Props {
   loading?: boolean;
   columns?: ColumnsType<any>;
   onView?: (id: number) => void;
+  onAddChild?: (parent: ClaimWithNames) => void;
+  onUnlink?: (id: number) => void;
 }
 
-export default function ClaimsTable({ claims, filters, loading, columns: columnsProp, onView }: Props) {
+export default function ClaimsTable({
+  claims,
+  filters,
+  loading,
+  columns: columnsProp,
+  onView,
+  onAddChild,
+  onUnlink,
+}: Props) {
   const { mutateAsync: remove, isPending } = useDeleteClaim();
   const defaultColumns: ColumnsType<any> = useMemo(
     () => [
+      {
+        title: '',
+        dataIndex: 'treeIcon',
+        width: 40,
+        render: (_: any, record: any) => {
+          if (!record.parent_id) {
+            return (
+              <Tooltip title="Основная претензия">
+                <FileTextOutlined style={{ color: '#1890ff', fontSize: 17 }} />
+              </Tooltip>
+            );
+          }
+          return (
+            <Tooltip title="Связанная претензия">
+              <BranchesOutlined style={{ color: '#52c41a', fontSize: 16 }} />
+            </Tooltip>
+          );
+        },
+      },
       { title: 'ID', dataIndex: 'id', width: 80, sorter: (a, b) => a.id - b.id },
       { title: 'Проект', dataIndex: 'projectName', width: 180, sorter: (a, b) => a.projectName.localeCompare(b.projectName) },
       { title: 'Объекты', dataIndex: 'unitNames', width: 160, sorter: (a, b) => a.unitNames.localeCompare(b.unitNames) },
@@ -39,12 +72,23 @@ export default function ClaimsTable({ claims, filters, loading, columns: columns
       {
         title: 'Действия',
         key: 'actions',
-        width: 120,
+        width: 140,
         render: (_: any, record) => (
           <Space size="middle">
             <Tooltip title="Просмотр">
               <Button size="small" type="text" icon={<EyeOutlined />} onClick={() => onView && onView(record.id)} />
             </Tooltip>
+            <Button size="small" type="text" icon={<PlusOutlined />} onClick={() => onAddChild && onAddChild(record)} />
+            {record.parent_id && (
+              <Tooltip title="Исключить из связи">
+                <Button
+                  size="small"
+                  type="text"
+                  icon={<LinkOutlined style={{ color: '#c41d7f', textDecoration: 'line-through', fontWeight: 700 }} />}
+                  onClick={() => onUnlink && onUnlink(record.id)}
+                />
+              </Tooltip>
+            )}
             <Popconfirm
               title="Удалить претензию?"
               okText="Да"
@@ -84,6 +128,34 @@ export default function ClaimsTable({ claims, filters, loading, columns: columns
     });
   }, [claims, filters]);
 
+  const treeData = useMemo(() => {
+    const map = new Map<number, any>();
+    const roots: any[] = [];
+    filtered.forEach((c) => {
+      const row = { ...c, key: c.id, children: [] as any[] };
+      map.set(c.id, row);
+    });
+    filtered.forEach((c) => {
+      const row = map.get(c.id);
+      if (c.parent_id && map.has(c.parent_id)) {
+        map.get(c.parent_id).children.push(row);
+      } else {
+        roots.push(row);
+      }
+    });
+    map.forEach((row) => {
+      if (!row.children.length) row.children = undefined;
+    });
+    return roots;
+  }, [filtered]);
+
+  const [expandedRowKeys, setExpandedRowKeys] = React.useState<React.Key[]>([]);
+  const [pageSize, setPageSize] = React.useState(25);
+
+  React.useEffect(() => {
+    setExpandedRowKeys(filtered.map((c) => c.id));
+  }, [filtered]);
+
   const rowClassName = (row: ClaimWithNames) => {
     if (row.is_official) return 'claim-official-row';
     const checking = row.statusName?.toLowerCase().includes('провер');
@@ -97,11 +169,35 @@ export default function ClaimsTable({ claims, filters, loading, columns: columns
     <Table
       rowKey="id"
       columns={columns}
-      dataSource={filtered}
+      dataSource={treeData}
       loading={loading}
-      pagination={{ pageSize: 25, showSizeChanger: true }}
+      pagination={{
+        pageSize,
+        showSizeChanger: true,
+        onChange: (_p, size) => size && setPageSize(size),
+      }}
       size="middle"
-      rowClassName={rowClassName}
+      expandable={{
+        expandRowByClick: true,
+        indentSize: 24,
+        expandedRowKeys,
+        onExpand: (expanded, record) => {
+          setExpandedRowKeys((prev) => {
+            const set = new Set(prev);
+            if (expanded) {
+              set.add(record.id);
+            } else {
+              set.delete(record.id);
+            }
+            return Array.from(set);
+          });
+        },
+      }}
+      rowClassName={(row: any) => {
+        const base = rowClassName(row);
+        return row.parent_id ? `child-claim-row ${base}` : `main-claim-row ${base}`;
+      }}
+      style={{ background: '#fff' }}
     />
   );
 }
