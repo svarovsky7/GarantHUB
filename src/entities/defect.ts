@@ -20,7 +20,10 @@ export interface NewDefect {
 
 const TABLE = 'defects';
 
-/** Получить все дефекты проекта */
+/**
+ * Получить все дефекты проекта без вложений.
+ * Вложения загружаются отдельно при запросе конкретного дефекта.
+ */
 export function useDefects() {
   return useQuery<DefectRecord[]>({
     queryKey: [TABLE],
@@ -28,7 +31,7 @@ export function useDefects() {
       const { data, error } = await supabase
         .from(TABLE)
         .select(
-          'id, description, defect_type_id, defect_status_id, brigade_id, contractor_id, is_warranty, received_at, fixed_at, fixed_by, attachment_ids, created_at,' +
+          'id, description, defect_type_id, defect_status_id, brigade_id, contractor_id, is_warranty, received_at, fixed_at, fixed_by, created_at,' +
           ' defect_type:defect_types(id,name), defect_status:statuses(id,name,color), fixed_by_user:profiles(id,name)'
         )
         .order('id');
@@ -46,6 +49,10 @@ export interface DefectWithFiles extends DefectRecord {
   defect_status?: { id: number; name: string; color: string | null } | null;
 }
 
+/**
+ * Получить один дефект с вложениями и связными названиями
+ * типа и статуса.
+ */
 export function useDefect(id?: number) {
   return useQuery<DefectWithFiles | null>({
     queryKey: ['defect', id],
@@ -54,18 +61,21 @@ export function useDefect(id?: number) {
       const { data, error } = await supabase
         .from(TABLE)
         .select(
-          'id, description, defect_type_id, defect_status_id, brigade_id, contractor_id, is_warranty, received_at, fixed_at, fixed_by, attachment_ids, created_at,' +
+          'id, description, defect_type_id, defect_status_id, brigade_id, contractor_id, is_warranty, received_at, fixed_at, fixed_by, created_at,' +
           ' defect_type:defect_types(id,name), defect_status:statuses(id,name,color), fixed_by_user:profiles(id,name)'
         )
         .eq('id', id as number)
         .single();
       if (error) throw error;
-      let attachments: any[] = [];
-      const record = data as unknown as DefectRecord;
-      if ((record as any)?.attachment_ids?.length) {
-        attachments = await getAttachmentsByIds((record as any).attachment_ids);
-      }
-      return { ...record, attachments } as DefectWithFiles;
+      const { data: attachRows, error: attachErr } = await supabase
+        .from('defect_attachments')
+        .select(
+          'attachments(id, storage_path, file_url:path, file_type:mime_type, original_name)'
+        )
+        .eq('defect_id', id as number);
+      if (attachErr) throw attachErr;
+      const attachments = (attachRows ?? []).map((r: any) => r.attachments);
+      return { ...(data as any), attachments } as DefectWithFiles;
     },
     staleTime: 5 * 60_000,
   });
@@ -210,11 +220,10 @@ export function useFixDefect() {
       updatedAttachments?: { id: number; type_id: number | null }[];
     }) => {
       const { data: current } = await supabase
-        .from(TABLE)
-        .select('attachment_ids')
-        .eq('id', id)
-        .single();
-      let ids: number[] = current?.attachment_ids ?? [];
+        .from('defect_attachments')
+        .select('attachment_id, attachments(storage_path)')
+        .eq('defect_id', id);
+      let ids: number[] = (current ?? []).map((r: any) => r.attachment_id);
       if (removedAttachmentIds.length) {
         const { data: atts } = await supabase
           .from('attachments')
@@ -225,11 +234,21 @@ export function useFixDefect() {
             .from(ATTACH_BUCKET)
             .remove(atts.map((a) => a.storage_path));
         await supabase.from('attachments').delete().in('id', removedAttachmentIds);
+        await supabase
+          .from('defect_attachments')
+          .delete()
+          .eq('defect_id', id)
+          .in('attachment_id', removedAttachmentIds);
         ids = ids.filter((i) => !removedAttachmentIds.includes(Number(i)));
       }
       let uploaded: any[] = [];
       if (attachments.length) {
         uploaded = await addDefectAttachments(attachments, id);
+        const rows = uploaded.map((u) => ({
+          defect_id: id,
+          attachment_id: u.id,
+        }));
+        if (rows.length) await supabase.from('defect_attachments').insert(rows);
         ids = ids.concat(uploaded.map((u) => u.id));
       }
       if (updatedAttachments.length) {
@@ -251,7 +270,6 @@ export function useFixDefect() {
           fixed_at,
           fixed_by: userId,
           defect_status_id: checkingId,
-          attachment_ids: ids,
         })
         .eq('id', id);
       if (error) throw error;
