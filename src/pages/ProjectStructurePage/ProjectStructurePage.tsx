@@ -250,9 +250,9 @@ export default function ProjectStructurePage() {
                             }}
                         >
                             <Select
-                                value={building || ""}
+                                value={buildings.includes(building) ? building : ""}
                                 onChange={(e) => setBuilding(e.target.value)}
-                                displayEmpty={false}
+                                displayEmpty
                                 sx={{
                                     bgcolor: "rgba(255,255,255,0.11)",
                                     borderRadius: "10px",
