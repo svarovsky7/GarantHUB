@@ -375,6 +375,55 @@ export function useCancelDefectFix() {
         })
         .eq('id', id);
       if (error) throw error;
+
+      // \u041E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435 \u0441\u0442\u0430\u0442\u0443\u0441\u043E\u0432 \u043F\u0440\u0435\u0442\u0435\u043D\u0437\u0438\u0439,
+      // \u0435\u0441\u043B\u0438 \u0434\u043E\u043F\u0443\u0441\u0442\u0438\u043C\u043E \u0434\u0435\u0444\u0435\u043A\u0442\u044B
+      // \u0431\u043E\u043B\u044C\u0448\u0435 \u043D\u0435 \u0432\u0441\u0435 \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D\u044B.
+      const { data: claimRows } = await supabase
+        .from('claim_defects')
+        .select('claim_id')
+        .eq('defect_id', id);
+      const claimIds = (claimRows ?? []).map((r: any) => r.claim_id);
+
+      if (claimIds.length) {
+        const { data: clSt } = await supabase
+          .from('statuses')
+          .select('id')
+          .ilike('name', '%работ%')
+          .eq('entity', 'claim')
+          .maybeSingle();
+        const claimInWorkId = clSt?.id ?? null;
+
+        if (claimInWorkId) {
+          for (const cId of claimIds) {
+            const { data: defRows } = await supabase
+              .from('claim_defects')
+              .select('defect_id')
+              .eq('claim_id', cId);
+            const defectIds = (defRows ?? []).map((d: any) => d.defect_id);
+
+            const { data: statuses } = defectIds.length
+              ? await supabase
+                  .from('defects')
+                  .select('statuses!fk_defects_status(name)')
+                  .in('id', defectIds)
+              : { data: [] };
+
+            const allFixed = (statuses ?? []).every((s: any) => {
+              const name = s.statuses?.name?.toLowerCase() ?? '';
+              return /\u043F\u0440\u043E\u0432\u0435\u0440|\u0437\u0430\u043A\u0440\u044B/.test(name);
+            });
+
+            if (!allFixed) {
+              await supabase
+                .from('claims')
+                .update({ claim_status_id: claimInWorkId })
+                .eq('id', cId);
+            }
+          }
+        }
+      }
+
       return id;
     },
     onSuccess: (_id) => {
