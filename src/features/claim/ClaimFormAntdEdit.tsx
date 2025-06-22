@@ -155,6 +155,14 @@ const ClaimFormAntdEdit = React.forwardRef<
           .eq('claim_id', claim.id);
       }
 
+      // если претензия перестала быть официальной, обновляем связанные дефекты
+      if (claim.is_official && !values.is_official) {
+        await supabase
+          .from('claim_defects')
+          .update({ is_official: false })
+          .eq('claim_id', claim.id);
+      }
+
       for (const id of attachments.removedIds) {
         await removeAtt.mutateAsync({
           claimId: claim.id,
