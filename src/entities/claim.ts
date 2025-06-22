@@ -212,6 +212,7 @@ export function useClaim(id?: number | string) {
  * Получить список претензий по всем проектам (минимальный набор полей).
  */
 export function useClaimsSimpleAll() {
+  return useQuery({
     queryKey: ['claims-simple-all'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -264,6 +265,7 @@ export function useClaimsSimpleAll() {
  */
 export function useClaimsSimple() {
   const { projectId, projectIds, onlyAssigned, enabled } = useProjectFilter();
+  return useQuery({
     queryKey: ['claims-simple', projectId, projectIds.join(',')],
     enabled,
     queryFn: async () => {

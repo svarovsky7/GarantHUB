@@ -49,10 +49,6 @@ export default function useUnitsMatrix(projectId, building, section) {
         // Грузим замечания и судебные дела только для отображаемых юнитов
         if (filtered.length > 0) {
             const unitIds = filtered.map(u => u.id);
-                        color: t.statuses?.color || null,
-                    });
-                });
-            });
 
             // Court cases (не закрытые)
             const { data: casesData } = await supabase
