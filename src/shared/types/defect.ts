@@ -5,9 +5,21 @@ export interface DefectRecord {
   /** Описание дефекта */
   description: string;
   /** Тип дефекта */
-  defect_type_id: number | null;
+  type_id: number | null;
   /** Статус дефекта */
-  defect_status_id: number | null;
+  status_id: number | null;
+  /** Проект */
+  project_id: number;
+  /** Основной объект */
+  unit_id: number | null;
+  /** Кто создал */
+  created_by: string | null;
+  /** Кто обновил */
+  updated_by: string | null;
+  /** Дата обновления */
+  updated_at: string | null;
+  /** Поле для полнотекстового поиска */
+  description_tsv: string | null;
   /** Исполнитель - бригада */
   brigade_id: number | null;
   /** Исполнитель - подрядчик */
