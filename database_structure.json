@@ -645,14 +645,14 @@
   },
   {
     "table_name": "defects",
-    "column_name": "defect_type_id",
+    "column_name": "type_id",
     "data_type": "integer",
     "is_nullable": "YES",
     "column_default": null
   },
   {
     "table_name": "defects",
-    "column_name": "defect_status_id",
+    "column_name": "status_id",
     "data_type": "integer",
     "is_nullable": "YES",
     "column_default": null
@@ -698,6 +698,48 @@
     "data_type": "boolean",
     "is_nullable": "NO",
     "column_default": "false"
+  },
+  {
+    "table_name": "defects",
+    "column_name": "project_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "defects",
+    "column_name": "unit_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "defects",
+    "column_name": "created_by",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "defects",
+    "column_name": "updated_by",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "defects",
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "defects",
+    "column_name": "description_tsv",
+    "data_type": "tsvector",
+    "is_nullable": "YES",
+    "column_default": null
   },
   {
     "table_name": "lawsuit_claim_types",
