@@ -232,7 +232,11 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
       </Row>
       <Row gutter={16}>
         <Col span={8}>
-          <Form.Item name="registered_on" label="Дата регистрации претензии GARANTHUB">
+          <Form.Item
+            name="registered_on"
+            label="Дата регистрации претензии GARANTHUB"
+            rules={[{ required: true }]}
+          >
             <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
           </Form.Item>
         </Col>
