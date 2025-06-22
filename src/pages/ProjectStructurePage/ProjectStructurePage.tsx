@@ -15,12 +15,12 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutline from "@mui/icons-material/DeleteOutline";
-import AddBuildingOrSectionDialog from "@/features/addBuildingOrSection/AddBuildingOrSectionDialog";
+import AddBuildingDialog from "@/features/addBuilding/AddBuildingDialog";
 import UnitsMatrix from "@/widgets/UnitsMatrix/UnitsMatrix";
 import StatusLegend from "@/widgets/StatusLegend";
 import useProjectStructure from "@/shared/hooks/useProjectStructure";
 import { useProjectId } from '@/shared/hooks/useProjectId';
-import { useDeleteUnitsByBuilding, useDeleteUnitsBySection } from '@/entities/unit';
+import { useDeleteUnitsByBuilding } from '@/entities/unit';
 // Новое:
 import HistoryDialog from "@/features/history/HistoryDialog"; // путь скорректируйте под ваш проект
 import { useNavigate } from 'react-router-dom';
@@ -51,25 +51,16 @@ export default function ProjectStructurePage() {
         buildings,
         building,
         setBuilding,
-        sections,
-        section,
-        setSection,
         refreshAll,
         setBuildings,
-        setSections,
     } = useProjectStructure();
     const globalProjectId = useProjectId();
 
     // Диалоги для корпусов/секций
-    const [addDialog, setAddDialog] = useState({
-        open: false,
-        type: "",
-        value: "",
-    });
+    const [addDialogOpen, setAddDialogOpen] = useState(false);
     const [confirmDialog, setConfirmDialog] = useState({
         open: false,
-        type: "",
-        value: "",
+        value: '',
     });
 
     // Массив всех объектов (units)
@@ -80,7 +71,6 @@ export default function ProjectStructurePage() {
     const [selectedUnit, setSelectedUnit] = useState(null);
     const navigate = useNavigate();
     const deleteBuildingMutation = useDeleteUnitsByBuilding();
-    const deleteSectionMutation = useDeleteUnitsBySection();
 
     // Автоматический выбор проекта, корпуса, секции
     useEffect(() => {
@@ -115,62 +105,32 @@ export default function ProjectStructurePage() {
     }, [buildings, building, setBuilding]);
 
     useEffect(() => {
-        const saved = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
-        if (!section && sections.length > 0) {
-            if (saved.section && sections.includes(saved.section)) {
-                setSection(saved.section);
-            }
-        }
-    }, [sections, section, setSection]);
-
-    useEffect(() => {
         localStorage.setItem(
             LS_KEY,
-            JSON.stringify({ projectId, building, section }),
+            JSON.stringify({ projectId, building }),
         );
-    }, [projectId, building, section]);
+    }, [projectId, building]);
 
     // --- Диалоги ---
-    const handleOpenAddDialog = (type) =>
-        setAddDialog({ open: true, type, value: "" });
-    const handleCloseAddDialog = () =>
-        setAddDialog({ open: false, type: "", value: "" });
+    const handleOpenAddDialog = () => setAddDialogOpen(true);
+    const handleCloseAddDialog = () => setAddDialogOpen(false);
 
     const handleDeleteBuilding = () => {
         if (!building) return;
-        setConfirmDialog({ open: true, type: "building", value: building });
-    };
-    const handleDeleteSection = () => {
-        if (!section) return;
-        setConfirmDialog({ open: true, type: "section", value: section });
+        setConfirmDialog({ open: true, value: building });
     };
     const handleConfirmDelete = async () => {
-        if (confirmDialog.type === 'building') {
-            await deleteBuildingMutation.mutateAsync({ projectId, building: confirmDialog.value });
-            setBuildings((b) => b.filter((v) => v !== confirmDialog.value));
-            setSections([]);
-            setBuilding('');
-            setSection('');
-        }
-        if (confirmDialog.type === 'section') {
-            await deleteSectionMutation.mutateAsync({ projectId, building, section: confirmDialog.value });
-            setSections((s) => s.filter((v) => v !== confirmDialog.value));
-            setSection('');
-        }
-        setConfirmDialog({ open: false, type: '', value: '' });
+        await deleteBuildingMutation.mutateAsync({ projectId, building: confirmDialog.value });
+        setBuildings((b) => b.filter((v) => v !== confirmDialog.value));
+        setBuilding('');
+        setConfirmDialog({ open: false, value: '' });
         refreshAll();
     };
-    const handleCancelDelete = () =>
-        setConfirmDialog({ open: false, type: "", value: "" });
+    const handleCancelDelete = () => setConfirmDialog({ open: false, value: '' });
 
     const countProject = units.length;
     const countBuilding = units.filter(
         (u) => String(u.building) === String(building),
-    ).length;
-    const countSection = units.filter(
-        (u) =>
-            String(u.building) === String(building) &&
-            String(u.section) === String(section),
     ).length;
 
     // --- Пример вызова истории: вызывайте из нужного места, например из UnitsMatrix
@@ -353,87 +313,6 @@ export default function ProjectStructurePage() {
                         )}
                     </Box>
                 </Box>
-                {/* Секция */}
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 2 }}>
-                    <Typography sx={{ fontWeight: 500, fontSize: 16 }}>
-                        Секция:
-                    </Typography>
-                    <FormControl
-                        size="small"
-                        sx={{
-                            minWidth: 110,
-                            "& .MuiInputBase-root, & .MuiInputBase-input": {
-                                color: "#fff",
-                                fontWeight: 500,
-                                fontSize: 15,
-                            },
-                            "& .MuiSelect-icon": { color: "#fff" },
-                        }}
-                    >
-                        <Select
-                            value={section}
-                            onChange={(e) => setSection(e.target.value)}
-                            displayEmpty
-                            sx={{
-                                bgcolor: "rgba(255,255,255,0.11)",
-                                borderRadius: "10px",
-                                color: "#fff",
-                                fontWeight: 600,
-                            }}
-                            disabled={!sections.length}
-                        >
-                            <MenuItem value="">Не выбрана</MenuItem>
-                            {sections.map((sec) => (
-                                <MenuItem key={sec} value={sec}>
-                                    {sec}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                    {section && (
-                        <Box
-                            sx={{
-                                ml: 1,
-                                px: 1.5,
-                                py: "2px",
-                                bgcolor: "rgba(255,255,255,0.20)",
-                                borderRadius: "16px",
-                                fontWeight: 600,
-                                fontSize: 15,
-                                color: "#fff",
-                                minWidth: 32,
-                                textAlign: "center",
-                            }}
-                        >
-                            ({countSection} {pluralObj(countSection)})
-                        </Box>
-                    )}
-                    <IconButton
-                        size="small"
-                        onClick={() => handleOpenAddDialog("section")}
-                        sx={{
-                            color: "#fff",
-                            opacity: 0.94,
-                            ml: 0.5,
-                            p: "6px",
-                        }}
-                    >
-                        <AddIcon fontSize="small" />
-                    </IconButton>
-                    {Boolean(section) && (
-                        <IconButton
-                            size="small"
-                            onClick={handleDeleteSection}
-                            sx={{
-                                color: "#fff",
-                                opacity: 0.88,
-                                p: "6px",
-                            }}
-                        >
-                            <DeleteOutline fontSize="small" />
-                        </IconButton>
-                    )}
-                </Box>
             </Box>
 
             {/* Диалог истории объекта */}
@@ -449,20 +328,13 @@ export default function ProjectStructurePage() {
                 }}
             />
 
-            {/* Диалог добавления корпуса/секции */}
-            <AddBuildingOrSectionDialog
-                open={addDialog.open}
-                type={addDialog.type}
+            {/* Диалог добавления корпуса */}
+            <AddBuildingDialog
+                open={addDialogOpen}
                 onClose={handleCloseAddDialog}
                 projectId={projectId}
-                building={building}
                 afterAdd={(name) => {
-                    if (addDialog.type === 'building') {
-                        setBuildings((b) => Array.from(new Set([...b, name])));
-                    }
-                    if (addDialog.type === 'section') {
-                        setSections((s) => Array.from(new Set([...s, name])));
-                    }
+                    setBuildings((b) => Array.from(new Set([...b, name])));
                     refreshAll();
                 }}
             />
@@ -470,14 +342,10 @@ export default function ProjectStructurePage() {
             {/* Диалог подтверждения удаления */}
             <Dialog open={confirmDialog.open} onClose={handleCancelDelete}>
                 <DialogTitle>
-                    {confirmDialog.type === "building"
-                        ? `Удалить корпус "${confirmDialog.value}"?`
-                        : `Удалить секцию "${confirmDialog.value}"?`}
+                    {`Удалить корпус "${confirmDialog.value}"?`}
                 </DialogTitle>
                 <DialogContent>
-                    {confirmDialog.type === "building"
-                        ? "Все секции и квартиры корпуса будут удалены безвозвратно."
-                        : "Все квартиры секции будут удалены безвозвратно."}
+                    Все квартиры корпуса будут удалены безвозвратно.
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleCancelDelete}>Отмена</Button>
@@ -503,7 +371,6 @@ export default function ProjectStructurePage() {
                 <UnitsMatrix
                     projectId={projectId}
                     building={building}
-                    section={section}
                     onUnitsChanged={setUnits}
                     // здесь добавьте handleShowHistory в карточки, если хотите открыть историю по объекту
                 />

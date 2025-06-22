@@ -18,11 +18,8 @@ export default function useProjectStructure() {
     const [projectId, setProjectIdState] = useState<string>('');
     const [buildings, setBuildings] = useState<string[]>([]);
     const [building, setBuildingState] = useState<string>('');
-    const [sections, setSections] = useState<string[]>([]);
-    const [section, setSectionState] = useState<string>('');
-
     // --- Helpers для сохранения в localStorage ---
-    const saveToLS = (obj: { projectId: string; building: string; section: string }) => {
+    const saveToLS = (obj: { projectId: string; building: string }) => {
         try {
             localStorage.setItem(LS_KEY, JSON.stringify(obj));
         } catch (e) { /* ignore */ }
@@ -32,15 +29,11 @@ export default function useProjectStructure() {
     const setProjectId = (id: string) => {
         setProjectIdState(id);
         setGlobalProjectId(id ? Number(id) : null);
-        saveToLS({ projectId: id, building, section });
+        saveToLS({ projectId: id, building });
     };
     const setBuilding = (bld: string) => {
         setBuildingState(bld);
-        saveToLS({ projectId, building: bld, section });
-    };
-    const setSection = (sec: string) => {
-        setSectionState(sec);
-        saveToLS({ projectId, building, section: sec });
+        saveToLS({ projectId, building: bld });
     };
 
     // --- Восстановление из localStorage при инициализации ---
@@ -52,17 +45,15 @@ export default function useProjectStructure() {
                 setGlobalProjectId(Number(saved.projectId));
             }
             if (saved.building) setBuildingState(saved.building);
-            if (saved.section) setSectionState(saved.section);
         } catch { /* ignore */ }
     }, []);
 
 
 
-    // --- Buildings and sections auto-refresh ---
+    // --- Buildings auto-refresh ---
     const refreshAll = useCallback(async () => {
         if (!projectId) {
             setBuildings([]);
-            setSections([]);
             return;
         }
         const { data: bld } = await supabase
@@ -73,26 +64,9 @@ export default function useProjectStructure() {
         setBuildings(bldList);
         if (building && !bldList.includes(building)) {
             setBuildingState(bldList[0] ?? '');
-            setSectionState('');
         }
         if (!building && bldList.length) {
             setBuildingState(bldList[0]);
-        }
-
-        const currBuilding = building && bldList.includes(building) ? building : bldList[0];
-        if (!currBuilding) {
-            setSections([]);
-            return;
-        }
-        const { data: sec } = await supabase
-            .from('units')
-            .select('section')
-            .eq('project_id', projectId)
-            .eq('building', currBuilding);
-        const secList = Array.from(new Set((sec || []).map((u: any) => u.section).filter(Boolean)));
-        setSections(secList);
-        if (section && !secList.includes(section)) {
-            setSectionState(secList[0] ?? '');
         }
     }, [projectId, building]);
 
@@ -118,9 +92,9 @@ export default function useProjectStructure() {
 
     // --- Автоматическое сохранение выбранных значений при изменении ---
     useEffect(() => {
-        saveToLS({ projectId, building, section });
+        saveToLS({ projectId, building });
         setGlobalProjectId(projectId ? Number(projectId) : null);
-    }, [projectId, building, section]);
+    }, [projectId, building]);
 
     // --- Поддержка обновления между вкладками ---
     useEffect(() => {
@@ -133,7 +107,6 @@ export default function useProjectStructure() {
                         setGlobalProjectId(Number(saved.projectId));
                     }
                     if (saved.building) setBuildingState(saved.building);
-                    if (saved.section) setSectionState(saved.section);
                 } catch { /* ignore */ }
             }
         };
@@ -144,10 +117,8 @@ export default function useProjectStructure() {
     return {
         projects, projectId, setProjectId,
         buildings, building, setBuilding,
-        sections, section, setSection,
         refreshAll,
         setBuildings,
-        setSections,
     };
 }
 

@@ -9,9 +9,8 @@ import { useCourtCaseStatuses } from '@/entities/courtCaseStatus';
  *
  * @param {number} projectId ID проекта
  * @param {string} building  Корпус
- * @param {string} section   Секция
  */
-export default function useUnitsMatrix(projectId, building, section) {
+export default function useUnitsMatrix(projectId, building) {
     const [units, setUnits] = useState([]); // <-- ВСЕ объекты проекта
     const [floors, setFloors] = useState([]);
     const [unitsByFloor, setUnitsByFloor] = useState({});
@@ -40,10 +39,9 @@ export default function useUnitsMatrix(projectId, building, section) {
         const { data: unitsData } = await query;
         setUnits(unitsData || []);
 
-        // Сначала фильтруем по building/section для визуализации шахматки
+        // Сначала фильтруем по building для визуализации шахматки
         let filtered = unitsData || [];
         if (building) filtered = filtered.filter(u => String(u.building) === String(building));
-        if (section) filtered = filtered.filter(u => String(u.section) === String(section));
         setFilteredUnits(filtered);
 
         // Грузим замечания и судебные дела только для отображаемых юнитов
@@ -72,11 +70,11 @@ export default function useUnitsMatrix(projectId, building, section) {
         } else {
             setCasesByUnit({});
         }
-    }, [projectId, building, section, closedStageId]);
+    }, [projectId, building, closedStageId]);
 
     useEffect(() => { fetchUnits(); }, [fetchUnits]);
 
-    // В floors и unitsByFloor отправляем только по текущему building/section
+        // В floors и unitsByFloor отправляем только по текущему building
     useEffect(() => {
         const currentUnits = filteredUnits;
         const unique = Array.from(
@@ -125,7 +123,6 @@ export default function useUnitsMatrix(projectId, building, section) {
         const payload = {
             project_id: projectId,
             building: building || null,
-            section: section || null,
             floor,
             name: newName,
             person_id: userId,
@@ -149,7 +146,7 @@ export default function useUnitsMatrix(projectId, building, section) {
     };
 
     return {
-        // Для шахматки (только по выбранному building/section)
+        // Для шахматки (только по выбранному building)
         floors,
         unitsByFloor,
         handleAddUnit,

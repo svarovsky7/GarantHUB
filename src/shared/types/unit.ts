@@ -4,6 +4,5 @@ export interface Unit {
   name: string;
   building?: string | null;
   floor?: number | null;
-  section?: string | null;
   person_id?: string | null;
 }
