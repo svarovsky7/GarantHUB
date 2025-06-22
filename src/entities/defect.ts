@@ -212,9 +212,10 @@ export function useUpdateDefect() {
         >
       >;
     }) => {
+      const userId = useAuthStore.getState().profile?.id ?? null;
       const { error } = await supabase
         .from(TABLE)
-        .update(updates)
+        .update({ ...updates, updated_by: userId ?? undefined })
         .eq('id', id);
       if (error) throw error;
       return { id, ...updates };
@@ -230,9 +231,10 @@ export function useUpdateDefectStatus() {
   const notify = useNotify();
   return useMutation<{ id: number; status_id: number | null }, Error, { id: number; statusId: number | null }>({
     mutationFn: async ({ id, statusId }) => {
+      const userId = useAuthStore.getState().profile?.id ?? null;
       const { data, error } = await supabase
         .from(TABLE)
-        .update({ status_id: statusId })
+        .update({ status_id: statusId, updated_by: userId ?? undefined })
         .eq('id', id)
         .select('id, status_id')
         .single();
@@ -319,6 +321,7 @@ export function useFixDefect() {
           fixed_at,
           fixed_by: userId,
           status_id: checkingId,
+          updated_by: userId ?? undefined,
         })
         .eq('id', id);
       if (error) throw error;
@@ -406,6 +409,7 @@ export function useCancelDefectFix() {
           fixed_at: null,
           fixed_by: null,
           status_id: inWorkId,
+          updated_by: useAuthStore.getState().profile?.id ?? undefined,
         })
         .eq('id', id);
       if (error) throw error;
@@ -492,6 +496,10 @@ export function useAddDefectAttachments() {
       if (uploaded.length) {
         const rows = uploaded.map((u) => ({ defect_id: defectId, attachment_id: u.id }));
         await supabase.from('defect_attachments').insert(rows);
+        await supabase
+          .from(TABLE)
+          .update({ updated_by: useAuthStore.getState().profile?.id ?? undefined })
+          .eq('id', defectId);
       }
       return uploaded;
     },
@@ -524,6 +532,10 @@ export function useRemoveDefectAttachment() {
         .delete()
         .eq('defect_id', defectId)
         .eq('attachment_id', attachmentId);
+      await supabase
+        .from(TABLE)
+        .update({ updated_by: useAuthStore.getState().profile?.id ?? undefined })
+        .eq('id', defectId);
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ['defect', vars.defectId] });
