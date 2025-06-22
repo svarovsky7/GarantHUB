@@ -1,6 +1,6 @@
 import React from 'react';
 import { Modal, Skeleton, Typography, Button } from 'antd';
-import { useClaim, signedUrl } from '@/entities/claim';
+import { useClaim, signedUrl, closeDefectsForClaim } from '@/entities/claim';
 import ClaimFormAntdEdit from './ClaimFormAntdEdit';
 import ClaimAttachmentsBlock from './ClaimAttachmentsBlock';
 import TicketDefectsTable from '@/widgets/TicketDefectsTable';
@@ -126,6 +126,7 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
             is_official: isOfficial,
           })),
         );
+        await closeDefectsForClaim(claim.id, claim.claim_status_id ?? null);
       }
       if (removedIds.length) {
         await supabase
@@ -136,10 +137,13 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
         for (const id of removedIds) {
           await deleteDef.mutateAsync(id);
         }
+        await closeDefectsForClaim(claim.id, claim.claim_status_id ?? null);
       }
       qc.invalidateQueries({ queryKey: ['defects'] });
       qc.invalidateQueries({ queryKey: ['claims'] });
       qc.invalidateQueries({ queryKey: ['claims', claim.id] });
+      qc.invalidateQueries({ queryKey: ['claims-simple'] });
+      qc.invalidateQueries({ queryKey: ['claims-simple-all'] });
       onClose();
     } catch (e) {
       console.error(e);
