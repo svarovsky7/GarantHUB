@@ -735,13 +735,6 @@
     "column_default": "now()"
   },
   {
-    "table_name": "defects",
-    "column_name": "description_tsv",
-    "data_type": "tsvector",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
     "table_name": "lawsuit_claim_types",
     "column_name": "id",
     "data_type": "bigint",

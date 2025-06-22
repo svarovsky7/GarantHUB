@@ -11,8 +11,12 @@ export interface NewDefect {
   type_id: number | null;
   status_id: number | null;
   project_id: number | null;
+  /** Основной объект */
+  unit_id: number | null;
   brigade_id: number | null;
   contractor_id: number | null;
+  /** Автор создания */
+  created_by: string | null;
   is_warranty: boolean;
   received_at: string | null;
   fixed_at: string | null;
@@ -154,9 +158,14 @@ export function useCreateDefects() {
   return useMutation<number[], Error, NewDefect[]>({
     async mutationFn(defects) {
       if (!defects.length) return [];
+      const userId = useAuthStore.getState().profile?.id ?? null;
+      const rows = defects.map((d) => ({
+        ...d,
+        created_by: d.created_by ?? userId,
+      }));
       const { data, error } = await supabase
         .from(TABLE)
-        .insert(defects)
+        .insert(rows)
         .select('id');
       if (error) throw error;
       return (data as { id: number }[]).map((d) => d.id);
