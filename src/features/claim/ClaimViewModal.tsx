@@ -92,7 +92,7 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
     setShowAdd(false);
   };
 
-  const handleSaved = async () => {
+  const handleSaved = async (isOfficial: boolean) => {
     if (!claim) return;
     try {
       const createdIds = newDefs.length
@@ -105,7 +105,7 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
           createdIds.map((id) => ({
             claim_id: claim.id,
             defect_id: id,
-            is_official: claim.is_official,
+            is_official: isOfficial,
           })),
         );
       }

@@ -18,6 +18,7 @@ import {
   useRemoveClaimAttachment,
   signedUrl,
 } from '@/entities/claim';
+import { supabase } from '@/shared/api/supabaseClient';
 import { useVisibleProjects } from '@/entities/project';
 import { useUnitsByProject } from '@/entities/unit';
 import { useUsers } from '@/entities/user';
@@ -35,7 +36,11 @@ import type { ClaimFormAntdEditRef } from '@/shared/types/claimFormAntdEditRef';
 export interface ClaimFormAntdEditProps {
   claimId: string | number;
   onCancel?: () => void;
-  onSaved?: () => void;
+  /**
+   * Вызывается после успешного сохранения формы
+   * @param isOfficial актуальное значение признака официальности
+   */
+  onSaved?: (isOfficial: boolean) => void;
   embedded?: boolean;
   /** Показывать блок работы с файлами */
   showAttachments?: boolean;
@@ -143,6 +148,13 @@ const ClaimFormAntdEdit = React.forwardRef<
         } as any,
       });
 
+      if (!claim.is_official && values.is_official) {
+        await supabase
+          .from('claim_defects')
+          .update({ is_official: true })
+          .eq('claim_id', claim.id);
+      }
+
       for (const id of attachments.removedIds) {
         await removeAtt.mutateAsync({
           claimId: claim.id,
@@ -163,11 +175,11 @@ const ClaimFormAntdEdit = React.forwardRef<
           url: u.file_url,
           mime_type: u.file_type,
         }));
-        attachments.appendRemote(uploaded);
+      attachments.appendRemote(uploaded);
       }
       attachments.markPersisted();
       notify.success('Претензия обновлена');
-      onSaved?.();
+      onSaved?.(values.is_official);
     } catch (e: any) {
       notify.error(e.message);
     }
