@@ -5,7 +5,6 @@ import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useAuthStore } from '@/shared/store/authStore';
 import { useRolePermission } from '@/entities/rolePermission';
 import type { RoleName } from '@/shared/types/rolePermission';
-import { ticketsKey } from '@/shared/utils/queryKeys';
 
 /**
  * Подписка на создание записей в ключевых таблицах.
@@ -32,30 +31,6 @@ export function useRealtimeUpdates() {
     const channel = supabase.channel('realtime-updates');
     ids.forEach((pid) => {
       channel
-        .on(
-          'postgres_changes',
-          { event: 'INSERT', schema: 'public', table: 'tickets', filter: `project_id=eq.${pid}` },
-          () => {
-            const keyPid = perm?.only_assigned_project ? projectId : null;
-            qc.invalidateQueries({ queryKey: ticketsKey(keyPid, projectIds) });
-          },
-        )
-        .on(
-          'postgres_changes',
-          { event: 'UPDATE', schema: 'public', table: 'tickets', filter: `project_id=eq.${pid}` },
-          () => {
-            const keyPid = perm?.only_assigned_project ? projectId : null;
-            qc.invalidateQueries({ queryKey: ticketsKey(keyPid, projectIds) });
-          },
-        )
-        .on(
-          'postgres_changes',
-          { event: 'DELETE', schema: 'public', table: 'tickets', filter: `project_id=eq.${pid}` },
-          () => {
-            const keyPid = perm?.only_assigned_project ? projectId : null;
-            qc.invalidateQueries({ queryKey: ticketsKey(keyPid, projectIds) });
-          },
-        )
         .on(
           'postgres_changes',
           { event: 'INSERT', schema: 'public', table: 'court_cases', filter: `project_id=eq.${pid}` },

@@ -50,7 +50,7 @@ export default function ClaimsTable({ claims, filters, loading, columns: columns
               okText="Да"
               cancelText="Нет"
               onConfirm={async () => {
-                await remove({ id: record.id, ticketIds: record.ticket_ids });
+                await remove({ id: record.id });
                 message.success('Удалено');
               }}
               disabled={isPending}

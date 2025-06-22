@@ -11,7 +11,6 @@ import { DEFAULT_ROLE_PERMISSIONS } from '@/shared/types/rolePermission';
 const PAGES = [
   'dashboard',
   'structure',
-  'tickets',
   'claims',
   'defects',
   'court-cases',
@@ -21,7 +20,6 @@ const PAGES = [
 
 // Список таблиц, для которых можно настроить права на редактирование и удаление
 // Дополнен таблицей "claims" для управления претензиями
-const TABLES = ['tickets', 'defects', 'court_cases', 'letters', 'claims'];
 
 export default function RolePermissionsAdmin() {
   const { data = [], isLoading } = useRolePermissions();

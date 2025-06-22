@@ -18,7 +18,6 @@ import {
 
 import ruRU from "antd/locale/ru_RU";
 import { useDefects, useDeleteDefect } from "@/entities/defect";
-import { useTicketsSimple, useTicketsSimpleAll } from "@/entities/ticket";
 import { useUnitsByIds } from "@/entities/unit";
 import { useVisibleProjects } from "@/entities/project";
 import { useBrigades } from "@/entities/brigade";
@@ -47,20 +46,13 @@ export default function DefectsPage() {
   const { data: defects = [], isPending } = useDefects();
   const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
   const { data: perm } = useRolePermission(role);
-  const { data: ticketsAll = [] } = useTicketsSimpleAll();
-  const { data: ticketsAssigned = [] } = useTicketsSimple();
-  const tickets = perm?.only_assigned_project ? ticketsAssigned : ticketsAll;
   const { data: claimsAll = [] } = useClaimsSimpleAll();
   const { data: claimsAssigned = [] } = useClaimsSimple();
   const claims = perm?.only_assigned_project ? claimsAssigned : claimsAll;
   const unitIds = useMemo(
     () =>
-      Array.from(
-        new Set(
-          [...tickets, ...claims].flatMap((t) => t.unit_ids || []),
-        ),
-      ),
-    [tickets, claims],
+      Array.from(new Set(claims.flatMap((t) => t.unit_ids || []))),
+    [claims],
   );
   const { data: units = [] } = useUnitsByIds(unitIds);
   const { data: projects = [] } = useVisibleProjects();
@@ -72,21 +64,8 @@ export default function DefectsPage() {
   const data: DefectWithInfo[] = useMemo(() => {
     const unitMap = new Map(units.map((u) => [u.id, formatUnitName(u)]));
     const projectMap = new Map(projects.map((p) => [p.id, p.name]));
-    const ticketsMap = new Map<
-      number,
-      { id: number; unit_ids: number[]; project_id: number }[]
-    >();
-    tickets.forEach((t: any) => {
-      (t.defect_ids || []).forEach((id: number) => {
-        const arr = ticketsMap.get(id) || [];
-        arr.push({
-          id: t.id,
-          unit_ids: t.unit_ids || [],
-          project_id: t.project_id,
-        });
-        ticketsMap.set(id, arr);
-      });
-    });
+    const ticketsMap = new Map<number, { id: number; unit_ids: number[]; project_id: number }[]>();
+    // замена: no tickets
     const claimsMap = new Map<
       number,
       { id: number; unit_ids: number[]; project_id: number }[]
@@ -103,9 +82,8 @@ export default function DefectsPage() {
       });
     });
     return defects.map((d: any) => {
-      const ticketLinked = ticketsMap.get(d.id) || [];
       const claimLinked = claimsMap.get(d.id) || [];
-      const linked = [...ticketLinked, ...claimLinked];
+      const linked = claimLinked;
       const unitIds = Array.from(new Set(linked.flatMap((l) => l.unit_ids)));
       const unitNamesList = unitIds
         .map((id) => unitMap.get(id))
@@ -127,7 +105,6 @@ export default function DefectsPage() {
       }
       return {
         ...d,
-        ticketIds: ticketLinked.map((l) => l.id),
         claimIds: claimLinked.map((l) => l.id),
         unitIds,
         unitNames,
@@ -143,7 +120,7 @@ export default function DefectsPage() {
         defectStatusColor: d.defect_status?.color ?? null,
       } as DefectWithInfo;
     });
-  }, [defects, tickets, claims, units, projects]);
+  }, [defects, claims, units, projects]);
 
   const filteredData = useMemo(() => {
     if (perm?.only_assigned_project) {
@@ -167,9 +144,6 @@ export default function DefectsPage() {
         label: String(id),
         value: id,
       })),
-      tickets: Array.from(
-        new Set(filteredData.flatMap((d) => d.ticketIds))
-      ).map((id) => ({ label: String(id), value: id })),
       units: units.map((u) => ({ label: u.name, value: u.id })),
       projects: projects.map((p) => ({ label: p.name, value: p.id })),
       types: uniq(filteredData.map((d) => [d.defect_type_id, d.defectTypeName])),
@@ -203,13 +177,6 @@ export default function DefectsPage() {
         title: "ID дефекта",
         dataIndex: "id",
         sorter: (a: DefectWithInfo, b: DefectWithInfo) => a.id - b.id,
-      },
-      tickets: {
-        title: "ID замечание",
-        dataIndex: "ticketIds",
-        sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
-          a.ticketIds.join(",").localeCompare(b.ticketIds.join(",")),
-        render: (v: number[]) => v.join(", "),
       },
       claims: {
         title: "ID претензии",
@@ -350,7 +317,6 @@ export default function DefectsPage() {
 
   const columnOrder = [
     "id",
-    "tickets",
     "claims",
     "days",
     "project",

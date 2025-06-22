@@ -5,8 +5,8 @@ export interface HistoryEvent {
   project_id: number;
   /** Идентификатор объекта */
   unit_id: number;
-  /** Тип сущности: ticket, letter или court_case */
-  entity_type: 'ticket' | 'letter' | 'court_case';
+  /** Тип сущности: letter или court_case */
+  entity_type: 'letter' | 'court_case';
   /** Идентификатор сущности */
   entity_id: number;
   /** Тип изменения */

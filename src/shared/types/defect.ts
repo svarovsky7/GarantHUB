@@ -28,8 +28,6 @@ export interface DefectRecord {
 
 /** Дефект с дополнительной информацией для отображения */
 export interface DefectWithInfo extends DefectRecord {
-  /** ID замечаний, содержащих данный дефект */
-  ticketIds: number[];
   /** ID претензий, связанных с дефектом */
   claimIds: number[];
   /** Идентификаторы объектов, связанные с замечаниями */

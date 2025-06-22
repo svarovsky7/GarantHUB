@@ -9,7 +9,6 @@ const LS_HIDE_CLOSED_KEY = 'defectsHideClosed';
 
 interface Options {
   ids: { label: string; value: number }[];
-  tickets: { label: string; value: number }[];
   units: { label: string; value: number }[];
   projects: { label: string; value: number }[];
   types: { label: string; value: number }[];
@@ -95,9 +94,6 @@ export default function DefectsFilters({
       </Form.Item>
       <Form.Item name="fixBy" label="Кем устраняется">
         <Select mode="multiple" allowClear options={options.fixBy} showSearch optionFilterProp="label" />
-      </Form.Item>
-      <Form.Item name="ticketId" label="ID замечание">
-        <Select mode="multiple" allowClear options={options.tickets} showSearch optionFilterProp="label" />
       </Form.Item>
       <Form.Item name="hideClosed" label="Скрыть закрытые" valuePropName="checked">
         <Switch />

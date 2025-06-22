@@ -66,15 +66,6 @@ const NavBar: React.FC = () => {
               Структура проекта
             </Button>
           )}
-          {perm?.pages.includes('tickets') && (
-            <Button
-              color="inherit"
-              component={RouterLink}
-              to="/tickets"
-              sx={{ whiteSpace: 'normal' }}
-            >
-              Замечания
-            </Button>
           )}
           {perm?.pages.includes('defects') && (
             <Button

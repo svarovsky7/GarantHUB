@@ -14,7 +14,6 @@ const FLOOR_COLOR = "#1976d2";
 export default function FloorCell({
   floor,
   units,
-  ticketsByUnit,
   casesByUnit,
   onAddUnit,
   onEditFloor,
@@ -105,7 +104,6 @@ export default function FloorCell({
         <UnitCell
           key={unit.id}
           unit={unit}
-          tickets={ticketsByUnit ? ticketsByUnit[unit.id] : []}
           cases={casesByUnit ? casesByUnit[unit.id] : []}
           onEditUnit={() => onEditUnit?.(unit)}
           onDeleteUnit={() => onDeleteUnit?.(unit)}
