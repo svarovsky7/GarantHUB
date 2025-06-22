@@ -1,8 +1,8 @@
 export interface DefectWithNames {
   id: number;
   description: string;
-  defect_type_id: number | null;
-  defect_status_id: number | null;
+  type_id: number | null;
+  status_id: number | null;
   brigade_id: number | null;
   contractor_id: number | null;
   is_warranty: boolean;

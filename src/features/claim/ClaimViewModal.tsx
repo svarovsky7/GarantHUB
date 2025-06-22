@@ -59,8 +59,8 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
       ...newDefs.map((d) => ({
         id: d.tmpId,
         description: d.description,
-        defect_type_id: d.defect_type_id,
-        defect_status_id: d.defect_status_id,
+        type_id: d.type_id,
+        status_id: d.status_id,
         brigade_id: d.brigade_id,
         contractor_id: d.contractor_id,
         is_warranty: d.is_warranty,
@@ -68,7 +68,7 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
         fixed_at: d.fixed_at,
         fixed_by: null,
         defectTypeName:
-          d.defect_type_id != null ? defectTypeMap[d.defect_type_id] ?? null : null,
+          d.type_id != null ? defectTypeMap[d.type_id] ?? null : null,
         defectStatusName: null,
         defectStatusColor: null,
       })),
