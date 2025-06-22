@@ -58,9 +58,15 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
   const lastClaimIdRef = React.useRef<number | null>(null);
 
   React.useEffect(() => {
-    if (claim && open && lastClaimIdRef.current !== claim.id) {
+    if (!claim || !open) return;
+    const ids = claim.defect_ids || [];
+    const changed =
+      lastClaimIdRef.current !== claim.id ||
+      ids.length !== defectIds.length ||
+      ids.some((d, i) => d !== defectIds[i]);
+    if (changed) {
       lastClaimIdRef.current = claim.id;
-      setDefectIds(claim.defect_ids || []);
+      setDefectIds(ids);
       setNewDefs([]);
       setRemovedIds([]);
     }
@@ -214,8 +220,10 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
       qc.invalidateQueries({ queryKey: ['defects'] });
       qc.invalidateQueries({ queryKey: ['claims'] });
       qc.invalidateQueries({ queryKey: ['claims', claim.id] });
+      qc.invalidateQueries({ queryKey: ['claim-all', claim.id] });
       qc.invalidateQueries({ queryKey: ['claims-simple'] });
       qc.invalidateQueries({ queryKey: ['claims-simple-all'] });
+      qc.invalidateQueries({ queryKey: ['claims-all'] });
       setEditedDefs({});
       setNewDefs([]);
       setRemovedIds([]);
