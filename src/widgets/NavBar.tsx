@@ -58,7 +58,7 @@ const NavBar: React.FC = () => {
     <Layout.Header style={{ display: 'flex', alignItems: 'center' }}>
       <RouterLink to="/" style={{ color: '#fff', marginRight: 24 }}>
         <Typography.Title level={4} style={{ color: 'inherit', margin: 0 }}>
-          Garantie Hub
+          Garant HUB
         </Typography.Title>
       </RouterLink>
       <Menu theme="dark" mode="horizontal" selectable={false} items={items as any} style={{ flex: 1 }} />
