@@ -77,26 +77,6 @@ const NavBar: React.FC = () => {
                 </Typography.Text>
               )
             ) : null}
-            {profile.role === 'ADMIN' && !perm?.only_assigned_project && (
-              isPending ? (
-                <Spin size="small" />
-              ) : (
-                <Select
-                  size="small"
-                  value={projectId ?? ''}
-                  onChange={(val) => setProjectId(val === '' ? null : Number(val))}
-                  style={{ width: 120 }}
-                  allowClear
-                  placeholder="Проект"
-                >
-                  {projects.map((p) => (
-                    <Select.Option key={p.id} value={p.id}>
-                      {p.name}
-                    </Select.Option>
-                  ))}
-                </Select>
-              )
-            )}
           </Space>
           <Button type="link" icon={<LogoutOutlined />} onClick={logout} style={{ color: '#fff' }}>
             Выйти
