@@ -36,6 +36,8 @@ export default function UnitsMatrix({
     handleAddFloor,
     fetchUnits,
     casesByUnit,
+    lettersByUnit,
+    claimsByUnit,
     units,
   } = useUnitsMatrix(projectId, building);
   const navigate = useNavigate();
@@ -183,6 +185,8 @@ export default function UnitsMatrix({
             floor={floor}
             units={unitsByFloor[floor] || []}
             casesByUnit={casesByUnit}
+            lettersByUnit={lettersByUnit}
+            claimsByUnit={claimsByUnit}
             onAddUnit={() => handleAddUnit(floor)}
             onEditFloor={handleEditFloor}
             onDeleteFloor={handleDeleteFloor}

@@ -15,6 +15,8 @@ export default function FloorCell({
   floor,
   units,
   casesByUnit,
+  lettersByUnit,
+  claimsByUnit,
   onAddUnit,
   onEditFloor,
   onDeleteFloor,
@@ -105,6 +107,8 @@ export default function FloorCell({
           key={unit.id}
           unit={unit}
           cases={casesByUnit ? casesByUnit[unit.id] : []}
+          hasLetter={Boolean(lettersByUnit ? lettersByUnit[unit.id] : false)}
+          claimInfo={claimsByUnit ? claimsByUnit[unit.id] : null}
           onEditUnit={() => onEditUnit?.(unit)}
           onDeleteUnit={() => onDeleteUnit?.(unit)}
           onAction={() => onUnitClick?.(unit)}
