@@ -23,17 +23,12 @@ function getSemiTransparent(color, alpha = 0.3) {
  */
 export default function UnitCell({
   unit,
-  tickets = [],
   cases = [],
   onEditUnit,
   onDeleteUnit,
   onAction,
 }) {
-  // Берём первый тикет для окраски (или нужную бизнес-логику)
-  const ticket =
-    Array.isArray(tickets) && tickets.length > 0 ? tickets[0] : null;
-  const bgColor =
-    ticket && ticket.color ? getSemiTransparent(ticket.color) : "#fff";
+  const bgColor = "#fff";
   const hasCases = Array.isArray(cases) && cases.length > 0;
 
   return (

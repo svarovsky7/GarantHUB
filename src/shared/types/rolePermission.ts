@@ -15,7 +15,6 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<RoleName, RolePermission> = {
     pages: [
       'dashboard',
       'structure',
-      'tickets',
       'claims',
       'defects',
       'court-cases',
@@ -23,21 +22,21 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<RoleName, RolePermission> = {
       'admin',
     ],
     // Администратор имеет полные права на все справочники
-    edit_tables: ['tickets', 'defects', 'court_cases', 'letters', 'claims'],
-    delete_tables: ['tickets', 'defects', 'court_cases', 'letters', 'claims'],
+    edit_tables: ['defects', 'court_cases', 'letters', 'claims'],
+    delete_tables: ['defects', 'court_cases', 'letters', 'claims'],
     only_assigned_project: false,
   },
   ENGINEER: {
     role_name: 'ENGINEER',
-    pages: ['dashboard', 'structure', 'tickets', 'claims', 'defects', 'court-cases', 'correspondence'],
+    pages: ['dashboard', 'structure', 'claims', 'defects', 'court-cases', 'correspondence'],
     // Инженер теперь может управлять претензиями
-    edit_tables: ['tickets', 'defects', 'letters', 'claims'],
-    delete_tables: ['tickets', 'defects', 'letters', 'claims'],
+    edit_tables: ['defects', 'letters', 'claims'],
+    delete_tables: ['defects', 'letters', 'claims'],
     only_assigned_project: false,
   },
   LAWYER: {
     role_name: 'LAWYER',
-    pages: ['dashboard', 'structure', 'tickets', 'claims', 'defects', 'court-cases', 'correspondence'],
+    pages: ['dashboard', 'structure', 'claims', 'defects', 'court-cases', 'correspondence'],
     edit_tables: ['court_cases', 'letters'],
     delete_tables: ['court_cases', 'letters'],
     only_assigned_project: false,

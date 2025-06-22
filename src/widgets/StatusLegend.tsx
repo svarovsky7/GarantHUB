@@ -1,13 +1,13 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
-import { useTicketStatuses } from '@/entities/ticketStatus';
+
 
 /**
  * Небольшой блок легенды статусов.
  * Отображает цвета статусов замечаний и пояснение к красной обводке.
  */
 export default function StatusLegend() {
-  const { data: statuses = [] } = useTicketStatuses();
+  const statuses: any[] = [];
 
   return (
     <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>

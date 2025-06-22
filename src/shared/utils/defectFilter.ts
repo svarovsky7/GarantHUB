@@ -7,7 +7,6 @@ import type { DefectFilters } from '@/shared/types/defectFilters';
  */
 export function filterDefects<T extends {
   id: number;
-  ticketIds: number[];
   unitIds: number[];
   created_at: string | null;
   received_at: string | null;
@@ -19,13 +18,6 @@ export function filterDefects<T extends {
 }>(rows: T[], f: DefectFilters): T[] {
   return rows.filter((d) => {
     if (Array.isArray(f.id) && f.id.length > 0 && !f.id.includes(d.id)) {
-      return false;
-    }
-    if (
-      Array.isArray(f.ticketId) &&
-      f.ticketId.length > 0 &&
-      !d.ticketIds.some((t) => f.ticketId!.includes(t))
-    ) {
       return false;
     }
     if (

@@ -15,7 +15,6 @@ export default function useUnitsMatrix(projectId, building, section) {
     const [units, setUnits] = useState([]); // <-- ВСЕ объекты проекта
     const [floors, setFloors] = useState([]);
     const [unitsByFloor, setUnitsByFloor] = useState({});
-    const [ticketsByUnit, setTicketsByUnit] = useState({});
     const [casesByUnit, setCasesByUnit] = useState({});
     const [filteredUnits, setFilteredUnits] = useState([]);
 
@@ -30,7 +29,6 @@ export default function useUnitsMatrix(projectId, building, section) {
             setUnits([]);
             setFloors([]);
             setUnitsByFloor({});
-            setTicketsByUnit({});
             setFilteredUnits([]);
             return;
         }
@@ -51,28 +49,10 @@ export default function useUnitsMatrix(projectId, building, section) {
         // Грузим замечания и судебные дела только для отображаемых юнитов
         if (filtered.length > 0) {
             const unitIds = filtered.map(u => u.id);
-            // Tickets
-            const { data: ticketsData } = await supabase
-                .from('tickets')
-                .select(`
-                    id,
-                    unit_ids,
-                    status_id,
-                    statuses(color)
-                `)
-                .overlaps('unit_ids', unitIds);
-            const byUnit = {};
-            (ticketsData || []).forEach(t => {
-                (t.unit_ids || []).forEach(uid => {
-                    if (!byUnit[uid]) byUnit[uid] = [];
-                    byUnit[uid].push({
-                        id: t.id,
-                        status_id: t.status_id,
                         color: t.statuses?.color || null,
                     });
                 });
             });
-            setTicketsByUnit(byUnit);
 
             // Court cases (не закрытые)
             const { data: casesData } = await supabase
@@ -91,7 +71,6 @@ export default function useUnitsMatrix(projectId, building, section) {
                 });
             setCasesByUnit(casesMap);
         } else {
-            setTicketsByUnit({});
             setCasesByUnit({});
         }
     }, [projectId, building, section, closedStageId]);
@@ -180,7 +159,6 @@ export default function useUnitsMatrix(projectId, building, section) {
         units,
         setUnits,
         fetchUnits,
-        ticketsByUnit,
         casesByUnit,
     };
 }

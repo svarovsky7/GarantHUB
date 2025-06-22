@@ -56,7 +56,6 @@ function mapClaim(r: any): ClaimWithNames {
     registered_on: r.registered_on,
     resolved_on: r.resolved_on,
     engineer_id: r.engineer_id,
-    ticket_ids: r.ticket_ids ?? [],
     defect_ids: r.defect_ids ?? [],
     description: r.description ?? '',
     projectName: r.projects?.name ?? '—',
@@ -110,16 +109,6 @@ export function useClaims() {
       });
 
       const { data: ticketRows, error: ticketErr } = ids.length
-        ? await supabase
-            .from('claim_tickets')
-            .select('claim_id, ticket_id')
-            .in('claim_id', ids)
-        : { data: [], error: null };
-      if (ticketErr) throw ticketErr;
-      const ticketMap: Record<number, number[]> = {};
-      (ticketRows ?? []).forEach((t: any) => {
-        if (!ticketMap[t.claim_id]) ticketMap[t.claim_id] = [];
-        ticketMap[t.claim_id].push(t.ticket_id);
       });
 
       const { data: defectRows, error: defectErr } = ids.length
@@ -157,7 +146,6 @@ export function useClaims() {
         mapClaim({
           ...r,
           unit_ids: unitMap[r.id] ?? [],
-          ticket_ids: ticketMap[r.id] ?? [],
           defect_ids: defectMap[r.id] ?? [],
           attachments: attachMap[r.id] ?? [],
         }),
@@ -201,9 +189,6 @@ export function useClaim(id?: number | string) {
         .from('claim_tickets')
         .select('ticket_id')
         .eq('claim_id', claimId);
-      const ticketIds = (tickets ?? []).map((t: any) => t.ticket_id);
-
-      const { data: defects } = await supabase
         .from('claim_defects')
         .select('defect_id')
         .eq('claim_id', claimId);
@@ -220,7 +205,6 @@ export function useClaim(id?: number | string) {
       return mapClaim({
         ...data,
         unit_ids: unitIds,
-        ticket_ids: ticketIds,
         defect_ids: defectIds,
         attachments,
       });
@@ -233,7 +217,6 @@ export function useClaim(id?: number | string) {
  * Получить список претензий по всем проектам (минимальный набор полей).
  */
 export function useClaimsSimpleAll() {
-  return useQuery<Array<{ id: number; project_id: number; unit_ids: number[]; ticket_ids: number[]; defect_ids: number[] }>>({
     queryKey: ['claims-simple-all'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -274,7 +257,6 @@ export function useClaimsSimpleAll() {
         id: r.id,
         project_id: r.project_id,
         unit_ids: unitMap[r.id] ?? [],
-        ticket_ids: ticketMap[r.id] ?? [],
         defect_ids: defectMap[r.id] ?? [],
       }));
     },
@@ -287,7 +269,6 @@ export function useClaimsSimpleAll() {
  */
 export function useClaimsSimple() {
   const { projectId, projectIds, onlyAssigned, enabled } = useProjectFilter();
-  return useQuery<Array<{ id: number; project_id: number; unit_ids: number[]; ticket_ids: number[]; defect_ids: number[] }>>({
     queryKey: ['claims-simple', projectId, projectIds.join(',')],
     enabled,
     queryFn: async () => {
@@ -329,7 +310,6 @@ export function useClaimsSimple() {
         id: r.id,
         project_id: r.project_id,
         unit_ids: unitMap[r.id] ?? [],
-        ticket_ids: ticketMap[r.id] ?? [],
         defect_ids: defectMap[r.id] ?? [],
       }));
     },
@@ -345,14 +325,12 @@ export function useCreateClaim() {
   const userId = useAuthStore((s) => s.profile?.id ?? null);
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ attachments = [], unit_ids = [], ticket_ids = [], defect_ids = [], ...payload }: Omit<Claim, 'id'> & { attachments?: any[]; defect_ids?: number[] }) => {
       const insertData: any = {
         ...payload,
         project_id: payload.project_id ?? projectId,
         created_by: userId,
       };
       delete insertData.unit_ids;
-      delete insertData.ticket_ids;
       delete insertData.defect_ids;
       const { data: created, error } = await supabase
         .from(TABLE)
@@ -386,7 +364,6 @@ export function useCreateClaim() {
         }
       }
 
-      return { ...created, attachment_ids: ids, unit_ids, ticket_ids, defect_ids } as Claim;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: [TABLE] }),
   });

@@ -48,13 +48,6 @@ export default function DefectsTable({
       sorter: (a, b) => a.id - b.id,
     },
     {
-      title: "ID замечание",
-      dataIndex: "ticketIds",
-      sorter: (a, b) =>
-        a.ticketIds.join(",").localeCompare(b.ticketIds.join(",")),
-      render: (v: number[]) => v.join(", "),
-    },
-    {
       title: "ID претензии",
       dataIndex: "claimIds",
       sorter: (a, b) =>

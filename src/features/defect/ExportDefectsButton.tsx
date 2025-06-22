@@ -24,7 +24,7 @@ export default function ExportDefectsButton({
     const today = dayjs();
     const rows = filterDefects(defects, filters).map((d) => ({
       'ID дефекта': d.id,
-      'ID замечание': d.ticketIds.join(', '),
+      'ID претензии': d.claimIds.join(', '),
       Проект: d.projectNames ?? '',
       Объекты: d.unitNames ?? '',
       Описание: d.description,

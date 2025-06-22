@@ -8,9 +8,7 @@ import { Backdrop, CircularProgress } from "@mui/material";
 
 import { useAuthStore } from "@/shared/store/authStore";
 import DashboardPage from "@/pages/DashboardPage/DashboardPage";
-import TicketsPage from "@/pages/TicketsPage/TicketsPage";
 import ClaimsPage from "@/pages/ClaimsPage/ClaimsPage";
-import TicketFormPage from "@/pages/TicketsPage/TicketFormPage";
 import CourtCasesPage from "@/pages/CourtCasesPage/CourtCasesPage";
 import CorrespondencePage from "@/pages/CorrespondencePage/CorrespondencePage";
 import DefectsPage from "@/pages/DefectsPage/DefectsPage";
@@ -73,17 +71,6 @@ export default function AppRouter() {
         data-oid="9:ob6bt"
       />
 
-      <Route
-        path="/tickets"
-        element={
-          <RequireAuth data-oid="nq-xmuj">
-            <RequirePermission page="tickets">
-              <TicketsPage data-oid="i99wikm" />
-            </RequirePermission>
-          </RequireAuth>
-        }
-        data-oid="41m4r4h"
-      />
 
       <Route
         path="/claims"
@@ -141,17 +128,6 @@ export default function AppRouter() {
       />
 
 
-      <Route
-        path="/tickets/:ticketId/edit"
-        element={
-          <RequireAuth data-oid="jw4mt.4">
-            <RequirePermission page="tickets">
-              <TicketFormPage data-oid="r9pp63u" />
-            </RequirePermission>
-          </RequireAuth>
-        }
-        data-oid="rdc_d7y"
-      />
 
 
       <Route

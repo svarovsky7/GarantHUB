@@ -70,25 +70,6 @@ body {
   border-left: 3px solid #52c41a;
 }
 
-.main-ticket-row {
-  background: #eaf4ff !important;
-  font-weight: 600;
-  box-shadow: 0 1px 0 #b5d3f7;
-}
-.child-ticket-row {
-  background: #f8fafb !important;
-  color: #888;
-  font-style: italic;
-  border-left: 3px solid #1890ff;
-}
-.ticket-fixed-row {
-  background: #f6ffed !important;
-}
-.ticket-closed-row {
-  color: #aaa;
-  background: inherit !important;
-}
-.main-case-row {
   background: #eaf4ff !important;
   font-weight: 600;
   box-shadow: 0 1px 0 #b5d3f7;

@@ -15,7 +15,6 @@ import AddIcon from "@mui/icons-material/Add";
 import FloorCell from "@/entities/floor/FloorCell";
 import useUnitsMatrix from "@/shared/hooks/useUnitsMatrix";
 import { supabase } from "@/shared/api/supabaseClient";
-import TicketListDialog from "@/features/ticket/TicketListDialog";
 import HistoryDialog from "@/features/history/HistoryDialog";
 import { useNavigate, createSearchParams } from 'react-router-dom';
 import { useAuthStore } from '@/shared/store/authStore';
@@ -35,7 +34,6 @@ export default function UnitsMatrix({
     handleAddUnit,
     handleAddFloor,
     fetchUnits,
-    ticketsByUnit,
     casesByUnit,
     units,
   } = useUnitsMatrix(projectId, building, section);
@@ -183,7 +181,6 @@ export default function UnitsMatrix({
             key={floor}
             floor={floor}
             units={unitsByFloor[floor] || []}
-            ticketsByUnit={ticketsByUnit}
             casesByUnit={casesByUnit}
             onAddUnit={() => handleAddUnit(floor)}
             onEditFloor={handleEditFloor}
@@ -326,20 +323,6 @@ export default function UnitsMatrix({
           >
             <Button
               variant="contained"
-              color="primary"
-              fullWidth
-              onClick={() => {
-                const id = actionDialog.unit?.id;
-                navigate(
-                  `/tickets?project_id=${projectId}&unit_id=${id}&responsible_engineer_id=${profileId ?? ''}&open_form=1`,
-                );
-                setActionDialog({ open: false, unit: null, action: '' });
-              }}
-            >
-              Добавить замечание
-            </Button>
-            <Button
-              variant="contained"
               color="secondary"
               fullWidth
               onClick={() => {
@@ -353,7 +336,6 @@ export default function UnitsMatrix({
                 navigate(`/court-cases?${search}`);
                 setActionDialog({ open: false, unit: null, action: '' });
               }}
-            >
               Добавить судебное дело
             </Button>
             <Button
@@ -388,12 +370,6 @@ export default function UnitsMatrix({
         )}
       </Dialog>
       {/* Диалог со всеми замечаниями */}
-      <TicketListDialog
-        open={actionDialog.action === "tickets"}
-        unit={actionDialog.unit}
-        onClose={() => setActionDialog({ open: false, unit: null, action: "" })}
-        onTicketsChanged={fetchUnits}
-      />
       <HistoryDialog
         open={actionDialog.action === "history"}
         unit={actionDialog.unit}

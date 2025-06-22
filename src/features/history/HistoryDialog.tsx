@@ -21,17 +21,6 @@ export default function HistoryDialog({ open, unit, onClose, onOpenCourtCase }: 
   const navigate = useNavigate();
   const [primaryOnly, setPrimaryOnly] = React.useState(false);
 
-  const ticketIds = React.useMemo(
-    () =>
-      Array.from(
-        new Set(
-          data
-            .filter((e) => e.entity_type === 'ticket')
-            .map((e) => e.entity_id),
-        ),
-      ),
-    [data],
-  );
   const caseIds = React.useMemo(
     () =>
       Array.from(
@@ -72,7 +61,6 @@ export default function HistoryDialog({ open, unit, onClose, onOpenCourtCase }: 
   };
 
   const typeLabels: Record<string, string> = {
-    ticket: 'Замечание',
     letter: 'Письмо',
     court_case: 'Судебное дело',
   };
@@ -109,9 +97,7 @@ export default function HistoryDialog({ open, unit, onClose, onOpenCourtCase }: 
           <Button
               type="link"
               onClick={() => {
-                if (record.entity_type === 'ticket') {
-                  navigate(`/tickets?ticket_id=${record.entity_id}`);
-                } else if (record.entity_type === 'letter') {
+                if (record.entity_type === 'letter') {
                   navigate(`/correspondence?letter_id=${record.entity_id}`);
                 } else if (record.entity_type === 'court_case') {
                   /* FIX: передаём дело через query‑param, а не через location.state */
@@ -146,23 +132,6 @@ export default function HistoryDialog({ open, unit, onClose, onOpenCourtCase }: 
             Показать основные документы
           </Space>
           <Space style={{ marginBottom: 12 }}>
-            <Button
-              disabled={!ticketIds.length}
-              onClick={() => {
-                if (unit) {
-                  const search = createSearchParams({
-                    project_id: String(unit.project_id ?? ''),
-                    unit_id: String(unit.id),
-                  }).toString();
-                  navigate(`/tickets?${search}`);
-                } else {
-                  navigate('/tickets');
-                }
-                onClose();
-              }}
-            >
-              Показать замечания
-            </Button>
             <Button
               disabled={!caseIds.length}
               onClick={() => {
