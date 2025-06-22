@@ -9,10 +9,12 @@ interface Props {
   claims: ClaimWithNames[];
   onClose: () => void;
   onSubmit: (ids: string[]) => void;
+  /** Признак выполнения операции связывания */
+  loading?: boolean;
 }
 
 /** Диалог выбора претензий для связывания */
-export default function LinkClaimsDialog({ open, parent, claims, onClose, onSubmit }: Props) {
+export default function LinkClaimsDialog({ open, parent, claims, onClose, onSubmit, loading }: Props) {
   const [selected, setSelected] = useState<string[]>([]);
   const [search, setSearch] = useState('');
 
@@ -62,6 +64,7 @@ export default function LinkClaimsDialog({ open, parent, claims, onClose, onSubm
           key="link"
           type="primary"
           disabled={selected.length === 0}
+          loading={loading}
           onClick={() => onSubmit(selected)}
         >
           Связать
