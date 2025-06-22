@@ -55,10 +55,7 @@ export default function UnitCell({
             ? "0 0 0 2px rgba(211,47,47,0.4)"
             : "0 4px 16px 0 #b5d2fa",
           borderColor: hasCases ? "#d32f2f" : "#1976d2",
-          background:
-            ticket && ticket.color
-              ? getSemiTransparent(ticket.color, 0.55)
-              : "#f6faff",
+          background: "#f6faff",
         },
         position: "relative",
       }}
