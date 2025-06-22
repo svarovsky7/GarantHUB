@@ -5,8 +5,17 @@ import ClaimFormAntdEdit from './ClaimFormAntdEdit';
 import ClaimAttachmentsBlock from './ClaimAttachmentsBlock';
 import TicketDefectsTable from '@/widgets/TicketDefectsTable';
 import DefectAddModal from '@/features/defect/DefectAddModal';
-import { useCreateDefects, useDeleteDefect, useDefectsWithNames, type NewDefect } from '@/entities/defect';
+import DefectViewModal from '@/features/defect/DefectViewModal';
+import {
+  useCreateDefects,
+  useDeleteDefect,
+  useDefectsWithNames,
+  type NewDefect,
+} from '@/entities/defect';
 import { useDefectTypes } from '@/entities/defectType';
+import { useDefectStatuses } from '@/entities/defectStatus';
+import { useBrigades } from '@/entities/brigade';
+import { useContractors } from '@/entities/contractor';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/shared/api/supabaseClient';
 import { useClaimAttachments } from './model/useClaimAttachments';
@@ -26,11 +35,15 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
   const createDefs = useCreateDefects();
   const deleteDef = useDeleteDefect();
   const { data: defectTypes = [] } = useDefectTypes();
+  const { data: defectStatuses = [] } = useDefectStatuses();
+  const { data: brigades = [] } = useBrigades();
+  const { data: contractors = [] } = useContractors();
   const qc = useQueryClient();
   const [defectIds, setDefectIds] = React.useState<number[]>([]);
   const [newDefs, setNewDefs] = React.useState<Array<{ tmpId: number } & NewDefect>>([]);
   const [removedIds, setRemovedIds] = React.useState<number[]>([]);
   const [showAdd, setShowAdd] = React.useState(false);
+  const [viewDefId, setViewDefId] = React.useState<number | null>(null);
   const tmpIdRef = React.useRef(-1);
 
   const lastClaimIdRef = React.useRef<number | null>(null);
@@ -64,27 +77,52 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
     return map;
   }, [defectTypes]);
 
+  const statusMap = React.useMemo(() => {
+    const map: Record<number, { name: string; color: string | null }> = {};
+    defectStatuses.forEach((s) => {
+      map[s.id] = { name: s.name, color: s.color };
+    });
+    return map;
+  }, [defectStatuses]);
+
+  const getFixByName = React.useCallback(
+    (d: { brigade_id: number | null; contractor_id: number | null }) => {
+      if (d.brigade_id)
+        return brigades.find((b) => b.id === d.brigade_id)?.name || 'Бригада';
+      if (d.contractor_id)
+        return (
+          contractors.find((c) => c.id === d.contractor_id)?.name || 'Подрядчик'
+        );
+      return '—';
+    },
+    [brigades, contractors],
+  );
+
   const displayDefs = React.useMemo(() => {
-    return [
-      ...loadedDefs,
-      ...newDefs.map((d) => ({
-        id: d.tmpId,
-        description: d.description,
-        type_id: d.type_id,
-        status_id: d.status_id,
-        brigade_id: d.brigade_id,
-        contractor_id: d.contractor_id,
-        is_warranty: d.is_warranty,
-        received_at: d.received_at,
-        fixed_at: d.fixed_at,
-        fixed_by: null,
-        defectTypeName:
-          d.type_id != null ? defectTypeMap[d.type_id] ?? null : null,
-        defectStatusName: null,
-        defectStatusColor: null,
-      })),
-    ];
-  }, [loadedDefs, newDefs, defectTypeMap]);
+    const existing = loadedDefs.map((d) => ({
+      ...d,
+      fixByName: getFixByName(d),
+    }));
+    const created = newDefs.map((d) => ({
+      id: d.tmpId,
+      description: d.description,
+      type_id: d.type_id,
+      status_id: d.status_id,
+      brigade_id: d.brigade_id,
+      contractor_id: d.contractor_id,
+      is_warranty: d.is_warranty,
+      received_at: d.received_at,
+      fixed_at: d.fixed_at,
+      fixed_by: null,
+      defectTypeName: d.type_id != null ? defectTypeMap[d.type_id] ?? null : null,
+      defectStatusName:
+        d.status_id != null ? statusMap[d.status_id]?.name ?? null : null,
+      defectStatusColor:
+        d.status_id != null ? statusMap[d.status_id]?.color ?? null : null,
+      fixByName: getFixByName(d),
+    }));
+    return [...existing, ...created];
+  }, [loadedDefs, newDefs, defectTypeMap, statusMap, getFixByName]);
 
   const handleRemove = (id: number) => {
     if (id < 0) {
@@ -155,7 +193,14 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
     : 'Претензия';
 
   return (
-    <Modal open={open} onCancel={onClose} footer={null} width="80%" title={<Typography.Title level={4} style={{ margin: 0 }}>{titleText}</Typography.Title>}>
+    <>
+      <Modal
+        open={open}
+        onCancel={onClose}
+        footer={null}
+        width="80%"
+        title={<Typography.Title level={4} style={{ margin: 0 }}>{titleText}</Typography.Title>}
+      >
       {claim ? (
         <>
           <ClaimFormAntdEdit
@@ -170,7 +215,11 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
           />
           <div style={{ marginTop: 16 }}>
             {displayDefs.length ? (
-              <TicketDefectsTable items={displayDefs} onRemove={handleRemove} />
+              <TicketDefectsTable
+                items={displayDefs}
+                onRemove={handleRemove}
+                onView={setViewDefId}
+              />
             ) : (
               <Typography.Text>Дефекты не указаны</Typography.Text>
             )}
@@ -206,6 +255,12 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
         onClose={() => setShowAdd(false)}
         onSubmit={handleAddDefs}
       />
-    </Modal>
+      </Modal>
+      <DefectViewModal
+        open={viewDefId !== null}
+        defectId={viewDefId}
+        onClose={() => setViewDefId(null)}
+      />
+    </>
   );
 }
