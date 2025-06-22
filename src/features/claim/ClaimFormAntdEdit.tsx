@@ -55,7 +55,8 @@ export interface ClaimFormAntdEditProps {
 
 export interface ClaimFormAntdEditValues {
   project_id: number | null;
-  unit_ids: number[];
+  /** Идентификатор выбранного объекта */
+  unit_id: number | null;
   claim_status_id: number | null;
   claim_no: string;
   claimed_on: Dayjs | null;
@@ -117,7 +118,7 @@ const ClaimFormAntdEdit = React.forwardRef<
     if (!claim) return;
     form.setFieldsValue({
       project_id: claim.project_id,
-      unit_ids: claim.unit_ids,
+      unit_id: claim.unit_ids?.[0] ?? null,
       claim_status_id: claim.claim_status_id,
       claim_no: claim.claim_no,
       claimed_on: claim.claimedOn ?? null,
@@ -136,7 +137,7 @@ const ClaimFormAntdEdit = React.forwardRef<
         id: claim.id,
         updates: {
           project_id: values.project_id ?? claim.project_id,
-          unit_ids: values.unit_ids,
+          unit_ids: values.unit_id != null ? [values.unit_id] : [],
           claim_status_id: values.claim_status_id,
           claim_no: values.claim_no,
           claimed_on: values.claimed_on
@@ -224,13 +225,14 @@ const ClaimFormAntdEdit = React.forwardRef<
         </Col>
         <Col span={8}>
           <Form.Item
-            name="unit_ids"
-            label="Объекты"
+            name="unit_id"
+            label="Объект"
             rules={[{ required: true }]}
-            style={highlight('unit_ids')}
+            style={highlight('unit_id')}
           >
             <Select
-              mode="multiple"
+              showSearch
+              allowClear
               options={units.map((u) => ({ value: u.id, label: u.name }))}
               disabled={!projectId}
             />

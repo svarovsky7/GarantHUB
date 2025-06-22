@@ -57,9 +57,9 @@ export default function ClaimsPage() {
     project_id: searchParams.get('project_id')
       ? Number(searchParams.get('project_id')!)
       : undefined,
-    unit_ids: searchParams.get('unit_id')
-      ? [Number(searchParams.get('unit_id')!)]
-      : [],
+    unit_id: searchParams.get('unit_id')
+      ? Number(searchParams.get('unit_id')!)
+      : undefined,
     engineer_id: searchParams.get('engineer_id') || undefined,
   };
   const [filters, setFilters] = useState({});
