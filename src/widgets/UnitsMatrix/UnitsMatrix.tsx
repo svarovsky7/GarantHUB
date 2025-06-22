@@ -336,6 +336,7 @@ export default function UnitsMatrix({
                 navigate(`/court-cases?${search}`);
                 setActionDialog({ open: false, unit: null, action: '' });
               }}
+            >
               Добавить судебное дело
             </Button>
             <Button
