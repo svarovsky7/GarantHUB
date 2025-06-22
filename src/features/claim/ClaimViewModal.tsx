@@ -43,6 +43,16 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
     }
   }, [claim, open]);
 
+  React.useEffect(() => {
+    if (!open) {
+      lastClaimIdRef.current = null;
+      setDefectIds([]);
+      setNewDefs([]);
+      setRemovedIds([]);
+      attachments.reset();
+    }
+  }, [open]);
+
   const { data: loadedDefs = [] } = useDefectsWithNames(defectIds);
 
   const defectTypeMap = React.useMemo(() => {
