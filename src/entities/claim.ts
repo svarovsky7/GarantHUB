@@ -76,6 +76,37 @@ function mapClaim(r: any): ClaimWithNames {
 }
 
 /**
+ * Проверяет статус претензии и при необходимости переводит связанные
+ * дефекты в статус "Закрыто".
+ */
+async function closeDefectsForClaim(claimId: number, statusId: number | null) {
+  if (!statusId) return;
+  const { data: claimStatus } = await supabase
+    .from('statuses')
+    .select('name')
+    .eq('id', statusId)
+    .maybeSingle();
+  if (!claimStatus || !/закры/i.test(claimStatus.name)) return;
+
+  const { data: closedDefStatus } = await supabase
+    .from('statuses')
+    .select('id')
+    .eq('entity', 'defect')
+    .ilike('name', '%закры%')
+    .maybeSingle();
+  if (!closedDefStatus?.id) return;
+
+  const { data: defectRows } = await supabase
+    .from('claim_defects')
+    .select('defect_id')
+    .eq('claim_id', claimId);
+  const defectIds = (defectRows ?? []).map((d: any) => d.defect_id);
+  if (!defectIds.length) return;
+
+  await supabase.from('defects').update({ status_id: closedDefStatus.id }).in('id', defectIds);
+}
+
+/**
  * Хук получения списка претензий с учётом фильтров проекта.
  */
 export function useClaims() {
@@ -321,6 +352,8 @@ export function useCreateClaim() {
         }
       }
 
+      await closeDefectsForClaim(created.id, insertData.claim_status_id ?? null);
+
       return {
         id: created.id,
         project_id: created.project_id,
@@ -330,6 +363,8 @@ export function useCreateClaim() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [TABLE] });
       qc.invalidateQueries({ queryKey: ['defects'] });
+      qc.invalidateQueries({ queryKey: ['claims-simple'] });
+      qc.invalidateQueries({ queryKey: ['claims-simple-all'] });
     },
   });
 }
@@ -357,11 +392,16 @@ export function useUpdateClaim() {
         }
       }
 
+      await closeDefectsForClaim(id, rest.claim_status_id ?? data.claim_status_id ?? null);
+
       return data as Claim;
     },
     onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: [TABLE] });
       qc.invalidateQueries({ queryKey: [TABLE, id] });
+      qc.invalidateQueries({ queryKey: ['claims-simple'] });
+      qc.invalidateQueries({ queryKey: ['claims-simple-all'] });
+      qc.invalidateQueries({ queryKey: ['defects'] });
     },
   });
 }
@@ -436,6 +476,8 @@ export function useDeleteClaim() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [TABLE] });
       qc.invalidateQueries({ queryKey: ['defects'] });
+      qc.invalidateQueries({ queryKey: ['claims-simple'] });
+      qc.invalidateQueries({ queryKey: ['claims-simple-all'] });
     },
   });
 }
@@ -516,4 +558,6 @@ export async function signedUrl(path: string, filename = ''): Promise<string> {
   if (error) throw error;
   return data.signedUrl;
 }
+
+export { closeDefectsForClaim };
 
