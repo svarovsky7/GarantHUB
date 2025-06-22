@@ -20,6 +20,7 @@ import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useNotify } from '@/shared/hooks/useNotify';
 import DefectEditableTable from '@/widgets/DefectEditableTable';
 import { useCreateDefects, type NewDefect } from '@/entities/defect';
+import { useAuthStore } from '@/shared/store/authStore';
 
 export interface ClaimFormAntdProps {
   onCreated?: () => void;
@@ -156,13 +157,17 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
       notify.error('Добавьте хотя бы один дефект');
       return;
     }
+    const unitId = values.unit_ids?.[0] ?? null;
+    const userId = useAuthStore.getState().profile?.id ?? null;
     const newDefs: NewDefect[] = defs.map((d) => ({
       description: d.description || '',
       type_id: d.type_id ?? null,
       status_id: d.status_id ?? null,
       project_id: projectId ?? null,
+      unit_id: unitId,
       brigade_id: d.brigade_id ?? null,
       contractor_id: d.contractor_id ?? null,
+      created_by: userId,
       is_warranty: d.is_warranty ?? false,
       received_at: d.received_at ? d.received_at.format('YYYY-MM-DD') : null,
       fixed_at: d.fixed_at ? d.fixed_at.format('YYYY-MM-DD') : null,

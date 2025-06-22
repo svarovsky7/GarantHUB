@@ -18,8 +18,6 @@ export interface DefectRecord {
   updated_by: string | null;
   /** Дата обновления */
   updated_at: string | null;
-  /** Поле для полнотекстового поиска */
-  description_tsv: string | null;
   /** Исполнитель - бригада */
   brigade_id: number | null;
   /** Исполнитель - подрядчик */

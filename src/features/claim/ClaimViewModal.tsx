@@ -11,6 +11,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/shared/api/supabaseClient';
 import { useClaimAttachments } from './model/useClaimAttachments';
 import type { ClaimFormAntdEditRef } from '@/shared/types/claimFormAntdEditRef';
+import { useAuthStore } from '@/shared/store/authStore';
 
 interface Props {
   open: boolean;
@@ -95,9 +96,16 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
   };
 
   const handleAddDefs = (defs: NewDefect[]) => {
+    const unitId = claim?.unit_ids?.[0] ?? null;
+    const userId = useAuthStore.getState().profile?.id ?? null;
     setNewDefs((p) => [
       ...p,
-      ...defs.map((d) => ({ ...d, tmpId: tmpIdRef.current-- })),
+      ...defs.map((d) => ({
+        ...d,
+        unit_id: unitId,
+        created_by: userId,
+        tmpId: tmpIdRef.current--,
+      })),
     ]);
     setShowAdd(false);
   };
