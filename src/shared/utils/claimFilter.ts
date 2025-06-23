@@ -10,6 +10,7 @@ export function filterClaims<T extends {
   responsibleEngineerName?: string | null;
   claim_no?: string;
   registeredOn?: Dayjs | null;
+  description?: string;
 }>(rows: T[], f: ClaimFilters): T[] {
   return rows.filter((r) => {
     if (f.id && f.id.length > 0 && !f.id.includes(r.id)) return false;

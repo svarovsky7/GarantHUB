@@ -288,7 +288,7 @@ export default function ProjectStructurePage() {
                         )}
                         <IconButton
                             size="small"
-                            onClick={() => handleOpenAddDialog("building")}
+                            onClick={() => handleOpenAddDialog()}
                             sx={{
                                 color: "#fff",
                                 opacity: 0.94,

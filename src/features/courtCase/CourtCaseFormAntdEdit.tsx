@@ -128,7 +128,7 @@ export default function CourtCaseFormAntdEdit({
             original_name: u.original_name ?? null,
             path: u.storage_path,
             url: u.file_url,
-            type: u.file_type,
+            mime_type: u.file_type,
           })),
         );
       }
@@ -346,7 +346,7 @@ export default function CourtCaseFormAntdEdit({
             id: String(f.id),
             name: f.name,
             path: f.path,
-            mime: f.type,
+            mime: f.mime_type,
           }))}
           newFiles={attachments.newFiles.map((f) => ({ file: f.file, mime: f.file.type }))}
           onRemoveRemote={(id) => attachments.removeRemote(id)}

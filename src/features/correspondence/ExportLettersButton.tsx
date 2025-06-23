@@ -64,7 +64,7 @@ export default function ExportLettersButton({
       Статус: l.status_id ? maps.status[l.status_id] : '',
       Ответственный: l.responsible_user_id ? maps.user[l.responsible_user_id] : '',
       Содержание: l.content,
-      'Ссылки на файлы': (l.attachments ?? []).map((a) => a.file_url).join('\n'),
+      'Ссылки на файлы': (l.attachments ?? []).map((a) => a.path).join('\n'),
     }));
     const wb = new ExcelJS.Workbook();
     const ws = wb.addWorksheet('Letters');
