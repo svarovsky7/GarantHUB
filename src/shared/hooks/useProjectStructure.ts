@@ -5,7 +5,10 @@ import type { ProjectStructureSelection } from '@/shared/types/projectStructure'
 import { useVisibleProjects } from '@/entities/project';
 import { useAuthStore } from '@/shared/store/authStore';
 
-const LS_KEY = 'structurePageSelection';
+/**
+ * Ключ для хранения выбора проекта и корпуса в `localStorage`.
+ */
+export const LS_KEY = 'structurePageSelection';
 
 /**
  * Хук для выбора проекта, корпуса и секции.
@@ -58,7 +61,10 @@ export default function useProjectStructure() {
         }
         const { data: bld } = await supabase
             .rpc('buildings_by_project', { pid: Number(projectId) });
-        const bldList = (bld || []).map((r: any) => r.building).filter(Boolean);
+        const bldList = (bld || [])
+            .map((r: any) => r.building)
+            .filter(Boolean)
+            .sort((a: string, b: string) => a.localeCompare(b));
         setBuildings(bldList);
         if (building && !bldList.includes(building)) {
             setBuildingState(bldList[0] ?? '');
