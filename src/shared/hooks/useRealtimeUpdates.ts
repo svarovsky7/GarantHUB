@@ -80,6 +80,21 @@ export function useRealtimeUpdates() {
           'postgres_changes',
           { event: 'INSERT', schema: 'public', table: 'unit_history', filter: `project_id=eq.${pid}` },
           () => qc.invalidateQueries({ queryKey: ['unit_history'] }),
+        )
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'units', filter: `project_id=eq.${pid}` },
+          () => qc.invalidateQueries({ queryKey: ['units'] }),
+        )
+        .on(
+          'postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'units', filter: `project_id=eq.${pid}` },
+          () => qc.invalidateQueries({ queryKey: ['units'] }),
+        )
+        .on(
+          'postgres_changes',
+          { event: 'DELETE', schema: 'public', table: 'units', filter: `project_id=eq.${pid}` },
+          () => qc.invalidateQueries({ queryKey: ['units'] }),
         );
     });
 
@@ -131,6 +146,22 @@ export function useRealtimeUpdates() {
           'postgres_changes',
           { event: 'DELETE', schema: 'public', table: 'claims' },
           () => qc.invalidateQueries({ queryKey: ['claims'] }),
+        );
+      channel
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'units' },
+          () => qc.invalidateQueries({ queryKey: ['units'] }),
+        )
+        .on(
+          'postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'units' },
+          () => qc.invalidateQueries({ queryKey: ['units'] }),
+        )
+        .on(
+          'postgres_changes',
+          { event: 'DELETE', schema: 'public', table: 'units' },
+          () => qc.invalidateQueries({ queryKey: ['units'] }),
         );
     }
     channel.subscribe();
