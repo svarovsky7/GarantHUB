@@ -25,12 +25,20 @@ import type { SortDirection } from '@/shared/types/sortDirection';
 import { useUnitSortOrders, useUpsertUnitSortOrder } from '@/entities/unitSortOrder';
 
 /**
- * Шахматка квартир/этажей для заданного проекта и корпуса.
+ * Компонент выводит шахматку квартир для выбранного корпуса проекта.
+ *
+ * @param projectId       идентификатор проекта
+ * @param building        корпус/секция
+ * @param onUnitsChanged  callback при изменении списка квартир
  */
 export default function UnitsMatrix({
   projectId,
   building,
   onUnitsChanged,
+}: {
+  projectId: number | string;
+  building?: string | null;
+  onUnitsChanged?: (units: any[]) => void;
 }) {
   const {
     floors,
@@ -66,12 +74,14 @@ export default function UnitsMatrix({
     action: "",
   });
 
-  const { data: sortOrders = {} } = useUnitSortOrders(projectId, building);
+  const { data: sortOrders } = useUnitSortOrders(projectId, building);
   const upsertSort = useUpsertUnitSortOrder();
   const [sortDirections, setSortDirections] = useState<Record<string, SortDirection | null>>({});
 
   useEffect(() => {
-    setSortDirections(sortOrders);
+    if (sortOrders) {
+      setSortDirections(sortOrders);
+    }
   }, [sortOrders]);
 
   // Прокидываем units (все объекты проекта) наверх для счетчиков
