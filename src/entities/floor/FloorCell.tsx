@@ -3,6 +3,7 @@ import { Box, Tooltip, IconButton } from "@mui/material";
 import UnitCell from "@/entities/unit/UnitCell";
 import EditOutlined from "@mui/icons-material/EditOutlined";
 import DeleteOutline from "@mui/icons-material/DeleteOutline";
+import SwapVertIcon from "@mui/icons-material/SwapVert";
 import AddIcon from "@mui/icons-material/Add";
 
 const CELL_SIZE = 54;
@@ -23,6 +24,8 @@ export default function FloorCell({
   onEditUnit,
   onDeleteUnit,
   onUnitClick,
+  onSortUnits,
+  sortDirection,
 }) {
   return (
     <Box
@@ -55,27 +58,34 @@ export default function FloorCell({
         }}
         data-oid="b2o0a0s"
       >
-        <span data-oid="79w3yn4">{floor}</span>
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            position: "absolute",
-            right: 8,
-            top: 6,
-            zIndex: 2,
-          }}
-          data-oid="ry3jcl1"
-        >
+        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+          <span data-oid="79w3yn4">{floor}</span>
+          <Tooltip title="Сортировать номера" data-oid="sortfloor">
+            <IconButton
+              size="small"
+              sx={{
+                color: sortDirection ? FLOOR_COLOR : "#b0b6be",
+                background: "#F8FAFF",
+                "&:hover": { color: FLOOR_COLOR, background: "#e3ecfb" },
+                p: 0.5,
+              }}
+              onClick={() => onSortUnits?.(floor)}
+            >
+              <SwapVertIcon
+                fontSize="small"
+                sx={{ transform: sortDirection === 'desc' ? 'rotate(180deg)' : 'none' }}
+              />
+            </IconButton>
+          </Tooltip>
+        </Box>
+        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
           <Tooltip title="Переименовать этаж" data-oid="w.a3.uu">
             <IconButton
               size="small"
               sx={{
                 color: "#b0b6be",
-                opacity: 0.8,
-                mb: 0.2,
                 background: "#F8FAFF",
+                mb: 0.2,
                 "&:hover": { color: FLOOR_COLOR, background: "#e3ecfb" },
               }}
               onClick={() => onEditFloor?.(floor)}
@@ -89,9 +99,8 @@ export default function FloorCell({
               size="small"
               sx={{
                 color: "#b0b6be",
-                opacity: 0.8,
-                mt: 0.2,
                 background: "#F8FAFF",
+                mt: 0.2,
                 "&:hover": { color: "#e53935", background: "#fdeaea" },
               }}
               onClick={() => onDeleteFloor?.(floor)}
