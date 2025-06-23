@@ -54,6 +54,11 @@ export default function useProjectStructure() {
 
 
     // --- Buildings auto-refresh ---
+    /**
+     * Загружает список корпусов выбранного проекта и обновляет состояние.
+     * Корпуса сортируются в естественном порядке, чтобы числа шли по
+     * возрастанию: 1, 2, 10 и т.д.
+     */
     const refreshAll = useCallback(async () => {
         if (!projectId) {
             setBuildings([]);
@@ -64,7 +69,10 @@ export default function useProjectStructure() {
         const bldList = (bld || [])
             .map((r: any) => r.building)
             .filter(Boolean)
-            .sort((a: string, b: string) => a.localeCompare(b));
+            // Natural sort so numeric strings are ordered as numbers
+            .sort((a: string, b: string) =>
+                a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }),
+            );
         setBuildings(bldList);
         if (building && !bldList.includes(building)) {
             setBuildingState(bldList[0] ?? '');
