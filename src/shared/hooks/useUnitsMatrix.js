@@ -14,7 +14,7 @@ import { useCourtCaseStatuses } from '@/entities/courtCaseStatus';
  * @param {string} building  Корпус
  */
 export default function useUnitsMatrix(projectId, building) {
-    const [units, setUnits] = useState([]); // <-- ВСЕ объекты проекта
+    const [units, setUnits] = useState([]); // объекты выбранного корпуса
     const [floors, setFloors] = useState([]);
     const [unitsByFloor, setUnitsByFloor] = useState({});
     const [casesByUnit, setCasesByUnit] = useState({});
@@ -36,17 +36,15 @@ export default function useUnitsMatrix(projectId, building) {
             setFilteredUnits([]);
             return;
         }
-        // Грузим ВСЕ units по проекту
+        // Грузим units только для выбранного корпуса
         let query = supabase
             .from('units')
             .select('*')
             .eq('project_id', projectId);
+        if (building) query = query.eq('building', building);
         const { data: unitsData } = await query;
         setUnits(unitsData || []);
-
-        // Сначала фильтруем по building для визуализации шахматки
-        let filtered = unitsData || [];
-        if (building) filtered = filtered.filter(u => String(u.building) === String(building));
+        const filtered = unitsData || [];
         setFilteredUnits(filtered);
 
         // Грузим замечания, письма и судебные дела только для отображаемых юнитов
@@ -192,7 +190,7 @@ export default function useUnitsMatrix(projectId, building) {
         unitsByFloor,
         handleAddUnit,
         handleAddFloor,
-        // Для счетчиков — ВСЕ объекты проекта
+        // Возвращаем объекты выбранного корпуса
         units,
         setUnits,
         fetchUnits,
