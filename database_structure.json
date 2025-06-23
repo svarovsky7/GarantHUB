@@ -1141,62 +1141,6 @@
     "column_default": null
   },
   {
-    "table_name": "unit_history",
-    "column_name": "id",
-    "data_type": "bigint",
-    "is_nullable": "NO",
-    "column_default": "nextval('unit_history_id_seq'::regclass)"
-  },
-  {
-    "table_name": "unit_history",
-    "column_name": "project_id",
-    "data_type": "integer",
-    "is_nullable": "NO",
-    "column_default": null
-  },
-  {
-    "table_name": "unit_history",
-    "column_name": "unit_id",
-    "data_type": "integer",
-    "is_nullable": "NO",
-    "column_default": null
-  },
-  {
-    "table_name": "unit_history",
-    "column_name": "entity_type",
-    "data_type": "text",
-    "is_nullable": "NO",
-    "column_default": null
-  },
-  {
-    "table_name": "unit_history",
-    "column_name": "entity_id",
-    "data_type": "bigint",
-    "is_nullable": "NO",
-    "column_default": null
-  },
-  {
-    "table_name": "unit_history",
-    "column_name": "action",
-    "data_type": "text",
-    "is_nullable": "NO",
-    "column_default": null
-  },
-  {
-    "table_name": "unit_history",
-    "column_name": "changed_by",
-    "data_type": "uuid",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
-    "table_name": "unit_history",
-    "column_name": "changed_at",
-    "data_type": "timestamp with time zone",
-    "is_nullable": "YES",
-    "column_default": "now()"
-  },
-  {
     "table_name": "unit_sort_orders",
     "column_name": "id",
     "data_type": "integer",
