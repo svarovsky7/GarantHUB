@@ -20,6 +20,7 @@ import { supabase } from "@/shared/api/supabaseClient";
 import HistoryDialog from "@/features/history/HistoryDialog";
 import { useNavigate, createSearchParams } from 'react-router-dom';
 import { useAuthStore } from '@/shared/store/authStore';
+import type { SortOrder } from '@/shared/types/sortOrder';
 
 /**
  * Шахматка квартир/этажей для заданного проекта и корпуса.
@@ -63,6 +64,8 @@ export default function UnitsMatrix({
     action: "",
   });
 
+  const [sortOrders, setSortOrders] = useState<Record<string, SortOrder>>({});
+
   // Прокидываем units (все объекты проекта) наверх для счетчиков
   useEffect(() => {
     if (typeof onUnitsChanged === "function") {
@@ -87,6 +90,13 @@ export default function UnitsMatrix({
     setConfirmDialog({ open: true, type: "unit", target: unit });
   const handleUnitAction = (unit) =>
     setActionDialog({ open: true, unit, action: "" });
+
+  const handleToggleSort = (floor: string | number) => {
+    setSortOrders((prev) => {
+      const current = prev[String(floor)] ?? 'asc';
+      return { ...prev, [String(floor)]: current === 'asc' ? 'desc' : 'asc' };
+    });
+  };
 
   // Сохранить (обновление в базе и fetchUnits)
   const handleSaveEdit = async () => {
@@ -184,6 +194,8 @@ export default function UnitsMatrix({
             key={floor}
             floor={floor}
             units={unitsByFloor[floor] || []}
+            sortOrder={sortOrders[String(floor)] ?? 'asc'}
+            onToggleSort={handleToggleSort}
             casesByUnit={casesByUnit}
             lettersByUnit={lettersByUnit}
             claimsByUnit={claimsByUnit}
