@@ -112,9 +112,9 @@ export function useLetters() {
         arr.push({
           id: String(file.id),
           name,
-          file_type: file.file_type,
+          mime_type: file.file_type,
           storage_path: file.storage_path,
-          file_url: file.file_url,
+          path: file.file_url,
         } as CorrespondenceAttachment);
         attachmentsMap[row.letter_id] = arr;
       });
@@ -251,9 +251,9 @@ export function useAddLetter() {
                 return u.storage_path;
               }
             })(),
-          file_type: u.file_type,
+          mime_type: u.file_type,
           storage_path: u.storage_path,
-          file_url: u.file_url,
+          path: u.file_url,
         }));
         attachmentIds = uploaded.map((u) => u.id);
         if (attachmentIds.length) {
@@ -609,14 +609,17 @@ export function useUpdateLetter() {
       if (updatedAttachments.length) {
         // attachment type updates removed
       }
-      let uploaded: any[] = [];
-      if (newAttachments.length) {
-        uploaded = await addLetterAttachments(newAttachments, id);
-        if (uploaded.length) {
-          const rows = uploaded.map((u: any) => ({
-            letter_id: id,
-            attachment_id: u.id,
-          }));
+        let uploaded: any[] = [];
+        if (newAttachments.length) {
+          uploaded = await addLetterAttachments(
+            newAttachments.map((f) => ({ file: f.file, type_id: null })),
+            id,
+          );
+          if (uploaded.length) {
+            const rows = uploaded.map((u: any) => ({
+              letter_id: id,
+              attachment_id: u.id,
+            }));
           await supabase.from(LETTER_ATTACH_TABLE).insert(rows);
         }
         ids = ids.concat(uploaded.map((u) => u.id));

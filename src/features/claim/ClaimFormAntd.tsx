@@ -26,13 +26,8 @@ import type { RoleName } from '@/shared/types/rolePermission';
 
 export interface ClaimFormAntdProps {
   onCreated?: () => void;
-  initialValues?: Partial<{
-    project_id: number;
-    unit_ids: number[];
-    engineer_id: string;
-    description: string;
-    resolved_on: string;
-  }>;
+  /** Начальные значения формы */
+  initialValues?: Partial<Omit<ClaimFormValues, 'defects'>>;
   /** Показывать форму добавления дефектов */
   showDefectsForm?: boolean;
   /** Показывать блок загрузки файлов */
@@ -174,6 +169,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
       is_warranty: d.is_warranty ?? false,
       received_at: d.received_at ? d.received_at.format('YYYY-MM-DD') : null,
       fixed_at: d.fixed_at ? d.fixed_at.format('YYYY-MM-DD') : null,
+      fixed_by: null,
     }));
     const defectIds = await createDefects.mutateAsync(newDefs);
     await create.mutateAsync({
