@@ -523,8 +523,9 @@ export function useDeleteClaim() {
   const { projectId, projectIds, onlyAssigned } = useProjectFilter();
   return useMutation<number, Error, ClaimDeleteParams>({
     /**
-   * Удаляет претензию вместе с её файлами и всеми связанными дефектами.
-   * При удалении дефектов учитываются права доступа к проектам.
+   * Удаляет претензию вместе с её файлами, всеми связанными дефектами
+   * и записями из таблицы связей претензий. При удалении дефектов
+   * учитываются права доступа к проектам.
    * @param payload объект с идентификатором претензии
    */
     mutationFn: async ({ id }) => {
@@ -578,6 +579,11 @@ export function useDeleteClaim() {
       }
 
       await supabase.from('claim_units').delete().eq('claim_id', id);
+
+      await supabase
+        .from(LINK_TABLE)
+        .delete()
+        .or(`child_id.eq.${id},parent_id.eq.${id}`);
 
       let q = supabase.from(TABLE).delete().eq('id', id);
       q = filterByProjects(q, projectId, projectIds, onlyAssigned);
