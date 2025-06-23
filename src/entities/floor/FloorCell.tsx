@@ -4,9 +4,6 @@ import UnitCell from "@/entities/unit/UnitCell";
 import EditOutlined from "@mui/icons-material/EditOutlined";
 import DeleteOutline from "@mui/icons-material/DeleteOutline";
 import AddIcon from "@mui/icons-material/Add";
-import SortIcon from "@mui/icons-material/Sort";
-import { parseUnitNumber } from "@/shared/utils/parseUnitNumber";
-import type { SortOrder } from "@/shared/types/sortOrder";
 
 const CELL_SIZE = 54;
 const FLOOR_COLOR = "#1976d2";
@@ -17,8 +14,6 @@ const FLOOR_COLOR = "#1976d2";
 export default function FloorCell({
   floor,
   units,
-  sortOrder = 'asc',
-  onToggleSort,
   casesByUnit,
   lettersByUnit,
   claimsByUnit,
@@ -29,22 +24,6 @@ export default function FloorCell({
   onDeleteUnit,
   onUnitClick,
 }) {
-  const sortedUnits = [...units].sort((a, b) => {
-    const numA = parseUnitNumber(a.name);
-    const numB = parseUnitNumber(b.name);
-    if (!Number.isNaN(numA) && !Number.isNaN(numB) && numA !== numB) {
-      return sortOrder === 'asc' ? numA - numB : numB - numA;
-    }
-    if (!Number.isNaN(numA) && Number.isNaN(numB)) {
-      return sortOrder === 'asc' ? -1 : 1;
-    }
-    if (Number.isNaN(numA) && !Number.isNaN(numB)) {
-      return sortOrder === 'asc' ? 1 : -1;
-    }
-    return sortOrder === 'asc'
-      ? String(a.name).localeCompare(String(b.name))
-      : String(b.name).localeCompare(String(a.name));
-  });
   return (
     <Box
       sx={{
@@ -89,30 +68,6 @@ export default function FloorCell({
           }}
           data-oid="ry3jcl1"
         >
-          <Tooltip
-            title={
-              sortOrder === "asc"
-                ? "Сортировать по убыванию"
-                : "Сортировать по возрастанию"
-            }
-          >
-            <IconButton
-              size="small"
-              sx={{
-                color: "#b0b6be",
-                opacity: 0.8,
-                mb: 0.2,
-                background: "#F8FAFF",
-                "&:hover": { color: FLOOR_COLOR, background: "#e3ecfb" },
-              }}
-              onClick={() => onToggleSort?.(floor)}
-            >
-              <SortIcon
-                fontSize="small"
-                sx={{ transform: sortOrder === "asc" ? "rotate(180deg)" : "none" }}
-              />
-            </IconButton>
-          </Tooltip>
           <Tooltip title="Переименовать этаж" data-oid="w.a3.uu">
             <IconButton
               size="small"
@@ -147,7 +102,7 @@ export default function FloorCell({
           </Tooltip>
         </Box>
       </Box>
-      {sortedUnits.map((unit) => (
+      {units.map((unit) => (
         <UnitCell
           key={unit.id}
           unit={unit}
