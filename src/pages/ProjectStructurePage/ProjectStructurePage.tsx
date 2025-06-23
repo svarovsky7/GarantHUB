@@ -23,8 +23,6 @@ import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useDeleteUnitsByBuilding } from '@/entities/unit';
 import { useUnitsCount } from '@/shared/hooks/useUnitsCount';
 // Новое:
-import HistoryDialog from "@/features/history/HistoryDialog"; // путь скорректируйте под ваш проект
-import { useNavigate } from 'react-router-dom';
 
 function getCurrentProfile() {
     try {
@@ -66,10 +64,6 @@ export default function ProjectStructurePage() {
 
     const { projectCount, buildingCount } = useUnitsCount(projectId, building);
 
-    // --- Новое: стейты для истории и дела ---
-    const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
-    const [selectedUnit, setSelectedUnit] = useState(null);
-    const navigate = useNavigate();
     const deleteBuildingMutation = useDeleteUnitsByBuilding();
 
     // Автоматический выбор проекта, корпуса, секции
@@ -131,12 +125,7 @@ export default function ProjectStructurePage() {
     const countProject = projectCount;
     const countBuilding = buildingCount;
 
-    // --- Пример вызова истории: вызывайте из нужного места, например из UnitsMatrix
-    // function handleShowHistory(unit) {
-    //   setSelectedUnit(unit);
-    //   setHistoryDialogOpen(true);
-    // }
-    // <Button onClick={() => handleShowHistory(unit)}>Показать историю</Button>
+
 
     return (
         <Stack spacing={4} alignItems="flex-start">
@@ -313,18 +302,7 @@ export default function ProjectStructurePage() {
                 </Box>
             </Box>
 
-            {/* Диалог истории объекта */}
-            <HistoryDialog
-                open={historyDialogOpen}
-                unit={selectedUnit}
-                onClose={() => setHistoryDialogOpen(false)}
-                onOpenCourtCase={(caseId) => {
-                    /* FIX: закрываем историю и переходим на страницу дел,
-                       добавляя ?case_id=… вместо state */
-                    setHistoryDialogOpen(false);
-                    navigate(`/court-cases?case_id=${caseId}&from=structure`);
-                }}
-            />
+
 
             {/* Диалог добавления корпуса */}
             <AddBuildingDialog
@@ -366,11 +344,7 @@ export default function ProjectStructurePage() {
             )}
 
             {projectId && building && buildings.length > 0 && (
-                <UnitsMatrix
-                    projectId={projectId}
-                    building={building}
-                    // здесь добавьте handleShowHistory в карточки, если хотите открыть историю по объекту
-                />
+                <UnitsMatrix projectId={projectId} building={building} />
             )}
             <StatusLegend />
         </Stack>

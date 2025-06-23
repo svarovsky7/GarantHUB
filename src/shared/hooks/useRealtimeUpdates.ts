@@ -48,11 +48,6 @@ export function useRealtimeUpdates() {
         )
         .on(
           'postgres_changes',
-          { event: 'INSERT', schema: 'public', table: 'unit_history', filter: `project_id=eq.${pid}` },
-          () => qc.invalidateQueries({ queryKey: ['unit_history'] }),
-        )
-        .on(
-          'postgres_changes',
           { event: '*', schema: 'public', table: 'units', filter: `project_id=eq.${pid}` },
           () => qc.invalidateQueries({ queryKey: ['units'] }),
         );

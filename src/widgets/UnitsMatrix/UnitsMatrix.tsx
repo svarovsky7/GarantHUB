@@ -17,7 +17,6 @@ import AddIcon from "@mui/icons-material/Add";
 import FloorCell from "@/entities/floor/FloorCell";
 import useUnitsMatrix from "@/shared/hooks/useUnitsMatrix";
 import { supabase } from "@/shared/api/supabaseClient";
-import HistoryDialog from "@/features/history/HistoryDialog";
 import { useNavigate, createSearchParams } from 'react-router-dom';
 import { useAuthStore } from '@/shared/store/authStore';
 import { getUnitNameComparator } from '@/shared/utils/unitNumberSort';
@@ -418,23 +417,10 @@ export default function UnitsMatrix({
               >
                 Добавить письмо
               </AntButton>
-              <AntButton
-                onClick={() =>
-                  setActionDialog((ad) => ({ ...ad, action: 'history' }))
-                }
-              >
-                Показать историю
-              </AntButton>
             </div>
           )}
         </Modal>
       </ConfigProvider>
-      {/* Диалог со всеми замечаниями */}
-      <HistoryDialog
-        open={actionDialog.action === "history"}
-        unit={actionDialog.unit}
-        onClose={() => setActionDialog({ open: false, unit: null, action: "" })}
-      />
     </>
   );
 }
