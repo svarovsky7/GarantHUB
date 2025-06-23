@@ -57,10 +57,8 @@ export default function useProjectStructure() {
             return;
         }
         const { data: bld } = await supabase
-            .from('units')
-            .select('building')
-            .eq('project_id', projectId);
-        const bldList = Array.from(new Set((bld || []).map((u: any) => u.building).filter(Boolean)));
+            .rpc('buildings_by_project', { pid: Number(projectId) });
+        const bldList = (bld || []).map((r: any) => r.building).filter(Boolean);
         setBuildings(bldList);
         if (building && !bldList.includes(building)) {
             setBuildingState(bldList[0] ?? '');

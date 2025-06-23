@@ -21,6 +21,7 @@ import StatusLegend from "@/widgets/StatusLegend";
 import useProjectStructure from "@/shared/hooks/useProjectStructure";
 import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useDeleteUnitsByBuilding } from '@/entities/unit';
+import { useUnitsCount } from '@/shared/hooks/useUnitsCount';
 // Новое:
 import HistoryDialog from "@/features/history/HistoryDialog"; // путь скорректируйте под ваш проект
 import { useNavigate } from 'react-router-dom';
@@ -63,8 +64,7 @@ export default function ProjectStructurePage() {
         value: '',
     });
 
-    // Массив всех объектов (units)
-    const [units, setUnits] = useState([]);
+    const { projectCount, buildingCount } = useUnitsCount(projectId, building);
 
     // --- Новое: стейты для истории и дела ---
     const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
@@ -128,10 +128,8 @@ export default function ProjectStructurePage() {
     };
     const handleCancelDelete = () => setConfirmDialog({ open: false, value: '' });
 
-    const countProject = units.length;
-    const countBuilding = units.filter(
-        (u) => String(u.building) === String(building),
-    ).length;
+    const countProject = projectCount;
+    const countBuilding = buildingCount;
 
     // --- Пример вызова истории: вызывайте из нужного места, например из UnitsMatrix
     // function handleShowHistory(unit) {
@@ -371,7 +369,6 @@ export default function ProjectStructurePage() {
                 <UnitsMatrix
                     projectId={projectId}
                     building={building}
-                    onUnitsChanged={setUnits}
                     // здесь добавьте handleShowHistory в карточки, если хотите открыть историю по объекту
                 />
             )}
