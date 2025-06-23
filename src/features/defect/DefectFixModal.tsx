@@ -50,7 +50,7 @@ export default function DefectFixModal({ defectId, open, onClose }: Props) {
           name: f.original_name ?? f.storage_path.split("/").pop(),
           path: f.storage_path,
           url: f.file_url,
-          type: f.file_type,
+          mime_type: f.file_type,
         })) ?? [];
       setRemoteFiles(atts);
       setRemovedIds([]);
@@ -98,7 +98,7 @@ export default function DefectFixModal({ defectId, open, onClose }: Props) {
       brigade_id: fixBy.brigade_id,
       contractor_id: fixBy.contractor_id,
       fixed_at: fixedAt ? fixedAt.format("YYYY-MM-DD") : null,
-      attachments: files,
+      attachments: files.map((f) => ({ file: f.file, type_id: null })),
       removedAttachmentIds: removedIds.map(Number),
       updatedAttachments: updated,
     });
@@ -158,7 +158,7 @@ export default function DefectFixModal({ defectId, open, onClose }: Props) {
               id: String(f.id),
               name: f.name,
               path: f.path,
-              mime: f.type,
+              mime: f.mime_type,
             }))}
             newFiles={files.map((f) => ({ file: f.file, mime: f.file.type }))}
             onRemoveRemote={removeRemote}

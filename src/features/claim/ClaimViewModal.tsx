@@ -166,7 +166,7 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
 
   const handleChangeDef = (
     id: number,
-    field: keyof NewDefect,
+    field: keyof NewDefect | 'id',
     value: any,
   ) => {
     if (id < 0) {

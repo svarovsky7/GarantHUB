@@ -36,7 +36,7 @@ export const useUnits = () => {
         queryKey: ['units', projectId, projectIds.join(',')],
         enabled,
         queryFn : async () => {
-            let query = supabase.from('units').select(SELECT);
+            let query: any = supabase.from('units').select(SELECT);
             query = filterByProjects(query, projectId, projectIds, onlyAssigned);
             query = query.order('id');
             const { data, error } = await query;
@@ -95,7 +95,7 @@ export const useUnit = (unitId) => {
         queryKey: ['unit', unitId, projectId, projectIds.join(',')],
         enabled : !!unitId && baseEnabled,
         queryFn : async () => {
-            let query = supabase
+            let query: any = supabase
                 .from('units')
                 .select(SELECT)
                 .eq('id', unitId);
@@ -142,7 +142,7 @@ const createUnit = async (payload) => {
 export const useAddUnit = () => {
     const qc = useQueryClient();
     const userId = useAuthStore((s) => s.profile?.id ?? null);
-    return useMutation({
+    return useMutation<any, Error, Omit<import('@/shared/types/unit').Unit, 'id'>>({
         mutationFn: (payload) => {
             if (!userId) throw new Error('Профиль пользователя не загружен');
             // person_id обязательно подставляется сюда:
@@ -186,7 +186,7 @@ const updateUnit = async ({ id, updates }) => {
 
 export const useUpdateUnit = () => {
     const qc = useQueryClient();
-    return useMutation({
+    return useMutation<any, Error, { id: number; updates: Partial<import('@/shared/types/unit').Unit> }>({
         mutationFn: (args) => updateUnit(args),
         onSuccess : () => qc.invalidateQueries({ queryKey: ['units'] }),
     });

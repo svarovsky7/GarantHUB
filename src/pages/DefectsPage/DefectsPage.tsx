@@ -368,11 +368,11 @@ export default function DefectsPage() {
 
   const [columnsState, setColumnsState] = useState<TableColumnSetting[]>(() => {
     const base = baseColumns;
-    const defaults = columnOrder.map((key) => ({
-      key,
-      title: getTitleText(base[key].title),
-      visible: true,
-    }));
+      const defaults = columnOrder.map((key) => ({
+        key,
+        title: getTitleText(base[key].title as React.ReactNode),
+        visible: true,
+      }));
     try {
       const saved = localStorage.getItem(LS_COLUMNS_KEY);
       if (saved) {
@@ -391,7 +391,7 @@ export default function DefectsPage() {
     const base = baseColumns;
     const defaults = columnOrder.map((key) => ({
       key,
-      title: getTitleText(base[key].title),
+      title: getTitleText(base[key].title as React.ReactNode),
       visible: true,
     }));
     setColumnsState(defaults);

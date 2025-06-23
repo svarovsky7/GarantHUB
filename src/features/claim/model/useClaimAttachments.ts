@@ -5,7 +5,7 @@ import type { RemoteClaimFile, NewClaimFile } from '@/shared/types/claimFile';
 /**
  * Хук управления вложениями претензии.
  */
-export function useClaimAttachments(options: { claim?: Claim | null }) {
+export function useClaimAttachments(options: { claim?: (Claim & { attachments?: any[] }) | null }) {
   const { claim } = options;
 
   const [remoteFiles, setRemoteFiles] = useState<RemoteClaimFile[]>([]);

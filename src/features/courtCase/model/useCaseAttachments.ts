@@ -19,7 +19,7 @@ export function useCaseAttachments(options: {
       if (!file) return null;
       const storagePath = (file as any).storage_path ?? file.path;
       const fileUrl = (file as any).file_url ?? file.url ?? '';
-      const fileType = (file as any).file_type ?? file.type ?? '';
+      const fileType = (file as any).file_type ?? file.mime_type ?? file.type ?? '';
       const originalName = (file as any).original_name ?? null;
       const name =
         originalName ||
@@ -31,7 +31,7 @@ export function useCaseAttachments(options: {
         original_name: originalName,
         path: storagePath ?? '',
         url: fileUrl,
-        type: fileType,
+        mime_type: fileType,
       } as RemoteCaseFile;
     }).filter(Boolean) as RemoteCaseFile[];
     setRemoteFiles(attachmentsWithType);

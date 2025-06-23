@@ -258,6 +258,7 @@ export default function CorrespondencePage() {
     const safeData = fixForeignKeys(
       {
         ...data,
+        attachments: data.attachments.map((f) => ({ file: f.file, type_id: null })),
         // явное приведение undefined/'' к null для корректного сохранения FK
         responsible_user_id: data.responsible_user_id || null,
         date: data.date ? data.date.toISOString() : dayjs().toISOString(),

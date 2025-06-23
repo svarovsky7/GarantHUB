@@ -44,7 +44,7 @@ function mapClaim(r: any): ClaimWithNames {
           original_name: a.original_name ?? null,
           name,
           url: a.file_url,
-          type: a.file_type,
+          mime_type: a.mime_type,
         } as import('@/shared/types/claimFile').RemoteClaimFile;
       })
     : [];
@@ -116,7 +116,7 @@ export function useClaims() {
   return useQuery({
     queryKey: [TABLE, projectId, projectIds.join(',')],
     queryFn: async () => {
-      let q = supabase
+      let q: any = supabase
         .from(TABLE)
         .select(
           `id, project_id, claim_status_id, claim_no, claimed_on,
@@ -165,7 +165,7 @@ export function useClaim(id?: number | string) {
     queryKey: [TABLE, claimId],
     enabled: !!claimId,
     queryFn: async () => {
-      let q = supabase
+      let q: any = supabase
         .from(TABLE)
         .select(
           `id, project_id, claim_status_id, claim_no, claimed_on,
@@ -351,7 +351,7 @@ export function useClaimsSimple() {
     queryKey: ['claims-simple', projectId, projectIds.join(',')],
     enabled,
     queryFn: async () => {
-      let q = supabase
+      let q: any = supabase
         .from(TABLE)
         .select('id, project_id, is_official');
       q = filterByProjects(q, projectId, projectIds, onlyAssigned);
