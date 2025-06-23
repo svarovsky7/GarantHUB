@@ -1237,5 +1237,40 @@
     "data_type": "uuid",
     "is_nullable": "YES",
     "column_default": null
+  },
+  {
+    "table_name": "unit_sort_orders",
+    "column_name": "id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": "nextval('unit_sort_orders_id_seq'::regclass)"
+  },
+  {
+    "table_name": "unit_sort_orders",
+    "column_name": "project_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "unit_sort_orders",
+    "column_name": "building",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "unit_sort_orders",
+    "column_name": "floor",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "unit_sort_orders",
+    "column_name": "sort_direction",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
   }
 ]
