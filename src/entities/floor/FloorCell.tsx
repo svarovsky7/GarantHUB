@@ -3,6 +3,7 @@ import { Box, Tooltip, IconButton } from "@mui/material";
 import UnitCell from "@/entities/unit/UnitCell";
 import EditOutlined from "@mui/icons-material/EditOutlined";
 import DeleteOutline from "@mui/icons-material/DeleteOutline";
+import SwapVertIcon from "@mui/icons-material/SwapVert";
 import AddIcon from "@mui/icons-material/Add";
 
 const CELL_SIZE = 54;
@@ -23,6 +24,8 @@ export default function FloorCell({
   onEditUnit,
   onDeleteUnit,
   onUnitClick,
+  onSortUnits,
+  sortDirection,
 }) {
   return (
     <Box
@@ -98,6 +101,24 @@ export default function FloorCell({
               data-oid="ha0rwke"
             >
               <DeleteOutline fontSize="small" data-oid="b.aximf" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Сортировать номера" data-oid="sortfloor">
+            <IconButton
+              size="small"
+              sx={{
+                color: sortDirection ? FLOOR_COLOR : "#b0b6be",
+                opacity: 0.8,
+                mt: 0.2,
+                background: "#F8FAFF",
+                "&:hover": { color: FLOOR_COLOR, background: "#e3ecfb" },
+              }}
+              onClick={() => onSortUnits?.(floor)}
+            >
+              <SwapVertIcon
+                fontSize="small"
+                sx={{ transform: sortDirection === 'desc' ? 'rotate(180deg)' : 'none' }}
+              />
             </IconButton>
           </Tooltip>
         </Box>
