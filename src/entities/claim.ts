@@ -523,9 +523,10 @@ export function useDeleteClaim() {
   const { projectId, projectIds, onlyAssigned } = useProjectFilter();
   return useMutation<number, Error, ClaimDeleteParams>({
     /**
-     * Удаляет претензию вместе с её файлами и всеми связанными дефектами.
-     * @param payload объект с идентификатором претензии
-     */
+   * Удаляет претензию вместе с её файлами и всеми связанными дефектами.
+   * При удалении дефектов учитываются права доступа к проектам.
+   * @param payload объект с идентификатором претензии
+   */
     mutationFn: async ({ id }) => {
       const { data: attachRows } = await supabase
         .from('claim_attachments')
@@ -570,7 +571,9 @@ export function useDeleteClaim() {
             .delete()
             .in('attachment_id', defFiles);
         }
-        await supabase.from('defects').delete().in('id', defectIds);
+        let dq = supabase.from('defects').delete().in('id', defectIds);
+        dq = filterByProjects(dq, projectId, projectIds, onlyAssigned);
+        await dq;
         await supabase.from('claim_defects').delete().eq('claim_id', id);
       }
 
