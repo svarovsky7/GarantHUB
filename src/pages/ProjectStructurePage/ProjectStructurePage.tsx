@@ -18,21 +18,11 @@ import DeleteOutline from "@mui/icons-material/DeleteOutline";
 import AddBuildingDialog from "@/features/addBuilding/AddBuildingDialog";
 import UnitsMatrix from "@/widgets/UnitsMatrix/UnitsMatrix";
 import StatusLegend from "@/widgets/StatusLegend";
-import useProjectStructure from "@/shared/hooks/useProjectStructure";
+import useProjectStructure, { LS_KEY } from "@/shared/hooks/useProjectStructure";
 import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useDeleteUnitsByBuilding } from '@/entities/unit';
 import { useUnitsCount } from '@/shared/hooks/useUnitsCount';
 // Новое:
-
-function getCurrentProfile() {
-    try {
-        return JSON.parse(localStorage.getItem("profile")) || {};
-    } catch {
-        return {};
-    }
-}
-
-const LS_KEY = "structurePageSelection";
 
 function pluralObj(n) {
     n = Number(n);
@@ -66,9 +56,8 @@ export default function ProjectStructurePage() {
 
     const deleteBuildingMutation = useDeleteUnitsByBuilding();
 
-    // Автоматический выбор проекта, корпуса, секции
+    // Автоматический выбор проекта и корпуса при загрузке
     useEffect(() => {
-        const profile = getCurrentProfile();
         const saved = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
         if (!projectId) {
             if (
