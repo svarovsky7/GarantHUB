@@ -20,7 +20,6 @@ import { supabase } from "@/shared/api/supabaseClient";
 import HistoryDialog from "@/features/history/HistoryDialog";
 import { useNavigate, createSearchParams } from 'react-router-dom';
 import { useAuthStore } from '@/shared/store/authStore';
-import { getUnitNameComparator } from '@/shared/utils/unitNumberSort';
 
 /**
  * Шахматка квартир/этажей для заданного проекта и корпуса.
@@ -64,12 +63,6 @@ export default function UnitsMatrix({
     action: "",
   });
 
-  const [sortDirections, setSortDirections] = useState<Record<string, 'asc' | 'desc' | null>>({});
-
-  useEffect(() => {
-    setSortDirections({});
-  }, [projectId, building]);
-
   // Прокидываем units (все объекты проекта) наверх для счетчиков
   useEffect(() => {
     if (typeof onUnitsChanged === "function") {
@@ -94,14 +87,6 @@ export default function UnitsMatrix({
     setConfirmDialog({ open: true, type: "unit", target: unit });
   const handleUnitAction = (unit) =>
     setActionDialog({ open: true, unit, action: "" });
-
-  const handleSortFloor = (floor: string | number) => {
-    setSortDirections((prev) => {
-      const current = prev[floor] ?? null;
-      const next = current === 'asc' ? 'desc' : 'asc';
-      return { ...prev, [floor]: next };
-    });
-  };
 
   // Сохранить (обновление в базе и fetchUnits)
   const handleSaveEdit = async () => {
@@ -146,19 +131,6 @@ export default function UnitsMatrix({
     }
     setConfirmDialog({ open: false, type: "", target: null });
   };
-
-  const sortedUnitsByFloor = React.useMemo(() => {
-    const map: Record<string, any[]> = {};
-    for (const [fl, units] of Object.entries(unitsByFloor)) {
-      const dir = sortDirections[fl];
-      if (dir) {
-        map[fl] = [...units].sort(getUnitNameComparator(dir));
-      } else {
-        map[fl] = units;
-      }
-    }
-    return map;
-  }, [unitsByFloor, sortDirections]);
 
   if (!floors.length) {
     return (
@@ -211,7 +183,7 @@ export default function UnitsMatrix({
           <FloorCell
             key={floor}
             floor={floor}
-            units={sortedUnitsByFloor[floor] || []}
+            units={unitsByFloor[floor] || []}
             casesByUnit={casesByUnit}
             lettersByUnit={lettersByUnit}
             claimsByUnit={claimsByUnit}
@@ -221,8 +193,6 @@ export default function UnitsMatrix({
             onEditUnit={handleEditUnit}
             onDeleteUnit={handleDeleteUnit}
             onUnitClick={handleUnitAction}
-            onSortUnits={handleSortFloor}
-            sortDirection={sortDirections[floor] ?? null}
           />
         ))}
         {/* Кнопка добавления нового этажа */}
