@@ -520,7 +520,6 @@ export function useUpdateClaim() {
  */
 export function useDeleteClaim() {
   const qc = useQueryClient();
-  const { projectId, projectIds, onlyAssigned } = useProjectFilter();
   return useMutation<number, Error, ClaimDeleteParams>({
     /**
    * Удаляет претензию вместе с её файлами, всеми связанными дефектами
@@ -529,6 +528,7 @@ export function useDeleteClaim() {
    * @param payload объект с идентификатором претензии
    */
     mutationFn: async ({ id }) => {
+      console.log('[useDeleteClaim] start delete id:', id);
       const { data: attachRows } = await supabase
         .from('claim_attachments')
         .select('attachment_id, attachments(storage_path)')
@@ -537,6 +537,7 @@ export function useDeleteClaim() {
       const paths = (attachRows ?? [])
         .map((r: any) => r.attachments?.storage_path)
         .filter(Boolean);
+      console.log('[useDeleteClaim] claim attachments:', paths);
 
 
       if (paths.length) {
@@ -552,6 +553,7 @@ export function useDeleteClaim() {
         .select('defect_id')
         .eq('claim_id', id);
       const defectIds = (defectRows ?? []).map((d: any) => d.defect_id);
+      console.log('[useDeleteClaim] defects for claim:', defectIds);
 
       if (defectIds.length) {
         const { data: defAttachRows } = await supabase
@@ -563,6 +565,7 @@ export function useDeleteClaim() {
           .map((r: any) => r.attachments?.storage_path)
           .filter(Boolean);
         if (defPaths.length) {
+          console.log('[useDeleteClaim] defect attachments:', defPaths);
           await supabase.storage.from(ATTACH_BUCKET).remove(defPaths);
           await supabase.from('attachments').delete().in('id', defFiles);
         }
@@ -572,9 +575,9 @@ export function useDeleteClaim() {
             .delete()
             .in('attachment_id', defFiles);
         }
-        let dq = supabase.from('defects').delete().in('id', defectIds);
-        dq = filterByProjects(dq, projectId, projectIds, onlyAssigned);
-        await dq;
+        const dq = await supabase.from('defects').delete().in('id', defectIds);
+        console.log('[useDeleteClaim] delete defects result:', dq.error || 'ok');
+        if (dq.error) throw dq.error;
         await supabase.from('claim_defects').delete().eq('claim_id', id);
       }
 
@@ -585,9 +588,8 @@ export function useDeleteClaim() {
         .delete()
         .or(`child_id.eq.${id},parent_id.eq.${id}`);
 
-      let q = supabase.from(TABLE).delete().eq('id', id);
-      q = filterByProjects(q, projectId, projectIds, onlyAssigned);
-      const { error } = await q;
+      const { error } = await supabase.from(TABLE).delete().eq('id', id);
+      console.log('[useDeleteClaim] delete claim result:', error || 'ok');
       if (error) throw error;
       return id;
     },
