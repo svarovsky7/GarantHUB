@@ -68,7 +68,6 @@
 ## defect_deadlines
 - `defect_deadlines_pkey` - `UNIQUE id`
 - `defect_deadlines_project_id_ticket_type_id_key` - `UNIQUE project_id, defect_type_id`
-
 ## defect_types
 - `ticket_types_pkey` - `UNIQUE id`
 
@@ -120,9 +119,6 @@
 
 ## statuses
 - `statuses_pkey` - `UNIQUE id`
-
-## unit_history
-- `unit_history_pkey` - `UNIQUE id`
 
 ## unit_sort_orders
 - `unit_sort_orders_pkey` - `UNIQUE id`
