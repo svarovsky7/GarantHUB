@@ -28,11 +28,11 @@ VITE_ATTACH_BUCKET=<название корзины для вложений>
 
 ## Структура базы данных
 
-Описание таблиц и полей находится в файле [`database_structure.json`](database_structure.json).
+Описание БД: [database_structure.json](database_structure.json).
 
 
 ## Индексы базы данных
 
-Полный список индексов находится в файле [`db_indexes_summary.md`](db_indexes_summary.md).
+Индексы: [db_indexes_summary.md](db_indexes_summary.md).
 
 
