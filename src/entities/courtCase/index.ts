@@ -26,14 +26,31 @@ export function useCourtCases() {
       query = query.order('created_at', { ascending: false });
       const { data, error } = await query;
       if (error) throw error;
+
+      const ids = (data ?? []).map((r: any) => r.id);
+      const { data: unitRows } = ids.length
+        ? await supabase
+            .from(CASE_UNITS_TABLE)
+            .select('court_case_id, unit_id')
+            .in('court_case_id', ids)
+        : { data: [] };
+      const unitMap = new Map<number, number[]>();
+      (unitRows ?? []).forEach((r: any) => {
+        const arr = unitMap.get(r.court_case_id) || [];
+        arr.push(r.unit_id);
+        unitMap.set(r.court_case_id, arr);
+      });
+
       const { data: links, error: linkErr } = await supabase
         .from(CASE_LINKS_TABLE)
         .select('parent_id, child_id');
       if (linkErr) throw linkErr;
       const linkMap = new Map<number, number>();
       (links ?? []).forEach((l) => linkMap.set(l.child_id, l.parent_id));
+
       return (data ?? []).map((row: any) => ({
         ...row,
+        unit_ids: unitMap.get(row.id) || [],
         parent_id: linkMap.get(row.id) ?? null,
       })) as CourtCase[];
     },

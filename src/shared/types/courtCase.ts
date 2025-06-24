@@ -20,6 +20,8 @@ export interface CourtCase {
   /** Идентификатор родительского дела */
   parent_id?: number | null;
   project_id: number;
+  /** Ссылка на уникальный идентификатор дела */
+  case_uid_id?: number | null;
   /** Идентификаторы объектов проекта */
   unit_ids: number[];
   date: string;
