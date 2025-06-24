@@ -25,6 +25,7 @@ import { usePersons, useDeletePerson } from '@/entities/person';
 import { useAddCourtCase, useUpdateCourtCase } from '@/entities/courtCase';
 import { addCaseAttachments } from '@/entities/attachment';
 import { useAddCaseClaims } from '@/entities/courtCaseClaim';
+import { useCaseUids, getOrCreateCaseUid } from '@/entities/caseUid';
 import CourtCaseClaimsTable from '@/widgets/CourtCaseClaimsTable';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/shared/api/supabaseClient';
@@ -49,6 +50,7 @@ export interface AddCourtCaseFormAntdProps {
     unit_ids: number[];
     responsible_lawyer_id: string;
     status: number;
+    case_uid: string;
   }>;
 }
 
@@ -83,6 +85,9 @@ export default function AddCourtCaseFormAntd({
     if (initialValues.status) {
       form.setFieldValue('status', initialValues.status);
     }
+    if (initialValues.case_uid) {
+      form.setFieldValue('case_uid', initialValues.case_uid);
+    }
   }, [initialValues, globalProjectId, profileId, form]);
 
   /**
@@ -103,6 +108,7 @@ export default function AddCourtCaseFormAntd({
   const { data: users = [], isPending: usersLoading } = useUsers();
   const { data: stages = [], isPending: stagesLoading } = useCourtCaseStatuses();
   const { data: personsList = [] } = usePersons();
+  const { data: caseUids = [] } = useCaseUids();
   const addCaseMutation = useAddCourtCase();
   const updateCaseMutation = useUpdateCourtCase();
   const addClaimsMutation = useAddCaseClaims();
@@ -149,11 +155,13 @@ export default function AddCourtCaseFormAntd({
 
   const handleAddCase = async (values: any) => {
     try {
+      const uidId = await getOrCreateCaseUid(values.case_uid);
       const newCase = await addCaseMutation.mutateAsync({
         project_id: values.project_id,
         unit_ids: values.unit_ids || [],
         number: values.number,
         date: values.date.format('YYYY-MM-DD'),
+        case_uid_id: uidId,
         plaintiff_person_id:
           plaintiffType === 'person' ? values.plaintiff_id : null,
         plaintiff_contractor_id:
@@ -234,6 +242,24 @@ export default function AddCourtCaseFormAntd({
           <Col span={8}>
             <Form.Item name="responsible_lawyer_id" label="Ответственный юрист" rules={[{ required: true, message: 'Выберите юриста' }]}> 
               <Select loading={usersLoading} options={users.map((u) => ({ value: u.id, label: u.name }))} />
+            </Form.Item>
+          </Col>
+        </Row>
+        {/* Row UID */}
+        <Row gutter={16}>
+          <Col span={8}>
+            <Form.Item
+              name="case_uid"
+              label="Уникальный идентификатор"
+              rules={[{ required: true, message: 'Укажите UID' }]}
+            >
+              <Select
+                mode="tags"
+                open={false}
+                tokenSeparators={[',']}
+                placeholder="UID"
+                options={caseUids.map((u) => ({ value: u.uid, label: u.uid }))}
+              />
             </Form.Item>
           </Col>
         </Row>
