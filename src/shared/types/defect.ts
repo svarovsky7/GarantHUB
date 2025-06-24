@@ -32,6 +32,8 @@ export interface DefectRecord {
   fixed_by: string | null;
   /** Дата создания */
   created_at: string | null;
+  /** Уникальный идентификатор судебного дела */
+  case_uid_id?: number | null;
 }
 
 /** Дефект с дополнительной информацией для отображения */
