@@ -330,11 +330,26 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
         </Col>
         {isOfficialWatch && (
           <Col span={8}>
-            <Form.Item name="case_uid_id" label="Уникальный идентификатор дела">
+            <Form.Item
+              name="case_uid_id"
+              label="Уникальный идентификатор дела"
+              rules={[
+                {
+                  required: true,
+                  message: 'Выберите идентификатор',
+                },
+              ]}
+            >
               <Select
                 showSearch
                 allowClear
                 options={caseUids.map((c) => ({ value: c.id, label: c.uid }))}
+                filterOption={(input, option) =>
+                  (option?.label ?? '')
+                    .toString()
+                    .toLowerCase()
+                    .includes(input.toLowerCase())
+                }
               />
             </Form.Item>
           </Col>
