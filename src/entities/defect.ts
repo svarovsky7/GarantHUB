@@ -22,8 +22,6 @@ export interface NewDefect {
   received_at: string | null;
   fixed_at: string | null;
   fixed_by: string | null;
-  /** Уникальный идентификатор судебного дела */
-  case_uid_id?: number | null;
 }
 
 const TABLE = 'defects';
