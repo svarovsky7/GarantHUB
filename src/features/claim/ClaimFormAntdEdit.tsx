@@ -11,6 +11,8 @@ import {
   Skeleton,
   Switch,
   Tooltip,
+  Space,
+  Popconfirm,
 } from 'antd';
 import {
   useClaim,
@@ -25,6 +27,9 @@ import { useVisibleProjects } from '@/entities/project';
 import { useUnitsByProject } from '@/entities/unit';
 import { useUsers } from '@/entities/user';
 import { useClaimStatuses } from '@/entities/claimStatus';
+import { usePersons, useDeletePerson } from '@/entities/person';
+import PersonModalId from '@/features/person/PersonModalId';
+import { useCaseUids } from '@/entities/caseUid';
 import { useNotify } from '@/shared/hooks/useNotify';
 import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useAuthStore } from '@/shared/store/authStore';
@@ -36,6 +41,7 @@ import FileDropZone from '@/shared/ui/FileDropZone';
 import { useClaimAttachments } from './model/useClaimAttachments';
 import type { RemoteClaimFile } from '@/shared/types/claimFile';
 import type { ClaimFormAntdEditRef } from '@/shared/types/claimFormAntdEditRef';
+import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 
 export interface ClaimFormAntdEditProps {
   claimId: string | number;
@@ -63,6 +69,8 @@ export interface ClaimFormAntdEditValues {
   accepted_on: Dayjs | null;
   registered_on: Dayjs | null;
   engineer_id: string | null;
+  person_id: number | null;
+  case_uid_id: number | null;
   is_official: boolean;
   description: string | null;
 }
@@ -95,6 +103,10 @@ const ClaimFormAntdEdit = React.forwardRef<
   const { data: units = [] } = useUnitsByProject(projectId);
   const { data: users = [] } = useUsers();
   const { data: statuses = [] } = useClaimStatuses();
+  const { data: persons = [] } = usePersons();
+  const deletePerson = useDeletePerson();
+  const { data: caseUids = [] } = useCaseUids();
+  const [personModal, setPersonModal] = React.useState<any | null>(null);
   const update = useUpdateClaim();
   const addAtt = useAddClaimAttachments();
   const removeAtt = useRemoveClaimAttachment();
@@ -103,6 +115,7 @@ const ClaimFormAntdEdit = React.forwardRef<
   const attachments =
     attachmentsState ?? useClaimAttachments({ claim: claim as any });
   const { changedFields, handleValuesChange } = useChangedFields(form, [claim]);
+  const isOfficialWatch = Form.useWatch('is_official', form);
 
   useImperativeHandle(ref, () => ({
     submit: () => form.submit(),
@@ -125,10 +138,18 @@ const ClaimFormAntdEdit = React.forwardRef<
       accepted_on: claim.acceptedOn ?? null,
       registered_on: claim.registeredOn ?? null,
       engineer_id: claim.engineer_id ?? null,
+      person_id: claim.person_id ?? null,
+      case_uid_id: claim.case_uid_id ?? null,
       description: claim.description ?? '',
       is_official: claim.is_official ?? false,
     });
   }, [claim, form]);
+
+  useEffect(() => {
+    if (!isOfficialWatch) {
+      form.setFieldValue('case_uid_id', null);
+    }
+  }, [isOfficialWatch, form]);
 
   const onFinish = async (values: ClaimFormAntdEditValues) => {
     if (!claim) return;
@@ -150,6 +171,8 @@ const ClaimFormAntdEdit = React.forwardRef<
             ? values.registered_on.format('YYYY-MM-DD')
             : null,
           engineer_id: values.engineer_id ?? null,
+          person_id: values.person_id ?? null,
+          case_uid_id: values.case_uid_id ?? null,
           is_official: values.is_official,
           description: values.description ?? '',
           updated_by: userId ?? undefined,
@@ -238,6 +261,40 @@ const ClaimFormAntdEdit = React.forwardRef<
           </Form.Item>
         </Col>
         <Col span={8}>
+          <Form.Item label="Физлицо" name="person_id" style={highlight('person_id')}>
+            <Space.Compact style={{ width: '100%' }}>
+              <Select
+                allowClear
+                showSearch
+                options={persons.map((p) => ({ value: p.id, label: p.full_name }))}
+              />
+              <Button icon={<PlusOutlined />} onClick={() => setPersonModal({})} />
+              <Button
+                icon={<EditOutlined />}
+                disabled={!form.getFieldValue('person_id')}
+                onClick={() => {
+                  const id = form.getFieldValue('person_id');
+                  const data = persons.find((p) => p.id === id) || null;
+                  setPersonModal(data);
+                }}
+              />
+              <Popconfirm
+                title="Удалить физлицо?"
+                okText="Да"
+                cancelText="Нет"
+                onConfirm={() => {
+                  const id = form.getFieldValue('person_id');
+                  if (!id) return;
+                  deletePerson.mutate(id);
+                }}
+                disabled={!form.getFieldValue('person_id')}
+              >
+                <Button icon={<DeleteOutlined />} disabled={!form.getFieldValue('person_id')} />
+              </Popconfirm>
+            </Space.Compact>
+          </Form.Item>
+        </Col>
+        <Col span={8}>
           <Form.Item
             name="engineer_id"
             label="Закрепленный инженер"
@@ -315,6 +372,17 @@ const ClaimFormAntdEdit = React.forwardRef<
             </Tooltip>
           </Form.Item>
         </Col>
+        {isOfficialWatch && (
+          <Col span={8}>
+            <Form.Item name="case_uid_id" label="Уникальный идентификатор дела" style={highlight('case_uid_id')}>
+              <Select
+                showSearch
+                allowClear
+                options={caseUids.map((c) => ({ value: c.id, label: c.uid }))}
+              />
+            </Form.Item>
+          </Col>
+        )}
       </Row>
       {showAttachments && (
         <Form.Item
@@ -356,6 +424,15 @@ const ClaimFormAntdEdit = React.forwardRef<
         </Form.Item>
       )}
     </Form>
+    <PersonModalId
+      open={!!personModal}
+      onClose={() => setPersonModal(null)}
+      unitId={Form.useWatch('unit_ids', form)?.[0] ?? null}
+      onSelect={(id) => {
+        form.setFieldValue('person_id', id);
+      }}
+      initialData={personModal}
+    />
   );
 });
 
