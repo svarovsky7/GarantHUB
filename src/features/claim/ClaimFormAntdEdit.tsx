@@ -375,11 +375,27 @@ const ClaimFormAntdEdit = React.forwardRef<
         </Col>
         {isOfficialWatch && (
           <Col span={8}>
-            <Form.Item name="case_uid_id" label="Уникальный идентификатор дела" style={highlight('case_uid_id')}>
+            <Form.Item
+              name="case_uid_id"
+              label="Уникальный идентификатор дела"
+              rules={[
+                {
+                  required: true,
+                  message: 'Выберите идентификатор',
+                },
+              ]}
+              style={highlight('case_uid_id')}
+            >
               <Select
                 showSearch
                 allowClear
                 options={caseUids.map((c) => ({ value: c.id, label: c.uid }))}
+                filterOption={(input, option) =>
+                  (option?.label ?? '')
+                    .toString()
+                    .toLowerCase()
+                    .includes(input.toLowerCase())
+                }
               />
             </Form.Item>
           </Col>
