@@ -179,6 +179,20 @@ const ClaimFormAntdEdit = React.forwardRef<
         } as any,
       });
 
+      if (values.case_uid_id !== claim.case_uid_id) {
+        const { data: rows } = await supabase
+          .from('claim_defects')
+          .select('defect_id')
+          .eq('claim_id', claim.id);
+        const defectIds = (rows ?? []).map((r: any) => r.defect_id);
+        if (defectIds.length) {
+          await supabase
+            .from('defects')
+            .update({ case_uid_id: values.case_uid_id ?? null })
+            .in('id', defectIds);
+        }
+      }
+
       if (!claim.is_official && values.is_official) {
         await supabase
           .from('claim_defects')
