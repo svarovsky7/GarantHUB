@@ -21,10 +21,6 @@ export interface Claim {
   resolved_on: string | null;
   /** Ответственный инженер */
   engineer_id: string | null;
-  /** Связь с физлицом */
-  person_id: number | null;
-  /** Уникальный идентификатор судебного дела */
-  case_uid_id: number | null;
   /**
    * Официальная претензия.
    * Переключатель доступен только ролям ADMIN и LAWYER.
