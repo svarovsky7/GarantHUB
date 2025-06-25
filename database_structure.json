@@ -267,6 +267,13 @@
   },
   {
     "table_name": "claims",
+    "column_name": "person_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "claims",
     "column_name": "case_uid_id",
     "data_type": "integer",
     "is_nullable": "YES",
@@ -775,6 +782,13 @@
     "data_type": "timestamp with time zone",
     "is_nullable": "YES",
     "column_default": "now()"
+  },
+  {
+    "table_name": "defects",
+    "column_name": "case_uid_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
   },
   {
     "table_name": "lawsuit_claim_types",
