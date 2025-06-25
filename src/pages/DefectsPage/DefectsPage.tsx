@@ -71,7 +71,7 @@ export default function DefectsPage() {
     // замена: no tickets
     const claimsMap = new Map<
       number,
-      { id: number; unit_ids: number[]; project_id: number }[]
+      { id: number; unit_ids: number[]; project_id: number; pre_trial_claim: boolean }[]
     >();
     claims.forEach((c: any) => {
       (c.claim_defects || []).forEach((cd: any) => {
@@ -80,6 +80,7 @@ export default function DefectsPage() {
           id: c.id,
           unit_ids: c.unit_ids || [],
           project_id: c.project_id,
+          pre_trial_claim: cd.pre_trial_claim ?? false,
         });
         claimsMap.set(cd.defect_id, arr);
       });
@@ -87,6 +88,7 @@ export default function DefectsPage() {
     return defects.map((d: any) => {
       const claimLinked = claimsMap.get(d.id) || [];
       const linked = claimLinked;
+      const hasPretrial = linked.some((l) => l.pre_trial_claim);
       const unitIds = Array.from(new Set(linked.flatMap((l) => l.unit_ids)));
       const unitNamesList = unitIds
         .map((id) => unitMap.get(id))
@@ -113,6 +115,7 @@ export default function DefectsPage() {
       return {
         ...d,
         claimIds: claimLinked.map((l) => l.id),
+        hasPretrialClaim: hasPretrial,
         unitIds,
         unitNames,
         unitNamesList,
