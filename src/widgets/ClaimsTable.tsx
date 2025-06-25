@@ -158,7 +158,6 @@ export default function ClaimsTable({
   }, [filtered]);
 
   const rowClassName = (row: ClaimWithNames) => {
-    if (row.is_official) return 'claim-official-row';
     const checking = row.statusName?.toLowerCase().includes('провер');
     const closed = row.statusName?.toLowerCase().includes('закры');
     if (checking || row.hasCheckingDefect) return 'claim-checking-row';

@@ -34,9 +34,6 @@ export default function StatusLegend() {
         <MailIcon fontSize="small" sx={{ mr: 0.5, color: '#f0b400' }} /> — есть связанные письма
       </Typography>
       <Typography variant="body2" color="text.secondary">
-        Тонкая красная обводка — официальная претензия
-      </Typography>
-      <Typography variant="body2" color="text.secondary">
         Жирная красная обводка — судебное дело
       </Typography>
     </Box>

@@ -100,14 +100,8 @@ body {
 .defect-confirmed-row {
   background: #f6ffed !important;
 }
-.defect-official-row {
-  background: #fff1f0 !important;
-}
 .claim-checking-row {
   background: #f6ffed !important;
-}
-.claim-official-row {
-  background: #fff1f0 !important;
 }
 .claim-closed-row {
   color: #aaa;

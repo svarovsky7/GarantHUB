@@ -53,7 +53,6 @@ export interface ClaimFormValues {
   engineer_id: string | null;
   person_id: number | null;
   case_uid_id: number | null;
-  is_official: boolean;
   description: string | null;
   defects?: Array<{
     type_id: number | null;
@@ -112,11 +111,6 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
     if (initialValues.description) form.setFieldValue('description', initialValues.description);
     if (initialValues.person_id != null) form.setFieldValue('person_id', initialValues.person_id);
     if (initialValues.case_uid_id != null) form.setFieldValue('case_uid_id', initialValues.case_uid_id);
-    if (initialValues.is_official != null) {
-      form.setFieldValue('is_official', initialValues.is_official);
-    } else {
-      form.setFieldValue('is_official', false);
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [globalProjectId, form]);
 
@@ -312,23 +306,8 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
       </Row>
       <Row gutter={16}>
         <Col span={8}>
-          <Form.Item
-            name="is_official"
-            label="Официальная претензия"
-            valuePropName="checked"
-          >
-            <Tooltip title="Доступно юристам и администраторам">
-              <Switch disabled={role !== 'ADMIN' && role !== 'LAWYER'} />
-            </Tooltip>
-          </Form.Item>
-        </Col>
-        <Col span={8}>
           <Form.Item name="case_uid_id" label="Уникальный идентификатор дела">
-            <Select
-              showSearch
-              allowClear
-              options={caseUids.map((c) => ({ value: c.id, label: c.uid }))}
-            />
+            <Select showSearch allowClear options={caseUids.map((c) => ({ value: c.id, label: c.uid }))} />
           </Form.Item>
         </Col>
       </Row>

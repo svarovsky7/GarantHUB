@@ -126,13 +126,6 @@
     "column_default": null
   },
   {
-    "table_name": "claim_defects",
-    "column_name": "is_official",
-    "data_type": "boolean",
-    "is_nullable": "YES",
-    "column_default": "false"
-  },
-  {
     "table_name": "claim_links",
     "column_name": "id",
     "data_type": "bigint",
@@ -271,13 +264,6 @@
     "data_type": "timestamp with time zone",
     "is_nullable": "YES",
     "column_default": "now()"
-  },
-  {
-    "table_name": "claims",
-    "column_name": "is_official",
-    "data_type": "boolean",
-    "is_nullable": "YES",
-    "column_default": "false"
   },
   {
     "table_name": "claims",
