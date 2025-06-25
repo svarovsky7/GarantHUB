@@ -10,6 +10,7 @@ import { useProjectFilter } from '@/shared/hooks/useProjectFilter';
 import { useAuthStore } from '@/shared/store/authStore';
 import { filterByProjects } from '@/shared/utils/projectQuery';
 import { useNotify } from '@/shared/hooks/useNotify';
+import { getUnitNameComparator } from '@/shared/utils/unitNumberSort';
 
 /* ---------- базовый SELECT ---------- */
 const SELECT = `
@@ -68,10 +69,15 @@ export const useUnitsByProject = (projectId, building) =>
 
             if (error) throw error;
 
-            return (data ?? []).map((u) => ({
+            const units = (data ?? []).map((u) => ({
                 ...u,
                 persons: [], // unit_persons removed
             }));
+
+            // Natural sort by unit name (e.g. 1, 1A, 2B)
+            units.sort(getUnitNameComparator('asc'));
+
+            return units;
         },
         staleTime: 5 * 60_000,
     });

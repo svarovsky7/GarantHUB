@@ -226,6 +226,20 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
             <Switch />
           </Form.Item>
         </Col>
+        <Col span={8}>
+          <Form.Item
+            name="case_uid_id"
+            label="Уникальный идентификатор дела"
+            hidden={!preTrialWatch}
+          >
+            <Select
+              showSearch
+              allowClear
+              disabled={!preTrialWatch}
+              options={caseUids.map((c) => ({ value: c.id, label: c.uid }))}
+            />
+          </Form.Item>
+        </Col>
       </Row>
       <Row gutter={16}>
         <Col span={8}>
@@ -331,22 +345,6 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
         <Col span={24}>
           <Form.Item name="description" label="Дополнительная информация">
             <Input.TextArea rows={2} />
-          </Form.Item>
-        </Col>
-      </Row>
-      <Row gutter={16}>
-        <Col span={8}>
-          <Form.Item
-            name="case_uid_id"
-            label="Уникальный идентификатор дела"
-            hidden={!preTrialWatch}
-          >
-            <Select
-              showSearch
-              allowClear
-              disabled={!preTrialWatch}
-              options={caseUids.map((c) => ({ value: c.id, label: c.uid }))}
-            />
           </Form.Item>
         </Col>
       </Row>
