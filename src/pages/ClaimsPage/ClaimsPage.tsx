@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ConfigProvider, Alert, Card, Button, Tooltip, Popconfirm, message, Space } from 'antd';
+import { ConfigProvider, Alert, Card, Button, Tooltip, Popconfirm, message, Space, Switch } from 'antd';
 import ruRU from 'antd/locale/ru_RU';
 import {
   SettingOutlined,
@@ -77,6 +77,7 @@ export default function ClaimsPage() {
   const [showAddForm, setShowAddForm] = useState(
     searchParams.get('open_form') === '1',
   );
+  const [preTrial, setPreTrial] = useState(false);
   const LS_SHOW_FILTERS = 'claims:showFilters';
   const [showFilters, setShowFilters] = useState<boolean>(() => {
     try {
@@ -247,6 +248,10 @@ export default function ClaimsPage() {
           {showFilters ? 'Скрыть фильтры' : 'Показать фильтры'}
         </Button>
         <Button icon={<SettingOutlined />} style={{ marginLeft: 8 }} onClick={() => setShowColumnsDrawer(true)} />
+        <span style={{ marginLeft: 8 }}>
+          Досудебная:&nbsp;
+          <Switch checked={preTrial} onChange={setPreTrial} />
+        </span>
         <span style={{ marginLeft: 8, display: 'inline-block' }}>
           <ExportClaimsButton claims={claimsWithNames} filters={filters} />
         </span>
@@ -254,7 +259,7 @@ export default function ClaimsPage() {
           <div style={{ marginTop: 16 }}>
             <ClaimFormAntd
               onCreated={() => setShowAddForm(false)}
-              initialValues={initialValues}
+              initialValues={{ ...initialValues, pre_trial_claim: preTrial }}
             />
           </div>
         )}
