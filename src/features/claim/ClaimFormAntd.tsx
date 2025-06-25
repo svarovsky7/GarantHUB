@@ -74,6 +74,12 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
   const projectIdWatch = Form.useWatch('project_id', form) ?? globalProjectId;
   const projectId = projectIdWatch != null ? Number(projectIdWatch) : null;
 
+  /**
+   * Признак официальной претензии.
+   * При изменении выключаем поле с UID дела.
+   */
+  const isOfficialWatch = Form.useWatch('is_official', form);
+
   const { data: projects = [] } = useVisibleProjects();
   const { data: units = [] } = useUnitsByProject(projectId);
   const { data: users = [] } = useUsers();
@@ -162,6 +168,12 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
     }
   }, [defectsWatch, form]);
 
+  useEffect(() => {
+    if (!isOfficialWatch) {
+      form.setFieldValue('case_uid_id', null);
+    }
+  }, [isOfficialWatch, form]);
+
 
   const onFinish = async (values: ClaimFormValues) => {
     if (!showDefectsForm) return;
@@ -201,6 +213,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
       defect_ids: defectIds,
     } as any);
     form.resetFields();
+    form.setFieldValue('is_official', false);
     setFiles([]);
     onCreated?.();
   };
@@ -322,15 +335,17 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
             </Tooltip>
           </Form.Item>
         </Col>
-        <Col span={8}>
-          <Form.Item name="case_uid_id" label="Уникальный идентификатор дела">
-            <Select
-              showSearch
-              allowClear
-              options={caseUids.map((c) => ({ value: c.id, label: c.uid }))}
-            />
-          </Form.Item>
-        </Col>
+        {isOfficialWatch && (
+          <Col span={8}>
+            <Form.Item name="case_uid_id" label="Уникальный идентификатор дела">
+              <Select
+                showSearch
+                allowClear
+                options={caseUids.map((c) => ({ value: c.id, label: c.uid }))}
+              />
+            </Form.Item>
+          </Col>
+        )}
       </Row>
       {showDefectsForm && (
         <Form.List name="defects">

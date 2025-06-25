@@ -427,7 +427,7 @@ export function useCreateClaim() {
 
       const insertData: any = {
         ...rest,
-        is_official: rest.is_official ?? false,
+        is_official: Boolean(rest.is_official),
         project_id: rest.project_id ?? projectId,
         created_by: userId,
       };
