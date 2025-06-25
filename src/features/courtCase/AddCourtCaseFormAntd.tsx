@@ -156,6 +156,7 @@ export default function AddCourtCaseFormAntd({
   const handleAddCase = async (values: any) => {
     try {
       const uidId = await getOrCreateCaseUid(values.case_uid);
+      qc.invalidateQueries({ queryKey: ['case_uids'] });
       const newCase = await addCaseMutation.mutateAsync({
         project_id: values.project_id,
         unit_ids: values.unit_ids || [],
