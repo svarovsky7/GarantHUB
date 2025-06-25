@@ -83,7 +83,6 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
   const createDefects = useCreateDefects();
   const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
   const defectsWatch = Form.useWatch('defects', form);
-  const isOfficialWatch = Form.useWatch('is_official', form);
   const { data: persons = [] } = usePersons();
   const deletePerson = useDeletePerson();
   const { data: caseUids = [] } = useCaseUids();
@@ -163,11 +162,6 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
     }
   }, [defectsWatch, form]);
 
-  useEffect(() => {
-    if (!isOfficialWatch) {
-      form.setFieldValue('case_uid_id', null);
-    }
-  }, [isOfficialWatch, form]);
 
   const onFinish = async (values: ClaimFormValues) => {
     if (!showDefectsForm) return;
@@ -328,17 +322,15 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
             </Tooltip>
           </Form.Item>
         </Col>
-        {isOfficialWatch && (
-          <Col span={8}>
-            <Form.Item name="case_uid_id" label="Уникальный идентификатор дела">
-              <Select
-                showSearch
-                allowClear
-                options={caseUids.map((c) => ({ value: c.id, label: c.uid }))}
-              />
-            </Form.Item>
-          </Col>
-        )}
+        <Col span={8}>
+          <Form.Item name="case_uid_id" label="Уникальный идентификатор дела">
+            <Select
+              showSearch
+              allowClear
+              options={caseUids.map((c) => ({ value: c.id, label: c.uid }))}
+            />
+          </Form.Item>
+        </Col>
       </Row>
       {showDefectsForm && (
         <Form.List name="defects">
