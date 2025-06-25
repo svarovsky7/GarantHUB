@@ -37,6 +37,8 @@ import type { TableColumnSetting } from '@/shared/types/tableColumnSetting';
 import type { ColumnsType } from 'antd/es/table';
 import { useSearchParams } from 'react-router-dom';
 import type { ClaimWithNames } from '@/shared/types/claimWithNames';
+import { naturalCompare } from '@/shared/utils/naturalSort';
+import type { ClaimFilters } from '@/shared/types/claimFilters';
 
 export default function ClaimsPage() {
   const { enqueueSnackbar } = useSnackbar();
@@ -164,16 +166,37 @@ export default function ClaimsPage() {
   );
 
   const options = useMemo(() => {
-    const uniq = (arr: any[], key: string) => Array.from(new Set(arr.map((i) => i[key]).filter(Boolean))).map((v) => ({ label: v, value: v }));
-    return {
-      projects: uniq(claimsWithNames, 'projectName'),
-      units: Array.from(new Set((units ?? []).map((u) => u.name))).map((v) => ({ label: v, value: v })),
-      buildings: Array.from(new Set((units ?? []).map((u) => u.building).filter(Boolean))).map((v) => ({ label: v, value: v })),
-      statuses: uniq(claimsWithNames, 'statusName'),
-      responsibleEngineers: uniq(claimsWithNames, 'responsibleEngineerName'),
-      ids: uniq(claimsWithNames, 'id'),
+    const without = <K extends keyof ClaimFilters>(key: K) => {
+      const { [key]: _omit, ...rest } = filters;
+      return rest as ClaimFilters;
     };
-  }, [claimsWithNames, units]);
+    const filtered = <K extends keyof ClaimFilters>(key: K) =>
+      filterClaims(claimsWithNames, without(key));
+
+    const uniq = (values: (string | number | undefined | null)[]) =>
+      Array.from(new Set(values.filter(Boolean) as (string | number)[])).sort(naturalCompare);
+    const mapOptions = (vals: (string | number | undefined | null)[]) =>
+      uniq(vals).map((v) => ({ label: String(v), value: v }));
+
+    return {
+      projects: mapOptions(filtered('project').map((c) => c.projectName)),
+      units: mapOptions(
+        filtered('units').flatMap((c) =>
+          c.unitNumbers ? c.unitNumbers.split(',').map((n) => n.trim()) : [],
+        ),
+      ),
+      buildings: mapOptions(
+        filtered('building').flatMap((c) =>
+          c.buildings ? c.buildings.split(',').map((n) => n.trim()) : [],
+        ),
+      ),
+      statuses: mapOptions(filtered('status').map((c) => c.statusName)),
+      responsibleEngineers: mapOptions(
+        filtered('responsible').map((c) => c.responsibleEngineerName),
+      ),
+      ids: mapOptions(filtered('id').map((c) => c.id)),
+    };
+  }, [claimsWithNames, filters]);
 
   function getBaseColumns() {
     return {
