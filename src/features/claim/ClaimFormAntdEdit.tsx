@@ -21,6 +21,7 @@ import {
   useAddClaimAttachments,
   useRemoveClaimAttachment,
   signedUrl,
+  markClaimDefectsPreTrial,
 } from '@/entities/claim';
 import { supabase } from '@/shared/api/supabaseClient';
 import { useVisibleProjects } from '@/entities/project';
@@ -169,6 +170,10 @@ const ClaimFormAntdEdit = React.forwardRef<
           updated_by: userId ?? undefined,
         } as any,
       });
+
+      if (!claim.pre_trial_claim && values.pre_trial_claim) {
+        await markClaimDefectsPreTrial(claim.id);
+      }
 
       for (const id of attachments.removedIds) {
         await removeAtt.mutateAsync({

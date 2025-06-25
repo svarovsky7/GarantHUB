@@ -195,6 +195,7 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
           createdIds.map((id) => ({
             claim_id: claim.id,
             defect_id: id,
+            pre_trial_claim: claim.pre_trial_claim ?? false,
           })),
         );
         await closeDefectsForClaim(claim.id, claim.claim_status_id ?? null);

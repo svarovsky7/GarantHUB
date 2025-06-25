@@ -113,6 +113,18 @@ async function closeDefectsForClaim(claimId: number, statusId: number | null) {
 }
 
 /**
+ * Помечает все дефекты претензии как относящиеся к досудебной.
+ * @param claimId идентификатор претензии
+ */
+async function markClaimDefectsPreTrial(claimId: number) {
+  await supabase
+    .from('claim_defects')
+    .update({ pre_trial_claim: true })
+    .eq('claim_id', claimId)
+    .eq('pre_trial_claim', false);
+}
+
+/**
  * Хук получения списка претензий с учётом фильтров проекта.
  */
 export function useClaims() {
@@ -727,5 +739,5 @@ export function useUnlinkClaim() {
   });
 }
 
-export { closeDefectsForClaim };
+export { closeDefectsForClaim, markClaimDefectsPreTrial };
 
