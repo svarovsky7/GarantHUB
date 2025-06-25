@@ -165,7 +165,9 @@ export default function ClaimsTable({
   const rowClassName = (row: ClaimWithNames) => {
     const checking = row.statusName?.toLowerCase().includes('провер');
     const closed = row.statusName?.toLowerCase().includes('закры');
+    const preTrial = row.statusName?.toLowerCase().includes('досудеб');
     if (checking || row.hasCheckingDefect) return 'claim-checking-row';
+    if (preTrial) return 'claim-pretrial-row';
     if (closed) return 'claim-closed-row';
     return '';
   };

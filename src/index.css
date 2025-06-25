@@ -107,6 +107,9 @@ body {
   color: #aaa;
   background: inherit !important;
 }
+.claim-pretrial-row {
+  background: #fff1f0 !important;
+}
 .defect-closed-row {
   color: #aaa;
   background: inherit !important;

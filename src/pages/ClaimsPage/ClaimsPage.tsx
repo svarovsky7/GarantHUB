@@ -24,7 +24,7 @@ import { useUnitsByIds } from '@/entities/unit';
 import { useRolePermission } from '@/entities/rolePermission';
 import { useAuthStore } from '@/shared/store/authStore';
 import type { RoleName } from '@/shared/types/rolePermission';
-import formatUnitName from '@/shared/utils/formatUnitName';
+import formatUnitShortName from '@/shared/utils/formatUnitShortName';
 import ClaimsTable from '@/widgets/ClaimsTable';
 import ClaimsFilters from '@/widgets/ClaimsFilters';
 import ClaimFormAntd from '@/features/claim/ClaimFormAntd';
@@ -130,7 +130,7 @@ export default function ClaimsPage() {
   const unitMap = useMemo(() => {
     const map = {} as Record<number, string>;
     (units ?? []).forEach((u) => {
-      map[u.id] = formatUnitName(u);
+      map[u.id] = formatUnitShortName(u);
     });
     return map;
   }, [units]);
