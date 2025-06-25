@@ -1,27 +1,12 @@
 import { supabase } from '@/shared/api/supabaseClient';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import type { CaseUid } from '@/shared/types/caseUid';
 
 const TABLE = 'case_uids';
 
 /** Получить список уникальных идентификаторов дел */
-export const useCaseUids = () => {
-  const qc = useQueryClient();
-  useEffect(() => {
-    const channel = supabase
-      .channel('case_uids')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: TABLE },
-        () => qc.invalidateQueries({ queryKey: [TABLE] }),
-      );
-    channel.subscribe();
-    return () => {
-      channel.unsubscribe();
-    };
-  }, [qc]);
-  return useQuery({
+export const useCaseUids = () =>
+  useQuery({
     queryKey: [TABLE],
     queryFn: async () => {
       const { data, error } = await supabase.from(TABLE).select('id, uid').order('uid');
@@ -30,7 +15,6 @@ export const useCaseUids = () => {
     },
     staleTime: 10 * 60_000,
   });
-};
 
 /** Возвращает id существующего идентификатора либо создаёт новый */
 export async function getOrCreateCaseUid(uid: string): Promise<number> {
