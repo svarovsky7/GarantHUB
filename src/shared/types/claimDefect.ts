@@ -3,4 +3,6 @@ export interface ClaimDefect {
   claim_id: number;
   /** Идентификатор дефекта */
   defect_id: number;
+  /** Досудебная претензия */
+  pre_trial_claim: boolean;
 }

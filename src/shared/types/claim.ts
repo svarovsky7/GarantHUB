@@ -25,6 +25,8 @@ export interface Claim {
   person_id: number | null;
   /** Уникальный идентификатор судебного дела */
   case_uid_id: number | null;
+  /** Признак досудебной претензии */
+  pre_trial_claim: boolean;
   /** Связанные дефекты */
   defect_ids?: number[];
   /** Дополнительное описание */

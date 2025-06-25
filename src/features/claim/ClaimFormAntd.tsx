@@ -53,6 +53,8 @@ export interface ClaimFormValues {
   engineer_id: string | null;
   person_id: number | null;
   case_uid_id: number | null;
+  /** Является ли претензия досудебной */
+  pre_trial_claim: boolean;
   description: string | null;
   defects?: Array<{
     type_id: number | null;
@@ -86,6 +88,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
   const deletePerson = useDeletePerson();
   const { data: caseUids = [] } = useCaseUids();
   const [personModal, setPersonModal] = useState<any | null>(null);
+  const preTrialWatch = Form.useWatch('pre_trial_claim', form);
 
   const handleDropFiles = (dropped: File[]) => {
     setFiles((p) => [...p, ...dropped]);
@@ -111,6 +114,11 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
     if (initialValues.description) form.setFieldValue('description', initialValues.description);
     if (initialValues.person_id != null) form.setFieldValue('person_id', initialValues.person_id);
     if (initialValues.case_uid_id != null) form.setFieldValue('case_uid_id', initialValues.case_uid_id);
+    if (initialValues.pre_trial_claim != null) {
+      form.setFieldValue('pre_trial_claim', initialValues.pre_trial_claim);
+    } else {
+      form.setFieldValue('pre_trial_claim', false);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [globalProjectId, form]);
 
@@ -202,6 +210,17 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
   return (
     <>
     <Form form={form} layout="vertical" onFinish={onFinish} autoComplete="off">
+      <Row gutter={16}>
+        <Col span={8}>
+          <Form.Item
+            name="pre_trial_claim"
+            label="Досудебная претензия"
+            valuePropName="checked"
+          >
+            <Switch />
+          </Form.Item>
+        </Col>
+      </Row>
       <Row gutter={16}>
         <Col span={8}>
           <Form.Item name="project_id" label="Проект" rules={[{ required: true }]}> 
@@ -306,8 +325,17 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
       </Row>
       <Row gutter={16}>
         <Col span={8}>
-          <Form.Item name="case_uid_id" label="Уникальный идентификатор дела">
-            <Select showSearch allowClear options={caseUids.map((c) => ({ value: c.id, label: c.uid }))} />
+          <Form.Item
+            name="case_uid_id"
+            label="Уникальный идентификатор дела"
+            hidden={!preTrialWatch}
+          >
+            <Select
+              showSearch
+              allowClear
+              disabled={!preTrialWatch}
+              options={caseUids.map((c) => ({ value: c.id, label: c.uid }))}
+            />
           </Form.Item>
         </Col>
       </Row>
