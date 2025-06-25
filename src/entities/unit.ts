@@ -52,16 +52,19 @@ export const useUnits = () => {
     });
 };
 
-export const useUnitsByProject = (projectId) =>
+export const useUnitsByProject = (projectId, building) =>
     useQuery({
-        queryKey: ['units', projectId ?? 'all'],
+        queryKey: ['units', projectId ?? 'all', building ?? ''],
         enabled : !!projectId,
         queryFn : async () => {
-            const { data, error } = await supabase
+            let query: any = supabase
                 .from('units')
                 .select(SELECT)
                 .eq('project_id', projectId)
                 .order('id');
+            if (building) query = query.eq('building', building);
+
+            const { data, error } = await query;
 
             if (error) throw error;
 

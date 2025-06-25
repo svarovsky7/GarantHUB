@@ -144,15 +144,24 @@ export default function ClaimsPage() {
     return map;
   }, [units]);
 
+  const buildingMap = useMemo(() => {
+    const map = {} as Record<number, string>;
+    (units ?? []).forEach((u) => {
+      if (u.building) map[u.id] = u.building;
+    });
+    return map;
+  }, [units]);
+
   const claimsWithNames: ClaimWithNames[] = useMemo(
     () =>
       claims.map((c) => ({
         ...c,
         unitNames: c.unit_ids.map((id) => unitMap[id]).filter(Boolean).join(', '),
         unitNumbers: c.unit_ids.map((id) => unitNumberMap[id]).filter(Boolean).join(', '),
+        buildings: Array.from(new Set(c.unit_ids.map((id) => buildingMap[id]).filter(Boolean))).join(', '),
         responsibleEngineerName: userMap[c.engineer_id] ?? null,
       })),
-    [claims, unitMap, unitNumberMap, userMap, checkingDefectMap],
+    [claims, unitMap, unitNumberMap, buildingMap, userMap, checkingDefectMap],
   );
 
   const options = useMemo(() => {
@@ -160,6 +169,7 @@ export default function ClaimsPage() {
     return {
       projects: uniq(claimsWithNames, 'projectName'),
       units: Array.from(new Set((units ?? []).map((u) => u.name))).map((v) => ({ label: v, value: v })),
+      buildings: Array.from(new Set((units ?? []).map((u) => u.building).filter(Boolean))).map((v) => ({ label: v, value: v })),
       statuses: uniq(claimsWithNames, 'statusName'),
       responsibleEngineers: uniq(claimsWithNames, 'responsibleEngineerName'),
       ids: uniq(claimsWithNames, 'id'),
@@ -189,6 +199,7 @@ export default function ClaimsPage() {
       },
       id: { title: 'ID', dataIndex: 'id', width: 80, sorter: (a: any, b: any) => a.id - b.id },
       projectName: { title: 'Проект', dataIndex: 'projectName', width: 180, sorter: (a: any, b: any) => a.projectName.localeCompare(b.projectName) },
+      buildings: { title: 'Корпус', dataIndex: 'buildings', width: 120, sorter: (a: any, b: any) => (a.buildings || '').localeCompare(b.buildings || '') },
       unitNames: { title: 'Объекты', dataIndex: 'unitNames', width: 160, sorter: (a: any, b: any) => a.unitNames.localeCompare(b.unitNames) },
       statusId: { title: 'Статус', dataIndex: 'claim_status_id', width: 160, sorter: (a: any, b: any) => a.statusName.localeCompare(b.statusName), render: (_: any, row: any) => <ClaimStatusSelect claimId={row.id} statusId={row.claim_status_id} statusColor={row.statusColor} statusName={row.statusName} /> },
       claim_no: { title: '№ претензии', dataIndex: 'claim_no', width: 160, sorter: (a: any, b: any) => a.claim_no.localeCompare(b.claim_no) },
