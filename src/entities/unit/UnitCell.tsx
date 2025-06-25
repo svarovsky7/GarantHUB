@@ -46,6 +46,7 @@ export default function UnitCell({
   const bgColor = "#fff";
   const hasCases = Array.isArray(cases) && cases.length > 0;
   const claimColor = claimInfo?.color ?? null;
+  const hasPretrial = claimInfo?.hasPretrialClaim ?? false;
 
   return (
     <Paper
@@ -58,7 +59,7 @@ export default function UnitCell({
         alignItems: "stretch",
         justifyContent: "flex-start",
         border: `${hasCases ? 2 : 1.5}px solid ${
-          hasCases ? "#e53935" : "#dde2ee"
+          hasCases || hasPretrial ? "#e53935" : "#dde2ee"
         }`,
         background: bgColor,
         borderRadius: "12px",
@@ -96,10 +97,11 @@ export default function UnitCell({
             top: 0,
             left: 0,
             right: 0,
-            height: 6,
-            bgcolor: claimColor,
-            borderTopLeftRadius: "12px",
-            borderTopRightRadius: "12px",
+            height: '50%',
+            bgcolor: getSemiTransparent(claimColor, 0.35),
+            borderTopLeftRadius: '12px',
+            borderTopRightRadius: '12px',
+            pointerEvents: 'none',
           }}
         />
       )}
