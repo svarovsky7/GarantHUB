@@ -87,6 +87,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
   const deletePerson = useDeletePerson();
   const { data: caseUids = [] } = useCaseUids();
   const [personModal, setPersonModal] = useState<any | null>(null);
+  const isOfficialWatch = Form.useWatch('is_official', form);
 
   const handleDropFiles = (dropped: File[]) => {
     setFiles((p) => [...p, ...dropped]);
@@ -126,6 +127,12 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
       form.setFieldValue('registered_on', dayjs());
     }
   }, [form]);
+
+  useEffect(() => {
+    if (!isOfficialWatch) {
+      form.setFieldValue('case_uid_id', null);
+    }
+  }, [isOfficialWatch, form]);
 
   /**
    * Если статус не указан, подставляем первым из списка.
@@ -322,15 +329,17 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
             </Tooltip>
           </Form.Item>
         </Col>
-        <Col span={8}>
-          <Form.Item name="case_uid_id" label="Уникальный идентификатор дела">
-            <Select
-              showSearch
-              allowClear
-              options={caseUids.map((c) => ({ value: c.id, label: c.uid }))}
-            />
-          </Form.Item>
-        </Col>
+        {isOfficialWatch && (
+          <Col span={8}>
+            <Form.Item name="case_uid_id" label="Уникальный идентификатор дела">
+              <Select
+                showSearch
+                allowClear
+                options={caseUids.map((c) => ({ value: c.id, label: c.uid }))}
+              />
+            </Form.Item>
+          </Col>
+        )}
       </Row>
       {showDefectsForm && (
         <Form.List name="defects">

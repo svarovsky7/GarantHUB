@@ -53,13 +53,18 @@ export function useRealtimeUpdates() {
         );
     });
 
-    channel
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'defects' },
-        () => qc.invalidateQueries({ queryKey: ['defects'] }),
-      );
-    if (subscribeAllLetters) {
+  channel
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'defects' },
+      () => qc.invalidateQueries({ queryKey: ['defects'] }),
+    )
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'case_uids' },
+      () => qc.invalidateQueries({ queryKey: ['case_uids'] }),
+    );
+  if (subscribeAllLetters) {
       channel
         .on(
           'postgres_changes',
