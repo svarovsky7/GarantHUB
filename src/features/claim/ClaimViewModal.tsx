@@ -6,6 +6,7 @@ import ClaimAttachmentsBlock from './ClaimAttachmentsBlock';
 import TicketDefectsEditorTable from '@/widgets/TicketDefectsEditorTable';
 import DefectAddModal from '@/features/defect/DefectAddModal';
 import DefectViewModal from '@/features/defect/DefectViewModal';
+import dayjs from 'dayjs';
 import {
   useCreateDefects,
   useDeleteDefect,
@@ -301,6 +302,7 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
       <DefectAddModal
         open={showAdd}
         projectId={claim?.project_id}
+        defaultReceivedAt={claim?.accepted_on ? dayjs(claim.accepted_on) : null}
         onClose={() => setShowAdd(false)}
         onSubmit={handleAddDefs}
       />

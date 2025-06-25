@@ -88,6 +88,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
   const createDefects = useCreateDefects();
   const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
   const defectsWatch = Form.useWatch('defects', form);
+  const acceptedOnWatch = Form.useWatch('accepted_on', form) ?? null;
   const { data: persons = [] } = usePersons();
   const deletePerson = useDeletePerson();
   const { data: caseUids = [] } = useCaseUids();
@@ -357,6 +358,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
               remove={remove}
               projectId={projectId}
               showFiles={false}
+              defaultReceivedAt={acceptedOnWatch}
             />
           )}
         </Form.List>

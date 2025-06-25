@@ -8,6 +8,8 @@ import { useAuthStore } from '@/shared/store/authStore';
 interface Props {
   open: boolean;
   projectId?: number | null;
+  /** Значение по умолчанию для поля "Дата получения" */
+  defaultReceivedAt?: dayjs.Dayjs | null;
   onClose: () => void;
   onSubmit: (defs: NewDefect[]) => void;
 }
@@ -15,7 +17,7 @@ interface Props {
 /**
  * Модальное окно добавления дефектов к претензии.
  */
-export default function DefectAddModal({ open, projectId, onClose, onSubmit }: Props) {
+export default function DefectAddModal({ open, projectId, defaultReceivedAt, onClose, onSubmit }: Props) {
   const [form] = Form.useForm();
 
   const handleOk = async () => {
@@ -58,6 +60,7 @@ export default function DefectAddModal({ open, projectId, onClose, onSubmit }: P
               remove={remove}
               projectId={projectId ?? null}
               showFiles={false}
+              defaultReceivedAt={defaultReceivedAt}
             />
           )}
         </Form.List>
