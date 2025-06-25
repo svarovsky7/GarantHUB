@@ -181,7 +181,9 @@ export default function DefectsTable({
     const classes = ["main-defect-row"];
     const checking = row.defectStatusName?.toLowerCase().includes("провер");
     const closed = row.defectStatusName?.toLowerCase().includes("закры");
+    const preTrial = row.hasPretrialClaim;
     if (checking) classes.push("defect-confirmed-row");
+    if (preTrial) classes.push("defect-pretrial-row");
     if (closed) classes.push("defect-closed-row");
     return classes.join(" ");
   };

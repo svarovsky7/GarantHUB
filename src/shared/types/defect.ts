@@ -66,4 +66,6 @@ export interface DefectWithInfo extends DefectRecord {
   projectNames?: string;
   /** Прошло дней с даты получения */
   days?: number | null;
+  /** Есть ли среди связанных претензий досудебная */
+  hasPretrialClaim?: boolean;
 }
