@@ -41,6 +41,9 @@ export default function ClaimsFilters({ options, onChange, initialValues = {} }:
       <Form.Item name="project" label="Проект">
         <Select allowClear options={options.projects} />
       </Form.Item>
+      <Form.Item name="building" label="Корпус">
+        <Select allowClear options={options.buildings} />
+      </Form.Item>
       <Form.Item name="units" label="Объекты">
         <Select mode="multiple" allowClear options={options.units} />
       </Form.Item>

@@ -29,6 +29,7 @@ import type { RoleName } from '@/shared/types/rolePermission';
 import { usePersons, useDeletePerson } from '@/entities/person';
 import PersonModalId from '@/features/person/PersonModalId';
 import { useCaseUids } from '@/entities/caseUid';
+import useProjectBuildings from '@/shared/hooks/useProjectBuildings';
 
 export interface ClaimFormAntdProps {
   onCreated?: () => void;
@@ -43,6 +44,7 @@ export interface ClaimFormAntdProps {
 export interface ClaimFormValues {
   project_id: number | null;
   unit_ids: number[];
+  building: string | null;
   claim_status_id: number | null;
   claim_no: string;
   claimed_on: dayjs.Dayjs | null;
@@ -74,7 +76,9 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
   const projectId = projectIdWatch != null ? Number(projectIdWatch) : null;
 
   const { data: projects = [] } = useVisibleProjects();
-  const { data: units = [] } = useUnitsByProject(projectId);
+  const { buildings = [] } = useProjectBuildings(projectId);
+  const buildingWatch = Form.useWatch('building', form) ?? null;
+  const { data: units = [] } = useUnitsByProject(projectId, buildingWatch ?? undefined);
   const { data: users = [] } = useUsers();
   const { data: statuses = [] } = useClaimStatuses();
   const create = useCreateClaim();
@@ -99,6 +103,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
       form.setFieldValue('project_id', Number(globalProjectId));
     }
     if (initialValues.unit_ids) form.setFieldValue('unit_ids', initialValues.unit_ids);
+    if (initialValues.building) form.setFieldValue('building', initialValues.building);
     if (initialValues.engineer_id)
       form.setFieldValue('engineer_id', initialValues.engineer_id);
     if (initialValues.claim_status_id != null) form.setFieldValue('claim_status_id', initialValues.claim_status_id);
@@ -139,6 +144,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
     if (!initialValues.unit_ids) {
       form.setFieldValue('unit_ids', []);
     }
+    form.setFieldValue('building', null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId, form]);
 
@@ -159,7 +165,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
 
   const onFinish = async (values: ClaimFormValues) => {
     if (!showDefectsForm) return;
-    const { defects: defs, ...rest } = values;
+    const { defects: defs, building: _bld, ...rest } = values;
     if (!defs || defs.length === 0) {
       notify.error('Добавьте хотя бы один дефект');
       return;
@@ -206,6 +212,11 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
         <Col span={8}>
           <Form.Item name="project_id" label="Проект" rules={[{ required: true }]}> 
             <Select allowClear showSearch options={projects.map((p) => ({ value: p.id, label: p.name }))} />
+          </Form.Item>
+        </Col>
+        <Col span={8}>
+          <Form.Item name="building" label="Корпус">
+            <Select allowClear options={buildings.map((b) => ({ value: b, label: b }))} disabled={!projectId} />
           </Form.Item>
         </Col>
         <Col span={8}>

@@ -18,6 +18,8 @@ export interface ClaimWithNames extends Claim {
   unitNames?: string;
   /** Список номеров объектов одной строкой */
   unitNumbers?: string;
+  /** Список корпусов одной строкой */
+  buildings?: string;
   /** Дата обнаружения дефекта */
   claimedOn: Dayjs | null;
   /** Дата принятия претензии застройщиком */

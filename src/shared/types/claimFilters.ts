@@ -4,6 +4,8 @@ export interface ClaimFilters {
   id?: number[];
   project?: string;
   units?: string[];
+  /** Корпус */
+  building?: string;
   status?: string;
   responsible?: string;
   claim_no?: string;

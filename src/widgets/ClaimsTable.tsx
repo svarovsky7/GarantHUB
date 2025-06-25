@@ -61,6 +61,7 @@ export default function ClaimsTable({
       },
       { title: 'ID', dataIndex: 'id', width: 80, sorter: (a, b) => a.id - b.id },
       { title: 'Проект', dataIndex: 'projectName', width: 180, sorter: (a, b) => a.projectName.localeCompare(b.projectName) },
+      { title: 'Корпус', dataIndex: 'buildings', width: 120, sorter: (a, b) => (a.buildings || '').localeCompare(b.buildings || '') },
       { title: 'Объекты', dataIndex: 'unitNames', width: 160, sorter: (a, b) => a.unitNames.localeCompare(b.unitNames) },
       { title: 'Статус', dataIndex: 'claim_status_id', width: 160, sorter: (a, b) => a.statusName.localeCompare(b.statusName), render: (_: any, row: any) => <ClaimStatusSelect claimId={row.id} statusId={row.claim_status_id} statusColor={row.statusColor} statusName={row.statusName} /> },
       { title: '№ претензии', dataIndex: 'claim_no', width: 160, sorter: (a, b) => a.claim_no.localeCompare(b.claim_no) },
@@ -117,6 +118,10 @@ export default function ClaimsTable({
         const units = c.unitNumbers ? c.unitNumbers.split(',').map((n) => n.trim()) : [];
         return filters.units.every((u) => units.includes(u));
       })();
+      const matchesBuilding = !filters.building || (() => {
+        const blds = c.buildings ? c.buildings.split(',').map((n) => n.trim()) : [];
+        return blds.includes(filters.building!);
+      })();
       const matchesStatus = !filters.status || c.statusName === filters.status;
       const matchesResponsible = !filters.responsible || c.responsibleEngineerName === filters.responsible;
       const matchesNumber = !filters.claim_no || c.claim_no.includes(filters.claim_no);
@@ -124,7 +129,7 @@ export default function ClaimsTable({
       const matchesDescription = !filters.description || (c.description ?? '').includes(filters.description);
       const matchesHideClosed = !(filters.hideClosed && /закры/i.test(c.statusName));
       const matchesPeriod = !filters.period || (c.registeredOn && c.registeredOn.isSameOrAfter(filters.period[0], 'day') && c.registeredOn.isSameOrBefore(filters.period[1], 'day'));
-      return matchesProject && matchesUnits && matchesStatus && matchesResponsible && matchesNumber && matchesIds && matchesDescription && matchesHideClosed && matchesPeriod;
+      return matchesProject && matchesUnits && matchesBuilding && matchesStatus && matchesResponsible && matchesNumber && matchesIds && matchesDescription && matchesHideClosed && matchesPeriod;
     });
   }, [claims, filters]);
 
