@@ -237,4 +237,33 @@ export const useDeleteUnitsByBuilding = () => {
     });
 };
 
+/** Переименовать корпус проекта. */
+export const useRenameBuilding = () => {
+    const qc = useQueryClient();
+    const notify = useNotify();
+    return useMutation<void, Error, import('@/shared/types/buildingRename').BuildingRename>({
+        mutationFn: async ({ project_id, old_name, new_name }) => {
+            const { error } = await supabase
+                .from('units')
+                .update({ building: new_name })
+                .eq('project_id', project_id)
+                .eq('building', old_name);
+            if (error) throw error;
+
+            const { error: err2 } = await supabase
+                .from('unit_sort_orders')
+                .update({ building: new_name })
+                .eq('project_id', project_id)
+                .eq('building', old_name);
+            if (err2) throw err2;
+        },
+        onSuccess: (_data, vars) => {
+            qc.invalidateQueries({ queryKey: ['units'] });
+            qc.invalidateQueries({ queryKey: ['unit_sort_orders', vars.project_id, vars.new_name] });
+            notify.success('Название корпуса изменено');
+        },
+        onError: (e: Error) => notify.error(e.message),
+    });
+};
+
 /** Удалить все квартиры в секции корпуса */
