@@ -14,6 +14,7 @@ interface Options {
   types: { label: string; value: number }[];
   statuses: { label: string; value: number }[];
   fixBy: { label: string; value: string }[];
+  buildings: { label: string; value: string }[];
 }
 
 /** Форма фильтров дефектов */
@@ -79,6 +80,9 @@ export default function DefectsFilters({
       </Form.Item>
       <Form.Item name="projectId" label="Проекты">
         <Select mode="multiple" allowClear options={options.projects} showSearch optionFilterProp="label" />
+      </Form.Item>
+      <Form.Item name="building" label="Корпус">
+        <Select mode="multiple" allowClear options={options.buildings} showSearch optionFilterProp="label" />
       </Form.Item>
       <Form.Item name="units" label="Объекты">
         <Select mode="multiple" allowClear options={options.units} showSearch optionFilterProp="label" />

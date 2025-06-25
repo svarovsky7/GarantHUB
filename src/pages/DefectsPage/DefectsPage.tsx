@@ -64,7 +64,8 @@ export default function DefectsPage() {
   const userProjectIds = useAuthStore((s) => s.profile?.project_ids) ?? [];
 
   const data: DefectWithInfo[] = useMemo(() => {
-    const unitMap = new Map(units.map((u) => [u.id, formatUnitName(u)]));
+    const unitMap = new Map(units.map((u) => [u.id, formatUnitName(u, false)]));
+    const buildingMap = new Map(units.map((u) => [u.id, u.building || ""]));
     const projectMap = new Map(projects.map((p) => [p.id, p.name]));
     const ticketsMap = new Map<number, { id: number; unit_ids: number[]; project_id: number }[]>();
     // замена: no tickets
@@ -91,6 +92,10 @@ export default function DefectsPage() {
         .map((id) => unitMap.get(id))
         .filter(Boolean);
       const unitNames = unitNamesList.join(", ");
+      const buildingNamesList = Array.from(
+        new Set(unitIds.map((id) => buildingMap.get(id)).filter(Boolean)),
+      );
+      const buildingNames = buildingNamesList.join(", ");
       const projectIds = Array.from(new Set(linked.map((l) => l.project_id)));
       const projectNames = projectIds
         .map((id) => projectMap.get(id))
@@ -111,6 +116,8 @@ export default function DefectsPage() {
         unitIds,
         unitNames,
         unitNamesList,
+        buildingNamesList,
+        buildingNames,
         projectIds,
         projectNames,
         fixByName,
@@ -147,6 +154,9 @@ export default function DefectsPage() {
         value: id,
       })),
       units: units.map((u) => ({ label: u.name, value: u.id })),
+      buildings: Array.from(new Set(units.map((u) => u.building).filter(Boolean))).map(
+        (b) => ({ label: String(b), value: String(b) }),
+      ),
       projects: projects.map((p) => ({ label: p.name, value: p.id })),
       types: uniq(filteredData.map((d) => [d.type_id, d.defectTypeName])),
       statuses: uniq(filteredData.map((d) => [d.status_id, d.defectStatusName])),
@@ -204,6 +214,12 @@ export default function DefectsPage() {
         dataIndex: "projectNames",
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           (a.projectNames || "").localeCompare(b.projectNames || ""),
+      },
+      building: {
+        title: "Корпус",
+        dataIndex: "buildingNames",
+        sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
+          (a.buildingNames || "").localeCompare(b.buildingNames || ""),
       },
       units: {
         title: "Объекты",
@@ -345,6 +361,7 @@ export default function DefectsPage() {
     "claims",
     "days",
     "project",
+    "building",
     "units",
     "description",
     "type",
