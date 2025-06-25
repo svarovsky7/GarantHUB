@@ -37,6 +37,7 @@ import ExportDefectsButton from "@/features/defect/ExportDefectsButton";
 import DefectFixModal from "@/features/defect/DefectFixModal";
 import { useCancelDefectFix } from "@/entities/defect";
 import { filterDefects } from "@/shared/utils/defectFilter";
+import { naturalCompare } from "@/shared/utils/naturalSort";
 import formatUnitName from "@/shared/utils/formatUnitName";
 import type { DefectWithInfo } from "@/shared/types/defect";
 import type { DefectFilters } from "@/shared/types/defectFilters";
@@ -140,33 +141,56 @@ export default function DefectsPage() {
     return data;
   }, [data, perm?.only_assigned_project, userProjectIds]);
 
+  const [filters, setFilters] = useState<DefectFilters>({});
+
   const options = useMemo(() => {
-    const uniq = (entries: [number | null, string | null][]) => {
+    const without = <K extends keyof DefectFilters>(key: K) => {
+      const { [key]: _omit, ...rest } = filters;
+      return rest as DefectFilters;
+    };
+    const filtered = <K extends keyof DefectFilters>(key: K) =>
+      filterDefects(filteredData, without(key));
+
+    const uniq = (values: (string | number | null | undefined)[]) =>
+      Array.from(new Set(values.filter(Boolean) as (string | number)[])).sort(naturalCompare);
+    const mapOptions = (vals: (string | number | null | undefined)[]) =>
+      uniq(vals).map((v) => ({ label: String(v), value: v }));
+
+    const uniqPairs = (pairs: [number | null, string | null][]) => {
       const map = new Map<number, string>();
-      entries.forEach(([id, name]) => {
+      pairs.forEach(([id, name]) => {
         if (id != null && name) map.set(id, name);
       });
-      return Array.from(map.entries()).map(([value, label]) => ({ value, label }));
+      return Array.from(map.entries())
+        .sort((a, b) => naturalCompare(a[1], b[1]))
+        .map(([value, label]) => ({ value, label }));
     };
-    return {
-      ids: Array.from(new Set(filteredData.map((d) => d.id))).map((id) => ({
-        label: String(id),
-        value: id,
-      })),
-      units: units.map((u) => ({ label: u.name, value: u.id })),
-      buildings: Array.from(new Set(units.map((u) => u.building).filter(Boolean))).map(
-        (b) => ({ label: String(b), value: String(b) }),
-      ),
-      projects: projects.map((p) => ({ label: p.name, value: p.id })),
-      types: uniq(filteredData.map((d) => [d.type_id, d.defectTypeName])),
-      statuses: uniq(filteredData.map((d) => [d.status_id, d.defectStatusName])),
-      fixBy: Array.from(new Set(filteredData.map((d) => d.fixByName).filter(Boolean))).map(
-        (name) => ({ label: String(name), value: String(name) })
-      ),
-    };
-  }, [filteredData, units, projects]);
 
-  const [filters, setFilters] = useState<DefectFilters>({});
+    const unitMap = new Map(units.map((u) => [u.id, u.name]));
+    const projectMap = new Map(projects.map((p) => [p.id, p.name]));
+
+    return {
+      ids: mapOptions(filtered('id').map((d) => d.id)),
+      units: Array.from(
+        new Set(filtered('units').flatMap((d) => d.unitIds)),
+      )
+        .map((id) => ({ label: unitMap.get(id) ?? String(id), value: id }))
+        .sort((a, b) => naturalCompare(a.label, b.label)),
+      buildings: mapOptions(
+        filtered('building').flatMap((d) => d.buildingNamesList || []),
+      ),
+      projects: Array.from(
+        new Set(filtered('projectId').flatMap((d) => d.projectIds || [])),
+      )
+        .map((id) => ({ label: projectMap.get(id) ?? String(id), value: id }))
+        .sort((a, b) => naturalCompare(a.label, b.label)),
+      types: uniqPairs(filtered('typeId').map((d) => [d.type_id, d.defectTypeName])),
+      statuses: uniqPairs(
+        filtered('statusId').map((d) => [d.status_id, d.defectStatusName]),
+      ),
+      fixBy: mapOptions(filtered('fixBy').map((d) => d.fixByName)),
+    };
+  }, [filteredData, filters, units, projects]);
   const [viewId, setViewId] = useState<number | null>(null);
   const [fixId, setFixId] = useState<number | null>(null);
   const { mutateAsync: removeDefect, isPending: removing } = useDeleteDefect();
