@@ -98,7 +98,7 @@ export default function useUnitsMatrix(projectId: number | null, building?: stri
 
         const { data: claimRows } = await supabase
           .from('claim_units')
-          .select('unit_id, claims!inner(id, project_id, is_official, claim_status_id, statuses(color))')
+          .select('unit_id, claims!inner(id, project_id, claim_status_id, statuses(color))')
           .in('unit_id', unitIds)
           .eq('claims.project_id', projectId);
         (claimRows || []).forEach((row) => {
@@ -107,7 +107,6 @@ export default function useUnitsMatrix(projectId: number | null, building?: stri
           if (!claimsByUnit[row.unit_id]) {
             claimsByUnit[row.unit_id] = {
               color: cl.statuses?.color ?? null,
-              official: cl.is_official ?? false,
             };
           }
         });

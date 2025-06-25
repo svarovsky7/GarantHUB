@@ -45,7 +45,6 @@ export default function UnitCell({
 }: Props) {
   const bgColor = "#fff";
   const hasCases = Array.isArray(cases) && cases.length > 0;
-  const hasOfficial = claimInfo?.official ?? false;
   const claimColor = claimInfo?.color ?? null;
 
   return (
@@ -59,7 +58,7 @@ export default function UnitCell({
         alignItems: "stretch",
         justifyContent: "flex-start",
         border: `${hasCases ? 2 : 1.5}px solid ${
-          hasCases || hasOfficial ? "#e53935" : "#dde2ee"
+          hasCases ? "#e53935" : "#dde2ee"
         }`,
         background: bgColor,
         borderRadius: "12px",
@@ -73,7 +72,7 @@ export default function UnitCell({
           boxShadow: hasCases
             ? "0 0 0 2px rgba(211,47,47,0.4)"
             : "0 4px 16px 0 #b5d2fa",
-          borderColor: hasCases || hasOfficial ? "#d32f2f" : "#1976d2",
+          borderColor: hasCases ? "#d32f2f" : "#1976d2",
           background: "#f6faff",
         },
         position: "relative",

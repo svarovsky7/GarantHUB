@@ -46,11 +46,8 @@ import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 export interface ClaimFormAntdEditProps {
   claimId: string | number;
   onCancel?: () => void;
-  /**
-   * Вызывается после успешного сохранения формы
-   * @param isOfficial актуальное значение признака официальности
-   */
-  onSaved?: (isOfficial: boolean) => void;
+  /** Вызывается после успешного сохранения формы */
+  onSaved?: () => void;
   embedded?: boolean;
   /** Показывать блок работы с файлами */
   showAttachments?: boolean;
@@ -71,7 +68,6 @@ export interface ClaimFormAntdEditValues {
   engineer_id: string | null;
   person_id: number | null;
   case_uid_id: number | null;
-  is_official: boolean;
   description: string | null;
 }
 
@@ -115,7 +111,6 @@ const ClaimFormAntdEdit = React.forwardRef<
   const attachments =
     attachmentsState ?? useClaimAttachments({ claim: claim as any });
   const { changedFields, handleValuesChange } = useChangedFields(form, [claim]);
-  const isOfficialWatch = Form.useWatch('is_official', form);
 
   useImperativeHandle(ref, () => ({
     submit: () => form.submit(),
@@ -141,15 +136,8 @@ const ClaimFormAntdEdit = React.forwardRef<
       person_id: claim.person_id ?? null,
       case_uid_id: claim.case_uid_id ?? null,
       description: claim.description ?? '',
-      is_official: claim.is_official ?? false,
     });
   }, [claim, form]);
-
-  useEffect(() => {
-    if (!isOfficialWatch) {
-      form.setFieldValue('case_uid_id', null);
-    }
-  }, [isOfficialWatch, form]);
 
   const onFinish = async (values: ClaimFormAntdEditValues) => {
     if (!claim) return;
@@ -173,26 +161,10 @@ const ClaimFormAntdEdit = React.forwardRef<
           engineer_id: values.engineer_id ?? null,
           person_id: values.person_id ?? null,
           case_uid_id: values.case_uid_id ?? null,
-          is_official: values.is_official,
           description: values.description ?? '',
           updated_by: userId ?? undefined,
         } as any,
       });
-
-      if (!claim.is_official && values.is_official) {
-        await supabase
-          .from('claim_defects')
-          .update({ is_official: true })
-          .eq('claim_id', claim.id);
-      }
-
-      // если претензия перестала быть официальной, обновляем связанные дефекты
-      if (claim.is_official && !values.is_official) {
-        await supabase
-          .from('claim_defects')
-          .update({ is_official: false })
-          .eq('claim_id', claim.id);
-      }
 
       for (const id of attachments.removedIds) {
         await removeAtt.mutateAsync({
@@ -218,7 +190,7 @@ const ClaimFormAntdEdit = React.forwardRef<
       }
       attachments.markPersisted();
       notify.success('Претензия обновлена');
-      onSaved?.(values.is_official);
+      onSaved?.();
     } catch (e: any) {
       notify.error(e.message);
     }
@@ -362,28 +334,10 @@ const ClaimFormAntdEdit = React.forwardRef<
       </Row>
       <Row gutter={16}>
         <Col span={8}>
-          <Form.Item
-            name="is_official"
-            label="Официальная претензия"
-            valuePropName="checked"
-            style={highlight('is_official')}
-          >
-            <Tooltip title="Доступно юристам и администраторам">
-              <Switch disabled={role !== 'ADMIN' && role !== 'LAWYER'} />
-            </Tooltip>
+          <Form.Item name="case_uid_id" label="Уникальный идентификатор дела" style={highlight('case_uid_id')}>
+            <Select showSearch allowClear options={caseUids.map((c) => ({ value: c.id, label: c.uid }))} />
           </Form.Item>
         </Col>
-        {isOfficialWatch && (
-          <Col span={8}>
-            <Form.Item name="case_uid_id" label="Уникальный идентификатор дела" style={highlight('case_uid_id')}>
-              <Select
-                showSearch
-                allowClear
-                options={caseUids.map((c) => ({ value: c.id, label: c.uid }))}
-              />
-            </Form.Item>
-          </Col>
-        )}
       </Row>
       {showAttachments && (
         <Form.Item

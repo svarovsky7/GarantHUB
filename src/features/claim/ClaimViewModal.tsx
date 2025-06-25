@@ -181,7 +181,7 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
     }
   };
 
-  const handleSaved = async (isOfficial: boolean) => {
+  const handleSaved = async () => {
     if (!claim) return;
     try {
       const createdIds = newDefs.length
@@ -194,7 +194,6 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
           createdIds.map((id) => ({
             claim_id: claim.id,
             defect_id: id,
-            is_official: isOfficial,
           })),
         );
         await closeDefectsForClaim(claim.id, claim.claim_status_id ?? null);

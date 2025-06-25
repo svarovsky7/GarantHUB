@@ -3,8 +3,6 @@ export interface ClaimSimple {
   id: number;
   /** Проект, к которому относится претензия */
   project_id: number;
-  /** Претензия официальная */
-  is_official?: boolean;
   /** Связанные объекты */
   unit_ids: number[];
   /** Идентификаторы связанных дефектов */

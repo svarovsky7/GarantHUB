@@ -25,11 +25,6 @@ export interface Claim {
   person_id: number | null;
   /** Уникальный идентификатор судебного дела */
   case_uid_id: number | null;
-  /**
-   * Официальная претензия.
-   * Переключатель доступен только ролям ADMIN и LAWYER.
-   */
-  is_official?: boolean;
   /** Связанные дефекты */
   defect_ids?: number[];
   /** Дополнительное описание */
