@@ -40,6 +40,8 @@ interface Props {
   onFilesChange?: (index: number, files: NewDefectFile[]) => void;
   /** Показывать колонку загрузки файлов */
   showFiles?: boolean;
+  /** Дата по умолчанию для поля "Дата получения" */
+  defaultReceivedAt?: dayjs.Dayjs | null;
 }
 
 /**
@@ -121,7 +123,7 @@ const FixByField: React.FC<FixByFieldProps> = React.memo(
  * Editable table for adding defects inside ticket form.
  * Shows skeleton until defect types and statuses are loaded.
  */
-export default function DefectEditableTable({ fields, add, remove, projectId, fileMap = {}, onFilesChange, showFiles = true }: Props) {
+export default function DefectEditableTable({ fields, add, remove, projectId, fileMap = {}, onFilesChange, showFiles = true, defaultReceivedAt }: Props) {
   const { data: defectTypes = [], isPending: loadingTypes } = useDefectTypes();
   const { data: defectStatuses = [], isPending: loadingStatuses } = useDefectStatuses();
   const { data: deadlines = [] } = useDefectDeadlines();
@@ -246,7 +248,7 @@ export default function DefectEditableTable({ fields, add, remove, projectId, fi
               name={[field.name, 'received_at']}
               noStyle
               rules={[{ required: true, message: 'Укажите дату' }]}
-              initialValue={dayjs()}
+              initialValue={defaultReceivedAt ?? dayjs()}
             >
               <DatePicker size="small" format="DD.MM.YYYY" style={{ width: '100%' }} />
             </Form.Item>
@@ -396,7 +398,7 @@ export default function DefectEditableTable({ fields, add, remove, projectId, fi
               status_id: defectStatuses[0]?.id ?? null,
               type_id: null,
               is_warranty: false,
-              received_at: dayjs(),
+              received_at: defaultReceivedAt ?? dayjs(),
               fixed_at: null,
               brigade_id: null,
               contractor_id: null,
