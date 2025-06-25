@@ -71,6 +71,12 @@ export default function DefectsTable({
         (a.projectNames || "").localeCompare(b.projectNames || ""),
     },
     {
+      title: "Корпус",
+      dataIndex: "buildingNames",
+      sorter: (a, b) =>
+        (a.buildingNames || "").localeCompare(b.buildingNames || ""),
+    },
+    {
       title: "Объекты",
       dataIndex: "unitNamesList",
       sorter: (a, b) => (a.unitNames || "").localeCompare(b.unitNames || ""),

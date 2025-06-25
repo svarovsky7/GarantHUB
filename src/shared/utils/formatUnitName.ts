@@ -4,6 +4,7 @@
  * Пустые части пропускаются.
  *
  * @param unit - данные объекта
+ * @param includeBuilding - включать ли корпус в итоговую строку
  */
 export default function formatUnitName(
   unit: {
@@ -11,10 +12,11 @@ export default function formatUnitName(
     building?: string | null;
     floor?: number | null;
   },
+  includeBuilding = true,
 ): string {
   const parts: string[] = [];
 
-  if (unit.building) {
+  if (includeBuilding && unit.building) {
     const b = unit.building.trim();
     parts.push(/^\s*корпус/i.test(b) ? b : `Корпус ${b}`);
   }

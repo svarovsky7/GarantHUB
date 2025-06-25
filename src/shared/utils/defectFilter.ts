@@ -15,6 +15,7 @@ export function filterDefects<T extends {
   status_id: number | null;
   defectStatusName?: string;
   fixByName?: string;
+  buildingNamesList?: string[];
 }>(rows: T[], f: DefectFilters): T[] {
   return rows.filter((d) => {
     if (Array.isArray(f.id) && f.id.length > 0 && !f.id.includes(d.id)) {
@@ -24,6 +25,13 @@ export function filterDefects<T extends {
       Array.isArray(f.units) &&
       f.units.length > 0 &&
       !d.unitIds.some((u) => f.units!.includes(u))
+    ) {
+      return false;
+    }
+    if (
+      Array.isArray(f.building) &&
+      f.building.length > 0 &&
+      (!d.buildingNamesList || !d.buildingNamesList.some((b) => f.building!.includes(b)))
     ) {
       return false;
     }
