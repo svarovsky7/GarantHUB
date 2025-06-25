@@ -68,6 +68,7 @@ export interface ClaimFormAntdEditValues {
   engineer_id: string | null;
   person_id: number | null;
   case_uid_id: number | null;
+  pre_trial_claim: boolean;
   description: string | null;
 }
 
@@ -111,6 +112,7 @@ const ClaimFormAntdEdit = React.forwardRef<
   const attachments =
     attachmentsState ?? useClaimAttachments({ claim: claim as any });
   const { changedFields, handleValuesChange } = useChangedFields(form, [claim]);
+  const preTrialWatch = Form.useWatch('pre_trial_claim', form);
 
   useImperativeHandle(ref, () => ({
     submit: () => form.submit(),
@@ -135,6 +137,7 @@ const ClaimFormAntdEdit = React.forwardRef<
       engineer_id: claim.engineer_id ?? null,
       person_id: claim.person_id ?? null,
       case_uid_id: claim.case_uid_id ?? null,
+      pre_trial_claim: claim.pre_trial_claim ?? false,
       description: claim.description ?? '',
     });
   }, [claim, form]);
@@ -161,6 +164,7 @@ const ClaimFormAntdEdit = React.forwardRef<
           engineer_id: values.engineer_id ?? null,
           person_id: values.person_id ?? null,
           case_uid_id: values.case_uid_id ?? null,
+          pre_trial_claim: values.pre_trial_claim ?? false,
           description: values.description ?? '',
           updated_by: userId ?? undefined,
         } as any,
@@ -208,6 +212,33 @@ const ClaimFormAntdEdit = React.forwardRef<
       style={{ maxWidth: embedded ? 'none' : 640 }}
       autoComplete="off"
     >
+      <Row gutter={16}>
+        <Col span={8}>
+          <Form.Item
+            name="pre_trial_claim"
+            label="Досудебная претензия"
+            valuePropName="checked"
+            style={highlight('pre_trial_claim')}
+          >
+            <Switch />
+          </Form.Item>
+        </Col>
+        <Col span={8}>
+          <Form.Item
+            name="case_uid_id"
+            label="Уникальный идентификатор дела"
+            hidden={!preTrialWatch}
+            style={highlight('case_uid_id')}
+          >
+            <Select
+              showSearch
+              allowClear
+              disabled={!preTrialWatch}
+              options={caseUids.map((c) => ({ value: c.id, label: c.uid }))}
+            />
+          </Form.Item>
+        </Col>
+      </Row>
       <Row gutter={16}>
         <Col span={8}>
           <Form.Item
@@ -329,13 +360,6 @@ const ClaimFormAntdEdit = React.forwardRef<
         <Col span={24}>
           <Form.Item name="description" label="Дополнительная информация" style={highlight('description')}>
             <Input.TextArea rows={2} />
-          </Form.Item>
-        </Col>
-      </Row>
-      <Row gutter={16}>
-        <Col span={8}>
-          <Form.Item name="case_uid_id" label="Уникальный идентификатор дела" style={highlight('case_uid_id')}>
-            <Select showSearch allowClear options={caseUids.map((c) => ({ value: c.id, label: c.uid }))} />
           </Form.Item>
         </Col>
       </Row>
