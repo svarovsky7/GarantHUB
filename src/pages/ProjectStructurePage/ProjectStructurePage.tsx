@@ -15,7 +15,9 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutline from "@mui/icons-material/DeleteOutline";
+import EditIcon from "@mui/icons-material/Edit";
 import AddBuildingDialog from "@/features/addBuilding/AddBuildingDialog";
+import RenameBuildingDialog from "@/features/renameBuilding/RenameBuildingDialog";
 import UnitsMatrix from "@/widgets/UnitsMatrix/UnitsMatrix";
 import StatusLegend from "@/widgets/StatusLegend";
 import useProjectStructure, { LS_KEY } from "@/shared/hooks/useProjectStructure";
@@ -47,6 +49,7 @@ export default function ProjectStructurePage() {
 
     // Диалоги для корпусов/секций
     const [addDialogOpen, setAddDialogOpen] = useState(false);
+    const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [confirmDialog, setConfirmDialog] = useState({
         open: false,
         value: '',
@@ -97,6 +100,8 @@ export default function ProjectStructurePage() {
     // --- Диалоги ---
     const handleOpenAddDialog = () => setAddDialogOpen(true);
     const handleCloseAddDialog = () => setAddDialogOpen(false);
+    const handleOpenEditDialog = () => setEditDialogOpen(true);
+    const handleCloseEditDialog = () => setEditDialogOpen(false);
 
     const handleDeleteBuilding = () => {
         if (!building) return;
@@ -277,6 +282,19 @@ export default function ProjectStructurePage() {
                         {Boolean(building) && (
                             <IconButton
                                 size="small"
+                                onClick={handleOpenEditDialog}
+                                sx={{
+                                    color: "#fff",
+                                    opacity: 0.88,
+                                    p: "6px",
+                                }}
+                            >
+                                <EditIcon fontSize="small" />
+                            </IconButton>
+                        )}
+                        {Boolean(building) && (
+                            <IconButton
+                                size="small"
                                 onClick={handleDeleteBuilding}
                                 sx={{
                                     color: "#fff",
@@ -300,6 +318,19 @@ export default function ProjectStructurePage() {
                 projectId={projectId}
                 afterAdd={(name) => {
                     setBuildings((b) => Array.from(new Set([...b, name])));
+                    refreshAll();
+                }}
+            />
+
+            {/* Диалог переименования корпуса */}
+            <RenameBuildingDialog
+                open={editDialogOpen}
+                onClose={handleCloseEditDialog}
+                projectId={projectId}
+                currentName={building || ''}
+                onSuccess={(name) => {
+                    setBuildings((b) => b.map((v) => (v === building ? name : v)));
+                    setBuilding(name);
                     refreshAll();
                 }}
             />
