@@ -12,7 +12,7 @@ import {
   Space,
   Popconfirm,
 } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+
 import ClaimAttachmentsBlock from './ClaimAttachmentsBlock';
 import dayjs from 'dayjs';
 import { useVisibleProjects } from '@/entities/project';
@@ -26,8 +26,6 @@ import DefectEditableTable from '@/widgets/DefectEditableTable';
 import { useCreateDefects, type NewDefect } from '@/entities/defect';
 import { useAuthStore } from '@/shared/store/authStore';
 import type { RoleName } from '@/shared/types/rolePermission';
-import { usePersons, useDeletePerson } from '@/entities/person';
-import PersonModalId from '@/features/person/PersonModalId';
 import { useCaseUids } from '@/entities/caseUid';
 import useProjectBuildings from '@/shared/hooks/useProjectBuildings';
 
@@ -53,7 +51,7 @@ export interface ClaimFormValues {
   /** Срок устранения всех дефектов */
   resolved_on: dayjs.Dayjs | null;
   engineer_id: string | null;
-  person_id: number | null;
+  owner: string | null;
   case_uid_id: number | null;
   /** Является ли претензия досудебной */
   pre_trial_claim: boolean;
@@ -89,10 +87,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
   const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
   const defectsWatch = Form.useWatch('defects', form);
   const acceptedOnWatch = Form.useWatch('accepted_on', form) ?? null;
-  const { data: persons = [] } = usePersons();
-  const deletePerson = useDeletePerson();
   const { data: caseUids = [] } = useCaseUids();
-  const [personModal, setPersonModal] = useState<any | null>(null);
   const preTrialWatch = Form.useWatch('pre_trial_claim', form);
 
   const handleDropFiles = (dropped: File[]) => {
@@ -118,7 +113,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
     if (initialValues.registered_on) form.setFieldValue('registered_on', dayjs(initialValues.registered_on));
     if (initialValues.resolved_on) form.setFieldValue('resolved_on', dayjs(initialValues.resolved_on));
     if (initialValues.description) form.setFieldValue('description', initialValues.description);
-    if (initialValues.person_id != null) form.setFieldValue('person_id', initialValues.person_id);
+    if (initialValues.owner != null) form.setFieldValue('owner', initialValues.owner);
     if (initialValues.case_uid_id != null) form.setFieldValue('case_uid_id', initialValues.case_uid_id);
     if (initialValues.pre_trial_claim != null) {
       form.setFieldValue('pre_trial_claim', initialValues.pre_trial_claim);
@@ -205,7 +200,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
       accepted_on: values.accepted_on ? values.accepted_on.format('YYYY-MM-DD') : null,
       registered_on: values.registered_on ? values.registered_on.format('YYYY-MM-DD') : null,
       resolved_on: values.resolved_on ? values.resolved_on.format('YYYY-MM-DD') : null,
-      person_id: values.person_id ?? null,
+      owner: values.owner ?? null,
       case_uid_id: values.case_uid_id ?? null,
       defect_ids: defectIds,
     } as any);
@@ -265,37 +260,8 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
           </Form.Item>
         </Col>
         <Col span={8}>
-          <Form.Item label="Физлицо" name="person_id">
-            <Space.Compact style={{ width: '100%' }}>
-              <Select
-                allowClear
-                showSearch
-                options={persons.map((p) => ({ value: p.id, label: p.full_name }))}
-              />
-              <Button icon={<PlusOutlined />} onClick={() => setPersonModal({})} />
-              <Button
-                icon={<EditOutlined />}
-                disabled={!form.getFieldValue('person_id')}
-                onClick={() => {
-                  const id = form.getFieldValue('person_id');
-                  const data = persons.find((p) => p.id === id) || null;
-                  setPersonModal(data);
-                }}
-              />
-              <Popconfirm
-                title="Удалить физлицо?"
-                okText="Да"
-                cancelText="Нет"
-                onConfirm={() => {
-                  const id = form.getFieldValue('person_id');
-                  if (!id) return;
-                  deletePerson.mutate(id);
-                }}
-                disabled={!form.getFieldValue('person_id')}
-              >
-                <Button icon={<DeleteOutlined />} disabled={!form.getFieldValue('person_id')} />
-              </Popconfirm>
-            </Space.Compact>
+          <Form.Item label="Собственник объекта" name="owner">
+            <Input />
           </Form.Item>
         </Col>
         <Col span={8}>
@@ -378,15 +344,6 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
         </Form.Item>
       )}
     </Form>
-    <PersonModalId
-      open={!!personModal}
-      onClose={() => setPersonModal(null)}
-      unitId={Form.useWatch('unit_ids', form)?.[0] ?? null}
-      onSelect={(id) => {
-        form.setFieldValue('person_id', id);
-      }}
-      initialData={personModal}
-    />
     </>
   );
 }

@@ -10,8 +10,6 @@ export interface ClaimWithNames extends Claim {
   statusColor: string | null;
   /** ФИО ответственного инженера */
   responsibleEngineerName: string | null;
-  /** ФИО выбранного физлица */
-  personName?: string | null;
   /** Уникальный идентификатор судебного дела */
   caseUid?: string | null;
   /** Список объектов одной строкой */
