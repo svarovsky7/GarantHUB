@@ -60,7 +60,7 @@ function mapClaim(r: any): ClaimWithNames {
     registered_on: r.registered_on,
     resolved_on: r.resolved_on,
     engineer_id: r.engineer_id,
-    person_id: r.person_id ?? null,
+    owner: r.owner ?? null,
     case_uid_id: r.case_uid_id ?? null,
     pre_trial_claim: r.pre_trial_claim ?? false,
     defect_ids: r.defect_ids ?? [],
@@ -69,7 +69,6 @@ function mapClaim(r: any): ClaimWithNames {
     statusName: r.statuses?.name ?? '—',
     statusColor: r.statuses?.color ?? null,
     responsibleEngineerName: null,
-    personName: r.persons?.full_name ?? null,
     caseUid: r.case_uids?.uid ?? null,
     unitNames: '',
     // convert strings to dayjs for consumer convenience
@@ -137,9 +136,8 @@ export function useClaims() {
         .select(
           `id, project_id, claim_status_id, claim_no, claimed_on,
           accepted_on, registered_on, resolved_on,
-          engineer_id, person_id, case_uid_id, pre_trial_claim, description, created_at,
+          engineer_id, owner, case_uid_id, pre_trial_claim, description, created_at,
           projects (id, name),
-          persons(id, full_name),
           case_uids(id, uid),
           statuses (id, name, color),
           claim_units(unit_id),
@@ -188,9 +186,8 @@ export function useClaim(id?: number | string) {
         .select(
           `id, project_id, claim_status_id, claim_no, claimed_on,
           accepted_on, registered_on, resolved_on,
-          engineer_id, person_id, case_uid_id, pre_trial_claim, description, created_at,
+          engineer_id, owner, case_uid_id, pre_trial_claim, description, created_at,
           projects (id, name),
-          persons(id, full_name),
           case_uids(id, uid),
           statuses (id, name, color),
           claim_units(unit_id),
@@ -234,9 +231,8 @@ export function useClaimAll(id?: number | string) {
         .select(
           `id, project_id, claim_status_id, claim_no, claimed_on,
           accepted_on, registered_on, resolved_on,
-          engineer_id, person_id, case_uid_id, pre_trial_claim, description, created_at,
+          engineer_id, owner, case_uid_id, pre_trial_claim, description, created_at,
           projects (id, name),
-          persons(id, full_name),
           case_uids(id, uid),
           statuses (id, name, color),
           claim_units(unit_id),
@@ -276,7 +272,7 @@ export function useClaimsAll() {
         .select(
           `id, project_id, claim_status_id, claim_no, claimed_on,
           accepted_on, registered_on, resolved_on,
-          engineer_id, person_id, case_uid_id, pre_trial_claim, description, created_at,
+          engineer_id, owner, case_uid_id, pre_trial_claim, description, created_at,
           projects (id, name),
           statuses (id, name, color),
           claim_units(unit_id),

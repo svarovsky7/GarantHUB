@@ -274,8 +274,8 @@
   },
   {
     "table_name": "claims",
-    "column_name": "person_id",
-    "data_type": "integer",
+    "column_name": "owner",
+    "data_type": "text",
     "is_nullable": "YES",
     "column_default": null
   },
