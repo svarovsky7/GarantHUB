@@ -274,13 +274,6 @@
   },
   {
     "table_name": "claims",
-    "column_name": "owner",
-    "data_type": "text",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
-    "table_name": "claims",
     "column_name": "case_uid_id",
     "data_type": "integer",
     "is_nullable": "YES",
@@ -292,6 +285,13 @@
     "data_type": "boolean",
     "is_nullable": "NO",
     "column_default": "false"
+  },
+  {
+    "table_name": "claims",
+    "column_name": "owner",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
   },
   {
     "table_name": "contractors",
