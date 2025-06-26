@@ -24,4 +24,10 @@ export interface DashboardStats {
   defectsClosed: number;
   /** Количество судебных дел */
   courtCases: number;
+  /** Претензии по объектам */
+  claimsByUnit: Array<{ unitName: string; count: number }>;
+  /** Претензии по закрепленным инженерам */
+  claimsByEngineer: Array<{ engineerName: string; count: number }>;
+  /** Дефекты по закрепленным инженерам */
+  defectsByEngineer: Array<{ engineerName: string; count: number }>;
 }
