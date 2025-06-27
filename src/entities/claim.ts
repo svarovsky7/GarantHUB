@@ -10,7 +10,6 @@ import type { ClaimWithNames } from '@/shared/types/claimWithNames';
 import type { ClaimDeleteParams } from '@/shared/types/claimDelete';
 import type { ClaimDefect } from '@/shared/types/claimDefect';
 import type { ClaimSimple } from '@/shared/types/claimSimple';
-import type { PagedResult } from '@/shared/types/pagedResult';
 import {
   addClaimAttachments,
   getAttachmentsByIds,
@@ -412,115 +411,6 @@ export function useClaimsSimple() {
         defect_ids: defectMap[r.id] ?? [],
         claim_defects: claimDefectMap[r.id] ?? [],
       })) as ClaimSimple[];
-    },
-    staleTime: 5 * 60_000,
-  });
-}
-
-/**
- * Получить список претензий постранично.
- */
-export function useClaimsPage(page: number, pageSize: number) {
-  const { projectId, projectIds, onlyAssigned, enabled } = useProjectFilter();
-  return useQuery({
-    queryKey: [TABLE, 'page', page, pageSize, projectId, projectIds.join(',')],
-    enabled,
-    keepPreviousData: true,
-    queryFn: async () => {
-      let q: any = supabase
-        .from(TABLE)
-        .select(
-          `id, project_id, claim_status_id, claim_no, claimed_on,
-          accepted_on, registered_on, resolved_on,
-          engineer_id, owner, case_uid_id, pre_trial_claim, description, created_at,
-          projects (id, name),
-          statuses (id, name, color),
-          claim_units(unit_id),
-          claim_defects(defect_id),
-          claim_attachments(attachments(id, storage_path, file_url:path, file_type:mime_type, original_name))`,
-          { count: 'exact' },
-        );
-      q = filterByProjects(q, projectId, projectIds, onlyAssigned);
-      q = q.order('created_at', { ascending: false });
-      const from = (page - 1) * pageSize;
-      const to = from + pageSize - 1;
-      q = q.range(from, to);
-      const { data, error, count } = await q;
-      if (error) throw error;
-      const ids = (data ?? []).map((r: any) => r.id);
-      const { data: links } = ids.length
-        ? await supabase
-            .from(LINK_TABLE)
-            .select('parent_id, child_id')
-            .in('child_id', ids)
-        : { data: [] };
-      const linkMap = new Map<number, number>();
-      (links ?? []).forEach((l: any) => linkMap.set(l.child_id, l.parent_id));
-      return {
-        total: count ?? 0,
-        data: (data ?? []).map((r: any) =>
-          mapClaim({
-            ...r,
-            parent_id: linkMap.get(r.id) ?? null,
-            unit_ids: (r.claim_units ?? []).map((u: any) => u.unit_id),
-            defect_ids: (r.claim_defects ?? []).map((d: any) => d.defect_id),
-            attachments: (r.claim_attachments ?? []).map((a: any) => a.attachments),
-          }),
-        ),
-      } as PagedResult<ClaimWithNames>;
-    },
-    staleTime: 5 * 60_000,
-  });
-}
-
-/**
- * Получить список претензий по всем проектам постранично.
- */
-export function useClaimsPageAll(page: number, pageSize: number) {
-  return useQuery({
-    queryKey: ['claims-all-page', page, pageSize],
-    keepPreviousData: true,
-    queryFn: async () => {
-      let q: any = supabase
-        .from(TABLE)
-        .select(
-          `id, project_id, claim_status_id, claim_no, claimed_on,
-          accepted_on, registered_on, resolved_on,
-          engineer_id, owner, case_uid_id, pre_trial_claim, description, created_at,
-          projects (id, name),
-          statuses (id, name, color),
-          claim_units(unit_id),
-          claim_defects(defect_id),
-          claim_attachments(attachments(id, storage_path, file_url:path, file_type:mime_type, original_name))`,
-          { count: 'exact' },
-        )
-        .order('created_at', { ascending: false });
-      const from = (page - 1) * pageSize;
-      const to = from + pageSize - 1;
-      q = q.range(from, to);
-      const { data, error, count } = await q;
-      if (error) throw error;
-      const ids = (data ?? []).map((r: any) => r.id);
-      const { data: links } = ids.length
-        ? await supabase
-            .from(LINK_TABLE)
-            .select('parent_id, child_id')
-            .in('child_id', ids)
-        : { data: [] };
-      const linkMap = new Map<number, number>();
-      (links ?? []).forEach((l: any) => linkMap.set(l.child_id, l.parent_id));
-      return {
-        total: count ?? 0,
-        data: (data ?? []).map((r: any) =>
-          mapClaim({
-            ...r,
-            parent_id: linkMap.get(r.id) ?? null,
-            unit_ids: (r.claim_units ?? []).map((u: any) => u.unit_id),
-            defect_ids: (r.claim_defects ?? []).map((d: any) => d.defect_id),
-            attachments: (r.claim_attachments ?? []).map((a: any) => a.attachments),
-          }),
-        ),
-      } as PagedResult<ClaimWithNames>;
     },
     staleTime: 5 * 60_000,
   });

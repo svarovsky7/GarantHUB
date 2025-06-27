@@ -13,8 +13,8 @@ import {
 import ExportClaimsButton from '@/features/claim/ExportClaimsButton';
 import { useSnackbar } from 'notistack';
 import {
-  useClaimsPage,
-  useClaimsPageAll,
+  useClaims,
+  useClaimsAll,
   useDeleteClaim,
   useLinkClaims,
   useUnlinkClaim,
@@ -45,20 +45,17 @@ export default function ClaimsPage() {
   const { enqueueSnackbar } = useSnackbar();
   const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
   const { data: perm } = useRolePermission(role);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(25);
   const {
-    data: assignedPage,
+    data: claimsAssigned = [],
     isLoading: loadingAssigned,
     error: errorAssigned,
-  } = useClaimsPage(page, pageSize);
+  } = useClaims();
   const {
-    data: allPage,
+    data: claimsAll = [],
     isLoading: loadingAll,
     error: errorAll,
-  } = useClaimsPageAll(page, pageSize);
-  const claims = perm?.only_assigned_project ? assignedPage?.data ?? [] : allPage?.data ?? [];
-  const total = perm?.only_assigned_project ? assignedPage?.total ?? 0 : allPage?.total ?? 0;
+  } = useClaimsAll();
+  const claims = perm?.only_assigned_project ? claimsAssigned : claimsAll;
   const isLoading = perm?.only_assigned_project ? loadingAssigned : loadingAll;
   const error = errorAssigned || errorAll;
   const deleteClaimMutation = useDeleteClaim();
@@ -336,13 +333,6 @@ export default function ClaimsPage() {
               filters={filters}
               loading={isLoading}
               columns={columns}
-              page={page}
-              pageSize={pageSize}
-              total={total}
-              onPageChange={(p, size) => {
-                setPage(p);
-                setPageSize(size);
-              }}
               onView={(id) => setViewId(id)}
               onAddChild={setLinkFor}
               onUnlink={(id) => unlinkClaim.mutate(id)}
