@@ -16,6 +16,7 @@ import DefectStatusSelect from "@/features/defect/DefectStatusSelect";
 import type { DefectWithInfo } from "@/shared/types/defect";
 import type { DefectFilters } from "@/shared/types/defectFilters";
 import { filterDefects } from "@/shared/utils/defectFilter";
+import { useResizableColumns } from "@/shared/hooks/useResizableColumns";
 
 const fmt = (v: string | null) => (v ? dayjs(v).format("DD.MM.YYYY") : "—");
 
@@ -45,11 +46,13 @@ export default function DefectsTable({
     {
       title: "ID дефекта",
       dataIndex: "id",
+      width: 80,
       sorter: (a, b) => a.id - b.id,
     },
     {
       title: "ID претензии",
       dataIndex: "claimIds",
+      width: 120,
       sorter: (a, b) =>
         a.claimIds.join(",").localeCompare(b.claimIds.join(",")),
       render: (v: number[]) => v.join(", "),
@@ -62,23 +65,27 @@ export default function DefectsTable({
         </span>
       ),
       dataIndex: "days",
+      width: 120,
       sorter: (a, b) => (a.days ?? -1) - (b.days ?? -1),
     },
     {
       title: "Проект",
       dataIndex: "projectNames",
+      width: 180,
       sorter: (a, b) =>
         (a.projectNames || "").localeCompare(b.projectNames || ""),
     },
     {
       title: "Корпус",
       dataIndex: "buildingNames",
+      width: 120,
       sorter: (a, b) =>
         (a.buildingNames || "").localeCompare(b.buildingNames || ""),
     },
     {
       title: "Объекты",
       dataIndex: "unitNamesList",
+      width: 160,
       sorter: (a, b) => (a.unitNames || "").localeCompare(b.unitNames || ""),
       render: (_: string[], row) => (
         <>
@@ -93,17 +100,20 @@ export default function DefectsTable({
     {
       title: "Описание",
       dataIndex: "description",
+      width: 220,
       sorter: (a, b) => a.description.localeCompare(b.description),
     },
     {
       title: "Тип",
       dataIndex: "defectTypeName",
+      width: 120,
       sorter: (a, b) =>
         (a.defectTypeName || "").localeCompare(b.defectTypeName || ""),
     },
     {
       title: "Статус",
       dataIndex: "status_id",
+      width: 160,
       sorter: (a, b) =>
         (a.defectStatusName || "").localeCompare(b.defectStatusName || ""),
       render: (_: number, row) => (
@@ -118,11 +128,13 @@ export default function DefectsTable({
     {
       title: "Кем устраняется",
       dataIndex: "fixByName",
+      width: 180,
       sorter: (a, b) => (a.fixByName || "").localeCompare(b.fixByName || ""),
     },
     {
       title: "Дата получения",
       dataIndex: "received_at",
+      width: 120,
       sorter: (a, b) =>
         (a.received_at ? dayjs(a.received_at).valueOf() : 0) -
         (b.received_at ? dayjs(b.received_at).valueOf() : 0),
@@ -131,6 +143,7 @@ export default function DefectsTable({
     {
       title: "Дата устранения",
       dataIndex: "fixed_at",
+      width: 120,
       sorter: (a, b) =>
         (a.fixed_at ? dayjs(a.fixed_at).valueOf() : 0) -
         (b.fixed_at ? dayjs(b.fixed_at).valueOf() : 0),
@@ -173,7 +186,8 @@ export default function DefectsTable({
     },
   ];
 
-  const columns = columnsProp ?? defaultColumns;
+  const { columns: columnsWithResize, components } =
+    useResizableColumns(columnsProp ?? defaultColumns);
   const [pageSize, setPageSize] = React.useState(25);
 
   if (loading) return <Skeleton active paragraph={{ rows: 6 }} />;
@@ -192,7 +206,8 @@ export default function DefectsTable({
   return (
     <Table
       rowKey="id"
-      columns={columns}
+      columns={columnsWithResize}
+      components={components}
       dataSource={filtered}
       pagination={{
         pageSize,

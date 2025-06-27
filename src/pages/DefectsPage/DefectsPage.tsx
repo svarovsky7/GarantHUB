@@ -216,11 +216,13 @@ export default function DefectsPage() {
       id: {
         title: "ID дефекта",
         dataIndex: "id",
+        width: 80,
         sorter: (a: DefectWithInfo, b: DefectWithInfo) => a.id - b.id,
       },
       claims: {
         title: "ID претензии",
         dataIndex: "claimIds",
+        width: 120,
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           a.claimIds.join(",").localeCompare(b.claimIds.join(",")),
         render: (v: number[]) => v.join(", "),
@@ -233,24 +235,28 @@ export default function DefectsPage() {
           </span>
         ),
         dataIndex: "days",
+        width: 120,
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           (a.days ?? -1) - (b.days ?? -1),
       },
       project: {
         title: "Проект",
         dataIndex: "projectNames",
+        width: 180,
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           (a.projectNames || "").localeCompare(b.projectNames || ""),
       },
       building: {
         title: "Корпус",
         dataIndex: "buildingNames",
+        width: 120,
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           (a.buildingNames || "").localeCompare(b.buildingNames || ""),
       },
       units: {
         title: "Объекты",
         dataIndex: "unitNamesList",
+        width: 160,
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           (a.unitNames || "").localeCompare(b.unitNames || ""),
         render: (_: string[], row: DefectWithInfo) => (
@@ -266,18 +272,21 @@ export default function DefectsPage() {
       description: {
         title: "Описание",
         dataIndex: "description",
+        width: 220,
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           a.description.localeCompare(b.description),
       },
       type: {
         title: "Тип",
         dataIndex: "defectTypeName",
+        width: 120,
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           (a.defectTypeName || "").localeCompare(b.defectTypeName || ""),
       },
       status: {
         title: "Статус",
         dataIndex: "status_id",
+        width: 160,
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           (a.defectStatusName || "").localeCompare(b.defectStatusName || ""),
         render: (_: number, row: DefectWithInfo) => (
@@ -292,12 +301,14 @@ export default function DefectsPage() {
       fixBy: {
         title: "Кем устраняется",
         dataIndex: "fixByName",
+        width: 180,
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           (a.fixByName || "").localeCompare(b.fixByName || ""),
       },
       received: {
         title: "Дата получения",
         dataIndex: "received_at",
+        width: 120,
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           (a.received_at ? dayjs(a.received_at).valueOf() : 0) -
           (b.received_at ? dayjs(b.received_at).valueOf() : 0),
@@ -306,6 +317,7 @@ export default function DefectsPage() {
       created: {
         title: "Дата устранения",
         dataIndex: "fixed_at",
+        width: 120,
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           (a.fixed_at ? dayjs(a.fixed_at).valueOf() : 0) -
           (b.fixed_at ? dayjs(b.fixed_at).valueOf() : 0),
