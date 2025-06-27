@@ -89,8 +89,6 @@ const ClaimFormAntdEdit = React.forwardRef<
 ) {
   const [form] = Form.useForm<ClaimFormAntdEditValues>();
   const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
-  /** Разрешено ли редактирование признака досудебной претензии */
-  const canEditPreTrial = role === 'LAWYER' || role === 'ADMIN';
   const { data: perm } = useRolePermission(role);
   const claimAssigned = useClaim(claimId);
   const claimAll = useClaimAll(claimId);
@@ -223,7 +221,7 @@ const ClaimFormAntdEdit = React.forwardRef<
             valuePropName="checked"
             style={highlight('pre_trial_claim')}
           >
-            <Switch disabled={!canEditPreTrial} />
+            <Switch />
           </Form.Item>
         </Col>
         <Col span={8}>
@@ -236,7 +234,7 @@ const ClaimFormAntdEdit = React.forwardRef<
             <Select
               showSearch
               allowClear
-              disabled={!preTrialWatch || !canEditPreTrial}
+              disabled={!preTrialWatch}
               options={caseUids.map((c) => ({ value: c.id, label: c.uid }))}
             />
           </Form.Item>
