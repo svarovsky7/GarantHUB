@@ -11,6 +11,4 @@ export interface UnitsMatrixData {
   lettersByUnit: Record<string | number, boolean>;
   /** Информация о претензиях по квартирам */
   claimsByUnit: Record<string | number, import('./unitClaimInfo').UnitClaimInfo>;
-  /** Общее количество квартир в корпусе */
-  total: number;
 }
