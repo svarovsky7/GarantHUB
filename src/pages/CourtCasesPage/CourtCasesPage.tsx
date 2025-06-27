@@ -43,6 +43,7 @@ import CourtCaseViewModal from '@/features/courtCase/CourtCaseViewModal';
 import CourtCasesFilters, { CourtCasesFiltersValues } from '@/widgets/CourtCasesFilters';
 import TableColumnsDrawer from '@/widgets/TableColumnsDrawer';
 import type { TableColumnSetting } from '@/shared/types/tableColumnSetting';
+import { useResizableColumns } from '@/shared/hooks/useResizableColumns';
 
  dayjs.locale('ru');
  dayjs.extend(isSameOrAfter);
@@ -296,11 +297,13 @@ export default function CourtCasesPage() {
     projectName: {
       title: 'Проект',
       dataIndex: 'projectName',
+      width: 180,
       sorter: (a, b) => (a.projectName || '').localeCompare(b.projectName || ''),
     },
     projectObject: {
       title: 'Объект',
       dataIndex: 'projectObject',
+      width: 160,
       sorter: (a, b) => (a.projectObject || '').localeCompare(b.projectObject || ''),
     },
     number: {
@@ -319,6 +322,7 @@ export default function CourtCasesPage() {
     status: {
       title: 'Статус',
       dataIndex: 'status',
+      width: 160,
       sorter: (a, b) => a.status - b.status,
       render: (_: number, row) => (
         <CourtCaseStatusSelect
@@ -332,33 +336,39 @@ export default function CourtCasesPage() {
     daysSinceFixStart: {
       title: 'Прошло дней с начала устранения',
       dataIndex: 'daysSinceFixStart',
+      width: 200,
       sorter: (a, b) => (a.daysSinceFixStart ?? 0) - (b.daysSinceFixStart ?? 0),
     },
     plaintiff: {
       title: 'Истец',
       dataIndex: 'plaintiff',
+      width: 160,
       sorter: (a, b) => (a.plaintiff || '').localeCompare(b.plaintiff || ''),
     },
     defendant: {
       title: 'Ответчик',
       dataIndex: 'defendant',
+      width: 160,
       sorter: (a, b) => (a.defendant || '').localeCompare(b.defendant || ''),
     },
     fix_start_date: {
       title: 'Дата начала устранения',
       dataIndex: 'fix_start_date',
+      width: 120,
       render: (v: string | null) => (v ? dayjs(v).format('DD.MM.YYYY') : ''),
       sorter: (a, b) => dayjs(a.fix_start_date || 0).valueOf() - dayjs(b.fix_start_date || 0).valueOf(),
     },
     fix_end_date: {
       title: 'Дата окончания устранения',
       dataIndex: 'fix_end_date',
+      width: 120,
       render: (v: string | null) => (v ? dayjs(v).format('DD.MM.YYYY') : ''),
       sorter: (a, b) => dayjs(a.fix_end_date || 0).valueOf() - dayjs(b.fix_end_date || 0).valueOf(),
     },
     responsibleLawyer: {
       title: 'Юрист',
       dataIndex: 'responsibleLawyer',
+      width: 180,
       sorter: (a, b) => (a.responsibleLawyer || '').localeCompare(b.responsibleLawyer || ''),
     },
     actions: {
@@ -438,6 +448,8 @@ export default function CourtCasesPage() {
     () => columnsState.filter((c) => c.visible).map((c) => baseColumns[c.key]),
     [columnsState],
   );
+
+  const { columns: resizableColumns, components } = useResizableColumns(columns);
 
 
   const total = cases.length;
@@ -534,7 +546,8 @@ export default function CourtCasesPage() {
 
           <Table
             rowKey="id"
-            columns={columns}
+            columns={resizableColumns}
+            components={components}
             dataSource={treeData}
             loading={casesLoading}
             pagination={{ pageSize: 25, showSizeChanger: true }}
