@@ -128,14 +128,3 @@ body {
   padding: 4px;
   border-radius: 2px;
 }
-
-/* Ручка изменения ширины колонок таблицы */
-.resize-handle {
-  position: absolute;
-  right: -5px;
-  top: 0;
-  bottom: 0;
-  width: 10px;
-  cursor: col-resize;
-  z-index: 1;
-}

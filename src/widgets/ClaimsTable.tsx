@@ -14,7 +14,6 @@ import { useDeleteClaim } from '@/entities/claim';
 import type { ClaimFilters } from '@/shared/types/claimFilters';
 import type { ClaimWithNames } from '@/shared/types/claimWithNames';
 import ClaimStatusSelect from '@/features/claim/ClaimStatusSelect';
-import { useResizableColumns } from '@/shared/hooks/useResizableColumns';
 
 const fmt = (d: any) => (d && dayjs.isDayjs(d) && d.isValid() ? d.format('DD.MM.YYYY') : '—');
 
@@ -110,8 +109,7 @@ export default function ClaimsTable({
     [onView, remove, isPending],
   );
 
-  const { columns: columnsWithResize, components } =
-    useResizableColumns(columnsProp ?? defaultColumns);
+  const columns = columnsProp ?? defaultColumns;
 
   const filtered = useMemo(() => {
     return claims.filter((c) => {
@@ -178,8 +176,7 @@ export default function ClaimsTable({
   return (
     <Table
       rowKey="id"
-      columns={columnsWithResize}
-      components={components}
+      columns={columns}
       dataSource={treeData}
       loading={loading}
       pagination={{
