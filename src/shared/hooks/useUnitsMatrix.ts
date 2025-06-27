@@ -16,15 +16,8 @@ import type { UnitClaimInfo } from '@/shared/types/unitClaimInfo';
  *
  * @param projectId ID проекта
  * @param building  Корпус
- * @param page      Номер страницы (с 1)
- * @param pageSize  Количество записей на страницу
  */
-export default function useUnitsMatrix(
-  projectId: number | null,
-  building?: string,
-  page = 1,
-  pageSize = 50,
-) {
+export default function useUnitsMatrix(projectId: number | null, building?: string) {
   const { data: stages = [] } = useCourtCaseStatuses();
   const closedStageId = useMemo(
     () => stages.find((s) => /закры/i.test(s.name))?.id,
@@ -32,7 +25,7 @@ export default function useUnitsMatrix(
   );
 
   const query = useQuery<UnitsMatrixData>({
-    queryKey: ['units-matrix', projectId, building, closedStageId, page, pageSize],
+    queryKey: ['units-matrix', projectId, building, closedStageId],
     queryFn: async () => {
       if (!projectId) {
         return {
@@ -45,17 +38,12 @@ export default function useUnitsMatrix(
         };
       }
 
-      const from = (page - 1) * pageSize;
-      const to = from + pageSize - 1;
       let query = supabase
         .from('units')
-        .select('id, name, building, floor, project_id', { count: 'exact' })
-        .eq('project_id', projectId)
-        .order('floor', { ascending: false })
-        .order('name');
+        .select('id, name, building, floor, project_id')
+        .eq('project_id', projectId);
       if (building) query = query.eq('building', building);
-      query = query.range(from, to);
-      const { data: unitsData, count } = await query;
+      const { data: unitsData } = await query;
       const units = unitsData || [];
 
       const floors = Array.from(
@@ -129,15 +117,7 @@ export default function useUnitsMatrix(
         });
       }
 
-      return {
-        units,
-        floors,
-        unitsByFloor,
-        casesByUnit,
-        lettersByUnit,
-        claimsByUnit,
-        total: count ?? units.length,
-      };
+      return { units, floors, unitsByFloor, casesByUnit, lettersByUnit, claimsByUnit };
     },
     staleTime: 5 * 60_000,
   });
@@ -191,7 +171,5 @@ export default function useUnitsMatrix(
     casesByUnit: query.data?.casesByUnit || {},
     lettersByUnit: query.data?.lettersByUnit || {},
     claimsByUnit: query.data?.claimsByUnit || {},
-    total: query.data?.total ?? 0,
-    isLoading: query.isLoading,
   };
 }

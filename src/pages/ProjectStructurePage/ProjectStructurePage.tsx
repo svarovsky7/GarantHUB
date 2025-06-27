@@ -57,9 +57,6 @@ export default function ProjectStructurePage() {
 
     const { projectCount, buildingCount } = useUnitsCount(projectId, building);
 
-    const [page, setPage] = useState(1);
-    const PAGE_SIZE = 50;
-
     const deleteBuildingMutation = useDeleteUnitsByBuilding();
 
     // Автоматический выбор проекта и корпуса при загрузке
@@ -98,10 +95,6 @@ export default function ProjectStructurePage() {
             LS_KEY,
             JSON.stringify({ projectId, building }),
         );
-    }, [projectId, building]);
-
-    useEffect(() => {
-        setPage(1);
     }, [projectId, building]);
 
     // --- Диалоги ---
@@ -371,13 +364,7 @@ export default function ProjectStructurePage() {
             )}
 
             {projectId && building && buildings.length > 0 && (
-                <UnitsMatrix
-                    projectId={projectId}
-                    building={building}
-                    page={page}
-                    pageSize={PAGE_SIZE}
-                    onPageChange={setPage}
-                />
+                <UnitsMatrix projectId={projectId} building={building} />
             )}
             <StatusLegend />
         </Stack>
