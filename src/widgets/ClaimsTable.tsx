@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import dayjs from 'dayjs';
 import { Table, Tooltip, Space, Button, Popconfirm, message } from 'antd';
-import type { ColumnsType } from 'antd/es/table';
+import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
 import {
   EyeOutlined,
   DeleteOutlined,
@@ -24,6 +24,14 @@ interface Props {
   filters: ClaimFilters;
   loading?: boolean;
   columns?: ColumnsType<any>;
+  /** Текущий номер страницы */
+  page?: number;
+  /** Количество элементов на странице */
+  pageSize?: number;
+  /** Общее число строк */
+  total?: number;
+  /** Событие смены страницы */
+  onPageChange?: (page: number, size: number) => void;
   onView?: (id: number) => void;
   onAddChild?: (parent: ClaimWithNames) => void;
   onUnlink?: (id: number) => void;
@@ -34,6 +42,10 @@ export default function ClaimsTable({
   filters,
   loading,
   columns: columnsProp,
+  page = 1,
+  pageSize = 25,
+  total = 0,
+  onPageChange,
   onView,
   onAddChild,
   onUnlink,
@@ -157,7 +169,6 @@ export default function ClaimsTable({
   }, [filtered]);
 
   const [expandedRowKeys, setExpandedRowKeys] = React.useState<React.Key[]>([]);
-  const [pageSize, setPageSize] = React.useState(25);
 
   React.useEffect(() => {
     // По умолчанию все строки свернуты
@@ -183,10 +194,12 @@ export default function ClaimsTable({
       dataSource={treeData}
       loading={loading}
       pagination={{
+        current: page,
         pageSize,
+        total,
         showSizeChanger: true,
-        onChange: (_p, size) => size && setPageSize(size),
-      }}
+        onChange: (p, size) => onPageChange && onPageChange(p, size ?? pageSize),
+      } as TablePaginationConfig}
       size="middle"
       expandable={{
         expandRowByClick: true,

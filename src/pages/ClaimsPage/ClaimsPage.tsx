@@ -13,8 +13,8 @@ import {
 import ExportClaimsButton from '@/features/claim/ExportClaimsButton';
 import { useSnackbar } from 'notistack';
 import {
-  useClaims,
-  useClaimsAll,
+  useClaimsPage,
+  useClaimsPageAll,
   useDeleteClaim,
   useLinkClaims,
   useUnlinkClaim,
@@ -45,19 +45,29 @@ export default function ClaimsPage() {
   const { enqueueSnackbar } = useSnackbar();
   const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
   const { data: perm } = useRolePermission(role);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const {
-    data: claimsAssigned = [],
+    data: assignedPage,
     isLoading: loadingAssigned,
     error: errorAssigned,
-  } = useClaims();
+  } = useClaimsPage(page, pageSize);
   const {
-    data: claimsAll = [],
+    data: allPage,
     isLoading: loadingAll,
     error: errorAll,
-  } = useClaimsAll();
-  const claims = perm?.only_assigned_project ? claimsAssigned : claimsAll;
+  } = useClaimsPageAll(page, pageSize);
+  const claims = perm?.only_assigned_project ? assignedPage?.data ?? [] : allPage?.data ?? [];
+  const total = perm?.only_assigned_project ? assignedPage?.total ?? 0 : allPage?.total ?? 0;
   const isLoading = perm?.only_assigned_project ? loadingAssigned : loadingAll;
   const error = errorAssigned || errorAll;
+
+  // корректировка номера страницы, если после смены размера выборки
+  // текущая страница стала выходить за пределы доступных данных
+  React.useEffect(() => {
+    const last = Math.max(1, Math.ceil(total / pageSize) || 1);
+    if (page > last) setPage(last);
+  }, [total, pageSize]);
   const deleteClaimMutation = useDeleteClaim();
   const { data: users = [] } = useUsers();
   const unitIds = useMemo(
@@ -333,6 +343,15 @@ export default function ClaimsPage() {
               filters={filters}
               loading={isLoading}
               columns={columns}
+              page={page}
+              pageSize={pageSize}
+              total={total}
+              onPageChange={(p, size) => {
+                const newSize = size ?? pageSize;
+                const last = Math.max(1, Math.ceil(total / newSize) || 1);
+                setPage(p > last ? last : p);
+                setPageSize(newSize);
+              }}
               onView={(id) => setViewId(id)}
               onAddChild={setLinkFor}
               onUnlink={(id) => unlinkClaim.mutate(id)}
