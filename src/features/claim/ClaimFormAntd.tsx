@@ -26,7 +26,6 @@ import DefectEditableTable from '@/widgets/DefectEditableTable';
 import { useCreateDefects, type NewDefect } from '@/entities/defect';
 import { useAuthStore } from '@/shared/store/authStore';
 import type { RoleName } from '@/shared/types/rolePermission';
-import { useRolePermission } from '@/entities/rolePermission';
 import { useCaseUids } from '@/entities/caseUid';
 import useProjectBuildings from '@/shared/hooks/useProjectBuildings';
 
@@ -86,7 +85,6 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
   const notify = useNotify();
   const createDefects = useCreateDefects();
   const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
-  const { data: perm } = useRolePermission(role);
   const defectsWatch = Form.useWatch('defects', form);
   const acceptedOnWatch = Form.useWatch('accepted_on', form) ?? null;
   const { data: caseUids = [] } = useCaseUids();
@@ -215,16 +213,16 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
     <>
     <Form form={form} layout="vertical" onFinish={onFinish} autoComplete="off">
       <Row gutter={16}>
-        <Col span={8} hidden={!perm?.allow_pretrial_claim}>
+        <Col span={8}>
           <Form.Item
             name="pre_trial_claim"
             label="Досудебная претензия"
             valuePropName="checked"
           >
-            <Switch disabled={!perm?.allow_pretrial_claim} />
+            <Switch />
           </Form.Item>
         </Col>
-        <Col span={8} hidden={!perm?.allow_pretrial_claim}>
+        <Col span={8}>
           <Form.Item
             name="case_uid_id"
             label="Уникальный идентификатор дела"
@@ -233,7 +231,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
             <Select
               showSearch
               allowClear
-              disabled={!preTrialWatch || !perm?.allow_pretrial_claim}
+              disabled={!preTrialWatch}
               options={caseUids.map((c) => ({ value: c.id, label: c.uid }))}
             />
           </Form.Item>
