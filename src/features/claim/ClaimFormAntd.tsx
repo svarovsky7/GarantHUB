@@ -85,7 +85,6 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
   const notify = useNotify();
   const createDefects = useCreateDefects();
   const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
-  const isLawyer = role === 'LAWYER';
   const defectsWatch = Form.useWatch('defects', form);
   const acceptedOnWatch = Form.useWatch('accepted_on', form) ?? null;
   const { data: caseUids = [] } = useCaseUids();
@@ -220,7 +219,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
             label="Досудебная претензия"
             valuePropName="checked"
           >
-            <Switch disabled={!isLawyer} />
+            <Switch />
           </Form.Item>
         </Col>
         <Col span={8}>
@@ -232,7 +231,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
             <Select
               showSearch
               allowClear
-              disabled={!isLawyer || !preTrialWatch}
+              disabled={!preTrialWatch}
               options={caseUids.map((c) => ({ value: c.id, label: c.uid }))}
             />
           </Form.Item>

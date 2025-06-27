@@ -89,7 +89,6 @@ const ClaimFormAntdEdit = React.forwardRef<
 ) {
   const [form] = Form.useForm<ClaimFormAntdEditValues>();
   const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
-  const isLawyer = role === 'LAWYER';
   const { data: perm } = useRolePermission(role);
   const claimAssigned = useClaim(claimId);
   const claimAll = useClaimAll(claimId);
@@ -219,26 +218,26 @@ const ClaimFormAntdEdit = React.forwardRef<
           <Form.Item
             name="pre_trial_claim"
             label="Досудебная претензия"
-          valuePropName="checked"
-          style={highlight('pre_trial_claim')}
-        >
-            <Switch disabled={!isLawyer} />
-        </Form.Item>
-      </Col>
-      <Col span={8}>
-        <Form.Item
-          name="case_uid_id"
-          label="Уникальный идентификатор дела"
-          hidden={!preTrialWatch}
-          style={highlight('case_uid_id')}
-        >
-          <Select
-            showSearch
-            allowClear
-            disabled={!isLawyer || !preTrialWatch}
-            options={caseUids.map((c) => ({ value: c.id, label: c.uid }))}
-          />
-        </Form.Item>
+            valuePropName="checked"
+            style={highlight('pre_trial_claim')}
+          >
+            <Switch />
+          </Form.Item>
+        </Col>
+        <Col span={8}>
+          <Form.Item
+            name="case_uid_id"
+            label="Уникальный идентификатор дела"
+            hidden={!preTrialWatch}
+            style={highlight('case_uid_id')}
+          >
+            <Select
+              showSearch
+              allowClear
+              disabled={!preTrialWatch}
+              options={caseUids.map((c) => ({ value: c.id, label: c.uid }))}
+            />
+          </Form.Item>
         </Col>
       </Row>
       <Row gutter={16}>
