@@ -11,7 +11,7 @@ import {
   Typography,
   Tooltip,
 } from "@mui/material";
-import { Modal, Button as AntButton, ConfigProvider } from 'antd';
+import { Modal, Button as AntButton, ConfigProvider, Pagination, Skeleton } from 'antd';
 import ruRU from 'antd/locale/ru_RU';
 import AddIcon from "@mui/icons-material/Add";
 import FloorCell from "@/entities/floor/FloorCell";
@@ -34,10 +34,16 @@ export default function UnitsMatrix({
   projectId,
   building,
   onUnitsChanged,
+  page = 1,
+  pageSize = 50,
+  onPageChange,
 }: {
   projectId: number | string;
   building?: string | null;
   onUnitsChanged?: (units: any[]) => void;
+  page?: number;
+  pageSize?: number;
+  onPageChange?: (p: number) => void;
 }) {
   const {
     floors,
@@ -49,7 +55,9 @@ export default function UnitsMatrix({
     lettersByUnit,
     claimsByUnit,
     units,
-  } = useUnitsMatrix(projectId, building);
+    total,
+    isLoading,
+  } = useUnitsMatrix(projectId, building, page, pageSize);
   const navigate = useNavigate();
   const profileId = useAuthStore((s) => s.profile?.id);
 
@@ -178,6 +186,10 @@ export default function UnitsMatrix({
     }
     return map;
   }, [unitsByFloor, sortDirections]);
+
+  if (isLoading) {
+    return <Skeleton active paragraph={{ rows: 4 }} />;
+  }
 
   if (!floors.length) {
     return (
@@ -421,6 +433,13 @@ export default function UnitsMatrix({
           )}
         </Modal>
       </ConfigProvider>
+      <Pagination
+        style={{ marginTop: 16 }}
+        current={page}
+        pageSize={pageSize}
+        total={total}
+        onChange={onPageChange}
+      />
     </>
   );
 }

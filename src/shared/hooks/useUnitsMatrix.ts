@@ -16,8 +16,15 @@ import type { UnitClaimInfo } from '@/shared/types/unitClaimInfo';
  *
  * @param projectId ID проекта
  * @param building  Корпус
+ * @param page      Номер страницы (с 1)
+ * @param pageSize  Количество записей на страницу
  */
-export default function useUnitsMatrix(projectId: number | null, building?: string) {
+export default function useUnitsMatrix(
+  projectId: number | null,
+  building?: string,
+  page = 1,
+  pageSize = 50,
+) {
   const { data: stages = [] } = useCourtCaseStatuses();
   const closedStageId = useMemo(
     () => stages.find((s) => /закры/i.test(s.name))?.id,
@@ -25,7 +32,7 @@ export default function useUnitsMatrix(projectId: number | null, building?: stri
   );
 
   const query = useQuery<UnitsMatrixData>({
-    queryKey: ['units-matrix', projectId, building, closedStageId],
+    queryKey: ['units-matrix', projectId, building, closedStageId, page, pageSize],
     queryFn: async () => {
       if (!projectId) {
         return {
@@ -38,12 +45,17 @@ export default function useUnitsMatrix(projectId: number | null, building?: stri
         };
       }
 
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
       let query = supabase
         .from('units')
-        .select('id, name, building, floor, project_id')
-        .eq('project_id', projectId);
+        .select('id, name, building, floor, project_id', { count: 'exact' })
+        .eq('project_id', projectId)
+        .order('floor', { ascending: false })
+        .order('name');
       if (building) query = query.eq('building', building);
-      const { data: unitsData } = await query;
+      query = query.range(from, to);
+      const { data: unitsData, count } = await query;
       const units = unitsData || [];
 
       const floors = Array.from(
@@ -117,7 +129,15 @@ export default function useUnitsMatrix(projectId: number | null, building?: stri
         });
       }
 
-      return { units, floors, unitsByFloor, casesByUnit, lettersByUnit, claimsByUnit };
+      return {
+        units,
+        floors,
+        unitsByFloor,
+        casesByUnit,
+        lettersByUnit,
+        claimsByUnit,
+        total: count ?? units.length,
+      };
     },
     staleTime: 5 * 60_000,
   });
@@ -171,5 +191,7 @@ export default function useUnitsMatrix(projectId: number | null, building?: stri
     casesByUnit: query.data?.casesByUnit || {},
     lettersByUnit: query.data?.lettersByUnit || {},
     claimsByUnit: query.data?.claimsByUnit || {},
+    total: query.data?.total ?? 0,
+    isLoading: query.isLoading,
   };
 }
