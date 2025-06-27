@@ -6,7 +6,7 @@ import {
   useUpsertRolePermission,
 } from '@/entities/rolePermission';
 import type { RolePermission, RoleName } from '@/shared/types/rolePermission';
-import { DEFAULT_ROLE_PERMISSIONS } from '@/shared/types/rolePermission';
+import { DEFAULT_ROLE_PERMISSIONS, PRETRIAL_FLAG } from '@/shared/types/rolePermission';
 
 const PAGES = [
   'dashboard',
@@ -47,6 +47,14 @@ export default function RolePermissionsAdmin() {
     upsert.mutate({ ...current, only_assigned_project: value });
   };
 
+  const handlePretrialToggle = (role: RoleName, value: boolean) => {
+    const current = merged.find((m) => m.role_name === role)!;
+    const pages = new Set(current.pages);
+    if (value) pages.add(PRETRIAL_FLAG);
+    else pages.delete(PRETRIAL_FLAG);
+    upsert.mutate({ ...current, pages: Array.from(pages) });
+  };
+
   const columns: ColumnsType<RolePermission> = [
     {
       title: 'Роль',
@@ -61,6 +69,18 @@ export default function RolePermissionsAdmin() {
           checked={record.only_assigned_project}
           onChange={(checked) =>
             handleProjectToggle(record.role_name as RoleName, checked)
+          }
+        />
+      ),
+    },
+    {
+      title: 'Досудебные претензии',
+      render: (_, record) => (
+        <Switch
+          size="small"
+          checked={record.pages.includes(PRETRIAL_FLAG)}
+          onChange={(checked) =>
+            handlePretrialToggle(record.role_name as RoleName, checked)
           }
         />
       ),

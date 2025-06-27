@@ -35,6 +35,7 @@ import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useAuthStore } from '@/shared/store/authStore';
 import { useRolePermission } from '@/entities/rolePermission';
 import type { RoleName } from '@/shared/types/rolePermission';
+import { PRETRIAL_FLAG } from '@/shared/types/rolePermission';
 import { useChangedFields } from '@/shared/hooks/useChangedFields';
 import AttachmentEditorTable from '@/shared/ui/AttachmentEditorTable';
 import FileDropZone from '@/shared/ui/FileDropZone';
@@ -90,6 +91,7 @@ const ClaimFormAntdEdit = React.forwardRef<
   const [form] = Form.useForm<ClaimFormAntdEditValues>();
   const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
   const { data: perm } = useRolePermission(role);
+  const allowPretrial = perm?.pages.includes(PRETRIAL_FLAG);
   const claimAssigned = useClaim(claimId);
   const claimAll = useClaimAll(claimId);
   const claim = perm?.only_assigned_project ? claimAssigned.data : claimAll.data;
@@ -214,17 +216,17 @@ const ClaimFormAntdEdit = React.forwardRef<
       autoComplete="off"
     >
       <Row gutter={16}>
-        <Col span={8}>
+        <Col span={8} hidden={!allowPretrial}>
           <Form.Item
             name="pre_trial_claim"
             label="Досудебная претензия"
             valuePropName="checked"
             style={highlight('pre_trial_claim')}
           >
-            <Switch />
+            <Switch disabled={!allowPretrial} />
           </Form.Item>
         </Col>
-        <Col span={8}>
+        <Col span={8} hidden={!allowPretrial}>
           <Form.Item
             name="case_uid_id"
             label="Уникальный идентификатор дела"
@@ -234,7 +236,7 @@ const ClaimFormAntdEdit = React.forwardRef<
             <Select
               showSearch
               allowClear
-              disabled={!preTrialWatch}
+              disabled={!preTrialWatch || !allowPretrial}
               options={caseUids.map((c) => ({ value: c.id, label: c.uid }))}
             />
           </Form.Item>
