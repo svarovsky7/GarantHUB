@@ -188,12 +188,18 @@ export default function DefectsTable({
     return classes.join(" ");
   };
 
+  const [pageSize, setPageSize] = React.useState(25);
+
   return (
     <Table
       rowKey="id"
       columns={columns}
       dataSource={filtered}
-      pagination={{ pageSize: 25, showSizeChanger: true }}
+      pagination={{
+        pageSize,
+        showSizeChanger: true,
+        onChange: (_p, size) => size && setPageSize(size),
+      }}
       size="middle"
       /** Стилизуем строки аналогично таблице писем */
       rowClassName={rowClassName}
