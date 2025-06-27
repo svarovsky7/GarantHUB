@@ -47,6 +47,11 @@ export default function RolePermissionsAdmin() {
     upsert.mutate({ ...current, only_assigned_project: value });
   };
 
+  const handlePretrialToggle = (role: RoleName, value: boolean) => {
+    const current = merged.find((m) => m.role_name === role)!;
+    upsert.mutate({ ...current, allow_pretrial_claim: value });
+  };
+
   const columns: ColumnsType<RolePermission> = [
     {
       title: 'Роль',
@@ -61,6 +66,19 @@ export default function RolePermissionsAdmin() {
           checked={record.only_assigned_project}
           onChange={(checked) =>
             handleProjectToggle(record.role_name as RoleName, checked)
+          }
+        />
+      ),
+    },
+    {
+      title: 'Досудебные претензии',
+      dataIndex: 'allow_pretrial_claim',
+      render: (_, record) => (
+        <Switch
+          size="small"
+          checked={record.allow_pretrial_claim}
+          onChange={(checked) =>
+            handlePretrialToggle(record.role_name as RoleName, checked)
           }
         />
       ),

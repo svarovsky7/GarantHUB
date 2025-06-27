@@ -214,17 +214,17 @@ const ClaimFormAntdEdit = React.forwardRef<
       autoComplete="off"
     >
       <Row gutter={16}>
-        <Col span={8}>
+        <Col span={8} hidden={!perm?.allow_pretrial_claim}>
           <Form.Item
             name="pre_trial_claim"
             label="Досудебная претензия"
             valuePropName="checked"
             style={highlight('pre_trial_claim')}
           >
-            <Switch />
+            <Switch disabled={!perm?.allow_pretrial_claim} />
           </Form.Item>
         </Col>
-        <Col span={8}>
+        <Col span={8} hidden={!perm?.allow_pretrial_claim}>
           <Form.Item
             name="case_uid_id"
             label="Уникальный идентификатор дела"
@@ -234,7 +234,7 @@ const ClaimFormAntdEdit = React.forwardRef<
             <Select
               showSearch
               allowClear
-              disabled={!preTrialWatch}
+              disabled={!preTrialWatch || !perm?.allow_pretrial_claim}
               options={caseUids.map((c) => ({ value: c.id, label: c.uid }))}
             />
           </Form.Item>
