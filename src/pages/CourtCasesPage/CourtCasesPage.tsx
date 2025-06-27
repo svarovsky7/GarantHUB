@@ -61,6 +61,8 @@ export default function CourtCasesPage() {
   const unlinkCase = useUnlinkCase();
   const [linkFor, setLinkFor] = useState<CourtCase | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  /** Размер страницы таблицы дел */
+  const [pageSize, setPageSize] = useState(25);
   const [showFilters, setShowFilters] = useState(() => {
     try {
       const saved = localStorage.getItem(LS_FILTERS_VISIBLE_KEY);
@@ -550,7 +552,11 @@ export default function CourtCasesPage() {
             components={components}
             dataSource={treeData}
             loading={casesLoading}
-            pagination={{ pageSize: 25, showSizeChanger: true }}
+            pagination={{
+              pageSize,
+              showSizeChanger: true,
+              onChange: (_p, size) => size && setPageSize(size),
+            }}
             size="middle"
             expandable={{ expandRowByClick: true, defaultExpandAllRows: false, indentSize: 24 }}
             rowClassName={(record) => (record.parent_id ? 'child-case-row' : 'main-case-row')}
