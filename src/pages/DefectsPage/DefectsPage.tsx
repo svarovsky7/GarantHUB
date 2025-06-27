@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { Resizable } from "react-resizable";
 import dayjs from "dayjs";
 import {
   ConfigProvider,
@@ -44,6 +45,27 @@ import type { DefectFilters } from "@/shared/types/defectFilters";
 import type { ColumnsType } from "antd/es/table";
 
 const fmt = (v: string | null) => (v ? dayjs(v).format("DD.MM.YYYY") : "—");
+
+const ResizableTitle = (
+  props: React.HTMLAttributes<HTMLTableCellElement> & {
+    onResize?: (e: any, data: { size: { width: number } }) => void;
+    width?: number;
+  },
+) => {
+  const { onResize, width, ...restProps } = props;
+  if (!width) return <th {...restProps} />;
+  return (
+    <Resizable
+      width={width}
+      height={0}
+      handle={<span className="react-resizable-handle" onClick={(e) => e.stopPropagation()} />}
+      onResize={onResize}
+      draggableOpts={{ enableUserSelectHack: false }}
+    >
+      <th {...restProps} style={{ width }} />
+    </Resizable>
+  );
+};
 
 export default function DefectsPage() {
   const { data: defects = [], isPending } = useDefects();
@@ -399,6 +421,22 @@ export default function DefectsPage() {
     "actions",
   ] as const;
 
+  const defaultColumnWidths: Record<(typeof columnOrder)[number], number> = {
+    id: 80,
+    claims: 120,
+    days: 120,
+    project: 120,
+    building: 120,
+    units: 160,
+    description: 200,
+    type: 120,
+    status: 120,
+    fixBy: 160,
+    received: 120,
+    created: 120,
+    actions: 100,
+  };
+
   const getTitleText = (t: React.ReactNode): string => {
     if (typeof t === 'string') return t;
     if (React.isValidElement(t)) {
@@ -409,16 +447,22 @@ export default function DefectsPage() {
 
   const [columnsState, setColumnsState] = useState<TableColumnSetting[]>(() => {
     const base = baseColumns;
-      const defaults = columnOrder.map((key) => ({
-        key,
-        title: getTitleText(base[key].title as React.ReactNode),
-        visible: true,
-      }));
+    const defaults = columnOrder.map((key) => ({
+      key,
+      title: getTitleText(base[key].title as React.ReactNode),
+      visible: true,
+      width: defaultColumnWidths[key],
+    }));
     try {
       const saved = localStorage.getItem(LS_COLUMNS_KEY);
       if (saved) {
         const parsed = JSON.parse(saved) as TableColumnSetting[];
-        const filtered = parsed.filter((c) => base[c.key]);
+        const filtered = parsed
+          .filter((c) => base[c.key])
+          .map((c) => ({
+            ...c,
+            width: c.width ?? defaultColumnWidths[c.key as keyof typeof defaultColumnWidths],
+          }));
         const missing = defaults.filter(
           (d) => !filtered.some((f) => f.key === d.key),
         );
@@ -428,12 +472,21 @@ export default function DefectsPage() {
     return defaults;
   });
 
+  const handleResize = (index: number) => (_: unknown, { size }: { size: { width: number } }) => {
+    setColumnsState((cols) => {
+      const next = [...cols];
+      next[index] = { ...next[index], width: size.width };
+      return next;
+    });
+  };
+
   const handleResetColumns = () => {
     const base = baseColumns;
     const defaults = columnOrder.map((key) => ({
       key,
       title: getTitleText(base[key].title as React.ReactNode),
       visible: true,
+      width: defaultColumnWidths[key],
     }));
     setColumnsState(defaults);
   };
@@ -452,8 +505,24 @@ export default function DefectsPage() {
 
   const columns = useMemo(() => {
     const base = baseColumns;
-    return columnsState.filter((c) => c.visible).map((c) => base[c.key]);
+    return columnsState
+      .filter((c) => c.visible)
+      .map((c, idx) => ({
+        ...base[c.key],
+        width: c.width,
+        onHeaderCell: () => ({
+          width: c.width,
+          onResize: handleResize(idx),
+        }),
+      }));
   }, [columnsState, baseColumns]);
+
+  const tableComponents = useMemo(
+    () => ({
+      header: { cell: ResizableTitle },
+    }),
+    [],
+  );
 
   const [showColumnsDrawer, setShowColumnsDrawer] = useState(false);
 
@@ -491,6 +560,7 @@ export default function DefectsPage() {
           loading={isPending}
           onView={setViewId}
           columns={columns}
+          components={tableComponents}
         />
         <TableColumnsDrawer
           open={showColumnsDrawer}

@@ -26,6 +26,8 @@ interface Props {
   /** Колонки таблицы. Если не переданы, используется набор по умолчанию */
   columns?: ColumnsType<DefectWithInfo>;
   onView?: (id: number) => void;
+  /** Пользовательские компоненты таблицы */
+  components?: import('antd').TableProps<DefectWithInfo>['components'];
 }
 
 export default function DefectsTable({
@@ -34,6 +36,7 @@ export default function DefectsTable({
   loading,
   columns: columnsProp,
   onView,
+  components,
 }: Props) {
   const { mutateAsync: remove, isPending } = useDeleteDefect();
   const filtered = useMemo(
@@ -194,6 +197,7 @@ export default function DefectsTable({
       rowKey="id"
       columns={columns}
       dataSource={filtered}
+      components={components}
       pagination={{
         pageSize,
         showSizeChanger: true,
