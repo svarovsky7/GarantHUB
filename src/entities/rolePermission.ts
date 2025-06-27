@@ -4,7 +4,8 @@ import type { RolePermission, RoleName } from '@/shared/types/rolePermission';
 import { DEFAULT_ROLE_PERMISSIONS } from '@/shared/types/rolePermission';
 
 const TABLE = 'role_permissions';
-const FIELDS = 'role_name, pages, edit_tables, delete_tables, only_assigned_project';
+const FIELDS =
+  'role_name, pages, edit_tables, delete_tables, only_assigned_project, allow_pretrial_claim';
 
 /** Получить настройки ролей */
 export const useRolePermissions = () =>

@@ -5,6 +5,8 @@ export interface RolePermission {
   delete_tables: string[];
   /** Ограничить видимость только назначенным проектом */
   only_assigned_project: boolean;
+  /** Разрешить работу с досудебными претензиями */
+  allow_pretrial_claim: boolean;
 }
 
 export type RoleName = 'ADMIN' | 'ENGINEER' | 'LAWYER' | 'CONTRACTOR';
@@ -25,6 +27,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<RoleName, RolePermission> = {
     edit_tables: ['defects', 'court_cases', 'letters', 'claims'],
     delete_tables: ['defects', 'court_cases', 'letters', 'claims'],
     only_assigned_project: false,
+    allow_pretrial_claim: true,
   },
   ENGINEER: {
     role_name: 'ENGINEER',
@@ -33,6 +36,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<RoleName, RolePermission> = {
     edit_tables: ['defects', 'letters', 'claims'],
     delete_tables: ['defects', 'letters', 'claims'],
     only_assigned_project: false,
+    allow_pretrial_claim: true,
   },
   LAWYER: {
     role_name: 'LAWYER',
@@ -40,6 +44,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<RoleName, RolePermission> = {
     edit_tables: ['court_cases', 'letters'],
     delete_tables: ['court_cases', 'letters'],
     only_assigned_project: false,
+    allow_pretrial_claim: true,
   },
   CONTRACTOR: {
     role_name: 'CONTRACTOR',
@@ -47,5 +52,6 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<RoleName, RolePermission> = {
     edit_tables: [],
     delete_tables: [],
     only_assigned_project: false,
+    allow_pretrial_claim: true,
   },
 };
