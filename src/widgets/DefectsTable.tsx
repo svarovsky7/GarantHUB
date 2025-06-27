@@ -174,6 +174,7 @@ export default function DefectsTable({
   ];
 
   const columns = columnsProp ?? defaultColumns;
+  const [pageSize, setPageSize] = React.useState(25);
 
   if (loading) return <Skeleton active paragraph={{ rows: 6 }} />;
 
@@ -193,7 +194,11 @@ export default function DefectsTable({
       rowKey="id"
       columns={columns}
       dataSource={filtered}
-      pagination={{ pageSize: 25, showSizeChanger: true }}
+      pagination={{
+        pageSize,
+        showSizeChanger: true,
+        onChange: (_p, size) => size && setPageSize(size),
+      }}
       size="middle"
       /** Стилизуем строки аналогично таблице писем */
       rowClassName={rowClassName}
