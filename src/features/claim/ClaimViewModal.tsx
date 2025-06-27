@@ -25,6 +25,8 @@ import type { ClaimFormAntdEditRef } from '@/shared/types/claimFormAntdEditRef';
 import { useAuthStore } from '@/shared/store/authStore';
 import { useRolePermission } from '@/entities/rolePermission';
 import type { RoleName } from '@/shared/types/rolePermission';
+import FilePreviewModal from '@/shared/ui/FilePreviewModal';
+import type { PreviewFile } from '@/shared/types/previewFile';
 
 interface Props {
   open: boolean;
@@ -54,6 +56,7 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
   const [editedDefs, setEditedDefs] = React.useState<Record<number, Partial<NewDefect>>>({});
   const [showAdd, setShowAdd] = React.useState(false);
   const [viewDefId, setViewDefId] = React.useState<number | null>(null);
+  const [previewFile, setPreviewFile] = React.useState<PreviewFile | null>(null);
   const tmpIdRef = React.useRef(-1);
 
   const lastClaimIdRef = React.useRef<number | null>(null);
@@ -287,6 +290,7 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
             onRemoveRemote={attachments.removeRemote}
             onRemoveNew={attachments.removeNew}
             getSignedUrl={(path, name) => signedUrl(path, name)}
+            onPreview={(f) => setPreviewFile(f)}
           />
           <div style={{ textAlign: 'right', marginTop: 16 }}>
             <Button style={{ marginRight: 8 }} onClick={onClose} disabled={formRef.current?.isSubmitting}>
@@ -312,6 +316,11 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
         open={viewDefId !== null}
         defectId={viewDefId}
         onClose={() => setViewDefId(null)}
+      />
+      <FilePreviewModal
+        open={previewFile !== null}
+        file={previewFile}
+        onClose={() => setPreviewFile(null)}
       />
     </>
   );

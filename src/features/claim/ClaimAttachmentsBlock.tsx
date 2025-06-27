@@ -3,6 +3,7 @@ import { Form } from 'antd';
 import FileDropZone from '@/shared/ui/FileDropZone';
 import ClaimAttachmentsTable from './ClaimAttachmentsTable';
 import type { RemoteClaimFile } from '@/shared/types/claimFile';
+import type { PreviewFile } from '@/shared/types/previewFile';
 
 /**
  * Блок загрузки и отображения файлов претензии.
@@ -23,6 +24,8 @@ export interface ClaimAttachmentsBlockProps {
   showUpload?: boolean;
   /** Получить подписанную ссылку */
   getSignedUrl?: (path: string, name: string) => Promise<string>;
+  /** Открыть предпросмотр */
+  onPreview?: (file: PreviewFile) => void;
 }
 
 export default function ClaimAttachmentsBlock({
@@ -33,6 +36,7 @@ export default function ClaimAttachmentsBlock({
   onRemoveNew,
   showUpload = true,
   getSignedUrl,
+  onPreview,
 }: ClaimAttachmentsBlockProps) {
   return (
     <Form.Item label="Файлы">
@@ -43,6 +47,7 @@ export default function ClaimAttachmentsBlock({
         onRemoveRemote={onRemoveRemote}
         onRemoveNew={onRemoveNew}
         getSignedUrl={getSignedUrl}
+        onPreview={onPreview}
       />
     </Form.Item>
   );
