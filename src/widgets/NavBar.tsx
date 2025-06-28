@@ -78,18 +78,17 @@ const NavBar: React.FC = () => {
                 }}
             >
               <Space direction="vertical" size={0} align="end" style={{ flex: 1, minWidth: 0 }}>
-                <RouterLink to="/profile" style={{ color: '#fff' }}>
-                  <Typography.Text
-                      style={{
-                        whiteSpace: 'nowrap',
-                        textOverflow: 'ellipsis',
-                        overflow: 'hidden',
-                        display: 'block',
-                      }}
-                  >
-                    {profile.name ? `${profile.name} (${profile.email})` : profile.email}
-                  </Typography.Text>
-                </RouterLink>
+                <Typography.Text
+                    style={{
+                      color: '#fff',
+                      whiteSpace: 'nowrap',
+                      textOverflow: 'ellipsis',
+                      overflow: 'hidden',
+                      display: 'block',
+                    }}
+                >
+                  {profile.name ? `${profile.name} (${profile.email})` : profile.email}
+                </Typography.Text>
 
                 {perm?.only_assigned_project && (
                     isPending ? (

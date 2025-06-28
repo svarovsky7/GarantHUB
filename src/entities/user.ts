@@ -128,33 +128,3 @@ export const useUpdateUserProjects = () => {
     });
 };
 
-
-/** Обновить имя пользователя. */
-export const useUpdateUserName = () => {
-    const qc = useQueryClient();
-    return useMutation<User, Error, { id: string; name: string | null }>({
-        mutationFn: async ({ id, name }) => {
-            const { data, error } = await supabase
-                .from('profiles')
-                .update({ name })
-                .eq('id', id)
-                .select(FIELDS)
-                .single();
-            if (error) throw error;
-            return {
-                ...data,
-                project_ids: data?.profiles_projects?.map((p: any) => p.project_id) ?? [],
-            } as User;
-        },
-        onSuccess: () => qc.invalidateQueries({ queryKey: ['users', 'all'] }),
-    });
-};
-
-/** Сменить пароль текущего пользователя. */
-export const useChangePassword = () =>
-    useMutation<void, Error, string>({
-        mutationFn: async (password: string) => {
-            const { error } = await supabase.auth.updateUser({ password });
-            if (error) throw error;
-        },
-    });
