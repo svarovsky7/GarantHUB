@@ -41,6 +41,8 @@ import { filterClaims } from '@/shared/utils/claimFilter';
 import { naturalCompare } from '@/shared/utils/naturalSort';
 import type { ClaimFilters } from '@/shared/types/claimFilters';
 
+const LS_COLUMNS_KEY = 'claimsColumns';
+
 export default function ClaimsPage() {
   const { enqueueSnackbar } = useSnackbar();
   const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
@@ -110,6 +112,17 @@ export default function ClaimsPage() {
       title: base[key].title as string,
       visible: !['createdAt', 'createdByName'].includes(key),
     }));
+    try {
+      const saved = localStorage.getItem(LS_COLUMNS_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved) as TableColumnSetting[];
+        const filtered = parsed.filter((c) => base[c.key]);
+        const missing = defaults.filter(
+          (d) => !filtered.some((f) => f.key === d.key),
+        );
+        return [...filtered, ...missing];
+      }
+    } catch {}
     return defaults;
   });
 
@@ -125,6 +138,12 @@ export default function ClaimsPage() {
     }));
     setColumnsState(defaults);
   };
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem(LS_COLUMNS_KEY, JSON.stringify(columnsState));
+    } catch {}
+  }, [columnsState]);
 
   const userMap = useMemo(() => {
     const map = {} as Record<string, string>;
