@@ -16,6 +16,7 @@
 ## claim_defects
 - `claim_defects_defect_idx` - `defect_id`
 - `claim_defects_pkey` - `UNIQUE claim_id, defect_id`
+- `idx_claim_defects_claim` - `claim_id`
 
 ## claim_links
 - `claim_links_pkey` - `UNIQUE id`
@@ -25,10 +26,12 @@
 ## claim_units
 - `claim_units_pkey` - `UNIQUE claim_id, unit_id`
 - `idx_claim_units_unit` - `unit_id`
+- `idx_claim_units_claim` - `claim_id`
 
 ## claims
 - `claims_pkey` - `UNIQUE id`
 - `idx_claims_project` - `project_id`
+- `idx_claims_status` - `claim_status_id`
 
 ## contractors
 - `contractors_pkey` - `UNIQUE id`
