@@ -36,3 +36,6 @@ VITE_ATTACH_BUCKET=<название корзины для вложений>
 Индексы: [db_indexes_summary.md](db_indexes_summary.md).
 
 
+
+## RPC функции
+- `dashboard_stats` — агрегирует все данные для дашборда. Структура ответа описана в [src/shared/types/dashboardStats.ts](src/shared/types/dashboardStats.ts).
