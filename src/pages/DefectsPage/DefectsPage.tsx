@@ -39,11 +39,14 @@ import { useCancelDefectFix } from "@/entities/defect";
 import { filterDefects } from "@/shared/utils/defectFilter";
 import { naturalCompare } from "@/shared/utils/naturalSort";
 import formatUnitName from "@/shared/utils/formatUnitName";
+import { useUsers } from "@/entities/user";
 import type { DefectWithInfo } from "@/shared/types/defect";
 import type { DefectFilters } from "@/shared/types/defectFilters";
 import type { ColumnsType } from "antd/es/table";
 
 const fmt = (v: string | null) => (v ? dayjs(v).format("DD.MM.YYYY") : "—");
+const fmtDateTime = (v: string | null) =>
+  v ? dayjs(v).format("DD.MM.YYYY HH:mm") : "—";
 
 export default function DefectsPage() {
   const { data: defects = [], isPending } = useDefects();
@@ -61,8 +64,16 @@ export default function DefectsPage() {
   const { data: projects = [] } = useVisibleProjects();
   const { data: brigades = [] } = useBrigades();
   const { data: contractors = [] } = useContractors();
+  const { data: users = [] } = useUsers();
 
   const userProjectIds = useAuthStore((s) => s.profile?.project_ids) ?? [];
+  const userMap = useMemo(() => {
+    const map = new Map<string, string>();
+    users.forEach((u) => {
+      map.set(u.id, u.name);
+    });
+    return map;
+  }, [users]);
 
   const data: DefectWithInfo[] = useMemo(() => {
     const unitMap = new Map(units.map((u) => [u.id, formatUnitName(u, false)]));
@@ -117,6 +128,7 @@ export default function DefectsPage() {
         ...d,
         claimIds: claimLinked.map((l) => l.id),
         hasPretrialClaim: hasPretrial,
+        createdByName: userMap.get(d.created_by as string) ?? null,
         unitIds,
         unitNames,
         unitNamesList,
@@ -133,7 +145,7 @@ export default function DefectsPage() {
         defectStatusColor: d.defect_status?.color ?? null,
       } as DefectWithInfo;
     });
-  }, [defects, claims, units, projects]);
+  }, [defects, claims, units, projects, userMap]);
 
   const filteredData = useMemo(() => {
     if (perm?.only_assigned_project) {
@@ -314,6 +326,22 @@ export default function DefectsPage() {
           (b.received_at ? dayjs(b.received_at).valueOf() : 0),
         render: fmt,
       },
+      createdAt: {
+        title: "Добавлено",
+        dataIndex: "created_at",
+        width: 160,
+        sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
+          (a.created_at ? dayjs(a.created_at).valueOf() : 0) -
+          (b.created_at ? dayjs(b.created_at).valueOf() : 0),
+        render: fmtDateTime,
+      },
+      createdByName: {
+        title: "Автор",
+        dataIndex: "createdByName",
+        width: 160,
+        sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
+          (a.createdByName || "").localeCompare(b.createdByName || ""),
+      },
       created: {
         title: "Дата устранения",
         dataIndex: "fixed_at",
@@ -407,6 +435,8 @@ export default function DefectsPage() {
     "status",
     "fixBy",
     "received",
+    "createdAt",
+    "createdByName",
     "created",
     "actions",
   ] as const;
@@ -424,7 +454,7 @@ export default function DefectsPage() {
       const defaults = columnOrder.map((key) => ({
         key,
         title: getTitleText(base[key].title as React.ReactNode),
-        visible: true,
+        visible: !["createdAt", "createdByName"].includes(key),
       }));
     try {
       const saved = localStorage.getItem(LS_COLUMNS_KEY);
@@ -445,7 +475,7 @@ export default function DefectsPage() {
     const defaults = columnOrder.map((key) => ({
       key,
       title: getTitleText(base[key].title as React.ReactNode),
-      visible: true,
+      visible: !["createdAt", "createdByName"].includes(key),
     }));
     setColumnsState(defaults);
   };

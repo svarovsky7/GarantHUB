@@ -19,6 +19,8 @@ import { filterDefects } from "@/shared/utils/defectFilter";
 import { useResizableColumns } from "@/shared/hooks/useResizableColumns";
 
 const fmt = (v: string | null) => (v ? dayjs(v).format("DD.MM.YYYY") : "—");
+const fmtDateTime = (v: string | null) =>
+  v ? dayjs(v).format("DD.MM.YYYY HH:mm") : "—";
 
 interface Props {
   defects: DefectWithInfo[];
@@ -139,6 +141,22 @@ export default function DefectsTable({
         (a.received_at ? dayjs(a.received_at).valueOf() : 0) -
         (b.received_at ? dayjs(b.received_at).valueOf() : 0),
       render: fmt,
+    },
+    {
+      title: "Добавлено",
+      dataIndex: "created_at",
+      width: 160,
+      sorter: (a, b) =>
+        (a.created_at ? dayjs(a.created_at).valueOf() : 0) -
+        (b.created_at ? dayjs(b.created_at).valueOf() : 0),
+      render: fmtDateTime,
+    },
+    {
+      title: "Автор",
+      dataIndex: "createdByName",
+      width: 160,
+      sorter: (a, b) =>
+        (a.createdByName || "").localeCompare(b.createdByName || ""),
     },
     {
       title: "Дата устранения",
