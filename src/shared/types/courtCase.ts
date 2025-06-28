@@ -36,6 +36,14 @@ export interface CourtCase {
   defendant_contractor_id: number | null;
   responsible_lawyer_id: string | null;
   status: number;
+  /** Автор создания записи */
+  created_by?: string | null;
+  /** Дата создания записи */
+  created_at?: string;
+  /** Автор последнего изменения */
+  updated_by?: string | null;
+  /** Дата последнего изменения */
+  updated_at?: string;
   fix_start_date?: string | null;
   fix_end_date?: string | null;
   description: string;
