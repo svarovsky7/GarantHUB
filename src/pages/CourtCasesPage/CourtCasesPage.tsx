@@ -202,6 +202,8 @@ export default function CourtCasesPage() {
       personsList.find((p) => p.id === c.defendant_person_id)?.full_name ||
       c.defendant,
     responsibleLawyer: users.find((u) => u.id === c.responsible_lawyer_id)?.name ?? c.responsibleLawyer,
+    createdAt: c.created_at ? dayjs(c.created_at) : null,
+    createdByName: users.find((u) => u.id === c.created_by)?.name ?? null,
     daysSinceFixStart: c.fix_start_date ? dayjs(c.fix_end_date ?? dayjs()).diff(dayjs(c.fix_start_date), 'day') : null,
     statusName: stages.find((s) => s.id === c.status)?.name ?? null,
     statusColor: stages.find((s) => s.id === c.status)?.color ?? null,
@@ -373,6 +375,20 @@ export default function CourtCasesPage() {
       width: 180,
       sorter: (a, b) => (a.responsibleLawyer || '').localeCompare(b.responsibleLawyer || ''),
     },
+    createdAt: {
+      title: 'Добавлено',
+      dataIndex: 'createdAt',
+      width: 160,
+      sorter: (a, b) =>
+        (a.createdAt ? a.createdAt.valueOf() : 0) - (b.createdAt ? b.createdAt.valueOf() : 0),
+      render: (v: dayjs.Dayjs | null) => (v ? v.format('DD.MM.YYYY HH:mm') : ''),
+    },
+    createdByName: {
+      title: 'Автор',
+      dataIndex: 'createdByName',
+      width: 160,
+      sorter: (a, b) => (a.createdByName || '').localeCompare(b.createdByName || ''),
+    },
     actions: {
       title: 'Действия',
       key: 'actions',
@@ -416,7 +432,7 @@ export default function CourtCasesPage() {
     const defaults = Object.keys(baseColumns).map((key) => ({
       key,
       title: baseColumns[key].title as string,
-      visible: true,
+      visible: !['createdAt', 'createdByName'].includes(key),
     }));
     try {
       const saved = localStorage.getItem(LS_COLUMNS_KEY);
@@ -435,7 +451,7 @@ export default function CourtCasesPage() {
     const defaults = Object.keys(baseColumns).map((key) => ({
       key,
       title: baseColumns[key].title as string,
-      visible: true,
+      visible: !['createdAt', 'createdByName'].includes(key),
     }));
     setColumnsState(defaults);
   };
