@@ -9,13 +9,10 @@ import {
   Button,
   Tooltip,
   Space,
-  Skeleton,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { EyeOutlined } from '@ant-design/icons';
 import FixBySelector from '@/shared/ui/FixBySelector';
-import DefectFilesLoader from './DefectFilesLoader';
-import DefectStatusSelect from '@/features/defect/DefectStatusSelect';
 
 interface Item {
   id: number;
@@ -43,7 +40,6 @@ interface Props {
   onChange: (id: number, field: keyof Item, value: any) => void;
   onRemove?: (id: number) => void;
   onView?: (id: number) => void;
-  loading?: boolean;
 }
 
 /**
@@ -58,33 +54,21 @@ export default function TicketDefectsEditorTable({
   onChange,
   onRemove,
   onView,
-  loading,
 }: Props) {
   const fmt = (d: string | null) => (d ? dayjs(d).format('DD.MM.YYYY') : undefined);
 
-  if (loading) return <Skeleton active paragraph={{ rows: 6 }} />;
-
   const columns: ColumnsType<Item> = [
-    {
-      title: 'ID',
-      dataIndex: 'id',
-      width: 60,
-      sorter: (a, b) => a.id - b.id,
-      defaultSortOrder: 'ascend',
-    },
+    { title: 'ID', dataIndex: 'id', width: 60 },
     {
       title: 'Описание',
       dataIndex: 'description',
       width: 200,
-      ellipsis: true,
       render: (v: string, row) => (
-        <Tooltip title={v}>
-          <Input.TextArea
-            autoSize
-            value={v}
-            onChange={(e) => onChange(row.id, 'description', e.target.value)}
-          />
-        </Tooltip>
+        <Input.TextArea
+          autoSize
+          value={v}
+          onChange={(e) => onChange(row.id, 'description', e.target.value)}
+        />
       ),
     },
     {
@@ -106,12 +90,14 @@ export default function TicketDefectsEditorTable({
       title: 'Статус',
       dataIndex: 'status_id',
       width: 160,
-      render: (_: number | null, row) => (
-        <DefectStatusSelect
-          defectId={row.id}
-          statusId={row.status_id}
-          statusName={statuses.find((s) => s.id === row.status_id)?.name}
-          statusColor={statuses.find((s) => s.id === row.status_id)?.color}
+      render: (v: number | null, row) => (
+        <Select
+          size="small"
+          allowClear
+          value={v ?? undefined}
+          style={{ width: '100%' }}
+          options={statuses.map((s) => ({ value: s.id, label: s.name }))}
+          onChange={(val) => onChange(row.id, 'status_id', val ?? null)}
         />
       ),
     },
@@ -208,12 +194,6 @@ export default function TicketDefectsEditorTable({
       dataSource={items}
       pagination={false}
       size="small"
-      expandable={{
-        expandedRowRender: (record) => (
-          <DefectFilesLoader defectId={record.id} />
-        ),
-        rowExpandable: () => true,
-      }}
     />
   );
 }
