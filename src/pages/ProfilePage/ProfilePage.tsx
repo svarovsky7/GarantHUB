@@ -12,6 +12,7 @@ import dayjs from 'dayjs';
 import ChangeNameForm from '@/features/user/ChangeNameForm';
 import ChangePasswordForm from '@/features/user/ChangePasswordForm';
 import UserProjectsEditor from '@/features/user/UserProjectsEditor';
+import ActiveProjectSelect from '@/features/user/ActiveProjectSelect';
 import { useVisibleProjects } from '@/entities/project';
 import { useAuthStore } from '@/shared/store/authStore';
 /**
@@ -75,6 +76,9 @@ export default function ProfilePage() {
             label: 'Настройки',
             children: (
               <Space direction="vertical" size="large" style={{ width: '100%' }}>
+                <Card title="Активный проект">
+                  <ActiveProjectSelect />
+                </Card>
                 <Card title="ФИО">
                   <ChangeNameForm />
                 </Card>
