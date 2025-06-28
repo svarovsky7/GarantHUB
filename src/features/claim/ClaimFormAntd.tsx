@@ -17,7 +17,6 @@ import ClaimAttachmentsBlock from './ClaimAttachmentsBlock';
 import dayjs from 'dayjs';
 import { useVisibleProjects } from '@/entities/project';
 import { useUnitsByProject } from '@/entities/unit';
-import { useDebounce } from '@/shared/hooks/useDebounce';
 import { useUsers } from '@/entities/user';
 import { useClaimStatuses } from '@/entities/claimStatus';
 import { useCreateClaim } from '@/entities/claim';
@@ -81,11 +80,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
   const { data: projects = [] } = useVisibleProjects();
   const { buildings = [] } = useProjectBuildings(projectId);
   const buildingWatch = Form.useWatch('building', form) ?? null;
-  const buildingDebounced = useDebounce(buildingWatch);
-  const { data: units = [] } = useUnitsByProject(
-    projectId,
-    buildingDebounced ?? undefined,
-  );
+  const { data: units = [] } = useUnitsByProject(projectId, buildingWatch ?? undefined);
   const { data: users = [] } = useUsers();
   const { data: statuses = [] } = useClaimStatuses();
   const create = useCreateClaim();
