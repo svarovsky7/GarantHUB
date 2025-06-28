@@ -1,5 +1,5 @@
 import React from 'react';
-import { Table, Switch, Skeleton } from 'antd';
+import { Table, Switch, Skeleton, Card, Space, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
   useRolePermissions,
@@ -88,12 +88,6 @@ export default function RolePermissionsAdmin() {
     value: t,
   }));
 
-  const rights: RightRow[] = [
-    ...generalRights,
-    ...pageRights,
-    ...editRights,
-    ...deleteRights,
-  ];
 
   const columns: ColumnsType<RightRow> = [
     {
@@ -131,11 +125,33 @@ export default function RolePermissionsAdmin() {
   if (isLoading) return <Skeleton active />;
 
   return (
-    <Table
-      rowKey="key"
-      pagination={false}
-      dataSource={rights}
-      columns={columns}
-    />
+    <Space direction="vertical" size="large" style={{ width: '100%' }}>
+      <Card title="Доступ к страницам" size="small">
+        <Table
+          rowKey="key"
+          pagination={false}
+          dataSource={pageRights}
+          columns={columns}
+        />
+      </Card>
+
+      <Card title="Редактирование и удаление" size="small">
+        <Table
+          rowKey="key"
+          pagination={false}
+          dataSource={[...editRights, ...deleteRights]}
+          columns={columns}
+        />
+      </Card>
+
+      <Card title="Особые функции" size="small">
+        <Table
+          rowKey="key"
+          pagination={false}
+          dataSource={generalRights}
+          columns={columns}
+        />
+      </Card>
+    </Space>
   );
 }
