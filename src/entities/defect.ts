@@ -560,3 +560,21 @@ export function useRemoveDefectAttachment() {
     onError: (e) => notify.error(`Ошибка удаления файла: ${e.message}`),
   });
 }
+
+/** Получить вложения дефекта по его идентификатору */
+export function useDefectAttachments(id?: number) {
+  return useQuery({
+    queryKey: ['defect-attachments', id],
+    enabled: !!id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('defect_attachments')
+        .select(
+          'attachments(id, storage_path, file_url:path, file_type:mime_type, original_name)'
+        )
+        .eq('defect_id', id as number);
+      return (data ?? []).map((r: any) => r.attachments);
+    },
+    staleTime: 5 * 60_000,
+  });
+}
