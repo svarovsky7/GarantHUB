@@ -417,6 +417,18 @@ export default function UnitsMatrix({
               >
                 Добавить письмо
               </AntButton>
+              <AntButton
+                onClick={() => {
+                  const id = actionDialog.unit?.id;
+                  const search = createSearchParams({
+                    unit_id: String(id ?? ''),
+                  }).toString();
+                  navigate(`/unit-archive?${search}`);
+                  setActionDialog({ open: false, unit: null, action: '' });
+                }}
+              >
+                Посмотреть архив
+              </AntButton>
             </div>
           )}
         </Modal>

@@ -16,6 +16,7 @@ import LoginPage from "@/pages/UnitsPage/LoginPage"; // ← CHANGE
 import RegisterPage from "@/pages/UnitsPage/RegisterPage"; // ← CHANGE
 import AdminPage from "@/pages/UnitsPage/AdminPage";
 import ProjectStructurePage from "@/pages/ProjectStructurePage/ProjectStructurePage";
+import ObjectArchivePage from "@/pages/ObjectArchivePage/ObjectArchivePage";
 import ProfilePage from "@/pages/ProfilePage/ProfilePage";
 import RequirePermission from "@/shared/components/RequirePermission";
 
@@ -126,6 +127,17 @@ export default function AppRouter() {
           </RequireAuth>
         }
         data-oid="50g:286"
+      />
+
+      <Route
+        path="/unit-archive"
+        element={
+          <RequireAuth>
+            <RequirePermission page="structure">
+              <ObjectArchivePage />
+            </RequirePermission>
+          </RequireAuth>
+        }
       />
 
       <Route
