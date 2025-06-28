@@ -15,7 +15,13 @@ import {
   Upload,
   Switch,
 } from 'antd';
-import { PlusOutlined, DeleteOutlined, UploadOutlined } from '@ant-design/icons';
+import {
+  PlusOutlined,
+  DeleteOutlined,
+  UploadOutlined,
+  PaperClipOutlined,
+} from '@ant-design/icons';
+import AttachmentEditorTable from '@/shared/ui/AttachmentEditorTable';
 import { useDefectTypes } from '@/entities/defectType';
 import { useDefectStatuses } from '@/entities/defectStatus';
 import { useDefectDeadlines } from '@/entities/defectDeadline';
@@ -24,6 +30,7 @@ import { useContractors } from '@/entities/contractor';
 import type { ColumnsType } from 'antd/es/table';
 import type { FormInstance } from 'antd/es/form';
 import type { NewDefectFile } from '@/shared/types/defectFile';
+import DefectFilesModal from '@/features/defect/DefectFilesModal';
 
 /**
  * Props for {@link DefectEditableTable}
@@ -130,6 +137,9 @@ export default function DefectEditableTable({ fields, add, remove, projectId, fi
   const { data: brigades = [] } = useBrigades();
   const { data: contractors = [] } = useContractors();
   const form = Form.useFormInstance();
+
+  const [fileModalIdx, setFileModalIdx] = React.useState<number | null>(null);
+  const [expandedKeys, setExpandedKeys] = React.useState<React.Key[]>([]);
 
   const getFixDays = (typeId: number | null | undefined) => {
     if (!projectId || !typeId) return null;
@@ -364,17 +374,27 @@ export default function DefectEditableTable({ fields, add, remove, projectId, fi
       {
         title: '',
         dataIndex: 'actions',
-        width: 60,
+        width: 80,
         render: (_: any, field: any) => (
-          <Tooltip title="Удалить">
-            <Button
-              size="small"
-              type="text"
-              danger
-              icon={<DeleteOutlined />}
-              onClick={() => remove(field.name)}
-            />
-          </Tooltip>
+          <Space>
+            <Tooltip title="Файлы">
+              <Button
+                size="small"
+                type="text"
+                icon={<PaperClipOutlined />}
+                onClick={() => setFileModalIdx(field.name)}
+              />
+            </Tooltip>
+            <Tooltip title="Удалить">
+              <Button
+                size="small"
+                type="text"
+                danger
+                icon={<DeleteOutlined />}
+                onClick={() => remove(field.name)}
+              />
+            </Tooltip>
+          </Space>
         ),
       },
     ].filter(Boolean),
@@ -414,6 +434,46 @@ export default function DefectEditableTable({ fields, add, remove, projectId, fi
         rowKey="key"
         columns={columns}
         dataSource={fields}
+        expandable={{
+          expandedRowKeys: expandedKeys,
+          onExpand: (exp, record) => {
+            const key = record.key;
+            setExpandedKeys((p) =>
+              exp ? [...p, key] : p.filter((k) => k !== key),
+            );
+          },
+          expandIcon: ({ expanded, onExpand, record }) => {
+            const has = (fileMap[record.name] ?? []).length > 0;
+            if (!has) return null;
+            return (
+              <PaperClipOutlined
+                style={{ cursor: 'pointer' }}
+                rotate={expanded ? 90 : 0}
+                onClick={(e) => onExpand(record, e)}
+              />
+            );
+          },
+          expandedRowRender: (record) => {
+            const files = fileMap[record.name] ?? [];
+            if (!files.length) return null;
+            return (
+              <AttachmentEditorTable
+                newFiles={files.map((f) => ({ file: f.file, mime: f.file.type }))}
+                onRemoveNew={(idx) => {
+                  const arr = files.filter((_, i) => i !== idx);
+                  onFilesChange?.(record.name, arr);
+                }}
+                showMime={false}
+              />
+            );
+          },
+        }}
+      />
+      <DefectFilesModal
+        open={fileModalIdx !== null}
+        files={fileModalIdx !== null ? fileMap[fileModalIdx] ?? [] : []}
+        onChange={(f) => fileModalIdx !== null && onFilesChange?.(fileModalIdx, f)}
+        onClose={() => setFileModalIdx(null)}
       />
     </div>
   );

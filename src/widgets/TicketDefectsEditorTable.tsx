@@ -11,8 +11,11 @@ import {
   Space,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { EyeOutlined } from '@ant-design/icons';
+import { EyeOutlined, PaperClipOutlined } from '@ant-design/icons';
 import FixBySelector from '@/shared/ui/FixBySelector';
+import AttachmentEditorTable from '@/shared/ui/AttachmentEditorTable';
+import DefectFilesModal from '@/features/defect/DefectFilesModal';
+import type { NewDefectFile } from '@/shared/types/defectFile';
 
 interface Item {
   id: number;
@@ -40,6 +43,8 @@ interface Props {
   onChange: (id: number, field: keyof Item, value: any) => void;
   onRemove?: (id: number) => void;
   onView?: (id: number) => void;
+  fileMap?: Record<number, NewDefectFile[]>;
+  onFilesChange?: (id: number, files: NewDefectFile[]) => void;
 }
 
 /**
@@ -54,8 +59,13 @@ export default function TicketDefectsEditorTable({
   onChange,
   onRemove,
   onView,
+  fileMap = {},
+  onFilesChange,
 }: Props) {
   const fmt = (d: string | null) => (d ? dayjs(d).format('DD.MM.YYYY') : undefined);
+
+  const [fileModalId, setFileModalId] = React.useState<number | null>(null);
+  const [expandedKeys, setExpandedKeys] = React.useState<React.Key[]>([]);
 
   const columns: ColumnsType<Item> = [
     { title: 'ID', dataIndex: 'id', width: 60 },
@@ -163,9 +173,17 @@ export default function TicketDefectsEditorTable({
     columns.push({
       title: 'Действия',
       key: 'actions',
-      width: 100,
+      width: 120,
       render: (_, row) => (
         <Space size="middle">
+          <Tooltip title="Файлы">
+            <Button
+              size="small"
+              type="text"
+              icon={<PaperClipOutlined />}
+              onClick={() => setFileModalId(row.id)}
+            />
+          </Tooltip>
           {onView && (
             <Tooltip title="Просмотр">
               <Button
@@ -192,8 +210,48 @@ export default function TicketDefectsEditorTable({
       rowClassName={(row) => (row.id < 0 ? 'new-row' : '')}
       columns={columns}
       dataSource={items}
+      expandable={{
+        expandedRowKeys: expandedKeys,
+        onExpand: (exp, record) => {
+          const key = record.id;
+          setExpandedKeys((p) =>
+            exp ? [...p, key] : p.filter((k) => k !== key),
+          );
+        },
+        expandIcon: ({ expanded, onExpand, record }) => {
+          const has = (fileMap[record.id] ?? []).length > 0;
+          if (!has) return null;
+          return (
+            <PaperClipOutlined
+              style={{ cursor: 'pointer' }}
+              rotate={expanded ? 90 : 0}
+              onClick={(e) => onExpand(record, e)}
+            />
+          );
+        },
+        expandedRowRender: (record) => {
+          const files = fileMap[record.id] ?? [];
+          if (!files.length) return null;
+          return (
+            <AttachmentEditorTable
+              newFiles={files.map((f) => ({ file: f.file, mime: f.file.type }))}
+              onRemoveNew={(idx) => {
+                const arr = files.filter((_, i) => i !== idx);
+                onFilesChange?.(record.id, arr);
+              }}
+              showMime={false}
+            />
+          );
+        },
+      }}
       pagination={false}
       size="small"
+    />
+    <DefectFilesModal
+      open={fileModalId !== null}
+      files={fileModalId !== null ? fileMap[fileModalId] ?? [] : []}
+      onChange={(f) => fileModalId !== null && onFilesChange?.(fileModalId, f)}
+      onClose={() => setFileModalId(null)}
     />
   );
 }
