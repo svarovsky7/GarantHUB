@@ -19,7 +19,9 @@ export default function App() {
     async (user, tag = "") => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, email, name, role, profiles_projects(project_id)")
+        .select(
+          "id, email, name, role, created_at, profiles_projects(project_id)"
+        )
         .eq("id", user.id)
         .single();
 
@@ -35,6 +37,7 @@ export default function App() {
               name: user.user_metadata?.name ?? null,
               role: "USER",
               project_ids: [],
+              created_at: null,
             },
       );
     },
