@@ -30,4 +30,8 @@ export interface ClaimWithNames extends Claim {
   attachments?: import('./claimFile').RemoteClaimFile[];
   /** Есть связанные дефекты со статусом "На проверке" */
   hasCheckingDefect?: boolean;
+  /** Дата создания претензии */
+  createdAt: Dayjs | null;
+  /** Имя автора создания */
+  createdByName?: string | null;
 }
