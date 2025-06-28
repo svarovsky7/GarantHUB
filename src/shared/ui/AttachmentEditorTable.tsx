@@ -1,5 +1,5 @@
 import React from 'react';
-import { Table, Button, Space, Tooltip, Select } from 'antd';
+import { Table, Button, Space, Tooltip, Select, Input } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
   FileOutlined,
@@ -28,6 +28,10 @@ interface Props {
   getSignedUrl?: (path: string, name: string) => Promise<string>;
   /** Показывать колонку MIME */
   showMime?: boolean;
+  /** Показывать поле подробностей */
+  showDetails?: boolean;
+  /** Получить ссылку для просмотра сущности */
+  getLink?: (file: RemoteFile) => string | undefined;
 }
 
 /**
@@ -42,6 +46,8 @@ export default function AttachmentEditorTable({
                                                 onRemoveNew,
                                                 getSignedUrl,
                                                 showMime = true,
+                                                showDetails = false,
+                                                getLink,
                                               }: Props) {
   const [cache, setCache] = React.useState<Record<string, string>>({});
 
@@ -110,6 +116,27 @@ export default function AttachmentEditorTable({
     },
     ...(showMime
       ? [{ title: 'MIME', dataIndex: 'mime', width: 200 } as ColumnsType<Row>[number]]
+      : []),
+    ...(showDetails
+      ? [{
+          title: 'Подробности',
+          dataIndex: 'details',
+          width: 200,
+          render: () => <Input placeholder="Подробности" size="small" />,
+        } as ColumnsType<Row>[number]]
+      : []),
+    ...(getLink
+      ? [{
+          title: 'Ссылка',
+          dataIndex: 'link',
+          width: 120,
+          render: (_: unknown, row) =>
+            row.isRemote && row.id ? (
+              <a href={getLink({ id: row.id, name: row.name, path: row.path ?? '', mime: row.mime })}>
+                Открыть
+              </a>
+            ) : null,
+        } as ColumnsType<Row>[number]]
       : []),
     {
       title: 'Действия',
