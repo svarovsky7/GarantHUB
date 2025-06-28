@@ -5,12 +5,15 @@ import { useSnackbar } from 'notistack';
 import { useVisibleProjects } from '@/entities/project';
 import { useAuthStore } from '@/shared/store/authStore';
 import DashboardInfographics from '@/widgets/DashboardInfographics';
+import ProjectsMultiSelect from '@/features/project/ProjectsMultiSelect';
+import ProjectStatsCard from '@/widgets/ProjectStatsCard';
 
 /** Главная страница с инфографикой. */
 export default function DashboardPage() {
   const { enqueueSnackbar } = useSnackbar();
   const { data: projects = [], isPending, error } = useVisibleProjects();
   const profile = useAuthStore((s) => s.profile);
+  const [selected, setSelected] = React.useState<number[]>([]);
 
   useEffect(() => {
     if (error) enqueueSnackbar('Ошибка загрузки проектов.', { variant: 'error' });
@@ -26,6 +29,14 @@ export default function DashboardPage() {
         </Typography.Title>
         <Typography.Paragraph>Всего проектов: {projects.length}</Typography.Paragraph>
       </Card>
+
+      <Card title="Выбор проектов">
+        <ProjectsMultiSelect value={selected} onChange={setSelected} />
+      </Card>
+
+      {selected.map((id) => (
+        <ProjectStatsCard key={id} projectId={id} />
+      ))}
 
       <DashboardInfographics />
 

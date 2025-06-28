@@ -9,11 +9,14 @@ import type { DashboardStats } from '@/shared/types/dashboardStats';
 
 /**
  * Загружает статистику для дашборда и подписывается на обновления.
+ *
+ * @param pid Опциональный идентификатор проекта. Если не указан,
+ *            используется выбранный в приложении проект.
  */
-export function useDashboardStats() {
+export function useDashboardStats(pid?: number | null) {
   const qc = useQueryClient();
   const { data: projects = [] } = useVisibleProjects();
-  const projectId = useProjectId();
+  const projectId = pid ?? useProjectId();
   const { data: claimStatuses = [] } = useClaimStatuses();
   const { data: defectStatuses = [] } = useDefectStatuses();
 
