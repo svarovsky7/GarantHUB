@@ -42,10 +42,6 @@ export interface CourtCase {
   /** Ссылки на загруженные файлы */
   attachment_ids?: number[];
   defects: Defect[];
-  /** Дата создания записи */
-  created_at?: string | null;
-  /** Автор создания */
-  created_by?: string | null;
 }
 
 /** Связь дел: parent_id - родительское дело, child_id - дочернее */
