@@ -354,6 +354,7 @@ export function useFixDefect() {
         const claimCheckingId = claimStatusRow?.id ?? null;
 
         if (claimCheckingId) {
+          const updateIds: number[] = [];
           for (const cId of claimIds) {
             const { data: defRows } = await supabase
               .from('claim_defects')
@@ -373,12 +374,13 @@ export function useFixDefect() {
               return /\u043F\u0440\u043E\u0432\u0435\u0440|\u0437\u0430\u043A\u0440\u044B/.test(name);
             });
 
-            if (allFixed) {
-              await supabase
-                .from('claims')
-                .update({ claim_status_id: claimCheckingId })
-                .eq('id', cId);
-            }
+            if (allFixed) updateIds.push(cId);
+          }
+          if (updateIds.length) {
+            await supabase
+              .from('claims')
+              .update({ claim_status_id: claimCheckingId })
+              .in('id', updateIds);
           }
         }
       }
@@ -444,6 +446,7 @@ export function useCancelDefectFix() {
         const claimInWorkId = clSt?.id ?? null;
 
         if (claimInWorkId) {
+          const updateIds: number[] = [];
           for (const cId of claimIds) {
             const { data: defRows } = await supabase
               .from('claim_defects')
@@ -463,12 +466,13 @@ export function useCancelDefectFix() {
               return /\u043F\u0440\u043E\u0432\u0435\u0440|\u0437\u0430\u043A\u0440\u044B/.test(name);
             });
 
-            if (!allFixed) {
-              await supabase
-                .from('claims')
-                .update({ claim_status_id: claimInWorkId })
-                .eq('id', cId);
-            }
+            if (!allFixed) updateIds.push(cId);
+          }
+          if (updateIds.length) {
+            await supabase
+              .from('claims')
+              .update({ claim_status_id: claimInWorkId })
+              .in('id', updateIds);
           }
         }
       }

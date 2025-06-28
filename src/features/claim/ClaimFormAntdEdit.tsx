@@ -19,7 +19,7 @@ import {
   useClaimAll,
   useUpdateClaim,
   useAddClaimAttachments,
-  useRemoveClaimAttachment,
+  removeClaimAttachmentsBulk,
   signedUrl,
   markClaimDefectsPreTrial,
 } from '@/entities/claim';
@@ -105,7 +105,6 @@ const ClaimFormAntdEdit = React.forwardRef<
   const { data: caseUids = [] } = useCaseUids();
   const update = useUpdateClaim();
   const addAtt = useAddClaimAttachments();
-  const removeAtt = useRemoveClaimAttachment();
   const notify = useNotify();
   const userId = useAuthStore((s) => s.profile?.id) ?? null;
   const attachments =
@@ -173,11 +172,11 @@ const ClaimFormAntdEdit = React.forwardRef<
         await markClaimDefectsPreTrial(claim.id);
       }
 
-      for (const id of attachments.removedIds) {
-        await removeAtt.mutateAsync({
-          claimId: claim.id,
-          attachmentId: Number(id),
-        });
+      if (attachments.removedIds.length) {
+        await removeClaimAttachmentsBulk(
+          claim.id,
+          attachments.removedIds.map(Number),
+        );
       }
       let uploaded: RemoteClaimFile[] = [];
       if (attachments.newFiles.length) {
