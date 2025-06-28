@@ -236,7 +236,15 @@ export default function ClaimsPage() {
       registeredOn: { title: 'Дата регистрации претензии', dataIndex: 'registeredOn', width: 120, sorter: (a: any, b: any) => (a.registeredOn ? a.registeredOn.valueOf() : 0) - (b.registeredOn ? b.registeredOn.valueOf() : 0), render: (v: any) => fmt(v) },
       resolvedOn: { title: 'Дата устранения', dataIndex: 'resolvedOn', width: 120, sorter: (a: any, b: any) => (a.resolvedOn ? a.resolvedOn.valueOf() : 0) - (b.resolvedOn ? b.resolvedOn.valueOf() : 0), render: (v: any) => fmt(v) },
       responsibleEngineerName: { title: 'Закрепленный инженер', dataIndex: 'responsibleEngineerName', width: 180, sorter: (a: any, b: any) => (a.responsibleEngineerName || '').localeCompare(b.responsibleEngineerName || '') },
-      createdAt: { title: 'Добавлено', dataIndex: 'createdAt', width: 120, sorter: (a: any, b: any) => (a.createdAt ? a.createdAt.valueOf() : 0) - (b.createdAt ? b.createdAt.valueOf() : 0), render: (v: any) => fmt(v) },
+      createdAt: {
+        title: 'Добавлено',
+        dataIndex: 'createdAt',
+        width: 160,
+        sorter: (a: any, b: any) =>
+          (a.createdAt ? a.createdAt.valueOf() : 0) -
+          (b.createdAt ? b.createdAt.valueOf() : 0),
+        render: (v: any) => fmtDateTime(v),
+      },
       createdByName: { title: 'Автор', dataIndex: 'createdByName', width: 160, sorter: (a: any, b: any) => (a.createdByName || '').localeCompare(b.createdByName || '') },
       actions: {
         title: 'Действия',
@@ -354,4 +362,10 @@ export default function ClaimsPage() {
 
 function fmt(d: any) {
   return d && dayjs.isDayjs(d) && d.isValid() ? d.format('DD.MM.YYYY') : '—';
+}
+
+function fmtDateTime(d: any) {
+  return d && dayjs.isDayjs(d) && d.isValid()
+    ? d.format('DD.MM.YYYY HH:mm')
+    : '—';
 }
