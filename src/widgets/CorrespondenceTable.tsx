@@ -74,6 +74,7 @@ export default function CorrespondenceTable({
         responsibleName: l.responsible_user_id
             ? maps.user[l.responsible_user_id]
             : null,
+        createdByName: l.created_by ? maps.user[l.created_by] : null,
         statusName: l.status_id ? maps.status[l.status_id] : null,
         children: [],
       };
@@ -228,6 +229,21 @@ export default function CorrespondenceTable({
       sorter: (a, b) =>
           (a.responsibleName || '').localeCompare(b.responsibleName || ''),
       render: (name: string) => name || '—',
+    },
+    {
+      title: 'Добавлено',
+      dataIndex: 'created_at',
+      width: 160,
+      sorter: (a, b) =>
+        (a.created_at ? dayjs(a.created_at).valueOf() : 0) -
+        (b.created_at ? dayjs(b.created_at).valueOf() : 0),
+      render: (v: string | null) => (v ? dayjs(v).format('DD.MM.YYYY HH:mm') : '—'),
+    },
+    {
+      title: 'Автор',
+      dataIndex: 'createdByName',
+      width: 160,
+      sorter: (a, b) => (a.createdByName || '').localeCompare(b.createdByName || ''),
     },
     {
       title: 'Действия',

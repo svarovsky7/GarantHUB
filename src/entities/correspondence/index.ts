@@ -57,7 +57,7 @@ export function useLetters() {
       let query = supabase
         .from(LETTERS_TABLE)
         .select(
-          `id, project_id, number, letter_type_id, direction, status_id, letter_date, subject, content, sender_person_id, sender_contractor_id, receiver_person_id, receiver_contractor_id, responsible_user_id, created_at`
+          `id, project_id, number, letter_type_id, direction, status_id, letter_date, subject, content, sender_person_id, sender_contractor_id, receiver_person_id, receiver_contractor_id, responsible_user_id, created_at, created_by`
         );
       if (onlyAssigned) {
         query = query.in('project_id', projectIds.length ? projectIds : [-1]);
@@ -182,6 +182,8 @@ export function useLetters() {
           receiver,
           subject: row.subject ?? '',
           content: row.content ?? '',
+          created_by: row.created_by ?? null,
+          created_at: row.created_at ?? null,
 
           attachments,
         } as CorrespondenceLetter;
@@ -224,6 +226,7 @@ export function useAddLetter() {
           receiver_contractor_id: receiverIds.contractorId,
           // null в случае отсутствия выбранного сотрудника
           responsible_user_id: data.responsible_user_id ?? null,
+          created_by: data.created_by ?? null,
         };
       const { data: inserted, error } = await supabase
         .from(LETTERS_TABLE)
@@ -295,6 +298,8 @@ export function useAddLetter() {
         receiver: data.receiver,
         subject: data.subject,
         content: data.content,
+        created_by: inserted.created_by ?? null,
+        created_at: inserted.created_at ?? null,
 
         attachments: files,
       } as CorrespondenceLetter;
@@ -426,7 +431,7 @@ export function useLetter(letterId: number | string | undefined) {
       const { data, error } = await supabase
         .from(LETTERS_TABLE)
         .select(
-          `id, project_id, number, letter_type_id, direction, status_id, letter_date, subject, content, sender_person_id, sender_contractor_id, receiver_person_id, receiver_contractor_id, responsible_user_id`
+          `id, project_id, number, letter_type_id, direction, status_id, letter_date, subject, content, sender_person_id, sender_contractor_id, receiver_person_id, receiver_contractor_id, responsible_user_id, created_at, created_by`
         )
         .eq('id', id)
         .single();
@@ -523,6 +528,8 @@ export function useLetter(letterId: number | string | undefined) {
         receiver,
         subject: data?.subject ?? '',
         content: data?.content ?? '',
+        created_by: data?.created_by ?? null,
+        created_at: data?.created_at ?? null,
         attachments,
       } as CorrespondenceLetter & { attachments: any[] };
     },
