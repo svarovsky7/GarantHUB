@@ -6,6 +6,10 @@
 ## brigades
 - `brigades_pkey` - `UNIQUE id`
 
+## case_uids
+- `case_uids_pkey` - `UNIQUE id`
+- `case_uids_uid_key` - `UNIQUE uid`
+
 ## claim_attachments
 - `claim_attachments_pkey` - `UNIQUE claim_id, attachment_id`
 
