@@ -5,6 +5,7 @@ import { addDefectAttachments, getAttachmentsByIds, ATTACH_BUCKET } from '@/enti
 import { useAuthStore } from '@/shared/store/authStore';
 import type { DefectRecord } from '@/shared/types/defect';
 import type { DefectWithNames } from '@/shared/types/defectWithNames';
+import type { RemoteDefectFile } from "@/shared/types/defectFile";
 import type { DefectWithFiles } from '@/shared/types/defectWithFiles';
 
 export interface NewDefect {
@@ -558,5 +559,28 @@ export function useRemoveDefectAttachment() {
       notify.success('Файл удалён');
     },
     onError: (e) => notify.error(`Ошибка удаления файла: ${e.message}`),
+  });
+}
+
+export function useDefectFiles(id?: number, opts?: { enabled?: boolean }) {
+  return useQuery<RemoteDefectFile[]>({
+    queryKey: ['defect-files', id],
+    enabled: (opts?.enabled ?? true) && !!id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('defect_attachments')
+        .select('attachments(id, storage_path, file_url:path, file_type:mime_type, original_name)')
+        .eq('defect_id', id as number);
+      if (error) throw error;
+      return (data ?? []).map((r: any) => ({
+        id: r.attachments.id,
+        name: r.attachments.original_name ?? r.attachments.storage_path.split('/').pop(),
+        original_name: r.attachments.original_name,
+        path: r.attachments.storage_path,
+        url: r.attachments.file_url,
+        mime_type: r.attachments.file_type,
+      })) as RemoteDefectFile[];
+    },
+    staleTime: 5 * 60_000,
   });
 }

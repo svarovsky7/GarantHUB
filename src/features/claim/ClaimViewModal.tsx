@@ -3,7 +3,7 @@ import { Modal, Skeleton, Typography, Button } from 'antd';
 import { useClaim, useClaimAll, signedUrl, closeDefectsForClaim } from '@/entities/claim';
 import ClaimFormAntdEdit from './ClaimFormAntdEdit';
 import ClaimAttachmentsBlock from './ClaimAttachmentsBlock';
-import TicketDefectsEditorTable from '@/widgets/TicketDefectsEditorTable';
+import ClaimDefectsTable from '@/widgets/ClaimDefectsTable';
 import DefectAddModal from '@/features/defect/DefectAddModal';
 import DefectViewModal from '@/features/defect/DefectViewModal';
 import dayjs from 'dayjs';
@@ -86,7 +86,7 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
     }
   }, [open]);
 
-  const { data: loadedDefs = [] } = useDefectsWithNames(defectIds);
+  const { data: loadedDefs = [], isPending: loadingDefs } = useDefectsWithNames(defectIds);
 
   const defectTypeMap = React.useMemo(() => {
     const map: Record<number, string> = {};
@@ -263,25 +263,22 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
             attachmentsState={attachments}
           />
           <div style={{ marginTop: 16 }}>
-            {displayDefs.length ? (
-              <TicketDefectsEditorTable
-                items={displayDefs}
-                defectTypes={defectTypes}
-                statuses={defectStatuses}
-                brigades={brigades}
-                contractors={contractors}
-                onChange={handleChangeDef}
-                onRemove={handleRemove}
-                onView={setViewDefId}
-              />
-            ) : (
-              <Typography.Text>Дефекты не указаны</Typography.Text>
-            )}
-            <div style={{ textAlign: 'right', marginTop: 8 }}>
+            <div style={{ textAlign: 'right', marginBottom: 8 }}>
               <Button size="small" type="primary" onClick={() => setShowAdd(true)}>
                 Добавить дефекты
               </Button>
             </div>
+            {displayDefs.length ? (
+              <ClaimDefectsTable
+                items={displayDefs}
+                loading={loadingDefs}
+                onView={setViewDefId}
+                onRemove={handleRemove}
+                onWarrantyChange={(id, v) => handleChangeDef(id, 'is_warranty', v)}
+              />
+            ) : (
+              <Typography.Text>Дефекты не указаны</Typography.Text>
+            )}
           </div>
           <ClaimAttachmentsBlock
             remoteFiles={attachments.remoteFiles}
