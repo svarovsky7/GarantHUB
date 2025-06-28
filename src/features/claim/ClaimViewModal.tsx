@@ -20,7 +20,6 @@ import { useBrigades } from '@/entities/brigade';
 import { useContractors } from '@/entities/contractor';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/shared/api/supabaseClient';
-import { addDefectAttachments } from '@/entities/attachment';
 import { useClaimAttachments } from './model/useClaimAttachments';
 import type { ClaimFormAntdEditRef } from '@/shared/types/claimFormAntdEditRef';
 import { useAuthStore } from '@/shared/store/authStore';
@@ -28,7 +27,6 @@ import { useRolePermission } from '@/entities/rolePermission';
 import type { RoleName } from '@/shared/types/rolePermission';
 import FilePreviewModal from '@/shared/ui/FilePreviewModal';
 import type { PreviewFile } from '@/shared/types/previewFile';
-import type { NewDefectFile } from '@/shared/types/defectFile';
 
 interface Props {
   open: boolean;
@@ -59,7 +57,6 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
   const [showAdd, setShowAdd] = React.useState(false);
   const [viewDefId, setViewDefId] = React.useState<number | null>(null);
   const [previewFile, setPreviewFile] = React.useState<PreviewFile | null>(null);
-  const [defectFiles, setDefectFiles] = React.useState<Record<number, NewDefectFile[]>>({});
   const tmpIdRef = React.useRef(-1);
 
   const lastClaimIdRef = React.useRef<number | null>(null);
@@ -86,7 +83,6 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
       setNewDefs([]);
       setRemovedIds([]);
       attachments.reset();
-      setDefectFiles({});
     }
   }, [open]);
 
@@ -151,10 +147,6 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
   const handleRemove = (id: number) => {
     if (id < 0) {
       setNewDefs((p) => p.filter((d) => d.tmpId !== id));
-      setDefectFiles((p) => {
-        const { [id]: _omit, ...rest } = p;
-        return rest;
-      });
     } else {
       setDefectIds((p) => p.filter((d) => d !== id));
       setRemovedIds((p) => [...p, id]);
@@ -174,10 +166,6 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
       })),
     ]);
     setShowAdd(false);
-  };
-
-  const changeDefFiles = (id: number, files: NewDefectFile[]) => {
-    setDefectFiles((p) => ({ ...p, [id]: files }));
   };
 
   const handleChangeDef = (
@@ -214,23 +202,6 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
           })),
         );
         await closeDefectsForClaim(claim.id, claim.claim_status_id ?? null);
-        for (let i = 0; i < createdIds.length; i += 1) {
-          const filesFor = defectFiles[newDefs[i].tmpId] ?? [];
-          if (filesFor.length) {
-            const uploaded = await addDefectAttachments(
-              filesFor.map((f) => ({ file: f.file, type_id: null })),
-              createdIds[i],
-            );
-            if (uploaded.length) {
-              await supabase.from('defect_attachments').insert(
-                uploaded.map((u: any) => ({
-                  defect_id: createdIds[i],
-                  attachment_id: u.id,
-                })),
-              );
-            }
-          }
-        }
       }
       if (removedIds.length) {
         await supabase
@@ -260,7 +231,6 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
       setEditedDefs({});
       setNewDefs([]);
       setRemovedIds([]);
-      setDefectFiles({});
       onClose();
     } catch (e) {
       console.error(e);
@@ -303,8 +273,6 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
                 onChange={handleChangeDef}
                 onRemove={handleRemove}
                 onView={setViewDefId}
-                fileMap={defectFiles}
-                onFilesChange={changeDefFiles}
               />
             ) : (
               <Typography.Text>Дефекты не указаны</Typography.Text>

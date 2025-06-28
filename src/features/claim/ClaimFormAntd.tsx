@@ -21,13 +21,10 @@ import { useDebounce } from '@/shared/hooks/useDebounce';
 import { useUsers } from '@/entities/user';
 import { useClaimStatuses } from '@/entities/claimStatus';
 import { useCreateClaim } from '@/entities/claim';
-import { addDefectAttachments } from '@/entities/attachment';
-import { supabase } from '@/shared/api/supabaseClient';
 import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useNotify } from '@/shared/hooks/useNotify';
 import DefectEditableTable from '@/widgets/DefectEditableTable';
 import { useCreateDefects, type NewDefect } from '@/entities/defect';
-import type { NewDefectFile } from '@/shared/types/defectFile';
 import { useAuthStore } from '@/shared/store/authStore';
 import type { RoleName } from '@/shared/types/rolePermission';
 import { useRolePermission } from '@/entities/rolePermission';
@@ -77,7 +74,6 @@ export interface ClaimFormValues {
 export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefectsForm = true, showAttachments = true }: ClaimFormAntdProps) {
   const [form] = Form.useForm<ClaimFormValues>();
   const [files, setFiles] = useState<File[]>([]);
-  const [defectFiles, setDefectFiles] = useState<Record<number, NewDefectFile[]>>({});
   const globalProjectId = useProjectId();
   const projectIdWatch = Form.useWatch('project_id', form) ?? globalProjectId;
   const projectId = projectIdWatch != null ? Number(projectIdWatch) : null;
@@ -107,9 +103,6 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
     setFiles((p) => [...p, ...dropped]);
   };
   const removeFile = (idx: number) => setFiles((p) => p.filter((_, i) => i !== idx));
-  const changeDefectFiles = (idx: number, fs: NewDefectFile[]) => {
-    setDefectFiles((p) => ({ ...p, [idx]: fs }));
-  };
 
   useEffect(() => {
     if (initialValues.project_id != null) {
@@ -182,17 +175,6 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
     }
   }, [defectsWatch, form]);
 
-  useEffect(() => {
-    if (!Array.isArray(defectsWatch)) return;
-    setDefectFiles((prev) => {
-      const res: Record<number, NewDefectFile[]> = {};
-      defectsWatch.forEach((_, i) => {
-        if (prev[i]) res[i] = prev[i];
-      });
-      return res;
-    });
-  }, [defectsWatch]);
-
 
   const onFinish = async (values: ClaimFormValues) => {
     if (!showDefectsForm) return;
@@ -219,25 +201,6 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
       case_uid_id: values.case_uid_id ?? null,
     }));
     const defectIds = await createDefects.mutateAsync(newDefs);
-
-    for (let i = 0; i < defectIds.length; i += 1) {
-      const filesFor = defectFiles[i] ?? [];
-      if (filesFor.length) {
-        const uploaded = await addDefectAttachments(
-          filesFor.map((f) => ({ file: f.file, type_id: null })),
-          defectIds[i],
-        );
-        if (uploaded.length) {
-          await supabase.from('defect_attachments').insert(
-            uploaded.map((u: any) => ({
-              defect_id: defectIds[i],
-              attachment_id: u.id,
-            })),
-          );
-        }
-      }
-    }
-
     await create.mutateAsync({
       ...rest,
       attachments: files,
@@ -252,7 +215,6 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
     } as any);
     form.resetFields();
     setFiles([]);
-    setDefectFiles({});
     onCreated?.();
   };
 
@@ -371,8 +333,6 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
               remove={remove}
               projectId={projectId}
               showFiles={false}
-              fileMap={defectFiles}
-              onFilesChange={changeDefectFiles}
               defaultReceivedAt={acceptedOnWatch}
             />
           )}
