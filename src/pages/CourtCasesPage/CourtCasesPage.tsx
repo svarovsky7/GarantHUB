@@ -205,8 +205,6 @@ export default function CourtCasesPage() {
     daysSinceFixStart: c.fix_start_date ? dayjs(c.fix_end_date ?? dayjs()).diff(dayjs(c.fix_start_date), 'day') : null,
     statusName: stages.find((s) => s.id === c.status)?.name ?? null,
     statusColor: stages.find((s) => s.id === c.status)?.color ?? null,
-    createdAt: c.created_at ?? null,
-    createdByName: users.find((u) => u.id === (c as any).created_by)?.name ?? null,
   }));
 
   const idOptions = React.useMemo(
@@ -369,19 +367,6 @@ export default function CourtCasesPage() {
       render: (v: string | null) => (v ? dayjs(v).format('DD.MM.YYYY') : ''),
       sorter: (a, b) => dayjs(a.fix_end_date || 0).valueOf() - dayjs(b.fix_end_date || 0).valueOf(),
     },
-    createdAt: {
-      title: 'Добавлено',
-      dataIndex: 'createdAt',
-      width: 160,
-      sorter: (a, b) => dayjs(a.createdAt || 0).valueOf() - dayjs(b.createdAt || 0).valueOf(),
-      render: (v: string | null) => (v ? dayjs(v).format('DD.MM.YYYY HH:mm') : ''),
-    },
-    createdByName: {
-      title: 'Автор',
-      dataIndex: 'createdByName',
-      width: 160,
-      sorter: (a, b) => (a.createdByName || '').localeCompare(b.createdByName || ''),
-    },
     responsibleLawyer: {
       title: 'Юрист',
       dataIndex: 'responsibleLawyer',
@@ -431,7 +416,7 @@ export default function CourtCasesPage() {
     const defaults = Object.keys(baseColumns).map((key) => ({
       key,
       title: baseColumns[key].title as string,
-      visible: !['createdAt', 'createdByName'].includes(key) ? true : false,
+      visible: true,
     }));
     try {
       const saved = localStorage.getItem(LS_COLUMNS_KEY);
@@ -450,7 +435,7 @@ export default function CourtCasesPage() {
     const defaults = Object.keys(baseColumns).map((key) => ({
       key,
       title: baseColumns[key].title as string,
-      visible: !['createdAt', 'createdByName'].includes(key) ? true : false,
+      visible: true,
     }));
     setColumnsState(defaults);
   };
