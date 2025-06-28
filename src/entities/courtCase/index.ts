@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/shared/api/supabaseClient';
 import { useProjectFilter } from '@/shared/hooks/useProjectFilter';
+import { useAuthStore } from '@/shared/store/authStore';
 import type { CourtCase, Defect } from '@/shared/types/courtCase';
 import type { NewCaseFile } from '@/shared/types/caseFile';
 import { addCaseAttachments, getAttachmentsByIds, ATTACH_BUCKET } from '../attachment';
@@ -61,6 +62,7 @@ export function useCourtCases() {
 
 export function useAddCourtCase() {
   const qc = useQueryClient();
+  const userId = useAuthStore((s) => s.profile?.id ?? null);
   return useMutation({
     /**
      * Создать новое судебное дело и привязать его к выбранным объектам.
@@ -77,7 +79,7 @@ export function useAddCourtCase() {
 
       const { data: inserted, error } = await supabase
         .from(CASES_TABLE)
-        .insert(rest)
+        .insert({ ...rest, created_by: userId })
         .select('*')
         .single();
       if (error) throw error;
