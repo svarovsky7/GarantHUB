@@ -37,6 +37,7 @@ import {
 } from '@/entities/correspondence';
 import { CorrespondenceLetter } from '@/shared/types/correspondence';
 import { fixForeignKeys } from '@/shared/utils/fixForeignKeys';
+import { useAuthStore } from '@/shared/store/authStore';
 
 import { useUsers } from '@/entities/user';
 import { useLetterTypes } from '@/entities/letterType';
@@ -81,6 +82,7 @@ export default function CorrespondencePage() {
   const remove = useDeleteLetter();
   const linkLetters = useLinkLetters();
   const unlinkLetter = useUnlinkLetter();
+  const userId = useAuthStore((s) => s.profile?.id);
   const notify = useNotify();
   const [searchParams, setSearchParams] = useSearchParams();
   const [filters, setFilters] = useState<Filters>(() => {
@@ -262,6 +264,7 @@ export default function CorrespondencePage() {
         // явное приведение undefined/'' к null для корректного сохранения FK
         responsible_user_id: data.responsible_user_id || null,
         date: data.date ? data.date.toISOString() : dayjs().toISOString(),
+        created_by: userId || null,
       },
       ['responsible_user_id', 'letter_type_id', 'project_id', 'status_id'],
     );
@@ -389,6 +392,21 @@ export default function CorrespondencePage() {
         sorter: (a: any, b: any) => (a.responsibleName || '').localeCompare(b.responsibleName || ''),
         render: (name: string) => name || '—',
       },
+      createdAt: {
+        title: 'Добавлено',
+        dataIndex: 'created_at',
+        width: 160,
+        sorter: (a: any, b: any) =>
+          (a.created_at ? dayjs(a.created_at).valueOf() : 0) -
+          (b.created_at ? dayjs(b.created_at).valueOf() : 0),
+        render: (v: string | null) => (v ? dayjs(v).format('DD.MM.YYYY HH:mm') : '—'),
+      },
+      createdByName: {
+        title: 'Автор',
+        dataIndex: 'createdByName',
+        width: 160,
+        sorter: (a: any, b: any) => (a.createdByName || '').localeCompare(b.createdByName || ''),
+      },
       actions: {
         title: 'Действия',
         key: 'actions',
@@ -419,7 +437,11 @@ export default function CorrespondencePage() {
 
   const [columnsState, setColumnsState] = useState<TableColumnSetting[]>(() => {
     const base = getBaseColumns();
-    const defaults = Object.keys(base).map((key) => ({ key, title: base[key].title as string, visible: true }));
+    const defaults = Object.keys(base).map((key) => ({
+      key,
+      title: base[key].title as string,
+      visible: !['createdAt', 'createdByName'].includes(key),
+    }));
     try {
       const saved = localStorage.getItem(LS_COLUMNS_KEY);
       if (saved) {
@@ -438,7 +460,7 @@ export default function CorrespondencePage() {
     const defaults = Object.keys(base).map((key) => ({
       key,
       title: base[key].title as string,
-      visible: true,
+      visible: !['createdAt', 'createdByName'].includes(key),
     }));
     setColumnsState(defaults);
   };

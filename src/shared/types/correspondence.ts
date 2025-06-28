@@ -42,6 +42,11 @@ export interface CorrespondenceLetter {
   /** Содержание письма */
   content: string;
 
+  /** Пользователь, создавший письмо */
+  created_by?: string | null;
+  /** Дата создания письма */
+  created_at?: string | null;
+
   /** Загруженные файлы */
   attachments: CorrespondenceAttachment[];
 }
