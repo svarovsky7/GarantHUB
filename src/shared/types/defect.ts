@@ -68,4 +68,6 @@ export interface DefectWithInfo extends DefectRecord {
   days?: number | null;
   /** Есть ли среди связанных претензий досудебная */
   hasPretrialClaim?: boolean;
+  /** Имя автора создания дефекта */
+  createdByName?: string | null;
 }
