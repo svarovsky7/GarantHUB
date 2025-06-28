@@ -6,30 +6,50 @@ import {
   useUpsertRolePermission,
 } from '@/entities/rolePermission';
 import type { RolePermission, RoleName } from '@/shared/types/rolePermission';
-import { DEFAULT_ROLE_PERMISSIONS, PRETRIAL_FLAG } from '@/shared/types/rolePermission';
+import {
+  DEFAULT_ROLE_PERMISSIONS,
+  PRETRIAL_FLAG,
+} from '@/shared/types/rolePermission';
 
 const PAGES = [
+  // Основные
   'dashboard',
   'structure',
+
+  // Документооборот
   'claims',
   'defects',
   'court-cases',
   'correspondence',
+
+  // Администрирование
   'admin',
 ];
 
-// Таблицы, для которых можно назначать права на редактирование и удаление
-// Дополнен таблицей "claims" для управления претензиями
+/** Справочники для прав на редактирование и удаление */
 const TABLES = ['defects', 'court_cases', 'letters', 'claims'];
+
+/** Строка с правом доступа */
+interface RightRow {
+  key: string;
+  label: string;
+  field: 'pages' | 'edit_tables' | 'delete_tables' | 'only_assigned_project';
+  value?: string;
+}
 
 export default function RolePermissionsAdmin() {
   const { data = [], isLoading } = useRolePermissions();
   const upsert = useUpsertRolePermission();
 
-  const merged: RolePermission[] = (['ADMIN', 'ENGINEER', 'LAWYER', 'CONTRACTOR'] as RoleName[]).map(
+  const roleNames: RoleName[] = ['ADMIN', 'ENGINEER', 'LAWYER', 'CONTRACTOR'];
+
+  const merged: RolePermission[] = roleNames.map(
     (r) => data.find((d) => d.role_name === r) ?? DEFAULT_ROLE_PERMISSIONS[r],
   );
 
+  /**
+   * Переключить конкретное право у роли
+   */
   const handleToggle = (
     role: RoleName,
     field: 'pages' | 'edit_tables' | 'delete_tables',
@@ -42,103 +62,94 @@ export default function RolePermissionsAdmin() {
     upsert.mutate({ ...current, [field]: Array.from(list) });
   };
 
+  /**
+   * Обновить флаг "только свой проект"
+   */
   const handleProjectToggle = (role: RoleName, value: boolean) => {
     const current = merged.find((m) => m.role_name === role)!;
     upsert.mutate({ ...current, only_assigned_project: value });
   };
 
-  const handlePretrialToggle = (role: RoleName, value: boolean) => {
-    const current = merged.find((m) => m.role_name === role)!;
-    const pages = new Set(current.pages);
-    if (value) pages.add(PRETRIAL_FLAG);
-    else pages.delete(PRETRIAL_FLAG);
-    upsert.mutate({ ...current, pages: Array.from(pages) });
-  };
+  // Доступ к отдельным страницам
+  const PAGE_RIGHTS: RightRow[] = PAGES.map((p) => ({
+    key: `page_${p}`,
+    label: `Стр.: ${p}`,
+    field: 'pages' as const,
+    value: p,
+  }));
+  // Права на редактирование справочников
+  const EDIT_RIGHTS: RightRow[] = TABLES.map((t) => ({
+    key: `edit_${t}`,
+    label: `Ред.: ${t}`,
+    field: 'edit_tables' as const,
+    value: t,
+  }));
+  // Права на удаление справочников
+  const DELETE_RIGHTS: RightRow[] = TABLES.map((t) => ({
+    key: `del_${t}`,
+    label: `Уд.: ${t}`,
+    field: 'delete_tables' as const,
+    value: t,
+  }));
 
-  const columns: ColumnsType<RolePermission> = [
+  const rights: RightRow[] = [
     {
-      title: 'Роль',
-      dataIndex: 'role_name',
+      key: 'only_project',
+      label: 'Свой проект',
+      field: 'only_assigned_project',
     },
     {
-      title: 'Только свой проект',
-      dataIndex: 'only_assigned_project',
-      render: (_, record) => (
-        <Switch
-          size="small"
-          checked={record.only_assigned_project}
-          onChange={(checked) =>
-            handleProjectToggle(record.role_name as RoleName, checked)
-          }
-        />
-      ),
+      key: 'pretrial',
+      label: 'Досудебные',
+      field: 'pages',
+      value: PRETRIAL_FLAG,
     },
+    ...PAGE_RIGHTS,
+    ...EDIT_RIGHTS,
+    ...DELETE_RIGHTS,
+  ];
+
+  const columns: ColumnsType<RightRow> = [
     {
-      title: 'Досудебные претензии',
-      render: (_, record) => (
-        <Switch
-          size="small"
-          checked={record.pages.includes(PRETRIAL_FLAG)}
-          onChange={(checked) =>
-            handlePretrialToggle(record.role_name as RoleName, checked)
-          }
-        />
-      ),
+      title: 'Право',
+      dataIndex: 'label',
+      width: 200,
     },
-    {
-      title: 'Доступные страницы',
-      render: (_, record) => (
-        <div>
-          {PAGES.map((p) => (
-            <div key={p} style={{ marginBottom: 4 }}>
-              <Switch
-                size="small"
-                checked={record.pages.includes(p)}
-                onChange={() => handleToggle(record.role_name as RoleName, 'pages', p)}
-              />{' '}
-              {p}
-            </div>
-          ))}
-        </div>
-      ),
-    },
-    {
-      title: 'Редактирование',
-      render: (_, record) => (
-        <div>
-          {TABLES.map((t) => (
-            <div key={t} style={{ marginBottom: 4 }}>
-              <Switch
-                size="small"
-                checked={record.edit_tables.includes(t)}
-                onChange={() => handleToggle(record.role_name as RoleName, 'edit_tables', t)}
-              />{' '}
-              {t}
-            </div>
-          ))}
-        </div>
-      ),
-    },
-    {
-      title: 'Удаление',
-      render: (_, record) => (
-        <div>
-          {TABLES.map((t) => (
-            <div key={t} style={{ marginBottom: 4 }}>
-              <Switch
-                size="small"
-                checked={record.delete_tables.includes(t)}
-                onChange={() => handleToggle(record.role_name as RoleName, 'delete_tables', t)}
-              />{' '}
-              {t}
-            </div>
-          ))}
-        </div>
-      ),
-    },
+    ...roleNames.map((role) => ({
+      title: role,
+      dataIndex: role,
+      render: (_: unknown, row: RightRow) => {
+        const record = merged.find((m) => m.role_name === role)!;
+        if (row.field === 'only_assigned_project') {
+          return (
+            <Switch
+              size="small"
+              checked={record.only_assigned_project}
+              onChange={(checked) => handleProjectToggle(role, checked)}
+            />
+          );
+        }
+        const value = row.value!;
+        const checked = (record[row.field as keyof RolePermission] as string[]).includes(value);
+        return (
+          <Switch
+            size="small"
+            checked={checked}
+            onChange={() => handleToggle(role, row.field as 'pages' | 'edit_tables' | 'delete_tables', value)}
+          />
+        );
+      },
+    })),
   ];
 
   if (isLoading) return <Skeleton active />;
 
-  return <Table rowKey="role_name" pagination={false} dataSource={merged} columns={columns} />;
+  return (
+    <Table
+      rowKey="key"
+      pagination={false}
+      dataSource={rights}
+      columns={columns}
+    />
+  );
 }
