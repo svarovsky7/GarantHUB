@@ -1,22 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/shared/api/supabaseClient';
+import type { ArchiveFile, UnitArchive } from '@/shared/types/unitArchive';
 
-export interface ArchiveFile {
-  id: string;
-  name: string;
-  path: string;
-  mime: string;
-}
-
-export interface UnitArchive {
-  officialDocs: ArchiveFile[];
-  defectDocs: ArchiveFile[];
-  courtDocs: ArchiveFile[];
-  drawings: ArchiveFile[];
-}
-
-function mapFile(a: any): ArchiveFile {
-  if (!a) return { id: '', name: '', path: '', mime: '' };
+function mapFile(a: any, entityId?: number): ArchiveFile {
+  if (!a) return { id: '', name: '', path: '', mime: '', entityId };
   let name = a.original_name;
   if (!name) {
     try {
@@ -32,6 +19,7 @@ function mapFile(a: any): ArchiveFile {
     name,
     path: a.file_url,
     mime: a.file_type,
+    entityId,
   };
 }
 
@@ -41,12 +29,29 @@ export function useUnitArchive(unitId?: number) {
     enabled: !!unitId,
     queryFn: async () => {
       const result: UnitArchive = {
-        officialDocs: [],
+        objectDocs: [],
+        remarkDocs: [],
         defectDocs: [],
         courtDocs: [],
-        drawings: [],
       };
       if (!unitId) return result;
+
+      const { data: letterRows } = await supabase
+        .from('letter_units')
+        .select('letter_id')
+        .eq('unit_id', unitId);
+      const letterIds = (letterRows ?? []).map((r: any) => r.letter_id);
+      if (letterIds.length) {
+        const { data } = await supabase
+          .from('letter_attachments')
+          .select(
+            'letter_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name)',
+          )
+          .in('letter_id', letterIds);
+        result.objectDocs = (data ?? []).map((r: any) =>
+          mapFile(r.attachments, r.letter_id),
+        );
+      }
 
       const { data: claimRows } = await supabase
         .from('claim_units')
@@ -57,10 +62,12 @@ export function useUnitArchive(unitId?: number) {
         const { data } = await supabase
           .from('claim_attachments')
           .select(
-            'attachments(id, storage_path, file_url:path, file_type:mime_type, original_name)',
+            'claim_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name)',
           )
           .in('claim_id', claimIds);
-        result.officialDocs = (data ?? []).map((r: any) => mapFile(r.attachments));
+        result.remarkDocs = (data ?? []).map((r: any) =>
+          mapFile(r.attachments, r.claim_id),
+        );
       }
 
       const { data: defectRows } = await supabase
@@ -72,10 +79,12 @@ export function useUnitArchive(unitId?: number) {
         const { data } = await supabase
           .from('defect_attachments')
           .select(
-            'attachments(id, storage_path, file_url:path, file_type:mime_type, original_name)',
+            'defect_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name)',
           )
           .in('defect_id', defectIds);
-        result.defectDocs = (data ?? []).map((r: any) => mapFile(r.attachments));
+        result.defectDocs = (data ?? []).map((r: any) =>
+          mapFile(r.attachments, r.defect_id),
+        );
       }
 
       const { data: caseRows } = await supabase
@@ -87,25 +96,12 @@ export function useUnitArchive(unitId?: number) {
         const { data } = await supabase
           .from('court_case_attachments')
           .select(
-            'attachments(id, storage_path, file_url:path, file_type:mime_type, original_name)',
+            'court_case_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name)',
           )
           .in('court_case_id', caseIds);
-        result.courtDocs = (data ?? []).map((r: any) => mapFile(r.attachments));
-      }
-
-      const { data: letterRows } = await supabase
-        .from('letter_units')
-        .select('letter_id')
-        .eq('unit_id', unitId);
-      const letterIds = (letterRows ?? []).map((r: any) => r.letter_id);
-      if (letterIds.length) {
-        const { data } = await supabase
-          .from('letter_attachments')
-          .select(
-            'attachments(id, storage_path, file_url:path, file_type:mime_type, original_name)',
-          )
-          .in('letter_id', letterIds);
-        result.drawings = (data ?? []).map((r: any) => mapFile(r.attachments));
+        result.courtDocs = (data ?? []).map((r: any) =>
+          mapFile(r.attachments, r.court_case_id),
+        );
       }
 
       return result;
