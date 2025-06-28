@@ -663,6 +663,32 @@ export function useRemoveClaimAttachment() {
   });
 }
 
+/**
+ * Удаляет несколько вложений претензии за один запрос.
+ */
+export async function removeClaimAttachmentsBulk(
+  claimId: number,
+  attachmentIds: number[],
+): Promise<void> {
+  if (attachmentIds.length === 0) return;
+  const { data: atts } = await supabase
+    .from('attachments')
+    .select('storage_path')
+    .in('id', attachmentIds);
+  const paths = (atts ?? [])
+    .map((a: any) => a.storage_path)
+    .filter(Boolean);
+  if (paths.length) {
+    await supabase.storage.from(ATTACH_BUCKET).remove(paths);
+  }
+  await supabase.from('attachments').delete().in('id', attachmentIds);
+  await supabase
+    .from('claim_attachments')
+    .delete()
+    .eq('claim_id', claimId)
+    .in('attachment_id', attachmentIds);
+}
+
 /** Добавить вложения к существующей претензии */
 export function useAddClaimAttachments() {
   const qc = useQueryClient();
