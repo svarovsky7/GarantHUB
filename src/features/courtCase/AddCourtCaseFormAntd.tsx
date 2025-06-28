@@ -179,6 +179,7 @@ export default function AddCourtCaseFormAntd({
           ? (values.fix_end_date as Dayjs).format('YYYY-MM-DD')
           : null,
         description: values.description || '',
+        created_by: profileId,
       } as any);
 
       let newAtts: { id: number }[] = [];
