@@ -105,7 +105,11 @@ export default function ClaimsPage() {
   const [showColumnsDrawer, setShowColumnsDrawer] = useState(false);
   const [columnsState, setColumnsState] = useState<TableColumnSetting[]>(() => {
     const base = getBaseColumns();
-    const defaults = Object.keys(base).map((key) => ({ key, title: base[key].title as string, visible: true }));
+    const defaults = Object.keys(base).map((key) => ({
+      key,
+      title: base[key].title as string,
+      visible: !['createdAt', 'createdByName'].includes(key),
+    }));
     return defaults;
   });
 
@@ -117,7 +121,7 @@ export default function ClaimsPage() {
     const defaults = Object.keys(base).map((key) => ({
       key,
       title: base[key].title as string,
-      visible: true,
+      visible: !['createdAt', 'createdByName'].includes(key),
     }));
     setColumnsState(defaults);
   };
@@ -162,6 +166,7 @@ export default function ClaimsPage() {
         unitNumbers: c.unit_ids.map((id) => unitNumberMap[id]).filter(Boolean).join(', '),
         buildings: Array.from(new Set(c.unit_ids.map((id) => buildingMap[id]).filter(Boolean))).join(', '),
         responsibleEngineerName: userMap[c.engineer_id] ?? null,
+        createdByName: userMap[c.created_by as string] ?? null,
       })),
     [claims, unitMap, unitNumberMap, buildingMap, userMap, checkingDefectMap],
   );
@@ -231,6 +236,8 @@ export default function ClaimsPage() {
       registeredOn: { title: 'Дата регистрации претензии', dataIndex: 'registeredOn', width: 120, sorter: (a: any, b: any) => (a.registeredOn ? a.registeredOn.valueOf() : 0) - (b.registeredOn ? b.registeredOn.valueOf() : 0), render: (v: any) => fmt(v) },
       resolvedOn: { title: 'Дата устранения', dataIndex: 'resolvedOn', width: 120, sorter: (a: any, b: any) => (a.resolvedOn ? a.resolvedOn.valueOf() : 0) - (b.resolvedOn ? b.resolvedOn.valueOf() : 0), render: (v: any) => fmt(v) },
       responsibleEngineerName: { title: 'Закрепленный инженер', dataIndex: 'responsibleEngineerName', width: 180, sorter: (a: any, b: any) => (a.responsibleEngineerName || '').localeCompare(b.responsibleEngineerName || '') },
+      createdAt: { title: 'Добавлено', dataIndex: 'createdAt', width: 120, sorter: (a: any, b: any) => (a.createdAt ? a.createdAt.valueOf() : 0) - (b.createdAt ? b.createdAt.valueOf() : 0), render: (v: any) => fmt(v) },
+      createdByName: { title: 'Автор', dataIndex: 'createdByName', width: 160, sorter: (a: any, b: any) => (a.createdByName || '').localeCompare(b.createdByName || '') },
       actions: {
         title: 'Действия',
         key: 'actions',

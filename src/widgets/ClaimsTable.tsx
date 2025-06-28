@@ -71,6 +71,8 @@ export default function ClaimsTable({
       { title: 'Дата регистрации претензии', dataIndex: 'registeredOn', width: 120, sorter: (a, b) => (a.registeredOn ? a.registeredOn.valueOf() : 0) - (b.registeredOn ? b.registeredOn.valueOf() : 0), render: (v) => fmt(v) },
       { title: 'Дата устранения', dataIndex: 'resolvedOn', width: 120, sorter: (a, b) => (a.resolvedOn ? a.resolvedOn.valueOf() : 0) - (b.resolvedOn ? b.resolvedOn.valueOf() : 0), render: (v) => fmt(v) },
       { title: 'Закрепленный инженер', dataIndex: 'responsibleEngineerName', width: 180, sorter: (a, b) => (a.responsibleEngineerName || '').localeCompare(b.responsibleEngineerName || '') },
+      { title: 'Добавлено', dataIndex: 'createdAt', width: 120, sorter: (a, b) => (a.createdAt ? a.createdAt.valueOf() : 0) - (b.createdAt ? b.createdAt.valueOf() : 0), render: (v) => fmt(v) },
+      { title: 'Автор', dataIndex: 'createdByName', width: 160, sorter: (a, b) => (a.createdByName || '').localeCompare(b.createdByName || '') },
       {
         title: 'Действия',
         key: 'actions',
