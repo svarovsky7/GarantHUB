@@ -939,6 +939,13 @@
   },
   {
     "table_name": "letters",
+    "column_name": "created_by",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "letters",
     "column_name": "responsible_user_id",
     "data_type": "uuid",
     "is_nullable": "YES",
