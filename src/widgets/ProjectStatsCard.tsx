@@ -28,28 +28,36 @@ export default function ProjectStatsCard({ projectId }: Props) {
   return (
     <Card title={name} style={{ width: '100%' }}>
       <Row gutter={16}>
-        <Col span={6}>
+        <Col span={8}>
           <Statistic title="Объекты" value={prj?.unitCount ?? 0} />
         </Col>
-        <Col span={6}>
+        <Col span={8}>
+          <Statistic title="Корпусов" value={prj?.buildingCount ?? 0} />
+        </Col>
+        <Col span={8}>
           <Statistic title="Откр. претензий" value={data.claimsOpen} />
-        </Col>
-        <Col span={6}>
-          <Statistic title="Закр. претензий" value={data.claimsClosed} />
-        </Col>
-        <Col span={6}>
-          <Statistic title="Откр. дефектов" value={data.defectsOpen} />
         </Col>
       </Row>
       <Row gutter={16} style={{ marginTop: 16 }}>
-        <Col span={6}>
+        <Col span={8}>
+          <Statistic title="Откр. дефектов" value={data.defectsOpen} />
+        </Col>
+        <Col span={8}>
+          <Statistic title="Закр. претензий" value={data.claimsClosed} />
+        </Col>
+        <Col span={8}>
           <Statistic title="Закр. дефектов" value={data.defectsClosed} />
         </Col>
-        <Col span={6}>
+      </Row>
+      <Row gutter={16} style={{ marginTop: 16 }}>
+        <Col span={8}>
           <Statistic title="Писем" value={prj?.letterCount ?? 0} />
         </Col>
-        <Col span={6}>
-          <Statistic title="Судебных дел" value={data.courtCases} />
+        <Col span={8}>
+          <Statistic title="Откр. судебных дел" value={data.courtCasesOpen} />
+        </Col>
+        <Col span={8}>
+          <Statistic title="Закр. судебных дел" value={data.courtCasesClosed} />
         </Col>
       </Row>
     </Card>

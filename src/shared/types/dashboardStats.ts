@@ -9,6 +9,8 @@ export interface ProjectStats {
   defectTotal: number;
   /** Количество писем */
   letterCount: number;
+  /** Количество корпусов в проекте */
+  buildingCount: number;
 }
 
 export interface DashboardStats {
@@ -22,8 +24,10 @@ export interface DashboardStats {
   defectsOpen: number;
   /** Количество закрытых дефектов */
   defectsClosed: number;
-  /** Количество судебных дел */
-  courtCases: number;
+  /** Количество открытых судебных дел */
+  courtCasesOpen: number;
+  /** Количество закрытых судебных дел */
+  courtCasesClosed: number;
   /** Претензии по объектам */
   claimsByUnit: Array<{ unitName: string; count: number }>;
   /** Претензии по закрепленным инженерам */

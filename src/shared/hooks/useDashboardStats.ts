@@ -5,6 +5,7 @@ import { useVisibleProjects } from '@/entities/project';
 import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useClaimStatuses } from '@/entities/claimStatus';
 import { useDefectStatuses } from '@/entities/defectStatus';
+import { useCourtCaseStatuses } from '@/entities/courtCaseStatus';
 import type { DashboardStats } from '@/shared/types/dashboardStats';
 
 /**
@@ -19,12 +20,14 @@ export function useDashboardStats(pid?: number | null) {
   const projectId = pid ?? useProjectId();
   const { data: claimStatuses = [] } = useClaimStatuses();
   const { data: defectStatuses = [] } = useDefectStatuses();
+  const { data: courtStages = [] } = useCourtCaseStatuses();
 
   const closedClaimId = claimStatuses.find((s) => /закры/i.test(s.name))?.id ?? null;
   const closedDefectId = defectStatuses.find((s) => /закры/i.test(s.name))?.id ?? null;
+  const closedCaseId = courtStages.find((s) => /закры/i.test(s.name))?.id ?? null;
 
   const statsQuery = useQuery<DashboardStats>({
-    queryKey: ['dashboard-stats', projectId, closedClaimId, closedDefectId],
+    queryKey: ['dashboard-stats', projectId, closedClaimId, closedDefectId, closedCaseId],
     enabled: !!projectId,
     queryFn: async () => {
       const project = projects.find((p) => p.id === projectId);
@@ -36,7 +39,29 @@ export function useDashboardStats(pid?: number | null) {
         closed_defect_id: closedDefectId,
       });
       if (error) throw error;
-      return data as DashboardStats;
+
+      const { data: bldData, error: bldErr } = await supabase.rpc('buildings_by_project', { pid: project.id });
+      if (bldErr) throw bldErr;
+      const buildingCount = (bldData || []).filter((b: any) => b.building).length;
+
+      const { count: totalCases } = await supabase
+        .from('court_cases')
+        .select('id', { count: 'exact', head: true })
+        .eq('project_id', project.id);
+      const { count: closedCases } = closedCaseId
+        ? await supabase
+            .from('court_cases')
+            .select('id', { count: 'exact', head: true })
+            .eq('project_id', project.id)
+            .eq('status', closedCaseId)
+        : { count: 0 };
+
+      return {
+        ...(data as DashboardStats),
+        projects: (data as DashboardStats).projects.map((p) => ({ ...p, buildingCount })),
+        courtCasesOpen: (totalCases ?? 0) - (closedCases ?? 0),
+        courtCasesClosed: closedCases ?? 0,
+      } as DashboardStats;
     },
     staleTime: 60_000,
   });

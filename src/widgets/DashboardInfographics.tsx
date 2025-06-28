@@ -93,9 +93,14 @@ export default function DashboardInfographics() {
           <Bar data={sortedDefectEng} xField="count" yField="name" height={200} />
         </Card>
       </Col>
-      <Col span={24}>
+      <Col span={12}>
         <Card>
-          <Statistic title="Судебных дел" value={data.courtCases} />
+          <Statistic title="Откр. судебных дел" value={data.courtCasesOpen} />
+        </Card>
+      </Col>
+      <Col span={12}>
+        <Card>
+          <Statistic title="Закр. судебных дел" value={data.courtCasesClosed} />
         </Card>
       </Col>
     </Row>
