@@ -65,8 +65,6 @@ function mapClaim(r: any): ClaimWithNames {
     pre_trial_claim: r.pre_trial_claim ?? false,
     defect_ids: r.defect_ids ?? [],
     description: r.description ?? '',
-    created_by: r.created_by ?? null,
-    createdAt: toDayjs(r.created_at),
     projectName: r.projects?.name ?? '—',
     statusName: r.statuses?.name ?? '—',
     statusColor: r.statuses?.color ?? null,
@@ -138,7 +136,7 @@ export function useClaims() {
         .select(
           `id, project_id, claim_status_id, claim_no, claimed_on,
           accepted_on, registered_on, resolved_on,
-          engineer_id, owner, case_uid_id, pre_trial_claim, description, created_at, created_by,
+          engineer_id, owner, case_uid_id, pre_trial_claim, description, created_at,
           projects (id, name),
           case_uids(id, uid),
           statuses (id, name, color),
@@ -188,7 +186,7 @@ export function useClaim(id?: number | string) {
         .select(
           `id, project_id, claim_status_id, claim_no, claimed_on,
           accepted_on, registered_on, resolved_on,
-          engineer_id, owner, case_uid_id, pre_trial_claim, description, created_at, created_by,
+          engineer_id, owner, case_uid_id, pre_trial_claim, description, created_at,
           projects (id, name),
           case_uids(id, uid),
           statuses (id, name, color),
@@ -233,7 +231,7 @@ export function useClaimAll(id?: number | string) {
         .select(
           `id, project_id, claim_status_id, claim_no, claimed_on,
           accepted_on, registered_on, resolved_on,
-          engineer_id, owner, case_uid_id, pre_trial_claim, description, created_at, created_by,
+          engineer_id, owner, case_uid_id, pre_trial_claim, description, created_at,
           projects (id, name),
           case_uids(id, uid),
           statuses (id, name, color),
@@ -274,7 +272,7 @@ export function useClaimsAll() {
         .select(
           `id, project_id, claim_status_id, claim_no, claimed_on,
           accepted_on, registered_on, resolved_on,
-          engineer_id, owner, case_uid_id, pre_trial_claim, description, created_at, created_by,
+          engineer_id, owner, case_uid_id, pre_trial_claim, description, created_at,
           projects (id, name),
           statuses (id, name, color),
           claim_units(unit_id),
