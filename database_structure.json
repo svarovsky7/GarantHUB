@@ -575,13 +575,6 @@
   },
   {
     "table_name": "court_cases",
-    "column_name": "created_by",
-    "data_type": "uuid",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
-    "table_name": "court_cases",
     "column_name": "date",
     "data_type": "date",
     "is_nullable": "YES",
@@ -633,6 +626,13 @@
     "table_name": "court_cases",
     "column_name": "case_uid_id",
     "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "court_cases",
+    "column_name": "created_by",
+    "data_type": "uuid",
     "is_nullable": "YES",
     "column_default": null
   },
@@ -946,13 +946,6 @@
   },
   {
     "table_name": "letters",
-    "column_name": "created_by",
-    "data_type": "uuid",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
-    "table_name": "letters",
     "column_name": "responsible_user_id",
     "data_type": "uuid",
     "is_nullable": "YES",
@@ -1006,6 +999,13 @@
     "data_type": "text",
     "is_nullable": "NO",
     "column_default": "'incoming'::text"
+  },
+  {
+    "table_name": "letters",
+    "column_name": "created_by",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
   },
   {
     "table_name": "persons",
