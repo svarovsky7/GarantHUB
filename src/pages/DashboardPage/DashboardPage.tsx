@@ -1,10 +1,8 @@
 import React, { useEffect } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
-import { Card, Typography, List, Skeleton, Space } from 'antd';
+import { Card, Typography, Skeleton, Space } from 'antd';
 import { useSnackbar } from 'notistack';
 import { useVisibleProjects } from '@/entities/project';
 import { useAuthStore } from '@/shared/store/authStore';
-import DashboardInfographics from '@/widgets/DashboardInfographics';
 import ProjectsMultiSelect from '@/features/project/ProjectsMultiSelect';
 import ProjectStatsCard from '@/widgets/ProjectStatsCard';
 
@@ -37,23 +35,6 @@ export default function DashboardPage() {
       {selected.map((id) => (
         <ProjectStatsCard key={id} projectId={id} />
       ))}
-
-      <DashboardInfographics />
-
-      <Card title="Список проектов">
-        {projects.length === 0 ? (
-          <Typography>Проектов пока нет.</Typography>
-        ) : (
-          <List
-            dataSource={projects}
-            renderItem={(p) => (
-              <List.Item>
-                <RouterLink to={`/units?project=${p.id}`}>{p.name}</RouterLink>
-              </List.Item>
-            )}
-          />
-        )}
-      </Card>
     </Space>
   );
 }
