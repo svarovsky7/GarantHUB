@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, Skeleton, Typography, Button } from 'antd';
+import { Modal, Skeleton, Typography, Button, message } from 'antd';
 import { useClaim, useClaimAll, signedUrl, closeDefectsForClaim } from '@/entities/claim';
 import ClaimFormAntdEdit from './ClaimFormAntdEdit';
 import ClaimAttachmentsBlock from './ClaimAttachmentsBlock';
@@ -86,7 +86,7 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
     }
   }, [open]);
 
-  const { data: loadedDefs = [] } = useDefectsWithNames(defectIds);
+  const { data: loadedDefs = [], isLoading: loadingDefs } = useDefectsWithNames(defectIds);
 
   const defectTypeMap = React.useMemo(() => {
     const map: Record<number, string> = {};
@@ -151,6 +151,7 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
       setDefectIds((p) => p.filter((d) => d !== id));
       setRemovedIds((p) => [...p, id]);
     }
+    message.success('Дефект успешно удалён');
   };
 
   const handleAddDefs = (defs: NewDefect[]) => {
@@ -166,6 +167,7 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
       })),
     ]);
     setShowAdd(false);
+    message.success('Дефект успешно добавлен');
   };
 
   const handleChangeDef = (
@@ -202,6 +204,7 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
           })),
         );
         await closeDefectsForClaim(claim.id, claim.claim_status_id ?? null);
+        message.success('Дефект успешно добавлен');
       }
       if (removedIds.length) {
         await supabase
@@ -213,6 +216,7 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
           await deleteDef.mutateAsync(id);
         }
         await closeDefectsForClaim(claim.id, claim.claim_status_id ?? null);
+        message.success('Дефект успешно удалён');
       }
       const updates = Object.entries(editedDefs).map(([id, upd]) => ({
         id: Number(id),
@@ -220,6 +224,7 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
       }));
       if (updates.length) {
         await Promise.all(updates.map((u) => updateDef.mutateAsync(u)));
+        message.success('Дефект успешно обновлён');
       }
       qc.invalidateQueries({ queryKey: ['defects'] });
       qc.invalidateQueries({ queryKey: ['claims'] });
@@ -263,6 +268,11 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
             attachmentsState={attachments}
           />
           <div style={{ marginTop: 16 }}>
+            <div style={{ textAlign: 'right', marginBottom: 8 }}>
+              <Button size="small" type="primary" onClick={() => setShowAdd(true)}>
+                Добавить дефекты
+              </Button>
+            </div>
             {displayDefs.length ? (
               <TicketDefectsEditorTable
                 items={displayDefs}
@@ -273,15 +283,11 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
                 onChange={handleChangeDef}
                 onRemove={handleRemove}
                 onView={setViewDefId}
+                loading={loadingDefs}
               />
             ) : (
               <Typography.Text>Дефекты не указаны</Typography.Text>
             )}
-            <div style={{ textAlign: 'right', marginTop: 8 }}>
-              <Button size="small" type="primary" onClick={() => setShowAdd(true)}>
-                Добавить дефекты
-              </Button>
-            </div>
           </div>
           <ClaimAttachmentsBlock
             remoteFiles={attachments.remoteFiles}
