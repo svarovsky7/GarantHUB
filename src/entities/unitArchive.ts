@@ -42,7 +42,7 @@ export function useUnitArchive(unitId?: number) {
       const { data: unitFiles } = await supabase
         .from('unit_attachments')
         .select(
-          'unit_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description)',
+          'unit_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description, created_at, created_by)',
         )
         .eq('unit_id', unitId);
       result.objectDocs = await Promise.all(
@@ -61,7 +61,7 @@ export function useUnitArchive(unitId?: number) {
         const { data } = await supabase
           .from('claim_attachments')
           .select(
-            'claim_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description)',
+            'claim_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description, created_at, created_by)',
           )
           .in('claim_id', claimIds);
         result.remarkDocs = await Promise.all(
@@ -81,7 +81,7 @@ export function useUnitArchive(unitId?: number) {
         const { data } = await supabase
           .from('defect_attachments')
           .select(
-            'defect_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description)',
+            'defect_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description, created_at, created_by)',
           )
           .in('defect_id', defectIds);
         result.defectDocs = await Promise.all(
@@ -101,7 +101,7 @@ export function useUnitArchive(unitId?: number) {
         const { data } = await supabase
           .from('court_case_attachments')
           .select(
-            'court_case_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description)',
+            'court_case_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description, created_at, created_by)',
           )
           .in('court_case_id', caseIds);
         result.courtDocs = await Promise.all(
