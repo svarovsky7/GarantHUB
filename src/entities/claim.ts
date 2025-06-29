@@ -5,6 +5,7 @@ import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useAuthStore } from '@/shared/store/authStore';
 import { filterByProjects } from '@/shared/utils/projectQuery';
 import { useNotify } from '@/shared/hooks/useNotify';
+import { fetchPaged, fetchByChunks } from '@/shared/api/fetchAll';
 import type { Claim } from '@/shared/types/claim';
 import type { ClaimWithNames } from '@/shared/types/claimWithNames';
 import type { ClaimDeleteParams } from '@/shared/types/claimDelete';
@@ -314,28 +315,30 @@ export function useClaimsSimpleAll() {
   return useQuery<ClaimSimple[]>({
     queryKey: ['claims-simple-all'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from(TABLE)
-        .select('id, project_id');
-      if (error) throw error;
-      const ids = (data ?? []).map((r: any) => r.id) as number[];
+      const data = await fetchPaged<{ id: number; project_id: number }>((from, to) =>
+        supabase.from(TABLE).select('id, project_id').range(from, to),
+      );
+      const ids = data.map((r) => r.id);
 
-      const { data: unitRows } = ids.length
-        ? await supabase.from('claim_units').select('claim_id, unit_id').in('claim_id', ids)
-        : { data: [] };
+      const unitRows = ids.length
+        ? await fetchByChunks(ids, (chunk) =>
+            supabase.from('claim_units').select('claim_id, unit_id').in('claim_id', chunk),
+          )
+        : [];
       const unitMap: Record<number, number[]> = {};
       (unitRows ?? []).forEach((u: any) => {
         if (!unitMap[u.claim_id]) unitMap[u.claim_id] = [];
         unitMap[u.claim_id].push(u.unit_id);
       });
 
-
-      const { data: defectRows } = ids.length
-        ? await supabase
-            .from('claim_defects')
-            .select('claim_id, defect_id, pre_trial_claim')
-            .in('claim_id', ids)
-        : { data: [] };
+      const defectRows = ids.length
+        ? await fetchByChunks(ids, (chunk) =>
+            supabase
+              .from('claim_defects')
+              .select('claim_id, defect_id, pre_trial_claim')
+              .in('claim_id', chunk),
+          )
+        : [];
       const defectMap: Record<number, number[]> = {};
       const claimDefectMap: Record<number, ClaimDefect[]> = {};
       (defectRows ?? []).forEach((d: any) => {
@@ -350,7 +353,7 @@ export function useClaimsSimpleAll() {
       });
 
 
-      return (data ?? []).map((r: any) => ({
+      return data.map((r: any) => ({
         id: r.id,
         project_id: r.project_id,
         unit_ids: unitMap[r.id] ?? [],
@@ -371,30 +374,32 @@ export function useClaimsSimple() {
     queryKey: ['claims-simple', projectId, projectIds.join(',')],
     enabled,
     queryFn: async () => {
-      let q: any = supabase
-        .from(TABLE)
-        .select('id, project_id');
-      q = filterByProjects(q, projectId, projectIds, onlyAssigned);
-      const { data, error } = await q;
-      if (error) throw error;
-      const ids = (data ?? []).map((r: any) => r.id) as number[];
+      const rows = await fetchPaged<{ id: number; project_id: number }>((from, to) => {
+        let qb: any = supabase.from(TABLE).select('id, project_id');
+        qb = filterByProjects(qb, projectId, projectIds, onlyAssigned);
+        return qb.range(from, to);
+      });
+      const ids = rows.map((r) => r.id);
 
-      const { data: unitRows } = ids.length
-        ? await supabase.from('claim_units').select('claim_id, unit_id').in('claim_id', ids)
-        : { data: [] };
+      const unitRows = ids.length
+        ? await fetchByChunks(ids, (chunk) =>
+            supabase.from('claim_units').select('claim_id, unit_id').in('claim_id', chunk),
+          )
+        : [];
       const unitMap: Record<number, number[]> = {};
       (unitRows ?? []).forEach((u: any) => {
         if (!unitMap[u.claim_id]) unitMap[u.claim_id] = [];
         unitMap[u.claim_id].push(u.unit_id);
       });
 
-
-      const { data: defectRows } = ids.length
-        ? await supabase
-            .from('claim_defects')
-            .select('claim_id, defect_id, pre_trial_claim')
-            .in('claim_id', ids)
-        : { data: [] };
+      const defectRows = ids.length
+        ? await fetchByChunks(ids, (chunk) =>
+            supabase
+              .from('claim_defects')
+              .select('claim_id, defect_id, pre_trial_claim')
+              .in('claim_id', chunk),
+          )
+        : [];
       const defectMap: Record<number, number[]> = {};
       const claimDefectMap: Record<number, ClaimDefect[]> = {};
       (defectRows ?? []).forEach((d: any) => {
@@ -407,7 +412,7 @@ export function useClaimsSimple() {
           pre_trial_claim: d.pre_trial_claim ?? false,
         });
       });
-      return (data ?? []).map((r: any) => ({
+      return rows.map((r: any) => ({
         id: r.id,
         project_id: r.project_id,
         unit_ids: unitMap[r.id] ?? [],
