@@ -11,7 +11,7 @@ import {
   Space,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { EyeOutlined, PaperClipOutlined } from '@ant-design/icons';
+import { EyeOutlined, PaperClipOutlined, DownOutlined } from '@ant-design/icons';
 import FixBySelector from '@/shared/ui/FixBySelector';
 import AttachmentEditorTable from '@/shared/ui/AttachmentEditorTable';
 import DefectFilesModal from '@/features/defect/DefectFilesModal';
@@ -223,9 +223,9 @@ export default function TicketDefectsEditorTable({
           const has = (fileMap[record.id] ?? []).length > 0;
           if (!has) return null;
           return (
-            <PaperClipOutlined
-              style={{ cursor: 'pointer' }}
-              rotate={expanded ? 90 : 0}
+            <DownOutlined
+              style={{ cursor: 'pointer', color: '#52c41a', fontWeight: 700 }}
+              rotate={expanded ? 180 : 0}
               onClick={(e) => onExpand(record, e)}
             />
           );
