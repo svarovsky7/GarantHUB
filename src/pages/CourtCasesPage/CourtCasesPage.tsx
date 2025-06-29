@@ -296,6 +296,7 @@ export default function CourtCasesPage() {
       dataIndex: 'id',
       width: 80,
       sorter: (a, b) => a.id - b.id,
+      defaultSortOrder: 'descend',
       render: (id: number) => <span style={{ whiteSpace: 'nowrap' }}>{id}</span>,
     },
     projectName: {

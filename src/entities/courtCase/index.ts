@@ -24,7 +24,8 @@ export function useCourtCases() {
       if (onlyAssigned) {
         query = query.in('project_id', projectIds.length ? projectIds : [-1]);
       }
-      query = query.order('created_at', { ascending: false });
+      // Sort cases by ID in descending order for consistent latest-first view
+      query = query.order('id', { ascending: false });
       const { data, error } = await query;
       if (error) throw error;
 
