@@ -149,7 +149,11 @@ export function useDefectsWithNames(ids?: number[]) {
   });
 }
 
-/** Создать несколько дефектов и вернуть их ID */
+/**
+ * Создать несколько дефектов одним запросом и вернуть массив их идентификаторов.
+ * Возвращаемые ID могут быть строками при большом значении, поэтому
+ * преобразуем их к `number` для единообразия.
+ */
 export function useCreateDefects() {
   const qc = useQueryClient();
   const notify = useNotify();
@@ -166,7 +170,7 @@ export function useCreateDefects() {
         .insert(rows)
         .select('id');
       if (error) throw error;
-      return (data as { id: number }[]).map((d) => d.id);
+      return (data as { id: string | number }[]).map((d) => Number(d.id));
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: [TABLE] }),
     onError: (e) => notify.error(e.message),
