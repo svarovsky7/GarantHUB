@@ -28,6 +28,7 @@ import { useNotify } from '@/shared/hooks/useNotify';
 import DefectEditableTable from '@/widgets/DefectEditableTable';
 import { useCreateDefects, type NewDefect } from '@/entities/defect';
 import type { NewDefectFile } from '@/shared/types/defectFile';
+import type { NewClaimFile } from '@/shared/types/claimFile';
 import { useAuthStore } from '@/shared/store/authStore';
 import type { RoleName } from '@/shared/types/rolePermission';
 import { useRolePermission } from '@/entities/rolePermission';
@@ -76,7 +77,7 @@ export interface ClaimFormValues {
 
 export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefectsForm = true, showAttachments = true }: ClaimFormAntdProps) {
   const [form] = Form.useForm<ClaimFormValues>();
-  const [files, setFiles] = useState<File[]>([]);
+  const [files, setFiles] = useState<NewClaimFile[]>([]);
   const [defectFiles, setDefectFiles] = useState<Record<number, NewDefectFile[]>>({});
   const globalProjectId = useProjectId();
   const projectIdWatch = Form.useWatch('project_id', form) ?? globalProjectId;
@@ -104,9 +105,11 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
   const preTrialWatch = Form.useWatch('pre_trial_claim', form);
 
   const handleDropFiles = (dropped: File[]) => {
-    setFiles((p) => [...p, ...dropped]);
+    setFiles((p) => [...p, ...dropped.map((file) => ({ file, description: '' }))]);
   };
   const removeFile = (idx: number) => setFiles((p) => p.filter((_, i) => i !== idx));
+  const changeFileDesc = (idx: number, d: string) =>
+    setFiles((p) => p.map((f, i) => (i === idx ? { ...f, description: d } : f)));
   const changeDefectFiles = (idx: number, fs: NewDefectFile[]) => {
     setDefectFiles((p) => ({ ...p, [idx]: fs }));
   };
@@ -240,7 +243,11 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
 
     await create.mutateAsync({
       ...rest,
-      attachments: files,
+      attachments: files.map((f) => ({
+        file: f.file,
+        type_id: null,
+        description: f.description,
+      })),
       project_id: values.project_id ?? globalProjectId,
       claimed_on: values.claimed_on ? values.claimed_on.format('YYYY-MM-DD') : null,
       accepted_on: values.accepted_on ? values.accepted_on.format('YYYY-MM-DD') : null,
@@ -383,6 +390,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
           newFiles={files}
           onFiles={handleDropFiles}
           onRemoveNew={removeFile}
+          onDescNew={changeFileDesc}
         />
       )}
       {showDefectsForm && (
