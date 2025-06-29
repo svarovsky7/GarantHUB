@@ -84,6 +84,9 @@ export default function DefectsPage() {
     return map;
   }, [users]);
 
+  const toNum = (v: string | number | null | undefined): number | undefined =>
+    v == null ? undefined : Number(v);
+
   const data: DefectWithInfo[] = useMemo(() => {
     const unitMap = new Map(units.map((u) => [u.id, formatUnitName(u, false)]));
     const buildingMap = new Map(units.map((u) => [u.id, u.building || ""]));
@@ -96,18 +99,19 @@ export default function DefectsPage() {
     >();
     claims.forEach((c: any) => {
       (c.claim_defects || []).forEach((cd: any) => {
-        const arr = claimsMap.get(cd.defect_id) || [];
+        const defectId = toNum(cd.defect_id);
+        const arr = claimsMap.get(defectId!) || [];
         arr.push({
-          id: c.id,
-          unit_ids: c.unit_ids || [],
-          project_id: c.project_id,
+          id: toNum(c.id)!,
+          unit_ids: (c.unit_ids || []).map(toNum).filter(Boolean) as number[],
+          project_id: toNum(c.project_id)!,
           pre_trial_claim: cd.pre_trial_claim ?? false,
         });
-        claimsMap.set(cd.defect_id, arr);
+        claimsMap.set(defectId!, arr);
       });
     });
     return defects.map((d: any) => {
-      const claimLinked = claimsMap.get(d.id) || [];
+      const claimLinked = claimsMap.get(toNum(d.id)!) || [];
       const linked = claimLinked;
       const hasPretrial = linked.some((l) => l.pre_trial_claim);
       const unitIdsFromClaims = Array.from(new Set(linked.flatMap((l) => l.unit_ids)));
