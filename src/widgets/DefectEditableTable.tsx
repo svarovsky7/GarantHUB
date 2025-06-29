@@ -458,12 +458,17 @@ export default function DefectEditableTable({ fields, add, remove, projectId, fi
             if (!files.length) return null;
             return (
               <AttachmentEditorTable
-                newFiles={files.map((f) => ({ file: f.file, mime: f.file.type }))}
+                newFiles={files.map((f) => ({ file: f.file, mime: f.file.type, description: f.description }))}
                 onRemoveNew={(idx) => {
                   const arr = files.filter((_, i) => i !== idx);
                   onFilesChange?.(record.name, arr);
                 }}
+                onDescNew={(idx, d) => {
+                  const arr = files.map((ff, i) => (i === idx ? { ...ff, description: d } : ff));
+                  onFilesChange?.(record.name, arr);
+                }}
                 showMime={false}
+                showDetails
               />
             );
           },

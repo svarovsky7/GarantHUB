@@ -131,7 +131,7 @@ export default function AddCourtCaseFormAntd({
   const [defendantType, setDefendantType] = useState<'person' | 'contractor'>('contractor');
   const [partyRole, setPartyRole] = useState<'plaintiff' | 'defendant' | null>(null);
   const [showClaims, setShowClaims] = useState(false);
-  const { caseFiles, addFiles: addCaseFiles, setType: setCaseFileType, removeFile: removeCaseFile, reset: resetCaseFiles } = useCaseFiles();
+  const { caseFiles, addFiles: addCaseFiles, setType: setCaseFileType, setDescription: setCaseFileDescription, removeFile: removeCaseFile, reset: resetCaseFiles } = useCaseFiles();
 
   useEffect(() => {
     if (showClaims && !(form.getFieldValue('claims')?.length)) {
@@ -184,7 +184,14 @@ export default function AddCourtCaseFormAntd({
 
       let newAtts: { id: number }[] = [];
       if (caseFiles.length) {
-        newAtts = await addCaseAttachments(caseFiles, newCase.id);
+        newAtts = await addCaseAttachments(
+          caseFiles.map((f) => ({
+            file: f.file,
+            type_id: f.type_id,
+            description: f.description,
+          })),
+          newCase.id,
+        );
         await updateCaseMutation.mutateAsync({
           id: newCase.id,
           updates: { attachment_ids: newAtts.map((a) => a.id) },
@@ -448,7 +455,14 @@ export default function AddCourtCaseFormAntd({
                 <Col flex="auto">
                   <span>{f.file.name}</span>
                 </Col>
-                <Col flex="220px" />
+                <Col flex="220px">
+                  <Input
+                    placeholder="Описание"
+                    size="small"
+                    value={f.description}
+                    onChange={(e) => setCaseFileDescription(i, e.target.value)}
+                  />
+                </Col>
                 <Col>
                   <Button type="text" danger onClick={() => removeCaseFile(i)}>
                     Удалить

@@ -159,10 +159,13 @@ export default function DefectFixModal({ defectId, open, onClose }: Props) {
               name: f.name,
               path: f.path,
               mime: f.mime_type,
+              description: f.description,
             }))}
-            newFiles={files.map((f) => ({ file: f.file, mime: f.file.type }))}
+            newFiles={files.map((f) => ({ file: f.file, mime: f.file.type, description: f.description }))}
             onRemoveRemote={removeRemote}
             onRemoveNew={removeFile}
+            onDescNew={(idx, d) => setFiles(files.map((ff, i) => (i === idx ? { ...ff, description: d } : ff)))}
+            showDetails
             getSignedUrl={(p, n) => signedUrl(p, n)}
           />
         </Form.Item>

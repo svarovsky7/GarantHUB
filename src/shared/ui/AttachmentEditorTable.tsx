@@ -13,11 +13,13 @@ interface RemoteFile {
   path: string;
   /** MIME-тип файла */
   mime?: string;
+  description?: string;
 }
 
 interface NewFile {
   file: File;
   mime?: string;
+  description?: string;
 }
 
 interface Props {
@@ -25,6 +27,8 @@ interface Props {
   newFiles?: NewFile[];
   onRemoveRemote?: (id: string) => void;
   onRemoveNew?: (idx: number) => void;
+  onDescRemote?: (id: string, d: string) => void;
+  onDescNew?: (idx: number, d: string) => void;
   getSignedUrl?: (path: string, name: string) => Promise<string>;
   /** Показывать колонку MIME */
   showMime?: boolean;
@@ -44,6 +48,8 @@ export default function AttachmentEditorTable({
                                                 newFiles = [],
                                                 onRemoveRemote,
                                                 onRemoveNew,
+                                                onDescRemote,
+                                                onDescNew,
                                                 getSignedUrl,
                                                 showMime = true,
                                                 showDetails = false,
@@ -81,6 +87,7 @@ export default function AttachmentEditorTable({
     mime?: string;
     file?: File;
     path?: string;
+    description?: string;
     isRemote: boolean;
   }
 
@@ -91,6 +98,7 @@ export default function AttachmentEditorTable({
       name: f.name,
       mime: f.mime,
       path: f.path,
+      description: f.description,
       isRemote: true,
     })),
     ...newFiles.map<Row>((f, i) => ({
@@ -98,6 +106,7 @@ export default function AttachmentEditorTable({
       name: f.file.name,
       mime: f.mime,
       file: f.file,
+      description: f.description,
       isRemote: false,
     })),
   ];
@@ -122,7 +131,18 @@ export default function AttachmentEditorTable({
           title: 'Подробности',
           dataIndex: 'details',
           width: 200,
-          render: () => <Input placeholder="Подробности" size="small" />,
+          render: (_: unknown, row) => (
+            <Input
+              placeholder="Описание"
+              size="small"
+              value={row.description}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (row.isRemote && row.id) onDescRemote?.(row.id, val);
+                else if (!row.isRemote) onDescNew?.(Number(row.key.split('-')[1]), val);
+              }}
+            />
+          ),
         } as ColumnsType<Row>[number]]
       : []),
     ...(getLink

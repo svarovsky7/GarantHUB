@@ -123,12 +123,13 @@ export async function addCaseAttachments(files, caseId) {
         mime_type: u.type,
         original_name: files[idx].file.name,
         storage_path: u.path,
+        description: files[idx].description ?? null,
     }));
 
     const { data, error } = await supabase
         .from('attachments')
         .insert(rows)
-        .select('id, storage_path, file_url:path, file_type:mime_type, original_name');
+        .select('id, storage_path, file_url:path, file_type:mime_type, original_name, description');
 
     if (error) throw error;
     return data ?? [];
@@ -149,12 +150,13 @@ export async function addLetterAttachments(files, letterId) {
         mime_type: u.type,
         original_name: files[idx].file.name,
         storage_path: u.path,
+        description: files[idx].description ?? null,
     }));
 
     const { data, error } = await supabase
         .from('attachments')
         .insert(rows)
-        .select('id, storage_path, file_url:path, file_type:mime_type, original_name');
+        .select('id, storage_path, file_url:path, file_type:mime_type, original_name, description');
 
     if (error) throw error;
     return data ?? [];
@@ -177,12 +179,13 @@ export async function addTicketAttachments(files, projectId, ticketId) {
         mime_type: u.type,
         original_name: files[idx].file.name,
         storage_path: u.path,
+        description: files[idx].description ?? null,
     }));
 
     const { data, error } = await supabase
         .from('attachments')
         .insert(rows)
-        .select('id, storage_path, file_url:path, file_type:mime_type, original_name');
+        .select('id, storage_path, file_url:path, file_type:mime_type, original_name, description');
 
     if (error) throw error;
     return data ?? [];
@@ -204,12 +207,13 @@ export async function addClaimAttachments(files, claimId) {
         mime_type: u.type,
         original_name: files[idx].file.name,
         storage_path: u.path,
+        description: files[idx].description ?? null,
     }));
 
     const { data, error } = await supabase
         .from('attachments')
         .insert(rows)
-        .select('id, storage_path, file_url:path, file_type:mime_type, original_name');
+        .select('id, storage_path, file_url:path, file_type:mime_type, original_name, description');
 
     if (error) throw error;
     return data ?? [];
@@ -231,12 +235,13 @@ export async function addDefectAttachments(files, defectId) {
         mime_type: u.type,
         original_name: files[idx].file.name,
         storage_path: u.path,
+        description: files[idx].description ?? null,
     }));
 
     const { data, error } = await supabase
         .from('attachments')
         .insert(rows)
-        .select('id, storage_path, file_url:path, file_type:mime_type, original_name');
+        .select('id, storage_path, file_url:path, file_type:mime_type, original_name, description');
 
     if (error) throw error;
     return data ?? [];
@@ -250,7 +255,7 @@ export async function getAttachmentsByIds(ids) {
     if (!ids.length) return [];
     const { data, error } = await supabase
         .from('attachments')
-        .select('id, storage_path, file_url:path, file_type:mime_type, original_name')
+        .select('id, storage_path, file_url:path, file_type:mime_type, original_name, description')
         .in('id', ids);
 
     if (error) throw error;

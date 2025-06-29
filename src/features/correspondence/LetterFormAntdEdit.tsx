@@ -400,10 +400,17 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
             name: f.original_name ?? f.name,
             path: f.path,
             mime: f.mime_type,
+            description: f.description,
           }))}
-          newFiles={attachments.newFiles.map((f) => ({ file: f.file, mime: f.file.type }))}
+          newFiles={attachments.newFiles.map((f) => ({
+            file: f.file,
+            mime: f.file.type,
+            description: f.description,
+          }))}
           onRemoveRemote={attachments.removeRemote}
           onRemoveNew={attachments.removeNew}
+          onDescNew={(idx, d) => attachments.setDescription(idx, d)}
+          showDetails
           getSignedUrl={(path, name) => signedUrl(path, name)}
         />
       </Form.Item>

@@ -41,7 +41,7 @@ export interface AddLetterFormData {
   unit_ids: number[];
   /** Статус письма */
   status_id: number | null;
-  attachments: { file: File }[];
+  attachments: { file: File; description?: string }[];
   parent_id: string | null;
 }
 
@@ -59,7 +59,7 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
   const senderValue = Form.useWatch('sender', form);
   const receiverValue = Form.useWatch('receiver', form);
 
-  const { files, addFiles, removeFile, reset: resetFiles } = useLetterFiles();
+  const { files, addFiles, setDescription, removeFile, reset: resetFiles } = useLetterFiles();
   const [senderType, setSenderType] = React.useState<'person' | 'contractor'>('contractor');
   const [receiverType, setReceiverType] = React.useState<'person' | 'contractor'>('contractor');
   const [personModal, setPersonModal] = React.useState<{ target: 'sender' | 'receiver'; data?: any } | null>(null);
@@ -125,7 +125,7 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
       ...values,
       date: values.date ?? dayjs(),
       status_id: statuses[0]?.id ?? null,
-      attachments: files,
+      attachments: files.map((f) => ({ file: f.file, description: f.description })),
       parent_id: parentId,
     });
     form.resetFields();
@@ -357,8 +357,15 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
         <Form.Item label="Вложения">
           <input type="file" multiple onChange={handleFiles} />
           {files.map((f, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', marginTop: 4 }}>
+              <div key={i} style={{ display: 'flex', alignItems: 'center', marginTop: 4, gap: 8 }}>
                 <span style={{ marginRight: 8 }}>{f.file.name}</span>
+                <Input
+                  placeholder="Описание"
+                  size="small"
+                  value={f.description}
+                  onChange={(e) => setDescription(i, e.target.value)}
+                  style={{ width: 160 }}
+                />
                 <Button type="text" danger onClick={() => removeFile(i)}>
                   Удалить
                 </Button>

@@ -224,7 +224,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
       const filesFor = defectFiles[i] ?? [];
       if (filesFor.length) {
         const uploaded = await addDefectAttachments(
-          filesFor.map((f) => ({ file: f.file, type_id: null })),
+          filesFor.map((f) => ({ file: f.file, type_id: null, description: f.description })),
           defectIds[i],
         );
         if (uploaded.length) {

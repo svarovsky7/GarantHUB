@@ -347,10 +347,17 @@ export default function CourtCaseFormAntdEdit({
             name: f.name,
             path: f.path,
             mime: f.mime_type,
+            description: f.description,
           }))}
-          newFiles={attachments.newFiles.map((f) => ({ file: f.file, mime: f.file.type }))}
+          newFiles={attachments.newFiles.map((f) => ({
+            file: f.file,
+            mime: f.file.type,
+            description: f.description,
+          }))}
           onRemoveRemote={(id) => attachments.removeRemote(id)}
           onRemoveNew={(idx) => attachments.removeNew(idx)}
+          onDescNew={(idx, d) => attachments.setDescription(idx, d)}
+          showDetails
           getSignedUrl={(path, name) => signedUrl(path, name)}
         />
       </Form.Item>

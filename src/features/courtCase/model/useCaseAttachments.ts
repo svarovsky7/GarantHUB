@@ -32,6 +32,7 @@ export function useCaseAttachments(options: {
         path: storagePath ?? '',
         url: fileUrl,
         mime_type: fileType,
+        description: (file as any).description ?? null,
       } as RemoteCaseFile;
     }).filter(Boolean) as RemoteCaseFile[];
     setRemoteFiles(attachmentsWithType);
@@ -39,7 +40,7 @@ export function useCaseAttachments(options: {
 
   const addFiles = useCallback(
     (files: File[]) => {
-      setNewFiles((p) => [...p, ...files.map((f) => ({ file: f }))]);
+      setNewFiles((p) => [...p, ...files.map((f) => ({ file: f, description: '' }))]);
     },
     [],
   );
@@ -55,6 +56,9 @@ export function useCaseAttachments(options: {
   }, []);
   const changeRemoteType = (_id: string, _type: number | null) => {};
   const changeNewType = (_idx: number, _type: number | null) => {};
+  const setDescription = useCallback((idx: number, val: string) => {
+    setNewFiles((p) => p.map((f, i) => (i === idx ? { ...f, description: val } : f)));
+  }, []);
   const appendRemote = useCallback((files: RemoteCaseFile[]) => {
     setRemoteFiles((p) => [...p, ...files]);
   }, []);
@@ -77,6 +81,7 @@ export function useCaseAttachments(options: {
     removeRemote,
     changeRemoteType: (_id: string, _t: number | null) => {},
     changeNewType: (_idx: number, _t: number | null) => {},
+    setDescription,
     appendRemote,
     markPersisted,
     attachmentsChanged,

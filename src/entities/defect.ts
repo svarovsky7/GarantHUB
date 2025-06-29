@@ -73,7 +73,7 @@ export function useDefect(id?: number) {
       const { data: attachRows, error: attachErr } = await supabase
         .from('defect_attachments')
         .select(
-          'attachments(id, storage_path, file_url:path, file_type:mime_type, original_name)'
+          'attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description)'
         )
         .eq('defect_id', id as number);
       if (attachErr) throw attachErr;
@@ -305,7 +305,14 @@ export function useFixDefect() {
       }
       let uploaded: any[] = [];
       if (attachments.length) {
-        uploaded = await addDefectAttachments(attachments, id);
+        uploaded = await addDefectAttachments(
+          attachments.map((a: any) => ({
+            file: a.file,
+            type_id: a.type_id ?? null,
+            description: a.description,
+          })),
+          id,
+        );
         const rows = uploaded.map((u) => ({
           defect_id: id,
           attachment_id: u.id,
@@ -505,7 +512,7 @@ export function useAddDefectAttachments() {
   return useMutation({
     mutationFn: async ({ defectId, files }: { defectId: number; files: File[] }) => {
       const uploaded = await addDefectAttachments(
-        files.map((f) => ({ file: f, type_id: null })),
+        files.map((f) => ({ file: f, type_id: null, description: undefined })),
         defectId,
       );
       if (uploaded.length) {

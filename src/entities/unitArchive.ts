@@ -19,6 +19,7 @@ function mapFile(a: any, entityId?: number): ArchiveFile {
     name,
     path: a.file_url,
     mime: a.file_type,
+    description: a.description ?? null,
     entityId,
   };
 }
@@ -45,7 +46,7 @@ export function useUnitArchive(unitId?: number) {
         const { data } = await supabase
           .from('letter_attachments')
           .select(
-            'letter_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name)',
+            'letter_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description)',
           )
           .in('letter_id', letterIds);
         result.objectDocs = (data ?? []).map((r: any) =>
@@ -62,7 +63,7 @@ export function useUnitArchive(unitId?: number) {
         const { data } = await supabase
           .from('claim_attachments')
           .select(
-            'claim_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name)',
+            'claim_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description)',
           )
           .in('claim_id', claimIds);
         result.remarkDocs = (data ?? []).map((r: any) =>
@@ -79,7 +80,7 @@ export function useUnitArchive(unitId?: number) {
         const { data } = await supabase
           .from('defect_attachments')
           .select(
-            'defect_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name)',
+            'defect_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description)',
           )
           .in('defect_id', defectIds);
         result.defectDocs = (data ?? []).map((r: any) =>
@@ -96,7 +97,7 @@ export function useUnitArchive(unitId?: number) {
         const { data } = await supabase
           .from('court_case_attachments')
           .select(
-            'court_case_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name)',
+            'court_case_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description)',
           )
           .in('court_case_id', caseIds);
         result.courtDocs = (data ?? []).map((r: any) =>
