@@ -230,6 +230,7 @@ export default function DefectsPage() {
         dataIndex: "id",
         width: 80,
         sorter: (a: DefectWithInfo, b: DefectWithInfo) => a.id - b.id,
+        defaultSortOrder: 'descend' as const,
       },
       claims: {
         title: "ID претензии",

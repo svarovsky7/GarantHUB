@@ -51,6 +51,7 @@ export default function DefectsTable({
       dataIndex: "id",
       width: 80,
       sorter: (a, b) => a.id - b.id,
+      defaultSortOrder: 'descend' as const,
     },
     {
       title: "ID претензии",
