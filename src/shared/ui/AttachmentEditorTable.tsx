@@ -1,4 +1,5 @@
 import React from 'react';
+import dayjs from 'dayjs';
 import { Table, Button, Space, Tooltip, Input } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
@@ -20,6 +21,10 @@ interface RemoteFile {
     size?: number | null;
     /** Идентификатор связанной сущности */
     entityId?: number;
+    /** Дата создания файла */
+    createdAt?: string | null;
+    /** Имя автора создания */
+    createdByName?: string | null;
 }
 
 interface NewFile {
@@ -56,6 +61,10 @@ interface Props {
     changedMap?: Record<string, boolean>;
     /** Показывать заголовок таблицы */
     showHeader?: boolean;
+    /** Показывать дату создания */
+    showCreatedAt?: boolean;
+    /** Показывать автора создания */
+    showCreatedBy?: boolean;
 }
 
 /**
@@ -79,6 +88,8 @@ export default function AttachmentEditorTable({
   showSize = false,
   changedMap,
   showHeader = false,
+  showCreatedAt = false,
+  showCreatedBy = false,
 }: Props) {
     const [cache, setCache] = React.useState<Record<string, string>>({});
 
@@ -131,6 +142,8 @@ export default function AttachmentEditorTable({
         description?: string;
         size?: number | null;
         entityId?: number;
+        createdAt?: string | null;
+        createdByName?: string | null;
         isRemote: boolean;
     }
 
@@ -144,6 +157,8 @@ export default function AttachmentEditorTable({
             description: f.description,
             size: f.size ?? null,
             entityId: f.entityId,
+            createdAt: f.createdAt ?? null,
+            createdByName: f.createdByName ?? null,
             isRemote: true,
         })),
         ...newFiles.map<Row>((f, i) => ({
@@ -211,6 +226,27 @@ export default function AttachmentEditorTable({
                         />
                     ),
                 } as ColumnsType<Row>[number],
+            ]
+            : []),
+        ...(showCreatedAt
+            ? [
+                {
+                    title: 'Создан',
+                    dataIndex: 'createdAt',
+                    width: 160,
+                    render: (v: string | null) =>
+                        v ? dayjs(v).format('DD.MM.YYYY HH:mm') : '—',
+                } as ColumnsType<Row>[number]
+            ]
+            : []),
+        ...(showCreatedBy
+            ? [
+                {
+                    title: 'Автор',
+                    dataIndex: 'createdByName',
+                    width: 160,
+                    render: (v: string | null) => v || '—',
+                } as ColumnsType<Row>[number]
             ]
             : []),
         ...(showLink
