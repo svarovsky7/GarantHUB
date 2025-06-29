@@ -311,7 +311,13 @@ export default function CorrespondencePage() {
           );
         },
       },
-      id: { title: 'ID', dataIndex: 'id', width: 80 },
+      id: {
+        title: 'ID',
+        dataIndex: 'id',
+        width: 80,
+        sorter: (a: any, b: any) => Number(a.id) - Number(b.id),
+        defaultSortOrder: 'descend' as const,
+      },
       type: {
         title: 'Тип',
         dataIndex: 'type',
