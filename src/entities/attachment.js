@@ -262,4 +262,63 @@ export async function getAttachmentsByIds(ids) {
     return data ?? [];
 }
 
+export async function addUnitAttachments(files, unitId) {
+    const uploaded = await Promise.all(
+        files.map(({ file }) => upload(file, `units/${unitId}`)),
+    );
+
+    const rows = uploaded.map((u, idx) => ({
+        path: u.url,
+        mime_type: u.type,
+        original_name: files[idx].file.name,
+        storage_path: u.path,
+        description: files[idx].description ?? null,
+    }));
+
+    const { data, error } = await supabase
+        .from('attachments')
+        .insert(rows)
+        .select('id, storage_path, file_url:path, file_type:mime_type, original_name, description');
+
+    if (error) throw error;
+
+    const ids = (data ?? []).map((r) => r.id);
+    if (ids.length) {
+        const linkRows = ids.map((id) => ({ unit_id: unitId, attachment_id: id }));
+        const { error: linkErr } = await supabase.from('unit_attachments').insert(linkRows);
+        if (linkErr) throw linkErr;
+    }
+    return data ?? [];
+}
+
+export async function updateAttachmentDescription(id, description) {
+    const { error } = await supabase
+        .from('attachments')
+        .update({ description })
+        .eq('id', id);
+    if (error) throw error;
+}
+
+export async function signedUrl(path, filename = '') {
+    const { data, error } = await supabase.storage
+        .from(ATTACH_BUCKET)
+        .createSignedUrl(path, 60, { download: filename || undefined });
+    if (error) throw error;
+    return data.signedUrl;
+}
+
+export async function getFileSize(path) {
+    try {
+        const { data, error } = await supabase.storage
+            .from(ATTACH_BUCKET)
+            .createSignedUrl(path, 60);
+        if (error) throw error;
+        const res = await fetch(data.signedUrl, { method: 'HEAD' });
+        const len = res.headers.get('content-length');
+        return len ? Number(len) : null;
+    } catch {
+        return null;
+    }
+}
+
 export { ATTACH_BUCKET };
