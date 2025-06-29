@@ -24,6 +24,7 @@ export default function ObjectArchivePage() {
   const [remarkFiles, setRemarkFiles] = React.useState<ArchiveFile[]>([]);
   const [defectFiles, setDefectFiles] = React.useState<ArchiveFile[]>([]);
   const [courtFiles, setCourtFiles] = React.useState<ArchiveFile[]>([]);
+  const [letterFiles, setLetterFiles] = React.useState<ArchiveFile[]>([]);
   const descInit = React.useRef<Record<string, string | null>>({});
   const [changed, setChanged] = React.useState<Record<string, string>>({});
 
@@ -33,8 +34,9 @@ export default function ObjectArchivePage() {
     setRemarkFiles(data.remarkDocs);
     setDefectFiles(data.defectDocs);
     setCourtFiles(data.courtDocs);
+    setLetterFiles(data.letterDocs);
     const map: Record<string, string | null> = {};
-    [...data.objectDocs, ...data.remarkDocs, ...data.defectDocs, ...data.courtDocs].forEach((f) => {
+    [...data.objectDocs, ...data.remarkDocs, ...data.defectDocs, ...data.courtDocs, ...data.letterDocs].forEach((f) => {
       map[f.id] = f.description ?? '';
     });
     descInit.current = map;
@@ -70,6 +72,9 @@ export default function ObjectArchivePage() {
   const handleDescCourt = React.useCallback((id: string, d: string) => {
     setDescHelper(setCourtFiles, id, d);
   }, []);
+  const handleDescLetter = React.useCallback((id: string, d: string) => {
+    setDescHelper(setLetterFiles, id, d);
+  }, []);
 
   const handleDownloadArchive = async () => {
     const files = [
@@ -77,6 +82,7 @@ export default function ObjectArchivePage() {
       ...remarkFiles,
       ...defectFiles,
       ...courtFiles,
+      ...letterFiles,
       ...newObjectFiles.map((f) => ({ id: '', name: f.file.name, path: '', file: f.file })),
     ];
     const sources = await Promise.all(
@@ -163,7 +169,8 @@ export default function ObjectArchivePage() {
             showLink
             changedMap={changed}
             getSignedUrl={(p, n) => signedUrl(p, n)}
-            getLink={(f) => `/claims?id=${f.entityId}`}
+            getLink={(f) => `/claims?claim_id=${f.entityId}`}
+            getLinkLabel={(f) => `Замечание №${f.entityId}`}
           />
           <Divider />
           <Typography.Title level={4}>Документы по дефектам</Typography.Title>
@@ -177,7 +184,8 @@ export default function ObjectArchivePage() {
             showLink
             changedMap={changed}
             getSignedUrl={(p, n) => signedUrl(p, n)}
-            getLink={(f) => `/defects?id=${f.entityId}`}
+            getLink={(f) => `/defects?defect_id=${f.entityId}`}
+            getLinkLabel={(f) => `Дефект №${f.entityId}`}
           />
           <Divider />
           <Typography.Title level={4}>Документы по судебным делам</Typography.Title>
@@ -191,7 +199,23 @@ export default function ObjectArchivePage() {
             showLink
             changedMap={changed}
             getSignedUrl={(p, n) => signedUrl(p, n)}
-            getLink={(f) => `/court-cases?id=${f.entityId}`}
+            getLink={(f) => `/court-cases?case_id=${f.entityId}`}
+            getLinkLabel={(f) => `Судебное дело №${f.entityId}`}
+          />
+          <Divider />
+          <Typography.Title level={4}>Документы из писем</Typography.Title>
+          <AttachmentEditorTable
+            remoteFiles={letterFiles}
+            onDescRemote={handleDescLetter}
+            showMime={false}
+            showDetails
+            showSize
+            showHeader
+            showLink
+            changedMap={changed}
+            getSignedUrl={(p, n) => signedUrl(p, n)}
+            getLink={(f) => `/correspondence?letter_id=${f.entityId}`}
+            getLinkLabel={(f) => `Письмо №${f.entityId}`}
           />
           <Divider />
           <Button type="primary" disabled={!newObjectFiles.length && !Object.keys(changed).length} onClick={handleSave}>
