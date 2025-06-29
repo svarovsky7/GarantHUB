@@ -847,6 +847,20 @@
     "column_default": null
   },
   {
+    "table_name": "unit_attachments",
+    "column_name": "unit_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "unit_attachments",
+    "column_name": "attachment_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
     "table_name": "letter_links",
     "column_name": "parent_id",
     "data_type": "bigint",

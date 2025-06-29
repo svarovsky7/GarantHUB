@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/shared/api/supabaseClient';
+import { getFileSize } from '@/entities/attachment';
 import type { ArchiveFile, UnitArchive } from '@/shared/types/unitArchive';
 
 function mapFile(a: any, entityId?: number): ArchiveFile {
@@ -17,9 +18,10 @@ function mapFile(a: any, entityId?: number): ArchiveFile {
   return {
     id: String(a.id),
     name,
-    path: a.file_url,
+    path: a.storage_path,
     mime: a.file_type,
     description: a.description ?? null,
+    size: null,
     entityId,
   };
 }
@@ -37,22 +39,18 @@ export function useUnitArchive(unitId?: number) {
       };
       if (!unitId) return result;
 
-      const { data: letterRows } = await supabase
-        .from('letter_units')
-        .select('letter_id')
+      const { data: unitFiles } = await supabase
+        .from('unit_attachments')
+        .select(
+          'unit_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description)',
+        )
         .eq('unit_id', unitId);
-      const letterIds = (letterRows ?? []).map((r: any) => r.letter_id);
-      if (letterIds.length) {
-        const { data } = await supabase
-          .from('letter_attachments')
-          .select(
-            'letter_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description)',
-          )
-          .in('letter_id', letterIds);
-        result.objectDocs = (data ?? []).map((r: any) =>
-          mapFile(r.attachments, r.letter_id),
-        );
-      }
+      result.objectDocs = await Promise.all(
+        (unitFiles ?? []).map(async (r: any) => {
+          const file = mapFile(r.attachments, r.unit_id);
+          return { ...file, size: await getFileSize(file.path) };
+        }),
+      );
 
       const { data: claimRows } = await supabase
         .from('claim_units')
@@ -66,8 +64,11 @@ export function useUnitArchive(unitId?: number) {
             'claim_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description)',
           )
           .in('claim_id', claimIds);
-        result.remarkDocs = (data ?? []).map((r: any) =>
-          mapFile(r.attachments, r.claim_id),
+        result.remarkDocs = await Promise.all(
+          (data ?? []).map(async (r: any) => {
+            const f = mapFile(r.attachments, r.claim_id);
+            return { ...f, size: await getFileSize(f.path) };
+          }),
         );
       }
 
@@ -83,8 +84,11 @@ export function useUnitArchive(unitId?: number) {
             'defect_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description)',
           )
           .in('defect_id', defectIds);
-        result.defectDocs = (data ?? []).map((r: any) =>
-          mapFile(r.attachments, r.defect_id),
+        result.defectDocs = await Promise.all(
+          (data ?? []).map(async (r: any) => {
+            const f = mapFile(r.attachments, r.defect_id);
+            return { ...f, size: await getFileSize(f.path) };
+          }),
         );
       }
 
@@ -100,8 +104,11 @@ export function useUnitArchive(unitId?: number) {
             'court_case_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description)',
           )
           .in('court_case_id', caseIds);
-        result.courtDocs = (data ?? []).map((r: any) =>
-          mapFile(r.attachments, r.court_case_id),
+        result.courtDocs = await Promise.all(
+          (data ?? []).map(async (r: any) => {
+            const f = mapFile(r.attachments, r.court_case_id);
+            return { ...f, size: await getFileSize(f.path) };
+          }),
         );
       }
 
