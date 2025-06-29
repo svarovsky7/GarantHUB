@@ -1,6 +1,5 @@
 import React from 'react';
 import { Table, Button, Space, Tooltip, Select, Input } from 'antd';
-import { formatFileSize } from '@/shared/utils/formatFileSize';
 import type { ColumnsType } from 'antd/es/table';
 import {
   FileOutlined,
@@ -15,14 +14,12 @@ interface RemoteFile {
   /** MIME-тип файла */
   mime?: string;
   description?: string;
-  size?: number | null;
 }
 
 interface NewFile {
   file: File;
   mime?: string;
   description?: string;
-  size?: number;
 }
 
 interface Props {
@@ -37,8 +34,6 @@ interface Props {
   showMime?: boolean;
   /** Показывать поле подробностей */
   showDetails?: boolean;
-  /** Показывать размер файла */
-  showSize?: boolean;
   /** Получить ссылку для просмотра сущности */
   getLink?: (file: RemoteFile) => string | undefined;
 }
@@ -58,7 +53,6 @@ export default function AttachmentEditorTable({
                                                 getSignedUrl,
                                                 showMime = true,
                                                 showDetails = false,
-                                                showSize = false,
                                                 getLink,
                                               }: Props) {
   const [cache, setCache] = React.useState<Record<string, string>>({});
@@ -94,7 +88,6 @@ export default function AttachmentEditorTable({
     file?: File;
     path?: string;
     description?: string;
-    size?: number;
     isRemote: boolean;
   }
 
@@ -106,7 +99,6 @@ export default function AttachmentEditorTable({
       mime: f.mime,
       path: f.path,
       description: f.description,
-      size: f.size ?? undefined,
       isRemote: true,
     })),
     ...newFiles.map<Row>((f, i) => ({
@@ -115,7 +107,6 @@ export default function AttachmentEditorTable({
       mime: f.mime,
       file: f.file,
       description: f.description,
-      size: f.file.size,
       isRemote: false,
     })),
   ];
@@ -132,14 +123,6 @@ export default function AttachmentEditorTable({
       width: 200,
       ellipsis: true,
     },
-    ...(showSize
-      ? [{
-          title: 'Размер',
-          dataIndex: 'size',
-          width: 100,
-          render: (v: number | undefined) => (v ? formatFileSize(v) : ''),
-        } as ColumnsType<Row>[number]]
-      : []),
     ...(showMime
       ? [{ title: 'MIME', dataIndex: 'mime', width: 200 } as ColumnsType<Row>[number]]
       : []),
