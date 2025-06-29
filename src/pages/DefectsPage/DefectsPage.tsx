@@ -95,19 +95,23 @@ export default function DefectsPage() {
       { id: number; unit_ids: number[]; project_id: number; pre_trial_claim: boolean }[]
     >();
     claims.forEach((c: any) => {
+      const claimId = Number(c.id);
+      const unitIds = (c.unit_ids || []).map(Number);
       (c.claim_defects || []).forEach((cd: any) => {
-        const arr = claimsMap.get(cd.defect_id) || [];
+        const defectId = Number(cd.defect_id);
+        const arr = claimsMap.get(defectId) || [];
         arr.push({
-          id: c.id,
-          unit_ids: c.unit_ids || [],
-          project_id: c.project_id,
+          id: claimId,
+          unit_ids: unitIds,
+          project_id: Number(c.project_id),
           pre_trial_claim: cd.pre_trial_claim ?? false,
         });
-        claimsMap.set(cd.defect_id, arr);
+        claimsMap.set(defectId, arr);
       });
     });
     return defects.map((d: any) => {
-      const claimLinked = claimsMap.get(d.id) || [];
+      const id = Number(d.id);
+      const claimLinked = claimsMap.get(id) || [];
       const linked = claimLinked;
       const hasPretrial = linked.some((l) => l.pre_trial_claim);
       const unitIdsFromClaims = Array.from(new Set(linked.flatMap((l) => l.unit_ids)));
@@ -145,6 +149,9 @@ export default function DefectsPage() {
       }
       return {
         ...d,
+        id,
+        project_id: d.project_id != null ? Number(d.project_id) : null,
+        unit_id: d.unit_id != null ? Number(d.unit_id) : null,
         claimIds: claimLinked.map((l) => l.id),
         hasPretrialClaim: hasPretrial,
         createdByName: userMap.get(d.created_by as string) ?? null,
