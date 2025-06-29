@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/shared/api/supabaseClient';
+import { fetchAllRows } from '@/shared/api/fetchAllSupabase';
 import { useNotify } from '@/shared/hooks/useNotify';
 import { addDefectAttachments, getAttachmentsByIds, ATTACH_BUCKET } from '@/entities/attachment';
 import { useAuthStore } from '@/shared/store/authStore';
@@ -36,15 +37,15 @@ export function useDefects() {
   return useQuery<DefectRecord[]>({
     queryKey: [TABLE],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const baseQuery = supabase
         .from(TABLE)
         .select(
           'id, description, type_id, status_id, project_id, unit_id, created_by, updated_by, updated_at, brigade_id, contractor_id, is_warranty, received_at, fixed_at, fixed_by, created_at,' +
-          ' defect_type:defect_types!fk_defects_type(id,name), defect_status:statuses!fk_defects_status(id,name,color), fixed_by_user:profiles!fk_defects_fixed_by(id,name)'
+            ' defect_type:defect_types!fk_defects_type(id,name), defect_status:statuses!fk_defects_status(id,name,color), fixed_by_user:profiles!fk_defects_fixed_by(id,name)'
         )
         .order('id');
-      if (error) throw error;
-      return data as unknown as DefectRecord[];
+      const rows = await fetchAllRows(baseQuery);
+      return rows as unknown as DefectRecord[];
     },
     staleTime: 5 * 60_000,
   });
