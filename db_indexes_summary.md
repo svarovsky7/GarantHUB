@@ -87,10 +87,6 @@
 ## letter_attachments
 - `letter_attachments_pkey` - `UNIQUE letter_id, attachment_id`
 
-## unit_attachments
-- `unit_attachments_pkey` - `UNIQUE unit_id, attachment_id`
-- `idx_unit_attachments_file` - `attachment_id`
-
 ## letter_links
 - `idx_letter_links_parent` - `parent_id`
 - `letter_links_id_key` - `UNIQUE id`

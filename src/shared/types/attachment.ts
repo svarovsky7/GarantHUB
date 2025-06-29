@@ -14,6 +14,4 @@ export interface Attachment {
   uploaded_by: string | null;
   /** Когда обновлён */
   updated_at: string | null;
-  /** Размер файла в байтах */
-  file_size: number | null;
 }

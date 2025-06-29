@@ -14,6 +14,4 @@ export interface ArchiveFile {
   description?: string | null;
   /** Идентификатор связанной сущности */
   entityId?: number;
-  /** Размер файла в байтах */
-  size?: number | null;
 }
