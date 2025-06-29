@@ -10,10 +10,6 @@ export interface Attachment {
   original_name: string | null;
   /** Описание файла */
   description: string | null;
-  /** Кто добавил файл */
-  created_by: string | null;
-  /** Когда добавлен */
-  created_at: string | null;
   /** Кто загрузил файл */
   uploaded_by: string | null;
   /** Когда обновлён */
