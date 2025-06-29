@@ -44,6 +44,10 @@ interface Props {
     showLink?: boolean;
     /** Получить ссылку для просмотра сущности */
     getLink?: (file: RemoteFile) => string | undefined;
+    /** Текст ссылки */
+    getLinkLabel?: (file: RemoteFile) => React.ReactNode;
+    /** Обработчик клика по ссылке. Если указан, getLink не используется */
+    onOpenLink?: (file: RemoteFile) => void;
     /** Показывать размер файла */
     showSize?: boolean;
     /** Карта изменённых описаний по id */
@@ -68,6 +72,8 @@ export default function AttachmentEditorTable({
   showDetails = false,
   showLink = false,
   getLink,
+  getLinkLabel,
+  onOpenLink,
   showSize = false,
   changedMap,
   showHeader = false,
@@ -209,26 +215,39 @@ export default function AttachmentEditorTable({
                     title: 'Ссылка',
                     dataIndex: 'link',
                     width: 120,
-                    render: (_: unknown, row) =>
-                        row.isRemote && row.id && getLink
-                            ? (() => {
-                                  const url = getLink({
-                                      id: row.id,
-                                      name: row.name,
-                                      path: row.path ?? '',
-                                      mime: row.mime,
-                                  });
-                                  return url ? (
-                                      <a
-                                          href={url}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                      >
-                                          Открыть
-                                      </a>
-                                  ) : null;
-                              })()
-                            : null,
+                    render: (_: unknown, row) => {
+                        if (!row.isRemote || !row.id) return null;
+                        const file = {
+                            id: row.id,
+                            name: row.name,
+                            path: row.path ?? '',
+                            mime: row.mime,
+                        } as RemoteFile;
+                        const label = getLinkLabel ? getLinkLabel(file) : 'Открыть';
+                        if (onOpenLink) {
+                            return (
+                                <a
+                                    href="#"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        onOpenLink(file);
+                                    }}
+                                >
+                                    {label}
+                                </a>
+                            );
+                        }
+                        if (getLink) {
+                            const url = getLink(file);
+                            return url ? (
+                                <a href={url} target="_blank" rel="noopener noreferrer">
+                                    {label}
+                                </a>
+                            ) : null;
+                        }
+                        return null;
+                        return null;
+                    },
                 } as ColumnsType<Row>[number],
             ]
             : []),
