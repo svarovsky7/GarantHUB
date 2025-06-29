@@ -29,6 +29,13 @@
   },
   {
     "table_name": "attachments",
+    "column_name": "description",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "attachments",
     "column_name": "storage_path",
     "data_type": "text",
     "is_nullable": "NO",

@@ -41,6 +41,7 @@ export function useClaimAttachments(options: { claim?: (Claim & { attachments?: 
         path: storagePath ?? '',
         url: fileUrl,
         mime_type: fileType,
+        description: (file as any).description ?? null,
       } as RemoteClaimFile;
     });
     setRemoteFiles(attachments);
@@ -49,11 +50,14 @@ export function useClaimAttachments(options: { claim?: (Claim & { attachments?: 
   }, [claim]);
 
   const addFiles = useCallback((files: File[]) => {
-    setNewFiles((p) => [...p, ...files.map((f) => ({ file: f }))]);
+    setNewFiles((p) => [...p, ...files.map((f) => ({ file: f, description: '' }))]);
   }, []);
 
   const removeNew = useCallback((idx: number) => {
     setNewFiles((p) => p.filter((_, i) => i !== idx));
+  }, []);
+  const setDescription = useCallback((idx: number, val: string) => {
+    setNewFiles((p) => p.map((f, i) => (i === idx ? { ...f, description: val } : f)));
   }, []);
 
   const removeRemote = useCallback((id: string) => {
@@ -85,6 +89,7 @@ export function useClaimAttachments(options: { claim?: (Claim & { attachments?: 
     addFiles,
     removeNew,
     removeRemote,
+    setDescription,
     appendRemote,
     markPersisted,
     attachmentsChanged,

@@ -8,9 +8,12 @@ export interface RemoteClaimFile {
   mime_type: string;
   /** Размер файла в байтах */
   size?: number;
+  /** Описание файла */
+  description?: string | null;
 }
 
 /** Новый файл для вложения претензии */
 export interface NewClaimFile {
   file: File;
+  description?: string;
 }

@@ -468,7 +468,11 @@ export function useUpdateCourtCaseFull() {
       let uploaded: any[] = [];
       if (newAttachments.length) {
         uploaded = await addCaseAttachments(
-          newAttachments.map((f) => ({ file: f.file, type_id: null })),
+          newAttachments.map((f) => ({
+            file: f.file,
+            type_id: null,
+            description: (f as any).description,
+          })),
           id,
         );
         ids = ids.concat(uploaded.map((u) => u.id));

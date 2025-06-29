@@ -10,7 +10,7 @@ export default function ObjectArchivePage() {
   const [params] = useSearchParams();
   const unitId = Number(params.get('unit_id'));
   const { data, isLoading } = useUnitArchive(Number.isNaN(unitId) ? undefined : unitId);
-  const [newObjectFiles, setNewObjectFiles] = React.useState<File[]>([]);
+  const [newObjectFiles, setNewObjectFiles] = React.useState<{ file: File; description: string }[]>([]);
 
   return (
     <ConfigProvider locale={ruRU}>
@@ -22,7 +22,7 @@ export default function ObjectArchivePage() {
             Документы по объекту{' '}
             <Upload
               beforeUpload={(file) => {
-                setNewObjectFiles((p) => [...p, file]);
+                setNewObjectFiles((p) => [...p, { file, description: '' }]);
                 return false;
               }}
               showUploadList={false}
@@ -32,7 +32,10 @@ export default function ObjectArchivePage() {
           </Typography.Title>
           <AttachmentEditorTable
             remoteFiles={data?.objectDocs}
-            newFiles={newObjectFiles.map((f) => ({ file: f }))}
+            newFiles={newObjectFiles.map((f) => ({ file: f.file, description: f.description }))}
+            onDescNew={(idx, d) =>
+              setNewObjectFiles((p) => p.map((f, i) => (i === idx ? { ...f, description: d } : f)))
+            }
             showMime={false}
             showDetails
           />

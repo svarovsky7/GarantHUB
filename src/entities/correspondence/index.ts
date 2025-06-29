@@ -89,7 +89,7 @@ export function useLetters() {
         ? await supabase
             .from(LETTER_ATTACH_TABLE)
             .select(
-              'letter_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name)'
+              'letter_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description)'
             )
             .in('letter_id', letterIds)
         : { data: [], error: null };
@@ -203,7 +203,7 @@ export function useAddLetter() {
   return useMutation({
     mutationFn: async (
       payload: Omit<CorrespondenceLetter, 'id' | 'attachments'> & {
-        attachments?: { file: File; type_id: number | null }[];
+        attachments?: { file: File; type_id: number | null; description?: string }[];
       }
     ) => {
       const { attachments = [], parent_id, ...data } = payload as any;
@@ -239,7 +239,14 @@ export function useAddLetter() {
       let files: CorrespondenceAttachment[] = [];
       let attachmentIds: number[] = [];
       if (attachments.length) {
-        const uploaded = await addLetterAttachments(attachments, letterId);
+        const uploaded = await addLetterAttachments(
+          attachments.map((a) => ({
+            file: a.file,
+            type_id: a.type_id,
+            description: a.description,
+          })),
+          letterId,
+        );
         files = uploaded.map((u) => ({
           id: String(u.id),
           name:
@@ -490,7 +497,7 @@ export function useLetter(letterId: number | string | undefined) {
 
       const { data: attachRows } = await supabase
         .from(LETTER_ATTACH_TABLE)
-        .select('attachment_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name)')
+        .select('attachment_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description)')
         .eq('letter_id', id);
       const attachments = (attachRows ?? []).map((row: any) => {
         const f = row.attachments;
@@ -619,7 +626,11 @@ export function useUpdateLetter() {
         let uploaded: any[] = [];
         if (newAttachments.length) {
           uploaded = await addLetterAttachments(
-            newAttachments.map((f) => ({ file: f.file, type_id: null })),
+            newAttachments.map((f) => ({
+              file: f.file,
+              type_id: null,
+              description: (f as any).description,
+            })),
             id,
           );
           if (uploaded.length) {

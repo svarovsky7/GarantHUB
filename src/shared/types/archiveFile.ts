@@ -10,6 +10,8 @@ export interface ArchiveFile {
   path: string;
   /** MIME-тип */
   mime: string;
+  /** Описание файла */
+  description?: string | null;
   /** Идентификатор связанной сущности */
   entityId?: number;
 }

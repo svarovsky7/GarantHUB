@@ -356,7 +356,10 @@ const ClaimFormAntdEdit = React.forwardRef<
             newFiles={attachments.newFiles.map((f) => ({
               file: f.file,
               mime: f.file.type,
+              description: f.description,
             }))}
+            showDetails
+            onDescNew={(idx, d) => attachments.setDescription(idx, d)}
             onRemoveRemote={(id) => attachments.removeRemote(id)}
             onRemoveNew={(idx) => attachments.removeNew(idx)}
             getSignedUrl={(path, name) => signedUrl(path, name)}

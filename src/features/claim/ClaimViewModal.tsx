@@ -218,7 +218,7 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
           const filesFor = defectFiles[newDefs[i].tmpId] ?? [];
           if (filesFor.length) {
             const uploaded = await addDefectAttachments(
-              filesFor.map((f) => ({ file: f.file, type_id: null })),
+              filesFor.map((f) => ({ file: f.file, type_id: null, description: f.description })),
               createdIds[i],
             );
             if (uploaded.length) {
