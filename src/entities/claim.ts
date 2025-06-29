@@ -144,7 +144,7 @@ export function useClaims() {
           statuses (id, name, color),
           claim_units(unit_id),
           claim_defects(defect_id),
-          claim_attachments(attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description, created_at, created_by))`,
+          claim_attachments(attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description))`,
         );
       q = filterByProjects(q, projectId, projectIds, onlyAssigned);
       q = q.order('created_at', { ascending: false });
@@ -194,7 +194,7 @@ export function useClaim(id?: number | string) {
           statuses (id, name, color),
           claim_units(unit_id),
           claim_defects(defect_id),
-          claim_attachments(attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description, created_at, created_by))`,
+          claim_attachments(attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description))`,
         )
         .eq('id', claimId);
       q = filterByProjects(q, projectId, projectIds, onlyAssigned);
@@ -239,7 +239,7 @@ export function useClaimAll(id?: number | string) {
           statuses (id, name, color),
           claim_units(unit_id),
           claim_defects(defect_id),
-          claim_attachments(attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description, created_at, created_by))`,
+          claim_attachments(attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description))`,
         )
         .eq('id', claimId)
         .maybeSingle();
@@ -279,7 +279,7 @@ export function useClaimsAll() {
           statuses (id, name, color),
           claim_units(unit_id),
           claim_defects(defect_id),
-          claim_attachments(attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description, created_at, created_by))`,
+          claim_attachments(attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description))`,
         )
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -629,7 +629,7 @@ export function useClaimAttachments(id?: number) {
     queryFn: async () => {
       const { data } = await supabase
         .from('claim_attachments')
-        .select('attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description, created_at, created_by)')
+        .select('attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description)')
         .eq('claim_id', id as number);
       return (data ?? []).map((r: any) => r.attachments);
     },

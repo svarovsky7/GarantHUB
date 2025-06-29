@@ -73,7 +73,7 @@ export function useDefect(id?: number) {
       const { data: attachRows, error: attachErr } = await supabase
         .from('defect_attachments')
         .select(
-          'attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description, created_at, created_by)'
+          'attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description)'
         )
         .eq('defect_id', id as number);
       if (attachErr) throw attachErr;
