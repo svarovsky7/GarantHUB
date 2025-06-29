@@ -147,6 +147,7 @@ export default function CorrespondenceTable({
       dataIndex: 'id',
       width: 80,
       sorter: (a, b) => Number(a.id) - Number(b.id),
+      defaultSortOrder: 'descend' as const,
     },
     {
       title: 'Тип',

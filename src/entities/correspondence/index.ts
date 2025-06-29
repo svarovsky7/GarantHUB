@@ -62,7 +62,7 @@ export function useLetters() {
       if (onlyAssigned) {
         query = query.in('project_id', projectIds.length ? projectIds : [-1]);
       }
-      const { data, error } = await query.order('id');
+      const { data, error } = await query.order('id', { ascending: false });
       if (error) throw error;
 
       const letterIds = (data ?? []).map((r: any) => r.id) as number[];
