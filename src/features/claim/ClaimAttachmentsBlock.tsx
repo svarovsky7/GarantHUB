@@ -22,6 +22,8 @@ export interface ClaimAttachmentsBlockProps {
   onRemoveNew?: (index: number) => void;
   /** Изменить описание локального файла */
   onDescNew?: (index: number, description: string) => void;
+  /** Изменить описание загруженного файла */
+  onDescRemote?: (id: string, description: string) => void;
   /** Показывать ли область загрузки */
   showUpload?: boolean;
   /** Получить подписанную ссылку */
@@ -37,6 +39,7 @@ export default function ClaimAttachmentsBlock({
   onRemoveRemote,
   onRemoveNew,
   onDescNew,
+  onDescRemote,
   showUpload = true,
   getSignedUrl,
   onPreview,
@@ -59,9 +62,11 @@ export default function ClaimAttachmentsBlock({
         }))}
         onRemoveRemote={onRemoveRemote}
         onRemoveNew={onRemoveNew}
+        onDescRemote={onDescRemote}
         onDescNew={onDescNew}
         getSignedUrl={getSignedUrl}
         showDetails
+        onPreview={onPreview}
       />
     </Form.Item>
   );

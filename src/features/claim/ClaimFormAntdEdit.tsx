@@ -23,6 +23,7 @@ import {
   signedUrl,
   markClaimDefectsPreTrial,
 } from '@/entities/claim';
+import { updateAttachmentDescription } from '@/entities/attachment';
 import { supabase } from '@/shared/api/supabaseClient';
 import { useVisibleProjects } from '@/entities/project';
 import { useUnitsByProject } from '@/entities/unit';
@@ -197,6 +198,13 @@ const ClaimFormAntdEdit = React.forwardRef<
           mime_type: u.file_type,
         }));
       attachments.appendRemote(uploaded);
+      }
+      if (Object.keys(attachments.changedDesc).length) {
+        await Promise.all(
+          Object.entries(attachments.changedDesc).map(([id, val]) =>
+            updateAttachmentDescription(Number(id), val),
+          ),
+        );
       }
       attachments.markPersisted();
       notify.success('Претензия обновлена');
