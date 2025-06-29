@@ -375,6 +375,7 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
             onFiles={attachments.addFiles}
             onRemoveRemote={attachments.removeRemote}
             onRemoveNew={attachments.removeNew}
+            onDescRemote={attachments.setRemoteDescription}
             onDescNew={attachments.setDescription}
             getSignedUrl={(path, name) => signedUrl(path, name)}
             onPreview={(f) => setPreviewFile(f)}

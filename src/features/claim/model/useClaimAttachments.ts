@@ -11,6 +11,8 @@ export function useClaimAttachments(options: { claim?: (Claim & { attachments?: 
   const [remoteFiles, setRemoteFiles] = useState<RemoteClaimFile[]>([]);
   const [newFiles, setNewFiles] = useState<NewClaimFile[]>([]);
   const [removedIds, setRemovedIds] = useState<string[]>([]);
+  const [changedDesc, setChangedDesc] = useState<Record<string, string>>({});
+  const descInit = useRef<Record<string, string | null>>({});
 
   const lastIdRef = useRef<number | null>(null);
 
@@ -19,6 +21,8 @@ export function useClaimAttachments(options: { claim?: (Claim & { attachments?: 
       setRemoteFiles([]);
       setNewFiles([]);
       setRemovedIds([]);
+      setChangedDesc({});
+      descInit.current = {};
       lastIdRef.current = null;
       return;
     }
@@ -34,6 +38,7 @@ export function useClaimAttachments(options: { claim?: (Claim & { attachments?: 
         originalName ||
         (storagePath ? storagePath.split('/').pop() : file.name) ||
         'file';
+      const desc = (file as any).description ?? '';
       return {
         id: file.id,
         name,
@@ -41,9 +46,15 @@ export function useClaimAttachments(options: { claim?: (Claim & { attachments?: 
         path: storagePath ?? '',
         url: fileUrl,
         mime_type: fileType,
-        description: (file as any).description ?? null,
+        description: desc,
       } as RemoteClaimFile;
     });
+    const initMap: Record<string, string | null> = {};
+    attachments.forEach((f) => {
+      initMap[String(f.id)] = f.description ?? '';
+    });
+    descInit.current = initMap;
+    setChangedDesc({});
     setRemoteFiles(attachments);
     setNewFiles([]);
     setRemovedIds([]);
@@ -65,6 +76,20 @@ export function useClaimAttachments(options: { claim?: (Claim & { attachments?: 
     setRemovedIds((p) => [...p, id]);
   }, []);
 
+  const setRemoteDescription = useCallback((id: string, val: string) => {
+    setRemoteFiles((p) =>
+      p.map((f) => (String(f.id) === String(id) ? { ...f, description: val } : f)),
+    );
+    setChangedDesc((prev) => {
+      const init = descInit.current[id] ?? '';
+      if (init === val) {
+        const { [id]: _omit, ...rest } = prev;
+        return rest;
+      }
+      return { ...prev, [id]: val };
+    });
+  }, []);
+
   const appendRemote = useCallback((files: RemoteClaimFile[]) => {
     setRemoteFiles((p) => [...p, ...files]);
   }, []);
@@ -72,14 +97,23 @@ export function useClaimAttachments(options: { claim?: (Claim & { attachments?: 
   const markPersisted = useCallback(() => {
     setNewFiles([]);
     setRemovedIds([]);
-  }, []);
+    setChangedDesc({});
+    descInit.current = Object.fromEntries(
+      remoteFiles.map((f) => [String(f.id), f.description ?? '']),
+    );
+  }, [remoteFiles]);
 
-  const attachmentsChanged = newFiles.length > 0 || removedIds.length > 0;
+  const attachmentsChanged =
+    newFiles.length > 0 ||
+    removedIds.length > 0 ||
+    Object.keys(changedDesc).length > 0;
 
   const resetAll = useCallback(() => {
     setNewFiles([]);
     setRemoteFiles([]);
     setRemovedIds([]);
+    setChangedDesc({});
+    descInit.current = {};
   }, []);
 
   return {
@@ -89,9 +123,11 @@ export function useClaimAttachments(options: { claim?: (Claim & { attachments?: 
     addFiles,
     removeNew,
     removeRemote,
+    setRemoteDescription,
     setDescription,
     appendRemote,
     markPersisted,
+    changedDesc,
     attachmentsChanged,
     reset: resetAll,
   };
