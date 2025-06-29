@@ -29,6 +29,7 @@ import type { RoleName } from '@/shared/types/rolePermission';
 import FilePreviewModal from '@/shared/ui/FilePreviewModal';
 import type { PreviewFile } from '@/shared/types/previewFile';
 import type { NewDefectFile } from '@/shared/types/defectFile';
+import type { RemoteClaimFile } from '@/shared/types/claimFile';
 
 interface Props {
   open: boolean;
@@ -60,6 +61,7 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
   const [viewDefId, setViewDefId] = React.useState<number | null>(null);
   const [previewFile, setPreviewFile] = React.useState<PreviewFile | null>(null);
   const [defectFiles, setDefectFiles] = React.useState<Record<number, NewDefectFile[]>>({});
+  const [defectRemoteFiles, setDefectRemoteFiles] = React.useState<Record<number, RemoteClaimFile[]>>({});
   const tmpIdRef = React.useRef(-1);
 
   const lastClaimIdRef = React.useRef<number | null>(null);
@@ -78,6 +80,41 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
       setRemovedIds([]);
     }
   }, [claim, open]);
+
+  React.useEffect(() => {
+    if (!open || defectIds.length === 0) {
+      setDefectRemoteFiles({});
+      return;
+    }
+    const load = async () => {
+      const { data, error } = await supabase
+        .from('defect_attachments')
+        .select(
+          'defect_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description)',
+        )
+        .in('defect_id', defectIds);
+      if (error) return;
+      const map: Record<number, RemoteClaimFile[]> = {};
+      (data ?? []).forEach((r: any) => {
+        const a = r.attachments;
+        if (!a) return;
+        const name = a.original_name ?? a.storage_path.split('/').pop() ?? 'file';
+        const file: RemoteClaimFile = {
+          id: a.id,
+          name,
+          original_name: a.original_name ?? null,
+          path: a.storage_path,
+          url: a.file_url,
+          mime_type: a.file_type,
+          description: a.description ?? null,
+        };
+        if (!map[r.defect_id]) map[r.defect_id] = [];
+        map[r.defect_id].push(file);
+      });
+      setDefectRemoteFiles(map);
+    };
+    load();
+  }, [open, defectIds]);
 
   React.useEffect(() => {
     if (!open) {
@@ -232,6 +269,22 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
           }
         }
       }
+      // upload files for existing defects
+      for (const id of defectIds) {
+        if (id < 0) continue;
+        const filesFor = defectFiles[id] ?? [];
+        if (filesFor.length) {
+          const uploaded = await addDefectAttachments(
+            filesFor.map((f) => ({ file: f.file, type_id: null, description: f.description })),
+            id,
+          );
+          if (uploaded.length) {
+            await supabase.from('defect_attachments').insert(
+              uploaded.map((u: any) => ({ defect_id: id, attachment_id: u.id })),
+            );
+          }
+        }
+      }
       if (removedIds.length) {
         await supabase
           .from('claim_defects')
@@ -304,6 +357,7 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
                 onRemove={handleRemove}
                 onView={setViewDefId}
                 fileMap={defectFiles}
+                remoteFileMap={defectRemoteFiles}
                 onFilesChange={changeDefFiles}
               />
             ) : (
@@ -317,10 +371,11 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
           </div>
           <ClaimAttachmentsBlock
             remoteFiles={attachments.remoteFiles}
-            newFiles={attachments.newFiles.map((f) => f.file)}
+            newFiles={attachments.newFiles}
             onFiles={attachments.addFiles}
             onRemoveRemote={attachments.removeRemote}
             onRemoveNew={attachments.removeNew}
+            onDescNew={attachments.setDescription}
             getSignedUrl={(path, name) => signedUrl(path, name)}
             onPreview={(f) => setPreviewFile(f)}
           />

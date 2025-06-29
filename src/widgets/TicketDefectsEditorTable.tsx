@@ -16,6 +16,7 @@ import FixBySelector from '@/shared/ui/FixBySelector';
 import AttachmentEditorTable from '@/shared/ui/AttachmentEditorTable';
 import DefectFilesModal from '@/features/defect/DefectFilesModal';
 import type { NewDefectFile } from '@/shared/types/defectFile';
+import type { RemoteClaimFile } from '@/shared/types/claimFile';
 
 interface Item {
   id: number;
@@ -44,6 +45,7 @@ interface Props {
   onRemove?: (id: number) => void;
   onView?: (id: number) => void;
   fileMap?: Record<number, NewDefectFile[]>;
+  remoteFileMap?: Record<number, RemoteClaimFile[]>;
   onFilesChange?: (id: number, files: NewDefectFile[]) => void;
 }
 
@@ -60,6 +62,7 @@ export default function TicketDefectsEditorTable({
   onRemove,
   onView,
   fileMap = {},
+  remoteFileMap = {},
   onFilesChange,
 }: Props) {
   const fmt = (d: string | null) => (d ? dayjs(d).format('DD.MM.YYYY') : undefined);
@@ -220,7 +223,9 @@ export default function TicketDefectsEditorTable({
           );
         },
         expandIcon: ({ expanded, onExpand, record }) => {
-          const has = (fileMap[record.id] ?? []).length > 0;
+          const has =
+            (fileMap[record.id] ?? []).length > 0 ||
+            (remoteFileMap[record.id] ?? []).length > 0;
           if (!has) return null;
           return (
             <DownOutlined
@@ -232,9 +237,17 @@ export default function TicketDefectsEditorTable({
         },
         expandedRowRender: (record) => {
           const files = fileMap[record.id] ?? [];
-          if (!files.length) return null;
+          const remotes = remoteFileMap[record.id] ?? [];
+          if (!files.length && !remotes.length) return null;
           return (
             <AttachmentEditorTable
+              remoteFiles={remotes.map((f) => ({
+                id: String(f.id),
+                name: f.name,
+                path: f.path,
+                mime: f.mime_type,
+                description: f.description ?? '',
+              }))}
               newFiles={files.map((f) => ({ file: f.file, mime: f.file.type, description: f.description }))}
               onRemoveNew={(idx) => {
                 const arr = files.filter((_, i) => i !== idx);

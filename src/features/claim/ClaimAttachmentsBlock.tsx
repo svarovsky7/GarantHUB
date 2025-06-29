@@ -1,8 +1,8 @@
 import React from 'react';
 import { Form } from 'antd';
 import FileDropZone from '@/shared/ui/FileDropZone';
-import ClaimAttachmentsTable from './ClaimAttachmentsTable';
-import type { RemoteClaimFile } from '@/shared/types/claimFile';
+import AttachmentEditorTable from '@/shared/ui/AttachmentEditorTable';
+import type { RemoteClaimFile, NewClaimFile } from '@/shared/types/claimFile';
 import type { PreviewFile } from '@/shared/types/previewFile';
 
 /**
@@ -13,13 +13,15 @@ export interface ClaimAttachmentsBlockProps {
   /** Файлы, уже загруженные на сервер */
   remoteFiles?: RemoteClaimFile[];
   /** Новые файлы, выбранные пользователем */
-  newFiles?: File[];
+  newFiles?: NewClaimFile[];
   /** Обработчик добавления новых файлов */
   onFiles?: (files: File[]) => void;
   /** Удалить файл с сервера */
   onRemoveRemote?: (id: string) => void;
   /** Удалить локально выбранный файл */
   onRemoveNew?: (index: number) => void;
+  /** Изменить описание локального файла */
+  onDescNew?: (index: number, description: string) => void;
   /** Показывать ли область загрузки */
   showUpload?: boolean;
   /** Получить подписанную ссылку */
@@ -34,6 +36,7 @@ export default function ClaimAttachmentsBlock({
   onFiles,
   onRemoveRemote,
   onRemoveNew,
+  onDescNew,
   showUpload = true,
   getSignedUrl,
   onPreview,
@@ -41,13 +44,24 @@ export default function ClaimAttachmentsBlock({
   return (
     <Form.Item label="Файлы">
       {showUpload && <FileDropZone onFiles={onFiles ?? (() => {})} />}
-      <ClaimAttachmentsTable
-        remoteFiles={remoteFiles}
-        newFiles={newFiles}
+      <AttachmentEditorTable
+        remoteFiles={remoteFiles.map((f) => ({
+          id: String(f.id),
+          name: f.original_name ?? f.name,
+          path: f.path,
+          mime: f.mime_type,
+          description: f.description ?? '',
+        }))}
+        newFiles={newFiles.map((f) => ({
+          file: f.file,
+          mime: f.file.type,
+          description: f.description,
+        }))}
         onRemoveRemote={onRemoveRemote}
         onRemoveNew={onRemoveNew}
+        onDescNew={onDescNew}
         getSignedUrl={getSignedUrl}
-        onPreview={onPreview}
+        showDetails
       />
     </Form.Item>
   );
