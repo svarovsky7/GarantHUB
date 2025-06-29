@@ -40,12 +40,16 @@ interface Props {
     showMime?: boolean;
     /** Показывать поле подробностей */
     showDetails?: boolean;
+    /** Показывать колонку ссылки */
+    showLink?: boolean;
     /** Получить ссылку для просмотра сущности */
     getLink?: (file: RemoteFile) => string | undefined;
     /** Показывать размер файла */
     showSize?: boolean;
     /** Карта изменённых описаний по id */
     changedMap?: Record<string, boolean>;
+    /** Показывать заголовок таблицы */
+    showHeader?: boolean;
 }
 
 /**
@@ -62,9 +66,11 @@ export default function AttachmentEditorTable({
   getSignedUrl,
   showMime = true,
   showDetails = false,
+  showLink = false,
   getLink,
   showSize = false,
   changedMap,
+  showHeader = false,
 }: Props) {
     const [cache, setCache] = React.useState<Record<string, string>>({});
 
@@ -197,29 +203,32 @@ export default function AttachmentEditorTable({
                 } as ColumnsType<Row>[number],
             ]
             : []),
-        ...(getLink
+        ...(showLink
             ? [
                 {
                     title: 'Ссылка',
                     dataIndex: 'link',
                     width: 120,
                     render: (_: unknown, row) =>
-                        row.isRemote && row.id ? (
-                            <a
-                                href={
-                                    getLink({
-                                        id: row.id,
-                                        name: row.name,
-                                        path: row.path ?? '',
-                                        mime: row.mime,
-                                    })
-                                }
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                Открыть
-                            </a>
-                        ) : null,
+                        row.isRemote && row.id && getLink
+                            ? (() => {
+                                  const url = getLink({
+                                      id: row.id,
+                                      name: row.name,
+                                      path: row.path ?? '',
+                                      mime: row.mime,
+                                  });
+                                  return url ? (
+                                      <a
+                                          href={url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                      >
+                                          Открыть
+                                      </a>
+                                  ) : null;
+                              })()
+                            : null,
                 } as ColumnsType<Row>[number],
             ]
             : []),
@@ -284,7 +293,7 @@ export default function AttachmentEditorTable({
             columns={columns}
             dataSource={data}
             rowClassName={(row) => (!row.isRemote ? 'new-row' : '')}
-            showHeader={false}
+            showHeader={showHeader}
             tableLayout="fixed"
             style={{ width: '100%', overflowX: 'hidden' }}
         />
