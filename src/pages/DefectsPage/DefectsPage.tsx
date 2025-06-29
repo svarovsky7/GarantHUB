@@ -55,10 +55,19 @@ export default function DefectsPage() {
   const { data: claimsAll = [] } = useClaimsSimpleAll();
   const { data: claimsAssigned = [] } = useClaimsSimple();
   const claims = perm?.only_assigned_project ? claimsAssigned : claimsAll;
+  const defectUnitIds = useMemo(
+    () => defects.map((d) => d.unit_id).filter(Boolean) as number[],
+    [defects],
+  );
   const unitIds = useMemo(
     () =>
-      Array.from(new Set(claims.flatMap((t) => t.unit_ids || []))),
-    [claims],
+      Array.from(
+        new Set([
+          ...claims.flatMap((t) => t.unit_ids || []),
+          ...defectUnitIds,
+        ]),
+      ),
+    [claims, defectUnitIds],
   );
   const { data: units = [] } = useUnitsByIds(unitIds);
   const { data: projects = [] } = useVisibleProjects();
@@ -101,7 +110,12 @@ export default function DefectsPage() {
       const claimLinked = claimsMap.get(d.id) || [];
       const linked = claimLinked;
       const hasPretrial = linked.some((l) => l.pre_trial_claim);
-      const unitIds = Array.from(new Set(linked.flatMap((l) => l.unit_ids)));
+      const unitIdsFromClaims = Array.from(new Set(linked.flatMap((l) => l.unit_ids)));
+      const unitIds = unitIdsFromClaims.length
+        ? unitIdsFromClaims
+        : d.unit_id != null
+        ? [d.unit_id]
+        : [];
       const unitNamesList = unitIds
         .map((id) => unitMap.get(id))
         .filter(Boolean);
@@ -110,7 +124,12 @@ export default function DefectsPage() {
         new Set(unitIds.map((id) => buildingMap.get(id)).filter(Boolean)),
       );
       const buildingNames = buildingNamesList.join(", ");
-      const projectIds = Array.from(new Set(linked.map((l) => l.project_id)));
+      const projectIdsFromClaims = Array.from(new Set(linked.map((l) => l.project_id)));
+      const projectIds = projectIdsFromClaims.length
+        ? projectIdsFromClaims
+        : d.project_id != null
+        ? [d.project_id]
+        : [];
       const projectNames = projectIds
         .map((id) => projectMap.get(id))
         .filter(Boolean)
