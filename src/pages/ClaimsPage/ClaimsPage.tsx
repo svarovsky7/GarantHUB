@@ -68,7 +68,7 @@ export default function ClaimsPage() {
   );
   const { data: units = [] } = useUnitsByIds(unitIds);
   const checkingDefectMap = useMemo(() => new Map<number, boolean>(), []);
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const initialValues = {
     project_id: searchParams.get('project_id')
       ? Number(searchParams.get('project_id')!)
@@ -94,10 +94,6 @@ export default function ClaimsPage() {
     if (searchParams.get('open_form') === '1') {
       setShowAddForm(true);
     }
-  }, [searchParams]);
-  React.useEffect(() => {
-    const cid = searchParams.get('claim_id');
-    if (cid) setViewId(Number(cid));
   }, [searchParams]);
   React.useEffect(() => {
     try {
@@ -377,16 +373,7 @@ export default function ClaimsPage() {
             />
           )}
         </div>
-        <ClaimViewModal
-          open={viewId !== null}
-          claimId={viewId}
-          onClose={() => {
-            setViewId(null);
-            const params = new URLSearchParams(searchParams);
-            params.delete('claim_id');
-            setSearchParams(params, { replace: true });
-          }}
-        />
+        <ClaimViewModal open={viewId !== null} claimId={viewId} onClose={() => setViewId(null)} />
       </>
     </ConfigProvider>
   );

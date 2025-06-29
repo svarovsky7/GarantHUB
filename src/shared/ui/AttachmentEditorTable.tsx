@@ -44,8 +44,6 @@ interface Props {
     showLink?: boolean;
     /** Получить ссылку для просмотра сущности */
     getLink?: (file: RemoteFile) => string | undefined;
-    /** Получить текст ссылки для просмотра */
-    getLinkLabel?: (file: RemoteFile) => string;
     /** Показывать размер файла */
     showSize?: boolean;
     /** Карта изменённых описаний по id */
@@ -70,7 +68,6 @@ export default function AttachmentEditorTable({
   showDetails = false,
   showLink = false,
   getLink,
-  getLinkLabel,
   showSize = false,
   changedMap,
   showHeader = false,
@@ -211,7 +208,7 @@ export default function AttachmentEditorTable({
                 {
                     title: 'Ссылка',
                     dataIndex: 'link',
-                    width: 200,
+                    width: 120,
                     render: (_: unknown, row) =>
                         row.isRemote && row.id && getLink
                             ? (() => {
@@ -227,12 +224,7 @@ export default function AttachmentEditorTable({
                                           target="_blank"
                                           rel="noopener noreferrer"
                                       >
-                                          {getLinkLabel ? getLinkLabel({
-                                              id: row.id!,
-                                              name: row.name,
-                                              path: row.path ?? '',
-                                              mime: row.mime,
-                                          }) : 'Открыть'}
+                                          Открыть
                                       </a>
                                   ) : null;
                               })()
