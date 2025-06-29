@@ -18,6 +18,8 @@ interface RemoteFile {
     description?: string;
     /** Размер файла в байтах */
     size?: number | null;
+    /** Идентификатор связанной сущности */
+    entityId?: number;
 }
 
 interface NewFile {
@@ -128,6 +130,7 @@ export default function AttachmentEditorTable({
         path?: string;
         description?: string;
         size?: number | null;
+        entityId?: number;
         isRemote: boolean;
     }
 
@@ -140,6 +143,7 @@ export default function AttachmentEditorTable({
             path: f.path,
             description: f.description,
             size: f.size ?? null,
+            entityId: f.entityId,
             isRemote: true,
         })),
         ...newFiles.map<Row>((f, i) => ({
@@ -222,6 +226,7 @@ export default function AttachmentEditorTable({
                             name: row.name,
                             path: row.path ?? '',
                             mime: row.mime,
+                            entityId: row.entityId,
                         } as RemoteFile;
                         const label = getLinkLabel ? getLinkLabel(file) : 'Открыть';
                         if (onOpenLink) {
