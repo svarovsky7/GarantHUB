@@ -23,6 +23,8 @@ function mapFile(a: any, entityId?: number): ArchiveFile {
     description: a.description ?? null,
     size: null,
     entityId,
+    createdAt: a.created_at ?? null,
+    createdBy: a.created_by ?? null,
   };
 }
 
@@ -119,12 +121,12 @@ export function useUnitArchive(unitId?: number) {
         .eq('unit_id', unitId);
       const letterIds = (letterRows ?? []).map((r: any) => r.letter_id);
       if (letterIds.length) {
-        const { data } = await supabase
-          .from('letter_attachments')
-          .select(
-            'letter_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description)',
-          )
-          .in('letter_id', letterIds);
+      const { data } = await supabase
+        .from('letter_attachments')
+        .select(
+            'letter_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description, created_at, created_by)',
+        )
+        .in('letter_id', letterIds);
         result.letterDocs = await Promise.all(
           (data ?? []).map(async (r: any) => {
             const f = mapFile(r.attachments, r.letter_id);

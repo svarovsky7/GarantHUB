@@ -16,19 +16,32 @@ import {
 } from '@/entities/attachment';
 import { downloadZip } from '@/shared/utils/downloadZip';
 import type { ArchiveFile } from '@/shared/types/archiveFile';
+import { useUsers } from '@/entities/user';
 import { useQueryClient } from '@tanstack/react-query';
+
+interface ArchiveFileWithUser extends ArchiveFile {
+  createdByName?: string | null;
+}
 
 export default function ObjectArchivePage() {
   const [params] = useSearchParams();
   const unitId = Number(params.get('unit_id'));
   const { data, isLoading } = useUnitArchive(Number.isNaN(unitId) ? undefined : unitId);
+  const { data: users = [] } = useUsers();
+  const userMap = React.useMemo(() => {
+    const map = new Map<string, string>();
+    users.forEach((u) => {
+      map.set(u.id, u.name ?? '');
+    });
+    return map;
+  }, [users]);
   const qc = useQueryClient();
   const [newObjectFiles, setNewObjectFiles] = React.useState<{ file: File; description: string }[]>([]);
-  const [objectFiles, setObjectFiles] = React.useState<ArchiveFile[]>([]);
-  const [remarkFiles, setRemarkFiles] = React.useState<ArchiveFile[]>([]);
-  const [defectFiles, setDefectFiles] = React.useState<ArchiveFile[]>([]);
-  const [courtFiles, setCourtFiles] = React.useState<ArchiveFile[]>([]);
-  const [letterFiles, setLetterFiles] = React.useState<ArchiveFile[]>([]);
+  const [objectFiles, setObjectFiles] = React.useState<ArchiveFileWithUser[]>([]);
+  const [remarkFiles, setRemarkFiles] = React.useState<ArchiveFileWithUser[]>([]);
+  const [defectFiles, setDefectFiles] = React.useState<ArchiveFileWithUser[]>([]);
+  const [courtFiles, setCourtFiles] = React.useState<ArchiveFileWithUser[]>([]);
+  const [letterFiles, setLetterFiles] = React.useState<ArchiveFileWithUser[]>([]);
   const descInit = React.useRef<Record<string, string | null>>({});
   const [changed, setChanged] = React.useState<Record<string, string>>({});
   const [viewClaimId, setViewClaimId] = React.useState<number | null>(null);
@@ -38,11 +51,16 @@ export default function ObjectArchivePage() {
 
   React.useEffect(() => {
     if (!data) return;
-    setObjectFiles(data.objectDocs);
-    setRemarkFiles(data.remarkDocs);
-    setDefectFiles(data.defectDocs);
-    setCourtFiles(data.courtDocs);
-    setLetterFiles(data.letterDocs);
+    const withNames = (files: ArchiveFile[]): ArchiveFileWithUser[] =>
+      files.map((f) => ({
+        ...f,
+        createdByName: f.createdBy ? userMap.get(f.createdBy) ?? null : null,
+      }));
+    setObjectFiles(withNames(data.objectDocs));
+    setRemarkFiles(withNames(data.remarkDocs));
+    setDefectFiles(withNames(data.defectDocs));
+    setCourtFiles(withNames(data.courtDocs));
+    setLetterFiles(withNames(data.letterDocs));
     const map: Record<string, string | null> = {};
     [...data.objectDocs, ...data.remarkDocs, ...data.defectDocs, ...data.courtDocs, ...data.letterDocs].forEach((f) => {
       map[f.id] = f.description ?? '';
@@ -50,11 +68,11 @@ export default function ObjectArchivePage() {
     descInit.current = map;
     setChanged({});
     setNewObjectFiles([]);
-  }, [data]);
+  }, [data, userMap]);
 
   const setDescHelper = (
-    setter: React.Dispatch<React.SetStateAction<ArchiveFile[]>>, 
-    id: string, 
+    setter: React.Dispatch<React.SetStateAction<ArchiveFileWithUser[]>>,
+    id: string,
     val: string
   ) => {
     setter((p) => p.map((f) => (f.id === id ? { ...f, description: val } : f)));
@@ -162,6 +180,8 @@ export default function ObjectArchivePage() {
             showSize
             showHeader
             showLink
+            showCreatedAt
+            showCreatedBy
             changedMap={changed}
             getSignedUrl={(p, n) => signedUrl(p, n)}
           />
@@ -175,6 +195,8 @@ export default function ObjectArchivePage() {
             showSize
             showHeader
             showLink
+            showCreatedAt
+            showCreatedBy
             changedMap={changed}
             getSignedUrl={(p, n) => signedUrl(p, n)}
             onOpenLink={(f) => setViewClaimId(Number(f.entityId))}
@@ -190,6 +212,8 @@ export default function ObjectArchivePage() {
             showSize
             showHeader
             showLink
+            showCreatedAt
+            showCreatedBy
             changedMap={changed}
             getSignedUrl={(p, n) => signedUrl(p, n)}
             onOpenLink={(f) => setViewDefectId(Number(f.entityId))}
@@ -205,6 +229,8 @@ export default function ObjectArchivePage() {
             showSize
             showHeader
             showLink
+            showCreatedAt
+            showCreatedBy
             changedMap={changed}
             getSignedUrl={(p, n) => signedUrl(p, n)}
             onOpenLink={(f) => setViewCourtId(Number(f.entityId))}
@@ -220,6 +246,8 @@ export default function ObjectArchivePage() {
             showSize
             showHeader
             showLink
+            showCreatedAt
+            showCreatedBy
             changedMap={changed}
             getSignedUrl={(p, n) => signedUrl(p, n)}
             onOpenLink={(f) => setViewLetterId(Number(f.entityId))}
