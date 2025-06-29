@@ -16,12 +16,16 @@ interface RemoteFile {
     /** MIME‑тип файла */
     mime?: string;
     description?: string;
+    /** Размер файла в байтах */
+    size?: number | null;
 }
 
 interface NewFile {
     file: File;
     mime?: string;
     description?: string;
+    /** Размер файла в байтах */
+    size?: number;
 }
 
 interface Props {
@@ -38,6 +42,10 @@ interface Props {
     showDetails?: boolean;
     /** Получить ссылку для просмотра сущности */
     getLink?: (file: RemoteFile) => string | undefined;
+    /** Показывать размер файла */
+    showSize?: boolean;
+    /** Карта изменённых описаний по id */
+    changedMap?: Record<string, boolean>;
 }
 
 /**
@@ -45,17 +53,19 @@ interface Props {
  * Исправлено выпадание строки за пределы формы.
  */
 export default function AttachmentEditorTable({
-                                                  remoteFiles = [],
-                                                  newFiles = [],
-                                                  onRemoveRemote,
-                                                  onRemoveNew,
-                                                  onDescRemote,
-                                                  onDescNew,
-                                                  getSignedUrl,
-                                                  showMime = true,
-                                                  showDetails = false,
-                                                  getLink,
-                                              }: Props) {
+  remoteFiles = [],
+  newFiles = [],
+  onRemoveRemote,
+  onRemoveNew,
+  onDescRemote,
+  onDescNew,
+  getSignedUrl,
+  showMime = true,
+  showDetails = false,
+  getLink,
+  showSize = false,
+  changedMap,
+}: Props) {
     const [cache, setCache] = React.useState<Record<string, string>>({});
 
     /** Вернуть подписанную ссылку и закэшировать по id */
@@ -82,6 +92,18 @@ export default function AttachmentEditorTable({
         a.remove();
     };
 
+    const formatSize = (bytes: number) => {
+        if (bytes === 0) return '0 Б';
+        const units = ['Б', 'КБ', 'МБ', 'ГБ'];
+        let i = 0;
+        let b = bytes;
+        while (b >= 1024 && i < units.length - 1) {
+            b /= 1024;
+            i++;
+        }
+        return `${b.toFixed(1)} ${units[i]}`;
+    };
+
     if (!remoteFiles.length && !newFiles.length) return null;
 
     /** Унифицированная строка таблицы */
@@ -93,6 +115,7 @@ export default function AttachmentEditorTable({
         file?: File;
         path?: string;
         description?: string;
+        size?: number | null;
         isRemote: boolean;
     }
 
@@ -104,6 +127,7 @@ export default function AttachmentEditorTable({
             mime: f.mime,
             path: f.path,
             description: f.description,
+            size: f.size ?? null,
             isRemote: true,
         })),
         ...newFiles.map<Row>((f, i) => ({
@@ -112,6 +136,7 @@ export default function AttachmentEditorTable({
             mime: f.mime,
             file: f.file,
             description: f.description,
+            size: f.size ?? f.file.size,
             isRemote: false,
         })),
     ];
@@ -128,6 +153,17 @@ export default function AttachmentEditorTable({
             width: 200,
             ellipsis: true,
         },
+        ...(showSize
+            ? [
+                {
+                    title: 'Размер',
+                    dataIndex: 'size',
+                    width: 100,
+                    render: (v: number | null) =>
+                        v != null ? formatSize(v) : '',
+                } as ColumnsType<Row>[number]
+            ]
+            : []),
         ...(showMime
             ? [
                 {
@@ -150,6 +186,7 @@ export default function AttachmentEditorTable({
                             size="small"
                             value={row.description}
                             style={{ width: '100%' }}
+                            className={row.isRemote && row.id && changedMap?.[row.id] ? 'changed-field' : undefined}
                             onChange={(e) => {
                                 const val = e.target.value;
                                 if (row.isRemote && row.id) onDescRemote?.(row.id, val);
@@ -246,6 +283,7 @@ export default function AttachmentEditorTable({
             pagination={false}
             columns={columns}
             dataSource={data}
+            rowClassName={(row) => (!row.isRemote ? 'new-row' : '')}
             showHeader={false}
             tableLayout="fixed"
             style={{ width: '100%', overflowX: 'hidden' }}
