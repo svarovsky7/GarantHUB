@@ -19,6 +19,7 @@ import {
   PlusOutlined,
   DeleteOutlined,
   UploadOutlined,
+  DownOutlined,
   PaperClipOutlined,
 } from '@ant-design/icons';
 import AttachmentEditorTable from '@/shared/ui/AttachmentEditorTable';
@@ -446,9 +447,9 @@ export default function DefectEditableTable({ fields, add, remove, projectId, fi
             const has = (fileMap[record.name] ?? []).length > 0;
             if (!has) return null;
             return (
-              <PaperClipOutlined
-                style={{ cursor: 'pointer' }}
-                rotate={expanded ? 90 : 0}
+              <DownOutlined
+                style={{ cursor: 'pointer', color: '#52c41a', fontWeight: 700 }}
+                rotate={expanded ? 180 : 0}
                 onClick={(e) => onExpand(record, e)}
               />
             );
