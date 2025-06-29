@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ConfigProvider, Alert, Card, Button, Tooltip, Popconfirm, message, Space } from 'antd';
+import { ConfigProvider, Alert, Card, Button, Tooltip, Popconfirm, message, Space, Typography } from 'antd';
 import ruRU from 'antd/locale/ru_RU';
 import {
   SettingOutlined,
@@ -306,6 +306,21 @@ export default function ClaimsPage() {
   const baseColumns = useMemo(getBaseColumns, [deleteClaimMutation.isPending]);
   const columns: ColumnsType<any> = useMemo(() => columnsState.filter((c) => c.visible).map((c) => baseColumns[c.key]), [columnsState, baseColumns]);
 
+  /** Общее количество претензий после учёта прав доступа */
+  const total = claimsWithNames.length;
+  /** Количество претензий со статусом, содержащим "закры" */
+  const closedCount = useMemo(
+    () => claimsWithNames.filter((c) => /закры/i.test(c.statusName ?? '')).length,
+    [claimsWithNames],
+  );
+  /** Количество открытых претензий */
+  const openCount = total - closedCount;
+  /** Сколько претензий пройдёт в выгрузку с учётом фильтров */
+  const readyToExport = useMemo(
+    () => filterClaims(claimsWithNames, filters).length,
+    [claimsWithNames, filters],
+  );
+
   return (
     <ConfigProvider locale={ruRU}>
       <>
@@ -373,6 +388,13 @@ export default function ClaimsPage() {
             />
           )}
         </div>
+        <Typography.Text style={{ display: 'block', marginTop: 8 }}>
+          Всего претензий: {total}, из них закрытых: {closedCount} и не
+          закрытых: {openCount}
+        </Typography.Text>
+        <Typography.Text style={{ display: 'block', marginTop: 4 }}>
+          Готовых претензий к выгрузке: {readyToExport}
+        </Typography.Text>
         <ClaimViewModal open={viewId !== null} claimId={viewId} onClose={() => setViewId(null)} />
       </>
     </ConfigProvider>
