@@ -125,7 +125,7 @@ body {
 /* Skeleton эффекты были выше (оставил без изменений) */
 .changed-field {
   background-color: #fffbe6;
-  padding: 4px;
+  padding: 0 4px;
   border-radius: 2px;
 }
 

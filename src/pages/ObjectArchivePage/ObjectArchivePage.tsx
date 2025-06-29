@@ -146,6 +146,8 @@ export default function ObjectArchivePage() {
             showMime={false}
             showDetails
             showSize
+            showHeader
+            showLink
             changedMap={changed}
             getSignedUrl={(p, n) => signedUrl(p, n)}
           />
@@ -157,6 +159,8 @@ export default function ObjectArchivePage() {
             showMime={false}
             showDetails
             showSize
+            showHeader
+            showLink
             changedMap={changed}
             getSignedUrl={(p, n) => signedUrl(p, n)}
             getLink={(f) => `/claims?id=${f.entityId}`}
@@ -169,6 +173,8 @@ export default function ObjectArchivePage() {
             showMime={false}
             showDetails
             showSize
+            showHeader
+            showLink
             changedMap={changed}
             getSignedUrl={(p, n) => signedUrl(p, n)}
             getLink={(f) => `/defects?id=${f.entityId}`}
@@ -181,6 +187,8 @@ export default function ObjectArchivePage() {
             showMime={false}
             showDetails
             showSize
+            showHeader
+            showLink
             changedMap={changed}
             getSignedUrl={(p, n) => signedUrl(p, n)}
             getLink={(f) => `/court-cases?id=${f.entityId}`}
