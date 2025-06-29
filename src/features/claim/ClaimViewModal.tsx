@@ -12,6 +12,7 @@ import {
   useDeleteDefect,
   useDefectsWithNames,
   useUpdateDefect,
+  removeDefectAttachmentsBulk,
   type NewDefect,
 } from '@/entities/defect';
 import { useDefectTypes } from '@/entities/defectType';
@@ -20,7 +21,7 @@ import { useBrigades } from '@/entities/brigade';
 import { useContractors } from '@/entities/contractor';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/shared/api/supabaseClient';
-import { addDefectAttachments } from '@/entities/attachment';
+import { addDefectAttachments, updateAttachmentDescription } from '@/entities/attachment';
 import { useClaimAttachments } from './model/useClaimAttachments';
 import type { ClaimFormAntdEditRef } from '@/shared/types/claimFormAntdEditRef';
 import { useAuthStore } from '@/shared/store/authStore';
@@ -62,6 +63,9 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
   const [previewFile, setPreviewFile] = React.useState<PreviewFile | null>(null);
   const [defectFiles, setDefectFiles] = React.useState<Record<number, NewDefectFile[]>>({});
   const [defectRemoteFiles, setDefectRemoteFiles] = React.useState<Record<number, RemoteClaimFile[]>>({});
+  const [defectRemovedMap, setDefectRemovedMap] = React.useState<Record<number, number[]>>({});
+  const [defectChangedDesc, setDefectChangedDesc] = React.useState<Record<number, string>>({});
+  const defectDescInit = React.useRef<Record<number, string>>({});
   const tmpIdRef = React.useRef(-1);
 
   const lastClaimIdRef = React.useRef<number | null>(null);
@@ -110,8 +114,11 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
         };
         if (!map[r.defect_id]) map[r.defect_id] = [];
         map[r.defect_id].push(file);
+        defectDescInit.current[a.id] = a.description ?? '';
       });
       setDefectRemoteFiles(map);
+      setDefectChangedDesc({});
+      setDefectRemovedMap({});
     };
     load();
   }, [open, defectIds]);
@@ -124,6 +131,10 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
       setRemovedIds([]);
       attachments.reset();
       setDefectFiles({});
+      setDefectRemoteFiles({});
+      setDefectRemovedMap({});
+      setDefectChangedDesc({});
+      defectDescInit.current = {};
     }
   }, [open]);
 
@@ -217,6 +228,42 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
     setDefectFiles((p) => ({ ...p, [id]: files }));
   };
 
+  const removeDefRemote = (defId: number, fileId: string) => {
+    setDefectRemoteFiles((p) => ({
+      ...p,
+      [defId]: (p[defId] ?? []).filter((f) => String(f.id) !== fileId),
+    }));
+    setDefectRemovedMap((prev) => ({
+      ...prev,
+      [defId]: [...(prev[defId] ?? []), Number(fileId)],
+    }));
+    setDefectChangedDesc((prev) => {
+      const { [Number(fileId)]: _omit, ...rest } = prev;
+      return rest;
+    });
+  };
+
+  const changeDefRemoteDesc = (
+    defId: number,
+    fileId: string,
+    desc: string,
+  ) => {
+    setDefectRemoteFiles((p) => ({
+      ...p,
+      [defId]: (p[defId] ?? []).map((f) =>
+        String(f.id) === fileId ? { ...f, description: desc } : f,
+      ),
+    }));
+    setDefectChangedDesc((prev) => {
+      const init = defectDescInit.current[Number(fileId)] ?? '';
+      if (init === desc) {
+        const { [Number(fileId)]: _om, ...rest } = prev;
+        return rest;
+      }
+      return { ...prev, [Number(fileId)]: desc };
+    });
+  };
+
   const handleChangeDef = (
     id: number,
     field: keyof NewDefect | 'id',
@@ -296,6 +343,18 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
         }
         await closeDefectsForClaim(claim.id, claim.claim_status_id ?? null);
       }
+      for (const [defId, ids] of Object.entries(defectRemovedMap)) {
+        if (ids.length) {
+          await removeDefectAttachmentsBulk(Number(defId), ids as number[]);
+        }
+      }
+      if (Object.keys(defectChangedDesc).length) {
+        await Promise.all(
+          Object.entries(defectChangedDesc).map(([id, val]) =>
+            updateAttachmentDescription(Number(id), val),
+          ),
+        );
+      }
       const updates = Object.entries(editedDefs).map(([id, upd]) => ({
         id: Number(id),
         updates: upd,
@@ -314,6 +373,13 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
       setNewDefs([]);
       setRemovedIds([]);
       setDefectFiles({});
+      setDefectRemovedMap({});
+      setDefectChangedDesc({});
+      defectDescInit.current = Object.fromEntries(
+        Object.values(defectRemoteFiles)
+          .flat()
+          .map((f) => [Number(f.id), f.description ?? '']),
+      );
       onClose();
     } catch (e) {
       console.error(e);
@@ -359,6 +425,9 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
                 fileMap={defectFiles}
                 remoteFileMap={defectRemoteFiles}
                 onFilesChange={changeDefFiles}
+                onRemoveRemoteFile={removeDefRemote}
+                onDescRemoteFile={changeDefRemoteDesc}
+                getSignedUrl={(p, n) => signedUrl(p, n)}
               />
             ) : (
               <Typography.Text>Дефекты не указаны</Typography.Text>

@@ -45,6 +45,7 @@ function mapClaim(r: any): ClaimWithNames {
           name,
           url: a.file_url,
           mime_type: a.mime_type,
+          description: a.description ?? null,
         } as import('@/shared/types/claimFile').RemoteClaimFile;
       })
     : [];
