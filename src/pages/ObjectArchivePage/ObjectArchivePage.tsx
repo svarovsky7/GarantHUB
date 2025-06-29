@@ -5,6 +5,10 @@ import { useSearchParams } from 'react-router-dom';
 import { UploadOutlined } from '@ant-design/icons';
 import AttachmentEditorTable from '@/shared/ui/AttachmentEditorTable';
 import { useUnitArchive } from '@/entities/unitArchive';
+import ClaimViewModal from '@/features/claim/ClaimViewModal';
+import DefectViewModal from '@/features/defect/DefectViewModal';
+import CourtCaseViewModal from '@/features/courtCase/CourtCaseViewModal';
+import LetterViewModal from '@/features/correspondence/LetterViewModal';
 import {
   signedUrl,
   updateAttachmentDescription,
@@ -24,8 +28,13 @@ export default function ObjectArchivePage() {
   const [remarkFiles, setRemarkFiles] = React.useState<ArchiveFile[]>([]);
   const [defectFiles, setDefectFiles] = React.useState<ArchiveFile[]>([]);
   const [courtFiles, setCourtFiles] = React.useState<ArchiveFile[]>([]);
+  const [letterFiles, setLetterFiles] = React.useState<ArchiveFile[]>([]);
   const descInit = React.useRef<Record<string, string | null>>({});
   const [changed, setChanged] = React.useState<Record<string, string>>({});
+  const [viewClaimId, setViewClaimId] = React.useState<number | null>(null);
+  const [viewDefectId, setViewDefectId] = React.useState<number | null>(null);
+  const [viewCourtId, setViewCourtId] = React.useState<number | null>(null);
+  const [viewLetterId, setViewLetterId] = React.useState<number | null>(null);
 
   React.useEffect(() => {
     if (!data) return;
@@ -33,8 +42,9 @@ export default function ObjectArchivePage() {
     setRemarkFiles(data.remarkDocs);
     setDefectFiles(data.defectDocs);
     setCourtFiles(data.courtDocs);
+    setLetterFiles(data.letterDocs);
     const map: Record<string, string | null> = {};
-    [...data.objectDocs, ...data.remarkDocs, ...data.defectDocs, ...data.courtDocs].forEach((f) => {
+    [...data.objectDocs, ...data.remarkDocs, ...data.defectDocs, ...data.courtDocs, ...data.letterDocs].forEach((f) => {
       map[f.id] = f.description ?? '';
     });
     descInit.current = map;
@@ -70,6 +80,9 @@ export default function ObjectArchivePage() {
   const handleDescCourt = React.useCallback((id: string, d: string) => {
     setDescHelper(setCourtFiles, id, d);
   }, []);
+  const handleDescLetter = React.useCallback((id: string, d: string) => {
+    setDescHelper(setLetterFiles, id, d);
+  }, []);
 
   const handleDownloadArchive = async () => {
     const files = [
@@ -77,6 +90,7 @@ export default function ObjectArchivePage() {
       ...remarkFiles,
       ...defectFiles,
       ...courtFiles,
+      ...letterFiles,
       ...newObjectFiles.map((f) => ({ id: '', name: f.file.name, path: '', file: f.file })),
     ];
     const sources = await Promise.all(
@@ -163,7 +177,8 @@ export default function ObjectArchivePage() {
             showLink
             changedMap={changed}
             getSignedUrl={(p, n) => signedUrl(p, n)}
-            getLink={(f) => `/claims?id=${f.entityId}`}
+            onOpenLink={(f) => setViewClaimId(Number(f.entityId))}
+            getLinkLabel={() => 'Замечание'}
           />
           <Divider />
           <Typography.Title level={4}>Документы по дефектам</Typography.Title>
@@ -177,7 +192,8 @@ export default function ObjectArchivePage() {
             showLink
             changedMap={changed}
             getSignedUrl={(p, n) => signedUrl(p, n)}
-            getLink={(f) => `/defects?id=${f.entityId}`}
+            onOpenLink={(f) => setViewDefectId(Number(f.entityId))}
+            getLinkLabel={() => 'Дефект'}
           />
           <Divider />
           <Typography.Title level={4}>Документы по судебным делам</Typography.Title>
@@ -191,12 +207,32 @@ export default function ObjectArchivePage() {
             showLink
             changedMap={changed}
             getSignedUrl={(p, n) => signedUrl(p, n)}
-            getLink={(f) => `/court-cases?id=${f.entityId}`}
+            onOpenLink={(f) => setViewCourtId(Number(f.entityId))}
+            getLinkLabel={() => 'Судебное дело'}
+          />
+          <Divider />
+          <Typography.Title level={4}>Файлы из писем</Typography.Title>
+          <AttachmentEditorTable
+            remoteFiles={letterFiles}
+            onDescRemote={handleDescLetter}
+            showMime={false}
+            showDetails
+            showSize
+            showHeader
+            showLink
+            changedMap={changed}
+            getSignedUrl={(p, n) => signedUrl(p, n)}
+            onOpenLink={(f) => setViewLetterId(Number(f.entityId))}
+            getLinkLabel={(f) => `Письмо №${f.entityId}`}
           />
           <Divider />
           <Button type="primary" disabled={!newObjectFiles.length && !Object.keys(changed).length} onClick={handleSave}>
             Сохранить изменения
           </Button>
+          <ClaimViewModal open={viewClaimId !== null} claimId={viewClaimId} onClose={() => setViewClaimId(null)} />
+          <DefectViewModal open={viewDefectId !== null} defectId={viewDefectId} onClose={() => setViewDefectId(null)} />
+          <CourtCaseViewModal open={viewCourtId !== null} caseId={viewCourtId} onClose={() => setViewCourtId(null)} />
+          <LetterViewModal open={viewLetterId !== null} letterId={viewLetterId} onClose={() => setViewLetterId(null)} />
         </>
       )}
     </ConfigProvider>
