@@ -38,7 +38,6 @@ import DefectFixModal from "@/features/defect/DefectFixModal";
 import { useCancelDefectFix } from "@/entities/defect";
 import { filterDefects } from "@/shared/utils/defectFilter";
 import { naturalCompare } from "@/shared/utils/naturalSort";
-import { useSearchParams } from 'react-router-dom';
 import formatUnitName from "@/shared/utils/formatUnitName";
 import { useUsers } from "@/entities/user";
 import type { DefectWithInfo } from "@/shared/types/defect";
@@ -66,7 +65,6 @@ export default function DefectsPage() {
   const { data: brigades = [] } = useBrigades();
   const { data: contractors = [] } = useContractors();
   const { data: users = [] } = useUsers();
-  const [searchParams, setSearchParams] = useSearchParams();
 
   const userProjectIds = useAuthStore((s) => s.profile?.project_ids) ?? [];
   const userMap = useMemo(() => {
@@ -212,10 +210,6 @@ export default function DefectsPage() {
   const [fixId, setFixId] = useState<number | null>(null);
   const { mutateAsync: removeDefect, isPending: removing } = useDeleteDefect();
   const cancelFix = useCancelDefectFix();
-  React.useEffect(() => {
-    const id = searchParams.get('defect_id');
-    if (id) setViewId(Number(id));
-  }, [searchParams]);
 
   const LS_FILTERS_VISIBLE_KEY = "defectsFiltersVisible";
   const LS_COLUMNS_KEY = "defectsColumns";
@@ -557,12 +551,7 @@ export default function DefectsPage() {
         <DefectViewModal
           open={viewId !== null}
           defectId={viewId}
-          onClose={() => {
-            setViewId(null);
-            const params = new URLSearchParams(searchParams);
-            params.delete('defect_id');
-            setSearchParams(params, { replace: true });
-          }}
+          onClose={() => setViewId(null)}
         />
         <DefectFixModal
           open={fixId !== null}

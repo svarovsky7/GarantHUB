@@ -12,6 +12,4 @@ export interface UnitArchive {
   defectDocs: ArchiveFile[];
   /** Документы по судебным делам */
   courtDocs: ArchiveFile[];
-  /** Документы из писем */
-  letterDocs: ArchiveFile[];
 }

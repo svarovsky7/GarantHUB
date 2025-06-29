@@ -36,7 +36,6 @@ export function useUnitArchive(unitId?: number) {
         remarkDocs: [],
         defectDocs: [],
         courtDocs: [],
-        letterDocs: [],
       };
       if (!unitId) return result;
 
@@ -110,26 +109,6 @@ export function useUnitArchive(unitId?: number) {
             const f = mapFile(r.attachments, r.court_case_id);
             return { ...f, size: await getFileSize(f.path) };
           }),
-        );
-      }
-
-      const { data: letterRows } = await supabase
-        .from('letter_units')
-        .select('letter_id')
-        .eq('unit_id', unitId);
-      const letterIds = (letterRows ?? []).map((r: any) => r.letter_id);
-      if (letterIds.length) {
-        const { data } = await supabase
-          .from('letter_attachments')
-          .select(
-            'letter_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description)'
-          )
-          .in('letter_id', letterIds);
-        result.letterDocs = await Promise.all(
-          (data ?? []).map(async (r: any) => {
-            const f = mapFile(r.attachments, r.letter_id);
-            return { ...f, size: await getFileSize(f.path) };
-          })
         );
       }
 
