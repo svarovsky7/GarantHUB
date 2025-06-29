@@ -222,6 +222,9 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
       case_uid_id: values.case_uid_id ?? null,
     }));
     const defectIds = await createDefects.mutateAsync(newDefs);
+    if (defectIds.length !== newDefs.length) {
+      notify.error('Не удалось сохранить все дефекты');
+    }
 
     for (let i = 0; i < defectIds.length; i += 1) {
       const filesFor = defectFiles[i] ?? [];
