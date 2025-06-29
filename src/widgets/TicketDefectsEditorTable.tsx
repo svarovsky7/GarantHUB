@@ -47,6 +47,13 @@ interface Props {
   fileMap?: Record<number, NewDefectFile[]>;
   remoteFileMap?: Record<number, RemoteClaimFile[]>;
   onFilesChange?: (id: number, files: NewDefectFile[]) => void;
+  onRemoveRemoteFile?: (defectId: number, fileId: string) => void;
+  onDescRemoteFile?: (
+    defectId: number,
+    fileId: string,
+    description: string,
+  ) => void;
+  getSignedUrl?: (path: string, name: string) => Promise<string>;
 }
 
 /**
@@ -64,6 +71,9 @@ export default function TicketDefectsEditorTable({
   fileMap = {},
   remoteFileMap = {},
   onFilesChange,
+  onRemoveRemoteFile,
+  onDescRemoteFile,
+  getSignedUrl,
 }: Props) {
   const fmt = (d: string | null) => (d ? dayjs(d).format('DD.MM.YYYY') : undefined);
 
@@ -249,6 +259,8 @@ export default function TicketDefectsEditorTable({
                 description: f.description ?? '',
               }))}
               newFiles={files.map((f) => ({ file: f.file, mime: f.file.type, description: f.description }))}
+              onRemoveRemote={(id) => onRemoveRemoteFile?.(record.id, id)}
+              onDescRemote={(id, d) => onDescRemoteFile?.(record.id, id, d)}
               onRemoveNew={(idx) => {
                 const arr = files.filter((_, i) => i !== idx);
                 onFilesChange?.(record.id, arr);
@@ -257,6 +269,7 @@ export default function TicketDefectsEditorTable({
                 const arr = files.map((ff, i) => (i === idx ? { ...ff, description: d } : ff));
                 onFilesChange?.(record.id, arr);
               }}
+              getSignedUrl={getSignedUrl}
               showMime={false}
               showDetails
             />

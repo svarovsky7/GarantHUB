@@ -567,3 +567,33 @@ export function useRemoveDefectAttachment() {
     onError: (e) => notify.error(`Ошибка удаления файла: ${e.message}`),
   });
 }
+
+/**
+ * Удаляет несколько вложений дефекта за один запрос.
+ */
+export async function removeDefectAttachmentsBulk(
+  defectId: number,
+  attachmentIds: number[],
+): Promise<void> {
+  if (attachmentIds.length === 0) return;
+  const { data: atts } = await supabase
+    .from('attachments')
+    .select('storage_path')
+    .in('id', attachmentIds);
+  const paths = (atts ?? [])
+    .map((a: any) => a.storage_path)
+    .filter(Boolean);
+  if (paths.length) {
+    await supabase.storage.from(ATTACH_BUCKET).remove(paths);
+  }
+  await supabase.from('attachments').delete().in('id', attachmentIds);
+  await supabase
+    .from('defect_attachments')
+    .delete()
+    .eq('defect_id', defectId)
+    .in('attachment_id', attachmentIds);
+  await supabase
+    .from(TABLE)
+    .update({ updated_by: useAuthStore.getState().profile?.id ?? undefined })
+    .eq('id', defectId);
+}
