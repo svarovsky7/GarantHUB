@@ -1,5 +1,4 @@
 import { supabase } from '@/shared/api/supabaseClient';
-import { useAuthStore } from '@/shared/store/authStore';
 
 let ATTACH_BUCKET =
     (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ATTACH_BUCKET) ||
@@ -115,7 +114,6 @@ export function uploadDefectAttachment(file, defectId) {
  * @param {number} caseId
  */
 export async function addCaseAttachments(files, caseId) {
-    const userId = useAuthStore.getState().profile?.id ?? null;
     const uploaded = await Promise.all(
         files.map(({ file }) => uploadCaseAttachment(file, caseId)),
     );
@@ -126,13 +124,12 @@ export async function addCaseAttachments(files, caseId) {
         original_name: files[idx].file.name,
         storage_path: u.path,
         description: files[idx].description ?? null,
-        created_by: userId,
     }));
 
     const { data, error } = await supabase
         .from('attachments')
         .insert(rows)
-        .select('id, storage_path, file_url:path, file_type:mime_type, original_name, description, created_at, created_by');
+        .select('id, storage_path, file_url:path, file_type:mime_type, original_name, description');
 
     if (error) throw error;
     return data ?? [];
@@ -144,7 +141,6 @@ export async function addCaseAttachments(files, caseId) {
  * @param {number} letterId
  */
 export async function addLetterAttachments(files, letterId) {
-    const userId = useAuthStore.getState().profile?.id ?? null;
     const uploaded = await Promise.all(
         files.map(({ file }) => uploadLetterAttachment(file, letterId)),
     );
@@ -155,13 +151,12 @@ export async function addLetterAttachments(files, letterId) {
         original_name: files[idx].file.name,
         storage_path: u.path,
         description: files[idx].description ?? null,
-        created_by: userId,
     }));
 
     const { data, error } = await supabase
         .from('attachments')
         .insert(rows)
-        .select('id, storage_path, file_url:path, file_type:mime_type, original_name, description, created_at, created_by');
+        .select('id, storage_path, file_url:path, file_type:mime_type, original_name, description');
 
     if (error) throw error;
     return data ?? [];
@@ -175,7 +170,6 @@ export async function addLetterAttachments(files, letterId) {
  * @param {number} ticketId
  */
 export async function addTicketAttachments(files, projectId, ticketId) {
-    const userId = useAuthStore.getState().profile?.id ?? null;
     const uploaded = await Promise.all(
         files.map(({ file }) => uploadTicketAttachment(file, projectId, ticketId)),
     );
@@ -186,13 +180,12 @@ export async function addTicketAttachments(files, projectId, ticketId) {
         original_name: files[idx].file.name,
         storage_path: u.path,
         description: files[idx].description ?? null,
-        created_by: userId,
     }));
 
     const { data, error } = await supabase
         .from('attachments')
         .insert(rows)
-        .select('id, storage_path, file_url:path, file_type:mime_type, original_name, description, created_at, created_by');
+        .select('id, storage_path, file_url:path, file_type:mime_type, original_name, description');
 
     if (error) throw error;
     return data ?? [];
@@ -205,7 +198,6 @@ export async function addTicketAttachments(files, projectId, ticketId) {
  * @param {number} claimId
  */
 export async function addClaimAttachments(files, claimId) {
-    const userId = useAuthStore.getState().profile?.id ?? null;
     const uploaded = await Promise.all(
         files.map(({ file }) => uploadClaimAttachment(file, claimId)),
     );
@@ -216,13 +208,12 @@ export async function addClaimAttachments(files, claimId) {
         original_name: files[idx].file.name,
         storage_path: u.path,
         description: files[idx].description ?? null,
-        created_by: userId,
     }));
 
     const { data, error } = await supabase
         .from('attachments')
         .insert(rows)
-        .select('id, storage_path, file_url:path, file_type:mime_type, original_name, description, created_at, created_by');
+        .select('id, storage_path, file_url:path, file_type:mime_type, original_name, description');
 
     if (error) throw error;
     return data ?? [];
@@ -235,7 +226,6 @@ export async function addClaimAttachments(files, claimId) {
  * @param {number} defectId
  */
 export async function addDefectAttachments(files, defectId) {
-    const userId = useAuthStore.getState().profile?.id ?? null;
     const uploaded = await Promise.all(
         files.map(({ file }) => uploadDefectAttachment(file, defectId)),
     );
@@ -246,13 +236,12 @@ export async function addDefectAttachments(files, defectId) {
         original_name: files[idx].file.name,
         storage_path: u.path,
         description: files[idx].description ?? null,
-        created_by: userId,
     }));
 
     const { data, error } = await supabase
         .from('attachments')
         .insert(rows)
-        .select('id, storage_path, file_url:path, file_type:mime_type, original_name, description, created_at, created_by');
+        .select('id, storage_path, file_url:path, file_type:mime_type, original_name, description');
 
     if (error) throw error;
     return data ?? [];
@@ -266,7 +255,7 @@ export async function getAttachmentsByIds(ids) {
     if (!ids.length) return [];
     const { data, error } = await supabase
         .from('attachments')
-        .select('id, storage_path, file_url:path, file_type:mime_type, original_name, description, created_at, created_by')
+        .select('id, storage_path, file_url:path, file_type:mime_type, original_name, description')
         .in('id', ids);
 
     if (error) throw error;
@@ -274,7 +263,6 @@ export async function getAttachmentsByIds(ids) {
 }
 
 export async function addUnitAttachments(files, unitId) {
-    const userId = useAuthStore.getState().profile?.id ?? null;
     const uploaded = await Promise.all(
         files.map(({ file }) => upload(file, `units/${unitId}`)),
     );
@@ -285,13 +273,12 @@ export async function addUnitAttachments(files, unitId) {
         original_name: files[idx].file.name,
         storage_path: u.path,
         description: files[idx].description ?? null,
-        created_by: userId,
     }));
 
     const { data, error } = await supabase
         .from('attachments')
         .insert(rows)
-        .select('id, storage_path, file_url:path, file_type:mime_type, original_name, description, created_at, created_by');
+        .select('id, storage_path, file_url:path, file_type:mime_type, original_name, description');
 
     if (error) throw error;
 
