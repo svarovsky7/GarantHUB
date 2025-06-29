@@ -42,7 +42,7 @@ export function useDefects() {
           'id, description, type_id, status_id, project_id, unit_id, created_by, updated_by, updated_at, brigade_id, contractor_id, is_warranty, received_at, fixed_at, fixed_by, created_at,' +
           ' defect_type:defect_types!fk_defects_type(id,name), defect_status:statuses!fk_defects_status(id,name,color), fixed_by_user:profiles!fk_defects_fixed_by(id,name)'
         )
-        .order('id');
+        .order('id', { ascending: false });
       if (error) throw error;
       return data as unknown as DefectRecord[];
     },
