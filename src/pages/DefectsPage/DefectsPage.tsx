@@ -37,7 +37,7 @@ import ExportDefectsButton from "@/features/defect/ExportDefectsButton";
 import DefectFixModal from "@/features/defect/DefectFixModal";
 import { useCancelDefectFix } from "@/entities/defect";
 import { filterDefects } from "@/shared/utils/defectFilter";
-import { naturalCompare } from "@/shared/utils/naturalSort";
+import { naturalCompare, naturalCompareArrays } from "@/shared/utils/naturalSort";
 import formatUnitName from "@/shared/utils/formatUnitName";
 import { useUsers } from "@/entities/user";
 import type { DefectWithInfo } from "@/shared/types/defect";
@@ -236,7 +236,7 @@ export default function DefectsPage() {
         dataIndex: "claimIds",
         width: 120,
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
-          a.claimIds.join(",").localeCompare(b.claimIds.join(",")),
+          naturalCompareArrays(a.claimIds, b.claimIds),
         render: (v: number[]) => v.join(", "),
       },
       days: {

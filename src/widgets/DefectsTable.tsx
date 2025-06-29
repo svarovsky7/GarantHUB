@@ -17,6 +17,7 @@ import type { DefectWithInfo } from "@/shared/types/defect";
 import type { DefectFilters } from "@/shared/types/defectFilters";
 import { filterDefects } from "@/shared/utils/defectFilter";
 import { useResizableColumns } from "@/shared/hooks/useResizableColumns";
+import { naturalCompareArrays } from "@/shared/utils/naturalSort";
 
 const fmt = (v: string | null) => (v ? dayjs(v).format("DD.MM.YYYY") : "—");
 const fmtDateTime = (v: string | null) =>
@@ -55,8 +56,7 @@ export default function DefectsTable({
       title: "ID претензии",
       dataIndex: "claimIds",
       width: 120,
-      sorter: (a, b) =>
-        a.claimIds.join(",").localeCompare(b.claimIds.join(",")),
+      sorter: (a, b) => naturalCompareArrays(a.claimIds, b.claimIds),
       render: (v: number[]) => v.join(", "),
     },
     {
