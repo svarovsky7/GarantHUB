@@ -170,8 +170,7 @@ export default function ClaimsTable({
   }, [filtered]);
 
   const [expandedRowKeys, setExpandedRowKeys] = React.useState<React.Key[]>([]);
-  /** Количество строк на странице по умолчанию */
-  const [pageSize, setPageSize] = React.useState(100);
+  const [pageSize, setPageSize] = React.useState(25);
 
   React.useEffect(() => {
     // По умолчанию все строки свернуты

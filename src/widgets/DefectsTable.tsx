@@ -211,8 +211,7 @@ export default function DefectsTable({
 
   const { columns: columnsWithResize, components } =
     useResizableColumns(columnsProp ?? defaultColumns);
-  /** Количество строк на странице по умолчанию */
-  const [pageSize, setPageSize] = React.useState(100);
+  const [pageSize, setPageSize] = React.useState(25);
 
   if (loading) return <Skeleton active paragraph={{ rows: 6 }} />;
 
