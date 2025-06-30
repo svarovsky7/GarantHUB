@@ -63,7 +63,7 @@ export default function CourtCasesPage() {
   const [linkFor, setLinkFor] = useState<CourtCase | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   /** Размер страницы таблицы дел */
-  const [pageSize, setPageSize] = useState(100);
+  const [pageSize, setPageSize] = useState(25);
   const [showFilters, setShowFilters] = useState(() => {
     try {
       const saved = localStorage.getItem(LS_FILTERS_VISIBLE_KEY);
