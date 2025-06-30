@@ -385,19 +385,21 @@ export default function ClaimsPage() {
               <ClaimsFilters options={options} onChange={setFilters} />
             </Card>
           )}
-          {error ? (
-            <Alert type="error" message={error.message} />
-          ) : (
-            <ClaimsTable
-              claims={claimsWithNames}
-              filters={filters}
-              loading={isLoading}
-              columns={columns}
-              onView={(id) => setViewId(id)}
-              onAddChild={setLinkFor}
-              onUnlink={(id) => unlinkClaim.mutate(id)}
-            />
-          )}
+          <div style={{ maxHeight: 'calc(100vh - 280px)', overflowY: 'auto' }}>
+            {error ? (
+              <Alert type="error" message={error.message} />
+            ) : (
+              <ClaimsTable
+                claims={claimsWithNames}
+                filters={filters}
+                loading={isLoading}
+                columns={columns}
+                onView={(id) => setViewId(id)}
+                onAddChild={setLinkFor}
+                onUnlink={(id) => unlinkClaim.mutate(id)}
+              />
+            )}
+          </div>
         </div>
         <Typography.Text style={{ display: 'block', marginTop: 8 }}>
           Всего претензий: {total}, из них закрытых: {closedCount} и не
