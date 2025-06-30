@@ -107,7 +107,7 @@ export default function DefectsTable({
     {
       title: "Описание",
       dataIndex: "description",
-      width: 220,
+      width: 600,
       sorter: (a, b) => a.description.localeCompare(b.description),
     },
     {

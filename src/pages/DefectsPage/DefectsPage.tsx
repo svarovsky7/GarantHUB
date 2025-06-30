@@ -319,7 +319,7 @@ export default function DefectsPage() {
       description: {
         title: "Описание",
         dataIndex: "description",
-        width: 220,
+        width: 600,
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           a.description.localeCompare(b.description),
       },
