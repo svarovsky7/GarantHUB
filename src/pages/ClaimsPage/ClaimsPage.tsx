@@ -32,7 +32,9 @@ import ClaimViewModal from '@/features/claim/ClaimViewModal';
 import ClaimStatusSelect from "@/features/claim/ClaimStatusSelect";
 import dayjs from "dayjs";
 import LinkClaimsDialog from '@/features/claim/LinkClaimsDialog';
-import TableColumnsDrawer from '@/widgets/TableColumnsDrawer';
+const TableColumnsDrawer = React.lazy(
+  () => import('@/widgets/TableColumnsDrawer'),
+);
 import type { TableColumnSetting } from '@/shared/types/tableColumnSetting';
 import type { ColumnsType } from 'antd/es/table';
 import { useSearchParams } from 'react-router-dom';
@@ -361,13 +363,15 @@ export default function ClaimsPage() {
             )
           }
         />
-        <TableColumnsDrawer
-          open={showColumnsDrawer}
-          columns={columnsState}
-          onChange={setColumnsState}
-          onClose={() => setShowColumnsDrawer(false)}
-          onReset={handleResetColumns}
-        />
+        <React.Suspense fallback={null}>
+          <TableColumnsDrawer
+            open={showColumnsDrawer}
+            columns={columnsState}
+            onChange={setColumnsState}
+            onClose={() => setShowColumnsDrawer(false)}
+            onReset={handleResetColumns}
+          />
+        </React.Suspense>
         <div style={{ marginTop: 24 }}>
           {showFilters && (
             <Card style={{ marginBottom: 24 }}>
