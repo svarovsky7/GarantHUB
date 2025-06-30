@@ -1,5 +1,9 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap");
 
+html {
+  overflow-x: hidden;
+}
+
 body {
   font-family: "Inter", system-ui, sans-serif;
   background-color: #f5f7ff;
