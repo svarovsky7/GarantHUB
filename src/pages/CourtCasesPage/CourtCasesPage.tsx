@@ -615,6 +615,7 @@ export default function CourtCasesPage() {
             rowKey="id"
             columns={resizableColumns}
             components={components}
+            sticky={{ offsetHeader: 64 }}
             dataSource={treeData}
             loading={casesLoading}
             pagination={{
