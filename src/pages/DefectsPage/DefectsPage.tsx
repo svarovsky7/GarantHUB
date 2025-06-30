@@ -25,6 +25,7 @@ import { useBrigades } from "@/entities/brigade";
 import { useContractors } from "@/entities/contractor";
 import { useRolePermission } from "@/entities/rolePermission";
 import { useClaimsSimple, useClaimsSimpleAll } from "@/entities/claim";
+import { useClaimDefects } from "@/entities/claimDefect";
 import { useAuthStore } from "@/shared/store/authStore";
 import type { RoleName } from "@/shared/types/rolePermission";
 import DefectsTable from "@/widgets/DefectsTable";
@@ -42,6 +43,7 @@ import formatUnitName from "@/shared/utils/formatUnitName";
 import { useUsers } from "@/entities/user";
 import type { DefectWithInfo } from "@/shared/types/defect";
 import type { DefectFilters } from "@/shared/types/defectFilters";
+import type { ClaimDefect } from "@/shared/types/claimDefect";
 import type { ColumnsType } from "antd/es/table";
 
 const fmt = (v: string | null) => (v ? dayjs(v).format("DD.MM.YYYY") : "—");
@@ -50,6 +52,8 @@ const fmtDateTime = (v: string | null) =>
 
 export default function DefectsPage() {
   const { data: defects = [], isPending } = useDefects();
+  const defectIds = useMemo(() => defects.map((d) => d.id), [defects]);
+  const { data: claimDefects = [] } = useClaimDefects(defectIds);
   const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
   const { data: perm } = useRolePermission(role);
   const { data: claimsAll = [] } = useClaimsSimpleAll();
@@ -106,10 +110,20 @@ export default function DefectsPage() {
         claimsMap.set(cd.defect_id, arr);
       });
     });
+    const claimDefMap = new Map<number, ClaimDefect[]>();
+    claimDefects.forEach((cd) => {
+      const arr = claimDefMap.get(cd.defect_id) || [];
+      arr.push(cd);
+      claimDefMap.set(cd.defect_id, arr);
+    });
     return defects.map((d: any) => {
       const claimLinked = claimsMap.get(d.id) || [];
+      const claimIdsDirect = (claimDefMap.get(d.id) || []).map((cd) => cd.claim_id);
+      const hasPretrialDirect = (claimDefMap.get(d.id) || []).some(
+        (cd) => cd.pre_trial_claim,
+      );
       const linked = claimLinked;
-      const hasPretrial = linked.some((l) => l.pre_trial_claim);
+      const hasPretrial = linked.some((l) => l.pre_trial_claim) || hasPretrialDirect;
       const unitIdsFromClaims = Array.from(new Set(linked.flatMap((l) => l.unit_ids)));
       const unitIds = unitIdsFromClaims.length
         ? unitIdsFromClaims
@@ -143,9 +157,12 @@ export default function DefectsPage() {
           contractors.find((c) => c.id === d.contractor_id)?.name ||
           "Подрядчик";
       }
+      const claimIds = claimLinked.length
+        ? claimLinked.map((l) => l.id)
+        : claimIdsDirect;
       return {
         ...d,
-        claimIds: claimLinked.map((l) => l.id),
+        claimIds,
         hasPretrialClaim: hasPretrial,
         createdByName: userMap.get(d.created_by as string) ?? null,
         unitIds,
