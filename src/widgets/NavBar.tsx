@@ -39,6 +39,10 @@ const NavBar: React.FC = () => {
             alignItems: 'center',
             padding: '0 24px',
             gap: 24,                 // аккуратный отступ между элементами
+            position: 'sticky',      // закрепляем навбар при прокрутке
+            top: 0,
+            zIndex: 1000,
+            width: '100%',
           }}
       >
         {/* Логотип */}
