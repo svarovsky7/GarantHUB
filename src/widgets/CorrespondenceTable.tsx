@@ -192,6 +192,7 @@ export default function CorrespondenceTable({
     {
       title: 'Тема',
       dataIndex: 'subject',
+      width: 600,
       sorter: (a, b) => a.subject.localeCompare(b.subject),
       render: (val: string, record: any) =>
           <span style={record.parent_id ? { color: '#888' } : {}}>{val}</span>,
