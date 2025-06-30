@@ -336,6 +336,12 @@ export default function CourtCasesPage() {
       width: 180,
       sorter: (a, b) => (a.projectName || '').localeCompare(b.projectName || ''),
     },
+    buildings: {
+      title: 'Корпус',
+      dataIndex: 'buildings',
+      width: 120,
+      sorter: (a, b) => (a.buildings || '').localeCompare(b.buildings || ''),
+    },
     projectObject: {
       title: 'Объект',
       dataIndex: 'projectObject',
@@ -477,7 +483,9 @@ export default function CourtCasesPage() {
           }
           return c;
         });
-        return parsed.filter((c) => baseColumns[c.key]);
+        const filtered = parsed.filter((c) => baseColumns[c.key]);
+        const missing = defaults.filter((d) => !filtered.some((f) => f.key === d.key));
+        return [...filtered, ...missing];
       }
     } catch {}
     return defaults;
