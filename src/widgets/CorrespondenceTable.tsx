@@ -100,7 +100,8 @@ export default function CorrespondenceTable({
   }, [letters, maps]);
 
   const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
-  const [pageSize, setPageSize] = useState(25);
+  /** Количество строк на странице по умолчанию */
+  const [pageSize, setPageSize] = useState(100);
 
   useEffect(() => {
     try {
