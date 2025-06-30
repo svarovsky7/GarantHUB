@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/shared/api/supabaseClient';
 import { getFileSize } from '@/entities/attachment';
-import type { ArchiveFile, UnitArchive } from '@/shared/types/unitArchive';
+import type { ArchiveFile } from '@/shared/types/archiveFile';
+import type { UnitArchive } from '@/shared/types/unitArchive';
 
 function mapFile(a: any, entityId?: number): ArchiveFile {
   if (!a) return { id: '', name: '', path: '', mime: '', entityId };

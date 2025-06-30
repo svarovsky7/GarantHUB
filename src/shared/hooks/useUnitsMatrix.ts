@@ -77,12 +77,16 @@ export default function useUnitsMatrix(projectId: number | null, building?: stri
           .in('unit_id', unitIds)
           .eq('court_cases.project_id', projectId);
         (casesData || [])
+          .map((row: any) => ({
+            unit_id: row.unit_id,
+            court_case: Array.isArray(row.court_cases) ? row.court_cases[0] : row.court_cases,
+          }))
           .filter(
-            (row) => row.court_cases && (!closedStageId || row.court_cases.status !== closedStageId),
+            (row) => row.court_case && (!closedStageId || row.court_case.status !== closedStageId),
           )
           .forEach((row) => {
             const uid = row.unit_id;
-            const c = row.court_cases;
+            const c = row.court_case;
             if (!casesByUnit[uid]) casesByUnit[uid] = [];
             casesByUnit[uid].push({ id: c.id });
           });
@@ -103,8 +107,8 @@ export default function useUnitsMatrix(projectId: number | null, building?: stri
           )
           .in('unit_id', unitIds)
           .eq('claims.project_id', projectId);
-        (claimRows || []).forEach((row) => {
-          const cl = row.claims;
+        (claimRows || []).forEach((row: any) => {
+          const cl = Array.isArray(row.claims) ? row.claims[0] : row.claims;
           if (!cl) return;
           if (!claimsByUnit[row.unit_id]) {
             claimsByUnit[row.unit_id] = {
@@ -156,7 +160,9 @@ export default function useUnitsMatrix(projectId: number | null, building?: stri
 
   const handleAddFloor = async () => {
     const floorsArr = query.data?.floors || [];
-    const numericFloors = floorsArr.filter((f) => !isNaN(f as any));
+    const numericFloors = floorsArr
+      .filter((f) => !isNaN(f as any))
+      .map((f) => Number(f));
     const candidate = numericFloors.length === 0 ? 1 : Math.max(...numericFloors) + 1;
     await handleAddUnit(candidate);
   };
