@@ -49,6 +49,14 @@ export default function ObjectArchivePage() {
   const [viewCourtId, setViewCourtId] = React.useState<number | null>(null);
   const [viewLetterId, setViewLetterId] = React.useState<number | null>(null);
 
+  const changedFlags = React.useMemo(() => {
+    const map: Record<string, boolean> = {};
+    Object.keys(changed).forEach((k) => {
+      map[k] = true;
+    });
+    return map;
+  }, [changed]);
+
   React.useEffect(() => {
     if (!data) return;
     const withNames = (files: ArchiveFile[]): ArchiveFileWithUser[] =>
@@ -140,7 +148,7 @@ export default function ObjectArchivePage() {
           unitId,
         );
       }
-      await qc.invalidateQueries(['unit-archive', unitId]);
+      await qc.invalidateQueries({ queryKey: ['unit-archive', unitId] });
     } catch (e) {
       console.error(e);
     }
@@ -182,7 +190,7 @@ export default function ObjectArchivePage() {
             showLink
             showCreatedAt
             showCreatedBy
-            changedMap={changed}
+            changedMap={changedFlags}
             getSignedUrl={(p, n) => signedUrl(p, n)}
           />
           <Divider />
@@ -197,7 +205,7 @@ export default function ObjectArchivePage() {
             showLink
             showCreatedAt
             showCreatedBy
-            changedMap={changed}
+            changedMap={changedFlags}
             getSignedUrl={(p, n) => signedUrl(p, n)}
             onOpenLink={(f) => setViewClaimId(Number(f.entityId))}
             getLinkLabel={() => 'Замечание'}
@@ -214,7 +222,7 @@ export default function ObjectArchivePage() {
             showLink
             showCreatedAt
             showCreatedBy
-            changedMap={changed}
+            changedMap={changedFlags}
             getSignedUrl={(p, n) => signedUrl(p, n)}
             onOpenLink={(f) => setViewDefectId(Number(f.entityId))}
             getLinkLabel={() => 'Дефект'}
@@ -231,7 +239,7 @@ export default function ObjectArchivePage() {
             showLink
             showCreatedAt
             showCreatedBy
-            changedMap={changed}
+            changedMap={changedFlags}
             getSignedUrl={(p, n) => signedUrl(p, n)}
             onOpenLink={(f) => setViewCourtId(Number(f.entityId))}
             getLinkLabel={() => 'Судебное дело'}
@@ -248,7 +256,7 @@ export default function ObjectArchivePage() {
             showLink
             showCreatedAt
             showCreatedBy
-            changedMap={changed}
+            changedMap={changedFlags}
             getSignedUrl={(p, n) => signedUrl(p, n)}
             onOpenLink={(f) => setViewLetterId(Number(f.entityId))}
             getLinkLabel={(f) => `Письмо №${f.entityId}`}

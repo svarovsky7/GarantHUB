@@ -39,6 +39,7 @@ export default function UnitsMatrix({
   building?: string | null;
   onUnitsChanged?: (units: any[]) => void;
 }) {
+  const numericProjectId = typeof projectId === 'string' ? Number(projectId) : projectId;
   const {
     floors,
     unitsByFloor,
@@ -49,7 +50,7 @@ export default function UnitsMatrix({
     lettersByUnit,
     claimsByUnit,
     units,
-  } = useUnitsMatrix(projectId, building);
+  } = useUnitsMatrix(numericProjectId, building);
   const navigate = useNavigate();
   const profileId = useAuthStore((s) => s.profile?.id);
 
@@ -73,7 +74,7 @@ export default function UnitsMatrix({
     action: "",
   });
 
-  const { data: sortOrders } = useUnitSortOrders(projectId, building);
+  const { data: sortOrders } = useUnitSortOrders(numericProjectId, building);
   const upsertSort = useUpsertUnitSortOrder();
   const [sortDirections, setSortDirections] = useState<Record<string, SortDirection | null>>({});
 
@@ -110,15 +111,15 @@ export default function UnitsMatrix({
 
   const handleSortFloor = (floor: string | number) => {
     setSortDirections((prev) => {
-      const current = prev[floor] ?? null;
+    const current = prev[String(floor)] ?? null;
       const next = current === 'asc' ? 'desc' : 'asc';
       upsertSort.mutate({
-        project_id: projectId,
+        project_id: numericProjectId,
         building: building ?? null,
         floor: String(floor),
         sort_direction: next,
       });
-      return { ...prev, [floor]: next };
+      return { ...prev, [String(floor)]: next };
     });
   };
 
@@ -151,11 +152,11 @@ export default function UnitsMatrix({
   // Удалить (с реальным удалением из БД)
   const handleConfirmDelete = async () => {
     if (confirmDialog.type === "floor") {
-      await supabase
-        .from("units")
-        .delete()
-        .eq("project_id", projectId)
-        .eq("building", building)
+        await supabase
+          .from("units")
+          .delete()
+          .eq("project_id", numericProjectId)
+          .eq("building", building)
         .eq("floor", Number(confirmDialog.target));
       await fetchUnits(); // Только fetchUnits, не setUnits!
     }
