@@ -32,8 +32,6 @@ import {
   useLinkCases,
   useUnlinkCase,
 } from '@/entities/courtCase';
-import { supabase } from '@/shared/api/supabaseClient';
-import { useQuery } from '@tanstack/react-query';
 import { useNotify } from '@/shared/hooks/useNotify';
 import CourtCaseStatusSelect from '@/features/courtCase/CourtCaseStatusSelect';
 import LinkCasesDialog from '@/features/courtCase/LinkCasesDialog';
@@ -116,23 +114,14 @@ export default function CourtCasesPage() {
     [cases],
   );
   const { data: caseUnits = [] } = useUnitsByIds(unitIds);
-  const { data: allUnits = [] } = useQuery({
-    queryKey: ['allUnits'],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('units').select('id, name, project_id, building');
-      if (error) throw error;
-      return data ?? [];
-    },
-    staleTime: 5 * 60_000,
-  });
 
   const buildingMap = React.useMemo(() => {
     const map = new Map<number, string>();
-    (allUnits ?? []).forEach((u) => {
+    (caseUnits ?? []).forEach((u) => {
       if (u.building) map.set(u.id, u.building);
     });
     return map;
-  }, [allUnits]);
+  }, [caseUnits]);
 
   const [filters, setFilters] = useState<CourtCasesFiltersValues>(() => {
     let hideClosed = false;
@@ -336,6 +325,12 @@ export default function CourtCasesPage() {
       width: 180,
       sorter: (a, b) => (a.projectName || '').localeCompare(b.projectName || ''),
     },
+    buildings: {
+      title: 'Корпус',
+      dataIndex: 'buildings',
+      width: 120,
+      sorter: (a, b) => (a.buildings || '').localeCompare(b.buildings || ''),
+    },
     projectObject: {
       title: 'Объект',
       dataIndex: 'projectObject',
@@ -477,7 +472,9 @@ export default function CourtCasesPage() {
           }
           return c;
         });
-        return parsed.filter((c) => baseColumns[c.key]);
+        const filtered = parsed.filter((c) => baseColumns[c.key]);
+        const missing = defaults.filter((d) => !filtered.some((f) => f.key === d.key));
+        return [...filtered, ...missing];
       }
     } catch {}
     return defaults;
@@ -595,7 +592,7 @@ export default function CourtCasesPage() {
                 onChange={handleFiltersChange}
                 onReset={resetFilters}
                 projects={projects}
-                units={allUnits}
+                units={caseUnits}
                 stages={stages}
                 users={users}
                 idOptions={idOptions}
