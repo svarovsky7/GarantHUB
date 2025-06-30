@@ -24,7 +24,11 @@ import { useVisibleProjects } from "@/entities/project";
 import { useBrigades } from "@/entities/brigade";
 import { useContractors } from "@/entities/contractor";
 import { useRolePermission } from "@/entities/rolePermission";
-import { useClaimsSimple, useClaimsSimpleAll } from "@/entities/claim";
+import {
+  useClaimsSimple,
+  useClaimsSimpleAll,
+  useClaimIdsByDefectIds,
+} from "@/entities/claim";
 import { useAuthStore } from "@/shared/store/authStore";
 import type { RoleName } from "@/shared/types/rolePermission";
 import DefectsTable from "@/widgets/DefectsTable";
@@ -74,6 +78,8 @@ export default function DefectsPage() {
   const { data: brigades = [] } = useBrigades();
   const { data: contractors = [] } = useContractors();
   const { data: users = [] } = useUsers();
+  const defectIds = useMemo(() => defects.map((d) => Number(d.id)), [defects]);
+  const { data: claimIdMap = {} } = useClaimIdsByDefectIds(defectIds);
 
   const userProjectIds = useAuthStore((s) => s.profile?.project_ids) ?? [];
   const userMap = useMemo(() => {
@@ -95,19 +101,22 @@ export default function DefectsPage() {
       { id: number; unit_ids: number[]; project_id: number; pre_trial_claim: boolean }[]
     >();
     claims.forEach((c: any) => {
+      const claimId = Number(c.id);
       (c.claim_defects || []).forEach((cd: any) => {
-        const arr = claimsMap.get(cd.defect_id) || [];
+        const defectId = Number(cd.defect_id);
+        const arr = claimsMap.get(defectId) || [];
         arr.push({
-          id: c.id,
+          id: claimId,
           unit_ids: c.unit_ids || [],
           project_id: c.project_id,
           pre_trial_claim: cd.pre_trial_claim ?? false,
         });
-        claimsMap.set(cd.defect_id, arr);
+        claimsMap.set(defectId, arr);
       });
     });
     return defects.map((d: any) => {
-      const claimLinked = claimsMap.get(d.id) || [];
+      const defectId = Number(d.id);
+      const claimLinked = claimsMap.get(defectId) || [];
       const linked = claimLinked;
       const hasPretrial = linked.some((l) => l.pre_trial_claim);
       const unitIdsFromClaims = Array.from(new Set(linked.flatMap((l) => l.unit_ids)));
@@ -145,7 +154,12 @@ export default function DefectsPage() {
       }
       return {
         ...d,
-        claimIds: claimLinked.map((l) => l.id),
+        claimIds: Array.from(
+          new Set([
+            ...claimLinked.map((l) => l.id),
+            ...(claimIdMap[defectId] ?? []),
+          ]),
+        ),
         hasPretrialClaim: hasPretrial,
         createdByName: userMap.get(d.created_by as string) ?? null,
         unitIds,
@@ -164,7 +178,7 @@ export default function DefectsPage() {
         defectStatusColor: d.defect_status?.color ?? null,
       } as DefectWithInfo;
     });
-  }, [defects, claims, units, projects, userMap]);
+  }, [defects, claims, units, projects, userMap, claimIdMap]);
 
   const filteredData = useMemo(() => {
     if (perm?.only_assigned_project) {
