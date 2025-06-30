@@ -453,7 +453,14 @@ export default function CorrespondencePage() {
     try {
       const saved = localStorage.getItem(LS_COLUMNS_KEY);
       if (saved) {
-        const parsed = JSON.parse(saved) as TableColumnSetting[];
+        let parsed = JSON.parse(saved) as TableColumnSetting[];
+        parsed = parsed.map((c) => {
+          if (typeof c.title !== 'string') {
+            const def = defaults.find((d) => d.key === c.key);
+            return { ...c, title: def?.title ?? '' };
+          }
+          return c;
+        });
         return parsed.filter((c) => base[c.key]);
       }
     } catch {}

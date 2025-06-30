@@ -496,7 +496,14 @@ export default function DefectsPage() {
     try {
       const saved = localStorage.getItem(LS_COLUMNS_KEY);
       if (saved) {
-        const parsed = JSON.parse(saved) as TableColumnSetting[];
+        let parsed = JSON.parse(saved) as TableColumnSetting[];
+        parsed = parsed.map((c) => {
+          if (typeof c.title !== 'string') {
+            const def = defaults.find((d) => d.key === c.key);
+            return { ...c, title: def?.title ?? '' };
+          }
+          return c;
+        });
         const filtered = parsed.filter((c) => base[c.key]);
         const missing = defaults.filter(
           (d) => !filtered.some((f) => f.key === d.key),
