@@ -24,7 +24,11 @@ import { useVisibleProjects } from "@/entities/project";
 import { useBrigades } from "@/entities/brigade";
 import { useContractors } from "@/entities/contractor";
 import { useRolePermission } from "@/entities/rolePermission";
-import { useClaimsSimple, useClaimsSimpleAll } from "@/entities/claim";
+import {
+  useClaimsSimple,
+  useClaimsSimpleAll,
+  useClaimIdsByDefectIds,
+} from "@/entities/claim";
 import { useAuthStore } from "@/shared/store/authStore";
 import type { RoleName } from "@/shared/types/rolePermission";
 import DefectsTable from "@/widgets/DefectsTable";
@@ -74,6 +78,8 @@ export default function DefectsPage() {
   const { data: brigades = [] } = useBrigades();
   const { data: contractors = [] } = useContractors();
   const { data: users = [] } = useUsers();
+  const defectIds = useMemo(() => defects.map((d) => d.id), [defects]);
+  const { data: claimIdMap = {} } = useClaimIdsByDefectIds(defectIds);
 
   const userProjectIds = useAuthStore((s) => s.profile?.project_ids) ?? [];
   const userMap = useMemo(() => {
@@ -145,7 +151,12 @@ export default function DefectsPage() {
       }
       return {
         ...d,
-        claimIds: claimLinked.map((l) => l.id),
+        claimIds: Array.from(
+          new Set([
+            ...claimLinked.map((l) => l.id),
+            ...(claimIdMap[d.id] ?? []),
+          ]),
+        ),
         hasPretrialClaim: hasPretrial,
         createdByName: userMap.get(d.created_by as string) ?? null,
         unitIds,
@@ -164,7 +175,7 @@ export default function DefectsPage() {
         defectStatusColor: d.defect_status?.color ?? null,
       } as DefectWithInfo;
     });
-  }, [defects, claims, units, projects, userMap]);
+  }, [defects, claims, units, projects, userMap, claimIdMap]);
 
   const filteredData = useMemo(() => {
     if (perm?.only_assigned_project) {
