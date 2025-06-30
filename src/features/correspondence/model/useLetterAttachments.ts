@@ -45,6 +45,14 @@ export function useLetterAttachments(options: {
     setRemoteFiles((p) => p.filter((f) => String(f.id) !== String(id)));
     setRemovedIds((p) => [...p, id]);
   }, []);
+  const setDescription = useCallback((idx: number, val: string) => {
+    setNewFiles((p) => p.map((f, i) => (i === idx ? { ...f, description: val } : f)));
+  }, []);
+  const setRemoteDescription = useCallback((id: string, val: string) => {
+    setRemoteFiles((p) =>
+      p.map((f) => (String(f.id) === String(id) ? { ...f, description: val } : f)),
+    );
+  }, []);
   const changeRemoteType = useCallback((_id: string, _type: number | null) => {}, []);
   const changeNewType = useCallback((_idx: number, _type: number | null) => {}, []);
   const appendRemote = useCallback((files: RemoteLetterFile[]) => {
@@ -70,6 +78,8 @@ export function useLetterAttachments(options: {
     addFiles,
     removeNew,
     removeRemote,
+    setDescription,
+    setRemoteDescription,
     changeRemoteType,
     changeNewType,
     appendRemote,

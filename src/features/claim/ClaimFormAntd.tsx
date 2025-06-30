@@ -310,7 +310,11 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
             <Select
               mode="multiple"
               showSearch
-              filterOption={(i, o) => (o?.label ?? '').toLowerCase().includes(i.toLowerCase())}
+              filterOption={(i, o) =>
+                String(o?.label ?? '')
+                  .toLowerCase()
+                  .includes(i.toLowerCase())
+              }
               options={units.map((u) => ({ value: u.id, label: u.name }))}
               disabled={!projectId}
             />

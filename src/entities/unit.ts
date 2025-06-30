@@ -53,7 +53,16 @@ export const useUnits = () => {
     });
 };
 
-export const useUnitsByProject = (projectId, building) =>
+/**
+ * Получить объекты (units) по идентификатору проекта.
+ *
+ * @param projectId идентификатор проекта
+ * @param building  optional номер/название корпуса
+ */
+export const useUnitsByProject = (
+    projectId: number | null,
+    building?: number | string,
+) =>
     useQuery({
         queryKey: ['units', projectId ?? 'all', building ?? ''],
         enabled : !!projectId,
