@@ -225,8 +225,6 @@ export default function UnitsMatrix({
           pl: 0,
           mt: 2,
           gap: 1,
-          maxHeight: "calc(100vh - 260px)",
-          overflowY: "auto",
         }}
       >
         {floors.map((floor) => (

@@ -137,9 +137,6 @@ export default function ProjectStructurePage() {
                     mb: 2,
                     mx: "auto",
                     fontFamily: 'Roboto, "Segoe UI", Arial, sans-serif',
-                    position: "sticky",
-                    top: 64,
-                    zIndex: 800,
                 }}
             >
                 <Typography
