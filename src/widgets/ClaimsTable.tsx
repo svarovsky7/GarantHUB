@@ -195,8 +195,6 @@ export default function ClaimsTable({
       components={components}
       dataSource={treeData}
       loading={loading}
-      sticky={{ offsetHeader: 64 }}
-      scroll={{ y: 'calc(100vh - 320px)' }}
       pagination={{
         pageSize,
         showSizeChanger: true,

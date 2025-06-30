@@ -35,9 +35,6 @@ const NavBar: React.FC = () => {
   return (
       <Layout.Header
           style={{
-            position: 'sticky',      // закрепляем навбар при прокрутке
-            top: 0,
-            zIndex: 1000,
             display: 'flex',
             alignItems: 'center',
             padding: '0 24px',

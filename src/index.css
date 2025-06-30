@@ -34,13 +34,6 @@ body {
   background: #f5f5f5;
   white-space: pre-line;
 }
-/* Закрепляем заголовки таблиц Ant Design под навбаром */
-.ant-table-thead > tr > th {
-  position: sticky;
-  top: 64px;         /* высота NavBar */
-  z-index: 2;
-  background: #fff;
-}
 .MuiTableCell-root {
   padding: 12px 16px;
   overflow: hidden;
