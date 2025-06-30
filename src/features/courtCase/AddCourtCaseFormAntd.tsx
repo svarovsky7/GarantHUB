@@ -15,6 +15,8 @@ import {
 import { Dayjs } from 'dayjs';
 import { useVisibleProjects } from '@/entities/project';
 import { useUnitsByProject } from '@/entities/unit';
+import useProjectBuildings from '@/shared/hooks/useProjectBuildings';
+import { useDebounce } from '@/shared/hooks/useDebounce';
 import {
   useContractors,
   useDeleteContractor,
@@ -63,6 +65,8 @@ export default function AddCourtCaseFormAntd({
   const projectIdStr = Form.useWatch('project_id', form);
   const globalProjectId = useProjectId();
   const projectId = projectIdStr != null ? Number(projectIdStr) : null;
+  const buildingWatch = Form.useWatch('building', form) ?? null;
+  const buildingDebounced = useDebounce(buildingWatch);
   const profileId = useAuthStore((s) => s.profile?.id);
   const prevProjectIdRef = useRef<number | null>(null);
 
@@ -97,13 +101,17 @@ export default function AddCourtCaseFormAntd({
   useEffect(() => {
     const prev = prevProjectIdRef.current;
     if (prev != null && projectId != null && prev !== projectId) {
-      form.setFieldsValue({ unit_ids: [] });
+      form.setFieldsValue({ unit_ids: [], building: undefined });
     }
     prevProjectIdRef.current = projectId ?? null;
   }, [projectId]);
 
   const { data: projects = [] } = useVisibleProjects();
-  const { data: units = [], isPending: unitsLoading } = useUnitsByProject(projectId);
+  const { buildings = [] } = useProjectBuildings(projectId);
+  const { data: units = [], isPending: unitsLoading } = useUnitsByProject(
+    projectId,
+    buildingDebounced ?? undefined,
+  );
   const { data: contractors = [], isPending: contractorsLoading } = useContractors();
   const { data: users = [], isPending: usersLoading } = useUsers();
   const { data: stages = [], isPending: stagesLoading } = useCourtCaseStatuses();
@@ -230,15 +238,24 @@ export default function AddCourtCaseFormAntd({
   return (
     <>
       <Form form={form} layout="vertical" onFinish={handleAddCase} autoComplete="off">
-        {/* Row 1: Project, Object, Lawyer */}
+        {/* Row 1: Project, Building, Objects */}
         <Row gutter={16}>
           <Col span={8}>
-            <Form.Item name="project_id" label="Проект" rules={[{ required: true, message: 'Выберите проект' }]}> 
+            <Form.Item name="project_id" label="Проект" rules={[{ required: true, message: 'Выберите проект' }]}>
               <Select options={projects.map((p) => ({ value: p.id, label: p.name }))} />
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item name="unit_ids" label="Объекты" rules={[{ required: true, message: 'Выберите объекты' }]}> 
+            <Form.Item name="building" label="Корпус">
+              <Select
+                allowClear
+                options={buildings.map((b) => ({ value: b, label: b }))}
+                disabled={!projectId}
+              />
+            </Form.Item>
+          </Col>
+          <Col span={8}>
+            <Form.Item name="unit_ids" label="Объекты" rules={[{ required: true, message: 'Выберите объекты' }]}>
               <Select
                 mode="multiple"
                 loading={unitsLoading}
@@ -247,14 +264,14 @@ export default function AddCourtCaseFormAntd({
               />
             </Form.Item>
           </Col>
+        </Row>
+        {/* Row 2: Lawyer and UID */}
+        <Row gutter={16}>
           <Col span={8}>
-            <Form.Item name="responsible_lawyer_id" label="Ответственный юрист" rules={[{ required: true, message: 'Выберите юриста' }]}> 
+            <Form.Item name="responsible_lawyer_id" label="Ответственный юрист" rules={[{ required: true, message: 'Выберите юриста' }]}>
               <Select loading={usersLoading} options={users.map((u) => ({ value: u.id, label: u.name }))} />
             </Form.Item>
           </Col>
-        </Row>
-        {/* Row UID */}
-        <Row gutter={16}>
           <Col span={8}>
             <Form.Item
               name="case_uid"
@@ -271,7 +288,7 @@ export default function AddCourtCaseFormAntd({
             </Form.Item>
           </Col>
         </Row>
-        {/* Row 2 */}
+        {/* Row 3 */}
         <Row gutter={16}>
           <Col span={8}>
             <Form.Item name="number" label="Номер дела" rules={[{ required: true, message: 'Укажите номер' }]}> 
@@ -289,7 +306,7 @@ export default function AddCourtCaseFormAntd({
             </Form.Item>
           </Col>
         </Row>
-        {/* Row 3 */}
+        {/* Row 5 */}
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item label="Истец" style={{ marginBottom: 0 }}>

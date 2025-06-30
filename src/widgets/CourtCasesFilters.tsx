@@ -1,24 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Form, Select, Input, DatePicker, Switch, Button } from 'antd';
 import { Project } from '@/shared/types/project';
 import { Unit } from '@/shared/types/unit';
 import { CourtCaseStatus } from '@/shared/types/courtCaseStatus';
 import { User } from '@/shared/types/user';
-import dayjs from 'dayjs';
-
-export interface CourtCasesFiltersValues {
-  ids?: number[];
-  projectId?: number;
-  objectId?: number;
-  number?: string;
-  dateRange?: [dayjs.Dayjs, dayjs.Dayjs];
-  status?: number;
-  plaintiff?: string;
-  defendant?: string;
-  fixStartRange?: [dayjs.Dayjs, dayjs.Dayjs];
-  lawyerId?: string;
-  hideClosed?: boolean;
-}
+import { naturalCompare } from '@/shared/utils/naturalSort';
+import type { CourtCasesFiltersValues } from '@/shared/types/courtCasesFilters';
 
 export interface CourtCasesFiltersProps {
   values: CourtCasesFiltersValues;
@@ -60,7 +47,31 @@ export default function CourtCasesFilters({
           placeholder="Проект"
           options={projects.map((p) => ({ value: p.id, label: p.name }))}
           value={values.projectId}
-          onChange={(v) => onChange({ ...values, projectId: v, objectId: undefined })}
+          onChange={(v) =>
+            onChange({ ...values, projectId: v, building: undefined, objectId: undefined })
+          }
+        />
+      </Form.Item>
+      <Form.Item label="Корпус">
+        <Select
+          allowClear
+          placeholder="Корпус"
+          options={useMemo(() => {
+            const list = Array.from(
+              new Set(
+                units
+                  .filter((u) => !values.projectId || u.project_id === values.projectId)
+                  .map((u) => u.building)
+                  .filter(Boolean),
+              ),
+            ) as string[];
+            return list
+              .sort(naturalCompare)
+              .map((b) => ({ value: b, label: b }));
+          }, [units, values.projectId])}
+          value={values.building}
+          onChange={(v) => onChange({ ...values, building: v, objectId: undefined })}
+          disabled={!values.projectId}
         />
       </Form.Item>
       <Form.Item label="Объект">
@@ -68,7 +79,11 @@ export default function CourtCasesFilters({
           allowClear
           placeholder="Объект"
           options={units
-            .filter((u) => !values.projectId || u.project_id === values.projectId)
+            .filter(
+              (u) =>
+                (!values.projectId || u.project_id === values.projectId) &&
+                (!values.building || u.building === values.building),
+            )
             .map((u) => ({ value: u.id, label: u.name }))}
           value={values.objectId}
           onChange={(v) => onChange({ ...values, objectId: v })}
