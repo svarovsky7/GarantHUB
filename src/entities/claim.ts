@@ -11,6 +11,7 @@ import type { ClaimWithNames } from '@/shared/types/claimWithNames';
 import type { ClaimDeleteParams } from '@/shared/types/claimDelete';
 import type { ClaimDefect } from '@/shared/types/claimDefect';
 import type { ClaimSimple } from '@/shared/types/claimSimple';
+import type { ClaimIdsMap } from '@/shared/types/claimIdsMap';
 import {
   addClaimAttachments,
   getAttachmentsByIds,
@@ -771,5 +772,32 @@ export function useUnlinkClaim() {
   });
 }
 
-export { closeDefectsForClaim, markClaimDefectsPreTrial };
+/**
+ * Получить связанные с дефектами идентификаторы претензий.
+ * @param defectIds массив идентификаторов дефектов
+ */
+export function useClaimIdsByDefectIds(defectIds?: number[]) {
+  return useQuery<ClaimIdsMap>({
+    queryKey: ['claim-ids-by-defect', (defectIds ?? []).join(',')],
+    enabled: Array.isArray(defectIds) && defectIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('claim_defects')
+        .select('claim_id, defect_id')
+        .in('defect_id', defectIds as number[]);
+      if (error) throw error;
+      const map: ClaimIdsMap = {};
+      (data ?? []).forEach((row: any) => {
+        const dId = Number(row.defect_id);
+        const cId = Number(row.claim_id);
+        if (!map[dId]) map[dId] = [];
+        map[dId].push(cId);
+      });
+      return map;
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
+export { closeDefectsForClaim, markClaimDefectsPreTrial, useClaimIdsByDefectIds };
 
