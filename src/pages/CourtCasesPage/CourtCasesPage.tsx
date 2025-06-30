@@ -40,7 +40,8 @@ import LinkCasesDialog from '@/features/courtCase/LinkCasesDialog';
 import ExportCourtCasesButton from '@/features/courtCase/ExportCourtCasesButton';
 import AddCourtCaseFormAntd from '@/features/courtCase/AddCourtCaseFormAntd';
 import CourtCaseViewModal from '@/features/courtCase/CourtCaseViewModal';
-import CourtCasesFilters, { CourtCasesFiltersValues } from '@/widgets/CourtCasesFilters';
+import CourtCasesFilters from '@/widgets/CourtCasesFilters';
+import type { CourtCasesFiltersValues } from '@/shared/types/courtCasesFilters';
 import TableColumnsDrawer from '@/widgets/TableColumnsDrawer';
 import type { TableColumnSetting } from '@/shared/types/tableColumnSetting';
 import { useResizableColumns } from '@/shared/hooks/useResizableColumns';
@@ -116,12 +117,20 @@ export default function CourtCasesPage() {
   const { data: allUnits = [] } = useQuery({
     queryKey: ['allUnits'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('units').select('id, name, project_id');
+      const { data, error } = await supabase.from('units').select('id, name, project_id, building');
       if (error) throw error;
       return data ?? [];
     },
     staleTime: 5 * 60_000,
   });
+
+  const buildingMap = React.useMemo(() => {
+    const map = new Map<number, string>();
+    (allUnits ?? []).forEach((u) => {
+      if (u.building) map.set(u.id, u.building);
+    });
+    return map;
+  }, [allUnits]);
 
   const [filters, setFilters] = useState<CourtCasesFiltersValues>(() => {
     let hideClosed = false;
@@ -133,6 +142,7 @@ export default function CourtCasesPage() {
       hideClosed,
       projectId: initialValues.project_id,
       objectId: initialValues.unit_ids ? initialValues.unit_ids[0] : undefined,
+      building: undefined,
     } as CourtCasesFiltersValues;
   });
 
@@ -180,7 +190,8 @@ export default function CourtCasesPage() {
     setFilters(v);
   };
 
-  const resetFilters = () => setFilters((f) => ({ hideClosed: f.hideClosed } as CourtCasesFiltersValues));
+  const resetFilters = () =>
+    setFilters((f) => ({ hideClosed: f.hideClosed } as CourtCasesFiltersValues));
 
   const closedStageId = React.useMemo(() => {
     return stages.find((s) => s.name.toLowerCase().includes('закры'))?.id;
@@ -192,6 +203,21 @@ export default function CourtCasesPage() {
     projectObject: (c.unit_ids ?? [])
       .map((id: number) => caseUnits.find((u) => u.id === id)?.name)
       .filter(Boolean)
+      .join(', '),
+    buildingNamesList: Array.from(
+      new Set(
+        (c.unit_ids ?? [])
+          .map((id: number) => buildingMap.get(id))
+          .filter(Boolean),
+      ),
+    ) as string[],
+    buildings: Array.from(
+      new Set(
+        (c.unit_ids ?? [])
+          .map((id: number) => buildingMap.get(id))
+          .filter(Boolean),
+      ),
+    )
       .join(', '),
     plaintiff:
       personsList.find((p) => p.id === c.plaintiff_person_id)?.full_name ||
@@ -219,6 +245,8 @@ export default function CourtCasesPage() {
     const matchesProject = !filters.projectId || c.project_id === filters.projectId;
     const matchesObject =
       !filters.objectId || (c.unit_ids ?? []).includes(filters.objectId);
+    const matchesBuilding =
+      !filters.building || c.buildingNamesList?.includes(filters.building);
     const matchesNumber = !filters.number || c.number.toLowerCase().includes(filters.number.toLowerCase());
     const matchesDate =
       !filters.dateRange ||
@@ -240,6 +268,7 @@ export default function CourtCasesPage() {
       matchesStatus &&
       matchesProject &&
       matchesObject &&
+      matchesBuilding &&
       matchesNumber &&
       matchesDate &&
       matchesPlaintiff &&
