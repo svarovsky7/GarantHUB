@@ -32,6 +32,10 @@ interface Props {
   onView?: (id: number) => void;
 }
 
+/**
+ * Таблица дефектов с возможностью изменения колонок и просмотра карточки.
+ * Заголовок фиксируется при прокрутке, как и на странице претензий.
+ */
 export default function DefectsTable({
   defects,
   filters,
@@ -227,6 +231,7 @@ export default function DefectsTable({
       rowKey="id"
       columns={columnsWithResize}
       components={components}
+      sticky={{ offsetHeader: 64 }}
       dataSource={filtered}
       pagination={{
         pageSize,
