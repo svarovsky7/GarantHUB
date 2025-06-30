@@ -42,7 +42,9 @@ import AddCourtCaseFormAntd from '@/features/courtCase/AddCourtCaseFormAntd';
 import CourtCaseViewModal from '@/features/courtCase/CourtCaseViewModal';
 import CourtCasesFilters from '@/widgets/CourtCasesFilters';
 import type { CourtCasesFiltersValues } from '@/shared/types/courtCasesFilters';
-import TableColumnsDrawer from '@/widgets/TableColumnsDrawer';
+const TableColumnsDrawer = React.lazy(
+  () => import('@/widgets/TableColumnsDrawer'),
+);
 import type { TableColumnSetting } from '@/shared/types/tableColumnSetting';
 import { useResizableColumns } from '@/shared/hooks/useResizableColumns';
 
@@ -551,13 +553,15 @@ export default function CourtCasesPage() {
           onClose={() => setLinkFor(null)}
           onSubmit={(ids) => linkCases.mutate({ parentId: String(linkFor!.id), childIds: ids })}
         />
-        <TableColumnsDrawer
-          open={showColumnsDrawer}
-          columns={columnsState}
-          onChange={setColumnsState}
-          onClose={() => setShowColumnsDrawer(false)}
-          onReset={handleResetColumns}
-        />
+        <React.Suspense fallback={null}>
+          <TableColumnsDrawer
+            open={showColumnsDrawer}
+            columns={columnsState}
+            onChange={setColumnsState}
+            onClose={() => setShowColumnsDrawer(false)}
+            onReset={handleResetColumns}
+          />
+        </React.Suspense>
         <CourtCaseViewModal
           open={viewId !== null}
           caseId={viewId}

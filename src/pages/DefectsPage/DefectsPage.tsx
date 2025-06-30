@@ -33,7 +33,9 @@ import { useAuthStore } from "@/shared/store/authStore";
 import type { RoleName } from "@/shared/types/rolePermission";
 import DefectsTable from "@/widgets/DefectsTable";
 import DefectsFilters from "@/widgets/DefectsFilters";
-import TableColumnsDrawer from "@/widgets/TableColumnsDrawer";
+const TableColumnsDrawer = React.lazy(
+  () => import("@/widgets/TableColumnsDrawer"),
+);
 import type { TableColumnSetting } from "@/shared/types/tableColumnSetting";
 import DefectViewModal from "@/features/defect/DefectViewModal";
 import DefectStatusSelect from "@/features/defect/DefectStatusSelect";
@@ -567,13 +569,15 @@ export default function DefectsPage() {
           onView={setViewId}
           columns={columns}
         />
-        <TableColumnsDrawer
-          open={showColumnsDrawer}
-          columns={columnsState}
-          onChange={setColumnsState}
-          onClose={() => setShowColumnsDrawer(false)}
-          onReset={handleResetColumns}
-        />
+        <React.Suspense fallback={null}>
+          <TableColumnsDrawer
+            open={showColumnsDrawer}
+            columns={columnsState}
+            onChange={setColumnsState}
+            onClose={() => setShowColumnsDrawer(false)}
+            onReset={handleResetColumns}
+          />
+        </React.Suspense>
         <Typography.Text style={{ display: "block", marginTop: 8 }}>
           Всего дефектов: {total}, из них закрытых: {closedCount} и не закрытых:{" "}
           {openCount}

@@ -23,7 +23,9 @@ import LinkLettersDialog from '@/features/correspondence/LinkLettersDialog';
 import ExportLettersButton from '@/features/correspondence/ExportLettersButton';
 import CorrespondenceTable from '@/widgets/CorrespondenceTable';
 import CorrespondenceFilters from '@/widgets/CorrespondenceFilters';
-import TableColumnsDrawer from '@/widgets/TableColumnsDrawer';
+const TableColumnsDrawer = React.lazy(
+  () => import('@/widgets/TableColumnsDrawer'),
+);
 import LetterStatusSelect from '@/features/correspondence/LetterStatusSelect';
 import LetterViewModal from '@/features/correspondence/LetterViewModal';
 import type { TableColumnSetting } from '@/shared/types/tableColumnSetting';
@@ -595,13 +597,15 @@ export default function CorrespondencePage() {
             });
           }}
         />
-        <TableColumnsDrawer
-          open={showColumnsDrawer}
-          columns={columnsState}
-          onChange={setColumnsState}
-          onClose={() => setShowColumnsDrawer(false)}
-          onReset={handleResetColumns}
-        />
+        <React.Suspense fallback={null}>
+          <TableColumnsDrawer
+            open={showColumnsDrawer}
+            columns={columnsState}
+            onChange={setColumnsState}
+            onClose={() => setShowColumnsDrawer(false)}
+            onReset={handleResetColumns}
+          />
+        </React.Suspense>
 
         <div
           style={{ marginTop: 24 }}
