@@ -6,7 +6,9 @@ import {
     FileOutlined,
     DeleteOutlined,
     DownloadOutlined,
+    EyeOutlined,
 } from '@ant-design/icons';
+import type { PreviewFile } from '@/shared/types/previewFile';
 
 // Типы лучше хранить в "@/shared/types", но оставляю здесь
 // для цельного примера. Можно вынести при рефакторинге.
@@ -55,6 +57,8 @@ interface Props {
     getLinkLabel?: (file: RemoteFile) => React.ReactNode;
     /** Обработчик клика по ссылке. Если указан, getLink не используется */
     onOpenLink?: (file: RemoteFile) => void;
+    /** Открыть предпросмотр файла */
+    onPreview?: (file: PreviewFile) => void;
     /** Показывать размер файла */
     showSize?: boolean;
     /** Карта изменённых описаний по id */
@@ -85,6 +89,7 @@ export default function AttachmentEditorTable({
   getLink,
   getLinkLabel,
   onOpenLink,
+  onPreview,
   showSize = false,
   changedMap,
   showHeader = false,
@@ -295,11 +300,26 @@ export default function AttachmentEditorTable({
         {
             title: 'Действия',
             dataIndex: 'actions',
-            width: 100,
+            width: 120,
             render: (_: unknown, row) => {
                 const idx = row.isRemote ? null : Number(row.key.split('-')[1]);
                 return (
                     <Space>
+                        <Tooltip title="Просмотреть">
+                            <Button
+                                type="text"
+                                size="small"
+                                icon={<EyeOutlined />}
+                                onClick={async () => {
+                                    if (row.isRemote && row.id && row.path) {
+                                        const url = await signed(row.path, row.name, row.id);
+                                        if (url) onPreview?.({ url, name: row.name, mime: row.mime });
+                                    } else if (idx != null) {
+                                        onPreview?.({ url: objUrls[idx], name: row.name, mime: row.mime });
+                                    }
+                                }}
+                            />
+                        </Tooltip>
                         <Tooltip title="Скачать">
                             {row.isRemote ? (
                                 <Button

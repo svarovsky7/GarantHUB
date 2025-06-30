@@ -7,7 +7,10 @@ const CHUNK_SIZE = 1000;
  * @param fn Функция, возвращающая промис запроса с указанием диапазона строк.
  */
 export async function fetchPaged<T>(
-  fn: (from: number, to: number) => Promise<PostgrestSingleResponse<T[]>>,
+  fn: (
+    from: number,
+    to: number,
+  ) => PromiseLike<PostgrestSingleResponse<T[]>>,
 ): Promise<T[]> {
   const result: T[] = [];
   for (let from = 0; ; from += CHUNK_SIZE) {
@@ -28,7 +31,9 @@ export async function fetchPaged<T>(
  */
 export async function fetchByChunks<T>(
   values: readonly number[],
-  fn: (chunk: readonly number[]) => Promise<PostgrestSingleResponse<T[]>>,
+  fn: (
+    chunk: readonly number[],
+  ) => PromiseLike<PostgrestSingleResponse<T[]>>,
 ): Promise<T[]> {
   const result: T[] = [];
   for (let i = 0; i < values.length; i += CHUNK_SIZE) {

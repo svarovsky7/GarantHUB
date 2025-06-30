@@ -183,11 +183,7 @@ const ClaimFormAntdEdit = React.forwardRef<
       if (attachments.newFiles.length) {
         const res = await addAtt.mutateAsync({
           claimId: claim.id,
-          files: attachments.newFiles.map((f) => ({
-            file: f.file,
-            type_id: null,
-            description: f.description,
-          })),
+          files: attachments.newFiles.map((f) => f.file),
         });
         uploaded = res.map((u) => ({
           id: u.id,

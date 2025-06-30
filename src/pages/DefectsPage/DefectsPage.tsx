@@ -198,8 +198,10 @@ export default function DefectsPage() {
 
     const uniq = (values: (string | number | null | undefined)[]) =>
       Array.from(new Set(values.filter(Boolean) as (string | number)[])).sort(naturalCompare);
-    const mapOptions = (vals: (string | number | null | undefined)[]) =>
-      uniq(vals).map((v) => ({ label: String(v), value: v }));
+    const mapNumOptions = (vals: (number | null | undefined)[]) =>
+      uniq(vals).map((v) => ({ label: String(v), value: Number(v) }));
+    const mapStrOptions = (vals: (string | null | undefined)[]) =>
+      uniq(vals).map((v) => ({ label: String(v), value: String(v) }));
 
     const uniqPairs = (pairs: [number | null, string | null][]) => {
       const map = new Map<number, string>();
@@ -214,15 +216,15 @@ export default function DefectsPage() {
     const unitMap = new Map(units.map((u) => [u.id, u.name]));
     const projectMap = new Map(projects.map((p) => [p.id, p.name]));
 
-    return {
-      ids: mapOptions(filtered('id').map((d) => d.id)),
+      return {
+        ids: mapNumOptions(filtered('id').map((d) => d.id)),
       units: Array.from(
         new Set(filtered('units').flatMap((d) => d.unitIds)),
       )
         .map((id) => ({ label: unitMap.get(id) ?? String(id), value: id }))
         .sort((a, b) => naturalCompare(a.label, b.label)),
-      buildings: mapOptions(
-        filtered('building').flatMap((d) => d.buildingNamesList || []),
+        buildings: mapStrOptions(
+          filtered('building').flatMap((d) => d.buildingNamesList || []),
       ),
       projects: Array.from(
         new Set(filtered('projectId').flatMap((d) => d.projectIds || [])),
@@ -233,8 +235,8 @@ export default function DefectsPage() {
       statuses: uniqPairs(
         filtered('statusId').map((d) => [d.status_id, d.defectStatusName]),
       ),
-      fixBy: mapOptions(filtered('fixBy').map((d) => d.fixByName)),
-    };
+        fixBy: mapStrOptions(filtered('fixBy').map((d) => d.fixByName)),
+      };
   }, [filteredData, filters, units, projects]);
   const [viewId, setViewId] = useState<number | null>(null);
   const [fixId, setFixId] = useState<number | null>(null);
