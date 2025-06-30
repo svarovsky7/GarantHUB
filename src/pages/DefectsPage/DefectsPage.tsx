@@ -477,9 +477,11 @@ export default function DefectsPage() {
   ] as const;
 
   const getTitleText = (t: React.ReactNode): string => {
-    if (typeof t === 'string') return t;
+    if (t == null || typeof t === 'boolean') return '';
+    if (typeof t === 'string' || typeof t === 'number') return String(t);
+    if (Array.isArray(t)) return t.map(getTitleText).join(' ');
     if (React.isValidElement(t)) {
-      return React.Children.toArray(t.props.children).join(' ');
+      return getTitleText(t.props.children);
     }
     return String(t);
   };
