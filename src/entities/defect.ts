@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/shared/api/supabaseClient';
 import { fetchPaged } from '@/shared/api/fetchAll';
+import type { PostgrestSingleResponse } from '@supabase/supabase-js';
 import { useNotify } from '@/shared/hooks/useNotify';
 import { addDefectAttachments, getAttachmentsByIds, ATTACH_BUCKET } from '@/entities/attachment';
 import { useAuthStore } from '@/shared/store/authStore';
@@ -45,7 +46,7 @@ export function useDefects() {
               ' defect_type:defect_types!fk_defects_type(id,name), defect_status:statuses!fk_defects_status(id,name,color), fixed_by_user:profiles!fk_defects_fixed_by(id,name)'
           )
           .order('id', { ascending: false })
-          .range(from, to),
+          .range(from, to) as unknown as PromiseLike<PostgrestSingleResponse<DefectRecord[]>>,
       );
       return rows;
     },
