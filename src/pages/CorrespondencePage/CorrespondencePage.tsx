@@ -132,6 +132,7 @@ export default function CorrespondencePage() {
   }, [searchParams]);
   const LS_FILTERS_VISIBLE_KEY = 'correspondenceFiltersVisible';
   const LS_COLUMNS_KEY = 'correspondenceColumns';
+  const LS_COLUMN_WIDTHS_KEY = 'correspondenceColumnWidths';
   const [showFilters, setShowFilters] = useState(() => {
     try {
       const saved = localStorage.getItem(LS_FILTERS_VISIBLE_KEY);
@@ -478,6 +479,9 @@ export default function CorrespondencePage() {
       title: base[key].title as string,
       visible: !['createdAt', 'createdByName'].includes(key),
     }));
+    try {
+      localStorage.removeItem(LS_COLUMN_WIDTHS_KEY);
+    } catch {}
     setColumnsState(defaults);
   };
 
@@ -653,6 +657,7 @@ export default function CorrespondencePage() {
             units={allUnits}
             statuses={statuses}
             columns={columns}
+            storageKey={LS_COLUMN_WIDTHS_KEY}
           />
           <Typography.Text style={{ display: 'block', marginTop: 8 }}>
             Всего писем: {total}, из них закрытых: {closedCount} и не закрытых: {openCount}

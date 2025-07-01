@@ -44,6 +44,7 @@ import { naturalCompare } from '@/shared/utils/naturalSort';
 import type { ClaimFilters } from '@/shared/types/claimFilters';
 
 const LS_COLUMNS_KEY = 'claimsColumns';
+const LS_COLUMN_WIDTHS_KEY = 'claimsColumnWidths';
 
 export default function ClaimsPage() {
   const { enqueueSnackbar } = useSnackbar();
@@ -145,6 +146,9 @@ export default function ClaimsPage() {
       title: base[key].title as string,
       visible: !['createdAt', 'createdByName'].includes(key),
     }));
+    try {
+      localStorage.removeItem(LS_COLUMN_WIDTHS_KEY);
+    } catch {}
     setColumnsState(defaults);
   };
 
@@ -393,6 +397,7 @@ export default function ClaimsPage() {
               filters={filters}
               loading={isLoading}
               columns={columns}
+              storageKey={LS_COLUMN_WIDTHS_KEY}
               onView={(id) => setViewId(id)}
               onAddChild={setLinkFor}
               onUnlink={(id) => unlinkClaim.mutate(id)}

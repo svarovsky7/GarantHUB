@@ -11,16 +11,47 @@ export interface UseResizableColumnsResult<T> {
   setColumns: React.Dispatch<React.SetStateAction<ColumnsType<T>>>;
 }
 
+/** Опции хука useResizableColumns */
+export interface UseResizableColumnsOptions {
+  /**
+   * Ключ в localStorage, куда сохраняются ширины колонок.
+   * Если не указан, ширины не сохраняются.
+   */
+  storageKey?: string;
+}
+
 /**
  * Хук добавляет возможность изменять ширину колонок Ant Design таблицы.
  * @param initial исходный массив колонок
  */
 export function useResizableColumns<T>(
   initial: ColumnsType<T>,
+  options: UseResizableColumnsOptions = {},
 ): UseResizableColumnsResult<T> {
-  const [cols, setCols] = useState(initial);
+  const { storageKey } = options;
 
-  useEffect(() => setCols(initial), [initial]);
+  const applySavedWidths = (cols: ColumnsType<T>): ColumnsType<T> => {
+    if (!storageKey) return cols;
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        const map = JSON.parse(saved) as Record<string, number>;
+        return cols.map((c) => {
+          const key = String(c.key ?? c.dataIndex);
+          const width = map[key];
+          return width ? { ...c, width } : c;
+        });
+      }
+    } catch {}
+    return cols;
+  };
+
+  const [cols, setCols] = useState(() => applySavedWidths(initial));
+
+  useEffect(() => {
+    setCols(applySavedWidths(initial));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initial, storageKey]);
 
   const handleResize = (index: number) => (_: any, { size }: any) => {
     setCols((prev) => {
@@ -29,6 +60,18 @@ export function useResizableColumns<T>(
       return next;
     });
   };
+
+  useEffect(() => {
+    if (!storageKey) return;
+    try {
+      const map: Record<string, number> = {};
+      cols.forEach((c) => {
+        const key = String(c.key ?? c.dataIndex);
+        if (c.width) map[key] = c.width as number;
+      });
+      localStorage.setItem(storageKey, JSON.stringify(map));
+    } catch {}
+  }, [cols, storageKey]);
 
   const columns = useMemo(
     () =>
