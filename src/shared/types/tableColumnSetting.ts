@@ -5,4 +5,6 @@ export interface TableColumnSetting {
   title: string;
   /** Виден ли столбец */
   visible: boolean;
+  /** Текущая ширина столбца в пикселях */
+  width?: number;
 }
