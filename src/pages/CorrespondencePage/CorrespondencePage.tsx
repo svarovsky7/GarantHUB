@@ -469,14 +469,6 @@ export default function CorrespondencePage() {
     return defaults;
   });
 
-  const [columnWidths, setColumnWidths] = useState<Record<string, number>>(() => {
-    try {
-      return JSON.parse(localStorage.getItem(LS_COLUMN_WIDTHS_KEY) || '{}');
-    } catch {
-      return {};
-    }
-  });
-
   /**
    * Сброс колонок к начальному состоянию
    */
@@ -490,7 +482,6 @@ export default function CorrespondencePage() {
     try {
       localStorage.removeItem(LS_COLUMN_WIDTHS_KEY);
     } catch {}
-    setColumnWidths({});
     setColumnsState(defaults);
   };
 
@@ -502,26 +493,14 @@ export default function CorrespondencePage() {
 
   React.useEffect(() => {
     try {
-      localStorage.setItem(LS_COLUMN_WIDTHS_KEY, JSON.stringify(columnWidths));
-    } catch {}
-  }, [columnWidths]);
-
-  React.useEffect(() => {
-    try {
       localStorage.setItem(LS_FILTERS_VISIBLE_KEY, JSON.stringify(showFilters));
     } catch {}
   }, [showFilters]);
 
   const baseColumns = React.useMemo(getBaseColumns, [remove.isPending]);
   const columns: ColumnsType<any> = React.useMemo(
-    () =>
-      columnsState
-        .filter((c) => c.visible)
-        .map((c) => ({
-          ...baseColumns[c.key],
-          width: columnWidths[c.key] ?? baseColumns[c.key].width,
-        })),
-    [columnsState, baseColumns, columnWidths],
+    () => columnsState.filter((c) => c.visible).map((c) => baseColumns[c.key]),
+    [columnsState, baseColumns],
   );
 
   /** ID статуса "Закрыто", определяется по названию */
@@ -634,10 +613,6 @@ export default function CorrespondencePage() {
           <TableColumnsDrawer
             open={showColumnsDrawer}
             columns={columnsState}
-            widths={Object.fromEntries(
-              Object.keys(baseColumns).map((k) => [k, columnWidths[k] ?? baseColumns[k].width])
-            )}
-            onWidthsChange={setColumnWidths}
             onChange={setColumnsState}
             onClose={() => setShowColumnsDrawer(false)}
             onReset={handleResetColumns}
@@ -682,6 +657,7 @@ export default function CorrespondencePage() {
             units={allUnits}
             statuses={statuses}
             columns={columns}
+            storageKey={LS_COLUMN_WIDTHS_KEY}
           />
           <Typography.Text style={{ display: 'block', marginTop: 8 }}>
             Всего писем: {total}, из них закрытых: {closedCount} и не закрытых: {openCount}

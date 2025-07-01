@@ -16,6 +16,7 @@ import DefectStatusSelect from "@/features/defect/DefectStatusSelect";
 import type { DefectWithInfo } from "@/shared/types/defect";
 import type { DefectFilters } from "@/shared/types/defectFilters";
 import { filterDefects } from "@/shared/utils/defectFilter";
+import { useResizableColumns } from "@/shared/hooks/useResizableColumns";
 import { naturalCompareArrays } from "@/shared/utils/naturalSort";
 
 const fmt = (v: string | null) => (v ? dayjs(v).format("DD.MM.YYYY") : "—");
@@ -29,6 +30,8 @@ interface Props {
   /** Колонки таблицы. Если не переданы, используется набор по умолчанию */
   columns?: ColumnsType<DefectWithInfo>;
   onView?: (id: number) => void;
+  /** Ключ localStorage для хранения ширины колонок */
+  storageKey?: string;
 }
 
 /**
@@ -41,6 +44,7 @@ export default function DefectsTable({
   loading,
   columns: columnsProp,
   onView,
+  storageKey,
 }: Props) {
   const { mutateAsync: remove, isPending } = useDeleteDefect();
   const filtered = useMemo(
@@ -208,7 +212,8 @@ export default function DefectsTable({
     },
   ];
 
-  const columnsWithResize = columnsProp ?? defaultColumns;
+  const { columns: columnsWithResize, components } =
+    useResizableColumns(columnsProp ?? defaultColumns, { storageKey });
   const [pageSize, setPageSize] = React.useState(100);
 
   if (loading) return <Skeleton active paragraph={{ rows: 6 }} />;
@@ -228,6 +233,7 @@ export default function DefectsTable({
     <Table
       rowKey="id"
       columns={columnsWithResize}
+      components={components}
       sticky={{ offsetHeader: 64 }}
       dataSource={filtered}
       pagination={{
