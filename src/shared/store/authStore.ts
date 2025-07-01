@@ -49,11 +49,11 @@ export const useAuthStore = create<AuthState>((set) => ({
   projectId: loadActiveProject(),
   setProfile: (profile) =>
     set(() => {
+      // Сохраняем ранее выбранный проект без ограничений по списку profile.project_ids.
+      // Это позволяет администратору выбрать любой доступный проект и сохранить
+      // его между сессиями.
       const saved = loadActiveProject();
-      const id =
-        saved && profile?.project_ids?.includes(saved)
-          ? saved
-          : profile?.project_ids?.[0] ?? null;
+      const id = saved ?? profile?.project_ids?.[0] ?? null;
       saveActiveProject(id);
       return { profile, projectId: id };
     }),
@@ -67,10 +67,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
   setProjectIds: (project_ids) =>
     set((s) => {
-      const current =
-        s.projectId && project_ids.includes(s.projectId)
-          ? s.projectId
-          : project_ids[0] ?? null;
+      // Не сбрасываем выбранный проект, даже если он отсутствует в новом списке
+      // назначенных. Это полезно, если администратор работает с чужим проектом.
+      const current = s.projectId ?? project_ids[0] ?? null;
       saveActiveProject(current);
       return s.profile
         ? { profile: { ...s.profile, project_ids }, projectId: current }
