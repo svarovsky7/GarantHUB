@@ -451,12 +451,9 @@ export default function CorrespondencePage() {
       key,
       title: base[key].title as string,
       visible: !['createdAt', 'createdByName'].includes(key),
-      width: base[key].width as number,
     }));
     try {
       const saved = localStorage.getItem(LS_COLUMNS_KEY);
-      const savedWidths = localStorage.getItem(LS_COLUMN_WIDTHS_KEY);
-      const widthMap = savedWidths ? JSON.parse(savedWidths) as Record<string, number> : {};
       if (saved) {
         let parsed = JSON.parse(saved) as TableColumnSetting[];
         parsed = parsed.map((c) => {
@@ -466,9 +463,7 @@ export default function CorrespondencePage() {
           }
           return c;
         });
-        return parsed
-          .filter((c) => base[c.key])
-          .map((c) => ({ ...c, width: widthMap[c.key] ?? c.width }));
+        return parsed.filter((c) => base[c.key]);
       }
     } catch {}
     return defaults;
@@ -483,7 +478,6 @@ export default function CorrespondencePage() {
       key,
       title: base[key].title as string,
       visible: !['createdAt', 'createdByName'].includes(key),
-      width: base[key].width as number,
     }));
     try {
       localStorage.removeItem(LS_COLUMN_WIDTHS_KEY);
@@ -499,36 +493,15 @@ export default function CorrespondencePage() {
 
   React.useEffect(() => {
     try {
-      const map: Record<string, number> = {};
-      columnsState.forEach((c) => {
-        if (c.width) map[c.key] = c.width;
-      });
-      localStorage.setItem(LS_COLUMN_WIDTHS_KEY, JSON.stringify(map));
-    } catch {}
-  }, [columnsState]);
-
-  React.useEffect(() => {
-    try {
       localStorage.setItem(LS_FILTERS_VISIBLE_KEY, JSON.stringify(showFilters));
     } catch {}
   }, [showFilters]);
 
   const baseColumns = React.useMemo(getBaseColumns, [remove.isPending]);
-  const columnsForResize: ColumnsType<any> = React.useMemo(
-    () =>
-      columnsState
-        .filter((c) => c.visible)
-        .map((c) => ({ ...baseColumns[c.key], width: c.width })),
+  const columns: ColumnsType<any> = React.useMemo(
+    () => columnsState.filter((c) => c.visible).map((c) => baseColumns[c.key]),
     [columnsState, baseColumns],
   );
-
-  const { columns, components } = useResizableColumns(columnsForResize, {
-    storageKey: LS_COLUMN_WIDTHS_KEY,
-    onWidthsChange: (map) =>
-      setColumnsState((prev) =>
-        prev.map((c) => ({ ...c, width: map[c.key] ?? c.width })),
-      ),
-  });
 
   /** ID статуса "Закрыто", определяется по названию */
   const closedStatusId = React.useMemo(
@@ -684,7 +657,7 @@ export default function CorrespondencePage() {
             units={allUnits}
             statuses={statuses}
             columns={columns}
-            components={components}
+            storageKey={LS_COLUMN_WIDTHS_KEY}
           />
           <Typography.Text style={{ display: 'block', marginTop: 8 }}>
             Всего писем: {total}, из них закрытых: {closedCount} и не закрытых: {openCount}
