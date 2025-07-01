@@ -26,7 +26,7 @@ import {
 import { updateAttachmentDescription } from '@/entities/attachment';
 import { supabase } from '@/shared/api/supabaseClient';
 import { useVisibleProjects } from '@/entities/project';
-import { useUnitsByProject } from '@/entities/unit';
+import { useUnitsByProject, useUnitsByIds } from '@/entities/unit';
 import { useUsers } from '@/entities/user';
 import { useClaimStatuses } from '@/entities/claimStatus';
 
@@ -112,6 +112,17 @@ const ClaimFormAntdEdit = React.forwardRef<
     attachmentsState ?? useClaimAttachments({ claim: claim as any });
   const { changedFields, handleValuesChange } = useChangedFields(form, [claim]);
   const preTrialWatch = Form.useWatch('pre_trial_claim', form);
+  const unitIdsWatch = Form.useWatch('unit_ids', form) ?? [];
+  const { data: selectedUnits = [] } = useUnitsByIds(
+    Array.isArray(unitIdsWatch) ? unitIdsWatch : [],
+  );
+  const buildingsText = React.useMemo(
+    () =>
+      Array.from(
+        new Set(selectedUnits.map((u) => u.building).filter(Boolean)),
+      ).join(', '),
+    [selectedUnits],
+  );
 
   useImperativeHandle(ref, () => ({
     submit: () => form.submit(),
@@ -258,6 +269,11 @@ const ClaimFormAntdEdit = React.forwardRef<
             style={highlight('project_id')}
           >
             <Select allowClear options={projects.map((p) => ({ value: p.id, label: p.name }))} />
+          </Form.Item>
+        </Col>
+        <Col span={8}>
+          <Form.Item label="Корпус">
+            <Input value={buildingsText} disabled />
           </Form.Item>
         </Col>
         <Col span={8}>
