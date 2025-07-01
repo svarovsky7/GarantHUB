@@ -49,6 +49,7 @@ import { useUsers } from "@/entities/user";
 import type { DefectWithInfo } from "@/shared/types/defect";
 import type { DefectFilters } from "@/shared/types/defectFilters";
 import type { ColumnsType } from "antd/es/table";
+import { useResizableColumns } from '@/shared/hooks/useResizableColumns';
 
 const fmt = (v: string | null) => (v ? dayjs(v).format("DD.MM.YYYY") : "—");
 const fmtDateTime = (v: string | null) =>
@@ -493,9 +494,12 @@ export default function DefectsPage() {
         key,
         title: getTitleText(base[key].title as React.ReactNode),
         visible: !["createdAt", "createdByName"].includes(key),
+        width: base[key].width as number,
       }));
     try {
       const saved = localStorage.getItem(LS_COLUMNS_KEY);
+      const savedWidths = localStorage.getItem(LS_COLUMN_WIDTHS_KEY);
+      const widthMap = savedWidths ? JSON.parse(savedWidths) as Record<string, number> : {};
       if (saved) {
         let parsed = JSON.parse(saved) as TableColumnSetting[];
         parsed = parsed.map((c) => {
@@ -509,7 +513,10 @@ export default function DefectsPage() {
         const missing = defaults.filter(
           (d) => !filtered.some((f) => f.key === d.key),
         );
-        return [...filtered, ...missing];
+        return [...filtered, ...missing].map((c) => ({
+          ...c,
+          width: widthMap[c.key] ?? c.width,
+        }));
       }
     } catch {}
     return defaults;
@@ -521,6 +528,7 @@ export default function DefectsPage() {
       key,
       title: getTitleText(base[key].title as React.ReactNode),
       visible: !["createdAt", "createdByName"].includes(key),
+      width: base[key].width as number,
     }));
     try {
       localStorage.removeItem(LS_COLUMN_WIDTHS_KEY);
@@ -536,14 +544,34 @@ export default function DefectsPage() {
 
   React.useEffect(() => {
     try {
+      const map: Record<string, number> = {};
+      columnsState.forEach((c) => {
+        if (c.width) map[c.key] = c.width;
+      });
+      localStorage.setItem(LS_COLUMN_WIDTHS_KEY, JSON.stringify(map));
+    } catch {}
+  }, [columnsState]);
+
+  React.useEffect(() => {
+    try {
       localStorage.setItem(LS_FILTERS_VISIBLE_KEY, JSON.stringify(showFilters));
     } catch {}
   }, [showFilters]);
 
-  const columns = useMemo(() => {
+  const columnsForResize = useMemo(() => {
     const base = baseColumns;
-    return columnsState.filter((c) => c.visible).map((c) => base[c.key]);
+    return columnsState
+      .filter((c) => c.visible)
+      .map((c) => ({ ...base[c.key], width: c.width }));
   }, [columnsState, baseColumns]);
+
+  const { columns, components } = useResizableColumns(columnsForResize, {
+    storageKey: LS_COLUMN_WIDTHS_KEY,
+    onWidthsChange: (map) =>
+      setColumnsState((prev) =>
+        prev.map((c) => ({ ...c, width: map[c.key] ?? c.width })),
+      ),
+  });
 
   const [showColumnsDrawer, setShowColumnsDrawer] = useState(false);
 
@@ -581,7 +609,7 @@ export default function DefectsPage() {
           loading={isPending}
           onView={setViewId}
           columns={columns}
-          storageKey={LS_COLUMN_WIDTHS_KEY}
+          components={components}
         />
         <React.Suspense fallback={null}>
           <TableColumnsDrawer

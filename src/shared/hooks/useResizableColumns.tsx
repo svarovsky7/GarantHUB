@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Resizable } from 'react-resizable';
 import type { ColumnsType } from 'antd/es/table';
 
@@ -18,6 +18,8 @@ export interface UseResizableColumnsOptions {
    * Если не указан, ширины не сохраняются.
    */
   storageKey?: string;
+  /** Вызывается при изменении ширины столбцов */
+  onWidthsChange?: (map: Record<string, number>) => void;
 }
 
 /**
@@ -28,7 +30,7 @@ export function useResizableColumns<T>(
   initial: ColumnsType<T>,
   options: UseResizableColumnsOptions = {},
 ): UseResizableColumnsResult<T> {
-  const { storageKey } = options;
+  const { storageKey, onWidthsChange } = options;
 
   const applySavedWidths = (cols: ColumnsType<T>): ColumnsType<T> => {
     if (!storageKey) return cols;
@@ -53,12 +55,18 @@ export function useResizableColumns<T>(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initial, storageKey]);
 
+  const resizeTimeout = useRef<number>();
+  const pending = useRef(cols);
+  const flush = () => {
+    setCols(pending.current);
+    resizeTimeout.current = undefined;
+  };
   const handleResize = (index: number) => (_: any, { size }: any) => {
-    setCols((prev) => {
-      const next = [...prev];
-      next[index] = { ...next[index], width: size.width };
-      return next;
-    });
+    pending.current = pending.current.map((c, i) =>
+      i === index ? { ...c, width: size.width } : c,
+    );
+    if (resizeTimeout.current) return;
+    resizeTimeout.current = window.setTimeout(flush, 50);
   };
 
   useEffect(() => {
@@ -72,6 +80,21 @@ export function useResizableColumns<T>(
       localStorage.setItem(storageKey, JSON.stringify(map));
     } catch {}
   }, [cols, storageKey]);
+
+  const lastWidths = useRef('');
+  useEffect(() => {
+    if (!onWidthsChange) return;
+    const map: Record<string, number> = {};
+    cols.forEach((c) => {
+      const key = String(c.key ?? c.dataIndex);
+      if (c.width) map[key] = c.width as number;
+    });
+    const json = JSON.stringify(map);
+    if (json !== lastWidths.current) {
+      lastWidths.current = json;
+      onWidthsChange(map);
+    }
+  }, [cols, onWidthsChange]);
 
   const columns = useMemo(
     () =>
