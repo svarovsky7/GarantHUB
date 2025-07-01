@@ -29,10 +29,10 @@ export default function ChangePasswordForm() {
       >
         <Input.Password />
       </Form.Item>
-      <Typography.Paragraph type="secondary">
+      <Typography.Paragraph type="secondary" style={{ marginBottom: 0 }}>
         Просмотр текущего пароля невозможен
       </Typography.Paragraph>
-      <Form.Item>
+      <Form.Item style={{ marginTop: 16, marginBottom: 0 }}>
         <Button type="primary" onClick={onSave} loading={changePass.isPending}>
           Изменить пароль
         </Button>
