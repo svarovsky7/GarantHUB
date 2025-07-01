@@ -37,7 +37,8 @@ const NavBar: React.FC = () => {
           style={{
             display: 'flex',
             alignItems: 'center',
-            padding: '0 24px',
+            paddingLeft: 24,
+            paddingRight: 36,    // дополнительный отступ справа
             gap: 24,                 // аккуратный отступ между элементами
             position: 'sticky',      // закрепляем навбар при прокрутке
             top: 0,
