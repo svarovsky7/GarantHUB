@@ -37,7 +37,8 @@ export function useResizableColumns<T>(
       if (saved) {
         const map = JSON.parse(saved) as Record<string, number>;
         return cols.map((c) => {
-          const key = String(c.key ?? c.dataIndex);
+          const key =
+            'dataIndex' in c ? String(c.key ?? c.dataIndex) : String(c.key);
           const width = map[key];
           return width ? { ...c, width } : c;
         });
@@ -66,7 +67,8 @@ export function useResizableColumns<T>(
     try {
       const map: Record<string, number> = {};
       cols.forEach((c) => {
-        const key = String(c.key ?? c.dataIndex);
+        const key =
+          'dataIndex' in c ? String(c.key ?? c.dataIndex) : String(c.key);
         if (c.width) map[key] = c.width as number;
       });
       localStorage.setItem(storageKey, JSON.stringify(map));
