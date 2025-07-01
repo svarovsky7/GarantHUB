@@ -1,4 +1,4 @@
-import React, { useEffect, useImperativeHandle } from 'react';
+import React, { useEffect, useImperativeHandle, useMemo } from 'react';
 import type { Dayjs } from 'dayjs';
 import {
   Form,
@@ -61,6 +61,8 @@ export interface ClaimFormAntdEditProps {
 
 export interface ClaimFormAntdEditValues {
   project_id: number | null;
+  /** Корпус, к которому относится претензия */
+  building: string | null;
   unit_ids: number[];
   claim_status_id: number | null;
   claim_no: string;
@@ -101,6 +103,18 @@ const ClaimFormAntdEdit = React.forwardRef<
   const projectIdWatch = Form.useWatch('project_id', form);
   const projectId = projectIdWatch != null ? Number(projectIdWatch) : globalProjectId;
   const { data: units = [] } = useUnitsByProject(projectId);
+  const buildingMap = useMemo(() => {
+    const map: Record<number, string> = {};
+    units.forEach((u) => {
+      if (u.building) map[u.id] = u.building;
+    });
+    return map;
+  }, [units]);
+  const buildingsValue = useMemo(() => {
+    if (!claim) return '';
+    const uniq = Array.from(new Set(claim.unit_ids.map((id) => buildingMap[id]).filter(Boolean)));
+    return uniq.join(', ');
+  }, [claim, buildingMap]);
   const { data: users = [] } = useUsers();
   const { data: statuses = [] } = useClaimStatuses();
   const { data: caseUids = [] } = useCaseUids();
@@ -140,6 +154,10 @@ const ClaimFormAntdEdit = React.forwardRef<
       description: claim.description ?? '',
     });
   }, [claim, form]);
+
+  useEffect(() => {
+    form.setFieldValue('building', buildingsValue || null);
+  }, [buildingsValue, form]);
 
   const onFinish = async (values: ClaimFormAntdEditValues) => {
     if (!claim) return;
@@ -261,6 +279,11 @@ const ClaimFormAntdEdit = React.forwardRef<
           </Form.Item>
         </Col>
         <Col span={8}>
+          <Form.Item name="building" label="Корпус">
+            <Input disabled />
+          </Form.Item>
+        </Col>
+        <Col span={8}>
           <Form.Item
             name="unit_ids"
             label="Объекты"
@@ -274,6 +297,8 @@ const ClaimFormAntdEdit = React.forwardRef<
             />
           </Form.Item>
         </Col>
+      </Row>
+      <Row gutter={16}>
         <Col span={8}>
           <Form.Item label="Собственник объекта" name="owner" style={highlight('owner')}>
             <Input />
