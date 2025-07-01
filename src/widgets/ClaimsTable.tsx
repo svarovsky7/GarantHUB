@@ -14,6 +14,7 @@ import { useDeleteClaim } from '@/entities/claim';
 import type { ClaimFilters } from '@/shared/types/claimFilters';
 import type { ClaimWithNames } from '@/shared/types/claimWithNames';
 import ClaimStatusSelect from '@/features/claim/ClaimStatusSelect';
+import { useResizableColumns } from '@/shared/hooks/useResizableColumns';
 
 const fmt = (d: any) =>
   d && dayjs.isDayjs(d) && d.isValid() ? d.format('DD.MM.YYYY') : '—';
@@ -29,6 +30,8 @@ interface Props {
   onView?: (id: number) => void;
   onAddChild?: (parent: ClaimWithNames) => void;
   onUnlink?: (id: number) => void;
+  /** Ключ localStorage для хранения ширины колонок */
+  storageKey?: string;
 }
 
 export default function ClaimsTable({
@@ -39,6 +42,7 @@ export default function ClaimsTable({
   onView,
   onAddChild,
   onUnlink,
+  storageKey,
 }: Props) {
   const { mutateAsync: remove, isPending } = useDeleteClaim();
   const defaultColumns: ColumnsType<any> = useMemo(
@@ -122,7 +126,8 @@ export default function ClaimsTable({
     [onView, remove, isPending],
   );
 
-  const columnsWithResize = columnsProp ?? defaultColumns;
+  const { columns: columnsWithResize, components } =
+    useResizableColumns(columnsProp ?? defaultColumns, { storageKey });
 
   const filtered = useMemo(() => {
     return claims.filter((c) => {
@@ -190,6 +195,7 @@ export default function ClaimsTable({
     <Table
       rowKey="id"
       columns={columnsWithResize}
+      components={components}
       sticky={{ offsetHeader: 64 }}
       dataSource={treeData}
       loading={loading}

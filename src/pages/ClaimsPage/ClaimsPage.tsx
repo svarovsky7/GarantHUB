@@ -136,14 +136,6 @@ export default function ClaimsPage() {
     return defaults;
   });
 
-  const [columnWidths, setColumnWidths] = useState<Record<string, number>>(() => {
-    try {
-      return JSON.parse(localStorage.getItem(LS_COLUMN_WIDTHS_KEY) || '{}');
-    } catch {
-      return {};
-    }
-  });
-
   /**
    * Сброс колонок к начальному состоянию
    */
@@ -157,7 +149,6 @@ export default function ClaimsPage() {
     try {
       localStorage.removeItem(LS_COLUMN_WIDTHS_KEY);
     } catch {}
-    setColumnWidths({});
     setColumnsState(defaults);
   };
 
@@ -166,12 +157,6 @@ export default function ClaimsPage() {
       localStorage.setItem(LS_COLUMNS_KEY, JSON.stringify(columnsState));
     } catch {}
   }, [columnsState]);
-
-  React.useEffect(() => {
-    try {
-      localStorage.setItem(LS_COLUMN_WIDTHS_KEY, JSON.stringify(columnWidths));
-    } catch {}
-  }, [columnWidths]);
 
   const userMap = useMemo(() => {
     const map = {} as Record<string, string>;
@@ -331,13 +316,7 @@ export default function ClaimsPage() {
     } as Record<string, ColumnsType<any>[number]>;
   }
 
-  const baseColumns = useMemo(() => {
-    const cols = getBaseColumns();
-    Object.keys(cols).forEach((key) => {
-      cols[key] = { ...cols[key], width: columnWidths[key] ?? cols[key].width };
-    });
-    return cols;
-  }, [columnWidths, deleteClaimMutation.isPending]);
+  const baseColumns = useMemo(getBaseColumns, [deleteClaimMutation.isPending]);
   const columns: ColumnsType<any> = useMemo(() => columnsState.filter((c) => c.visible).map((c) => baseColumns[c.key]), [columnsState, baseColumns]);
 
   /** Общее количество претензий после учёта прав доступа */
@@ -399,10 +378,6 @@ export default function ClaimsPage() {
           <TableColumnsDrawer
             open={showColumnsDrawer}
             columns={columnsState}
-            widths={Object.fromEntries(
-              Object.keys(baseColumns).map((k) => [k, columnWidths[k] ?? baseColumns[k].width])
-            )}
-            onWidthsChange={setColumnWidths}
             onChange={setColumnsState}
             onClose={() => setShowColumnsDrawer(false)}
             onReset={handleResetColumns}
@@ -422,6 +397,7 @@ export default function ClaimsPage() {
               filters={filters}
               loading={isLoading}
               columns={columns}
+              storageKey={LS_COLUMN_WIDTHS_KEY}
               onView={(id) => setViewId(id)}
               onAddChild={setLinkFor}
               onUnlink={(id) => unlinkClaim.mutate(id)}
