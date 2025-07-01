@@ -18,8 +18,6 @@ interface CorrespondenceTableProps {
   onView?: (id: string) => void;
   /** Колонки таблицы. Если не переданы, используется набор по умолчанию */
   columns?: ColumnsType<any>;
-  /** Компоненты таблицы для ресайза */
-  components?: Record<string, any>;
   users: Option[];
   letterTypes: Option[];
   projects: Option[];
@@ -27,7 +25,6 @@ interface CorrespondenceTableProps {
   statuses: Option[];
   /** Ключ localStorage для хранения ширины колонок */
   storageKey?: string;
-  onWidthsChange?: (map: Record<string, number>) => void;
 }
 
 /** Ключ в localStorage для хранения раскрывшихся строк */
@@ -41,14 +38,12 @@ export default function CorrespondenceTable({
                                               onUnlink,
                                               onView,
                                               columns: columnsProp,
-                                              components: externalComponents,
                                               users,
                                               letterTypes,
                                               projects,
                                               units,
                                               statuses,
                                               storageKey,
-                                              onWidthsChange,
                                             }: CorrespondenceTableProps) {
   const maps = useMemo(() => {
     const m = {
@@ -300,12 +295,8 @@ export default function CorrespondenceTable({
   ],
     [onAddChild, onUnlink, onDelete, onView],
   );
-  const { columns: resizableColumns, components } = externalComponents
-    ? { columns: columnsProp ?? defaultColumns, components: externalComponents }
-    : useResizableColumns(columnsProp ?? defaultColumns, {
-        storageKey,
-        onWidthsChange,
-      });
+  const { columns: resizableColumns, components } =
+    useResizableColumns(columnsProp ?? defaultColumns, { storageKey });
 
   const rowClassName = (record: any) => {
     if (!record.parent_id) return 'main-letter-row';
