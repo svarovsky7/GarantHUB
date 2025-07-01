@@ -1,5 +1,5 @@
 import React from 'react';
-import { Drawer, Switch, Button } from 'antd';
+import { Drawer, Switch, Button, InputNumber } from 'antd';
 import { UpOutlined, DownOutlined } from '@ant-design/icons';
 import type { TableColumnSetting } from '@/shared/types/tableColumnSetting';
 
@@ -8,6 +8,9 @@ interface Props {
   columns: TableColumnSetting[];
   onChange: (cols: TableColumnSetting[]) => void;
   onClose: () => void;
+  /** Текущие ширины столбцов */
+  widths: Record<string, number | undefined>;
+  onWidthsChange: (w: Record<string, number | undefined>) => void;
   /** Сбросить состояние столбцов к изначальному */
   onReset?: () => void;
 }
@@ -15,7 +18,7 @@ interface Props {
 /**
  * Боковая панель настройки столбцов таблицы.
  */
-export default function TableColumnsDrawer({ open, columns, onChange, onClose, onReset }: Props) {
+export default function TableColumnsDrawer({ open, columns, onChange, onClose, widths, onWidthsChange, onReset }: Props) {
   const move = (from: number, to: number) => {
     if (to < 0 || to >= columns.length) return;
     const updated = [...columns];
@@ -36,6 +39,14 @@ export default function TableColumnsDrawer({ open, columns, onChange, onClose, o
         <div key={c.key} style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
           <Switch checked={c.visible} onChange={(v) => toggle(idx, v)} size="small" />
           <span style={{ marginLeft: 8, flexGrow: 1 }}>{c.title || '(без названия)'}</span>
+          <InputNumber
+            style={{ width: 80, marginRight: 8 }}
+            min={40}
+            value={widths[c.key]}
+            onChange={(v) =>
+              onWidthsChange({ ...widths, [c.key]: typeof v === 'number' ? v : widths[c.key] })
+            }
+          />
           <Button
             size="small"
             type="text"
