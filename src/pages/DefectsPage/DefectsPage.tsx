@@ -247,6 +247,7 @@ export default function DefectsPage() {
 
   const LS_FILTERS_VISIBLE_KEY = "defectsFiltersVisible";
   const LS_COLUMNS_KEY = "defectsColumns";
+  const LS_COLUMN_WIDTHS_KEY = "defectsColumnWidths";
 
   const [showFilters, setShowFilters] = useState(() => {
     try {
@@ -521,6 +522,9 @@ export default function DefectsPage() {
       title: getTitleText(base[key].title as React.ReactNode),
       visible: !["createdAt", "createdByName"].includes(key),
     }));
+    try {
+      localStorage.removeItem(LS_COLUMN_WIDTHS_KEY);
+    } catch {}
     setColumnsState(defaults);
   };
 
@@ -577,6 +581,7 @@ export default function DefectsPage() {
           loading={isPending}
           onView={setViewId}
           columns={columns}
+          storageKey={LS_COLUMN_WIDTHS_KEY}
         />
         <React.Suspense fallback={null}>
           <TableColumnsDrawer

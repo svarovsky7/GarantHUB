@@ -30,6 +30,8 @@ interface Props {
   onView?: (id: number) => void;
   onAddChild?: (parent: ClaimWithNames) => void;
   onUnlink?: (id: number) => void;
+  /** Ключ localStorage для хранения ширины колонок */
+  storageKey?: string;
 }
 
 export default function ClaimsTable({
@@ -40,6 +42,7 @@ export default function ClaimsTable({
   onView,
   onAddChild,
   onUnlink,
+  storageKey,
 }: Props) {
   const { mutateAsync: remove, isPending } = useDeleteClaim();
   const defaultColumns: ColumnsType<any> = useMemo(
@@ -124,7 +127,7 @@ export default function ClaimsTable({
   );
 
   const { columns: columnsWithResize, components } =
-    useResizableColumns(columnsProp ?? defaultColumns);
+    useResizableColumns(columnsProp ?? defaultColumns, { storageKey });
 
   const filtered = useMemo(() => {
     return claims.filter((c) => {

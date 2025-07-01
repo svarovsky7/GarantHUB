@@ -52,6 +52,7 @@ import { useResizableColumns } from '@/shared/hooks/useResizableColumns';
 
 const LS_KEY = 'courtCasesHideClosed';
 const LS_COLUMNS_KEY = 'courtCasesColumns';
+const LS_COLUMN_WIDTHS_KEY = 'courtCasesColumnWidths';
 const LS_FILTERS_VISIBLE_KEY = 'courtCasesFiltersVisible';
 
 export default function CourtCasesPage() {
@@ -489,6 +490,9 @@ export default function CourtCasesPage() {
       title: baseColumns[key].title as string,
       visible: !['createdAt', 'createdByName'].includes(key),
     }));
+    try {
+      localStorage.removeItem(LS_COLUMN_WIDTHS_KEY);
+    } catch {}
     setColumnsState(defaults);
   };
 
@@ -503,7 +507,8 @@ export default function CourtCasesPage() {
     [columnsState],
   );
 
-  const { columns: resizableColumns, components } = useResizableColumns(columns);
+  const { columns: resizableColumns, components } =
+    useResizableColumns(columns, { storageKey: LS_COLUMN_WIDTHS_KEY });
 
 
   const total = cases.length;

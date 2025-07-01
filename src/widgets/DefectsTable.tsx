@@ -30,6 +30,8 @@ interface Props {
   /** Колонки таблицы. Если не переданы, используется набор по умолчанию */
   columns?: ColumnsType<DefectWithInfo>;
   onView?: (id: number) => void;
+  /** Ключ localStorage для хранения ширины колонок */
+  storageKey?: string;
 }
 
 /**
@@ -42,6 +44,7 @@ export default function DefectsTable({
   loading,
   columns: columnsProp,
   onView,
+  storageKey,
 }: Props) {
   const { mutateAsync: remove, isPending } = useDeleteDefect();
   const filtered = useMemo(
@@ -210,7 +213,7 @@ export default function DefectsTable({
   ];
 
   const { columns: columnsWithResize, components } =
-    useResizableColumns(columnsProp ?? defaultColumns);
+    useResizableColumns(columnsProp ?? defaultColumns, { storageKey });
   const [pageSize, setPageSize] = React.useState(100);
 
   if (loading) return <Skeleton active paragraph={{ rows: 6 }} />;
