@@ -79,6 +79,7 @@ const NavBar: React.FC = () => {
                   maxWidth: 1000,              // ⬅️ лимит ширины: ничего не «ломает» строку
                   overflow: 'hidden',
                   columnGap: 12,
+                  paddingRight: 24,            // добавили запас справа, чтобы кнопка "Выйти" не обрезалась
                 }}
             >
               <Space direction="vertical" size={0} align="end" style={{ flex: 1, minWidth: 0 }}>
