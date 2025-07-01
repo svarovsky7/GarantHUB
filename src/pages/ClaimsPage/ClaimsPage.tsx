@@ -32,6 +32,7 @@ import ClaimViewModal from '@/features/claim/ClaimViewModal';
 import ClaimStatusSelect from "@/features/claim/ClaimStatusSelect";
 import dayjs from "dayjs";
 import LinkClaimsDialog from '@/features/claim/LinkClaimsDialog';
+import { useResizableColumns } from '@/shared/hooks/useResizableColumns';
 const TableColumnsDrawer = React.lazy(
   () => import('@/widgets/TableColumnsDrawer'),
 );
@@ -114,9 +115,12 @@ export default function ClaimsPage() {
       key,
       title: base[key].title as string,
       visible: !['createdAt', 'createdByName'].includes(key),
+      width: base[key].width as number,
     }));
     try {
       const saved = localStorage.getItem(LS_COLUMNS_KEY);
+      const savedWidths = localStorage.getItem(LS_COLUMN_WIDTHS_KEY);
+      const widthMap = savedWidths ? JSON.parse(savedWidths) as Record<string, number> : {};
       if (saved) {
         let parsed = JSON.parse(saved) as TableColumnSetting[];
         parsed = parsed.map((c) => {
@@ -130,7 +134,10 @@ export default function ClaimsPage() {
         const missing = defaults.filter(
           (d) => !filtered.some((f) => f.key === d.key),
         );
-        return [...filtered, ...missing];
+        return [...filtered, ...missing].map((c) => ({
+          ...c,
+          width: widthMap[c.key] ?? c.width,
+        }));
       }
     } catch {}
     return defaults;
@@ -145,6 +152,7 @@ export default function ClaimsPage() {
       key,
       title: base[key].title as string,
       visible: !['createdAt', 'createdByName'].includes(key),
+      width: base[key].width as number,
     }));
     try {
       localStorage.removeItem(LS_COLUMN_WIDTHS_KEY);
@@ -155,6 +163,16 @@ export default function ClaimsPage() {
   React.useEffect(() => {
     try {
       localStorage.setItem(LS_COLUMNS_KEY, JSON.stringify(columnsState));
+    } catch {}
+  }, [columnsState]);
+
+  React.useEffect(() => {
+    try {
+      const map: Record<string, number> = {};
+      columnsState.forEach((c) => {
+        if (c.width) map[c.key] = c.width;
+      });
+      localStorage.setItem(LS_COLUMN_WIDTHS_KEY, JSON.stringify(map));
     } catch {}
   }, [columnsState]);
 
@@ -317,7 +335,24 @@ export default function ClaimsPage() {
   }
 
   const baseColumns = useMemo(getBaseColumns, [deleteClaimMutation.isPending]);
-  const columns: ColumnsType<any> = useMemo(() => columnsState.filter((c) => c.visible).map((c) => baseColumns[c.key]), [columnsState, baseColumns]);
+  const columnsForResize: ColumnsType<any> = useMemo(
+    () =>
+      columnsState
+        .filter((c) => c.visible)
+        .map((c) => ({ ...baseColumns[c.key], width: c.width })),
+    [columnsState, baseColumns],
+  );
+
+  const { columns: resizableColumns, components } = useResizableColumns(
+    columnsForResize,
+    {
+      storageKey: LS_COLUMN_WIDTHS_KEY,
+      onWidthsChange: (map) =>
+        setColumnsState((prev) =>
+          prev.map((c) => ({ ...c, width: map[c.key] ?? c.width })),
+        ),
+    },
+  );
 
   /** Общее количество претензий после учёта прав доступа */
   const total = claimsWithNames.length;
@@ -396,8 +431,8 @@ export default function ClaimsPage() {
               claims={claimsWithNames}
               filters={filters}
               loading={isLoading}
-              columns={columns}
-              storageKey={LS_COLUMN_WIDTHS_KEY}
+              columns={resizableColumns}
+              components={components}
               onView={(id) => setViewId(id)}
               onAddChild={setLinkFor}
               onUnlink={(id) => unlinkClaim.mutate(id)}

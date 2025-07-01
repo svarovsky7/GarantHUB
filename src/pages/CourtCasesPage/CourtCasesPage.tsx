@@ -461,9 +461,12 @@ export default function CourtCasesPage() {
       key,
       title: baseColumns[key].title as string,
       visible: !['createdAt', 'createdByName'].includes(key),
+      width: baseColumns[key].width as number,
     }));
     try {
       const saved = localStorage.getItem(LS_COLUMNS_KEY);
+      const savedWidths = localStorage.getItem(LS_COLUMN_WIDTHS_KEY);
+      const widthMap = savedWidths ? JSON.parse(savedWidths) as Record<string, number> : {};
       if (saved) {
         let parsed = JSON.parse(saved) as TableColumnSetting[];
         parsed = parsed.map((c) => {
@@ -475,7 +478,10 @@ export default function CourtCasesPage() {
         });
         const filtered = parsed.filter((c) => baseColumns[c.key]);
         const missing = defaults.filter((d) => !filtered.some((f) => f.key === d.key));
-        return [...filtered, ...missing];
+        return [...filtered, ...missing].map((c) => ({
+          ...c,
+          width: widthMap[c.key] ?? c.width,
+        }));
       }
     } catch {}
     return defaults;
@@ -489,6 +495,7 @@ export default function CourtCasesPage() {
       key,
       title: baseColumns[key].title as string,
       visible: !['createdAt', 'createdByName'].includes(key),
+      width: baseColumns[key].width as number,
     }));
     try {
       localStorage.removeItem(LS_COLUMN_WIDTHS_KEY);
@@ -502,13 +509,34 @@ export default function CourtCasesPage() {
     } catch {}
   }, [columnsState]);
 
-  const columns: ColumnsType<CourtCase & any> = React.useMemo(
-    () => columnsState.filter((c) => c.visible).map((c) => baseColumns[c.key]),
+  useEffect(() => {
+    try {
+      const map: Record<string, number> = {};
+      columnsState.forEach((c) => {
+        if (c.width) map[c.key] = c.width;
+      });
+      localStorage.setItem(LS_COLUMN_WIDTHS_KEY, JSON.stringify(map));
+    } catch {}
+  }, [columnsState]);
+
+  const columnsForResize: ColumnsType<CourtCase & any> = React.useMemo(
+    () =>
+      columnsState
+        .filter((c) => c.visible)
+        .map((c) => ({ ...baseColumns[c.key], width: c.width })),
     [columnsState],
   );
 
-  const { columns: resizableColumns, components } =
-    useResizableColumns(columns, { storageKey: LS_COLUMN_WIDTHS_KEY });
+  const { columns: resizableColumns, components } = useResizableColumns(
+    columnsForResize,
+    {
+      storageKey: LS_COLUMN_WIDTHS_KEY,
+      onWidthsChange: (map) =>
+        setColumnsState((prev) =>
+          prev.map((c) => ({ ...c, width: map[c.key] ?? c.width })),
+        ),
+    },
+  );
 
 
   const total = cases.length;
