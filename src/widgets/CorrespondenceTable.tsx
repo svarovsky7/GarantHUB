@@ -6,7 +6,6 @@ import { DeleteOutlined, PlusOutlined, MailOutlined, BranchesOutlined, LinkOutli
 import { CorrespondenceLetter } from '@/shared/types/correspondence';
 import LetterStatusSelect from '@/features/correspondence/LetterStatusSelect';
 import LetterDirectionSelect from '@/features/correspondence/LetterDirectionSelect';
-import { useResizableColumns } from '@/shared/hooks/useResizableColumns';
 
 interface Option { id: number | string; name: string; }
 
@@ -23,8 +22,6 @@ interface CorrespondenceTableProps {
   projects: Option[];
   units: Option[];
   statuses: Option[];
-  /** Ключ localStorage для хранения ширины колонок */
-  storageKey?: string;
 }
 
 /** Ключ в localStorage для хранения раскрывшихся строк */
@@ -43,7 +40,6 @@ export default function CorrespondenceTable({
                                               projects,
                                               units,
                                               statuses,
-                                              storageKey,
                                             }: CorrespondenceTableProps) {
   const maps = useMemo(() => {
     const m = {
@@ -295,8 +291,7 @@ export default function CorrespondenceTable({
   ],
     [onAddChild, onUnlink, onDelete, onView],
   );
-  const { columns: resizableColumns, components } =
-    useResizableColumns(columnsProp ?? defaultColumns, { storageKey });
+  const resizableColumns = columnsProp ?? defaultColumns;
 
   const rowClassName = (record: any) => {
     if (!record.parent_id) return 'main-letter-row';
@@ -307,7 +302,6 @@ export default function CorrespondenceTable({
       <Table
           rowKey="id"
           columns={resizableColumns}
-          components={components}
           sticky={{ offsetHeader: 64 }}
           dataSource={treeData}
           pagination={{

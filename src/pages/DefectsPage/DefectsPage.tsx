@@ -245,9 +245,10 @@ export default function DefectsPage() {
   const { mutateAsync: removeDefect, isPending: removing } = useDeleteDefect();
   const cancelFix = useCancelDefectFix();
 
-  const LS_FILTERS_VISIBLE_KEY = "defectsFiltersVisible";
-  const LS_COLUMNS_KEY = "defectsColumns";
-  const LS_COLUMN_WIDTHS_KEY = "defectsColumnWidths";
+const LS_FILTERS_VISIBLE_KEY = "defectsFiltersVisible";
+const LS_COLUMNS_KEY = "defectsColumns";
+const LS_COLUMN_WIDTHS_KEY = "defectsColumnWidths";
+
 
   const [showFilters, setShowFilters] = useState(() => {
     try {
@@ -258,8 +259,17 @@ export default function DefectsPage() {
     }
   });
 
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(LS_COLUMN_WIDTHS_KEY) || "{}");
+    } catch {
+      return {};
+    }
+  });
+
+
   const baseColumns = useMemo(() => {
-    return {
+    const cols = {
       id: {
         title: "ID дефекта",
         dataIndex: "id",
@@ -457,7 +467,11 @@ export default function DefectsPage() {
         ),
       } as any,
     } as Record<string, ColumnsType<DefectWithInfo>[number]>;
-  }, [removeDefect, removing]);
+    Object.keys(cols).forEach((k) => {
+      cols[k] = { ...cols[k], width: columnWidths[k] ?? cols[k].width };
+    });
+    return cols;
+  }, [removeDefect, removing, columnWidths]);
 
   const columnOrder = [
     "id",
@@ -515,6 +529,7 @@ export default function DefectsPage() {
     return defaults;
   });
 
+
   const handleResetColumns = () => {
     const base = baseColumns;
     const defaults = columnOrder.map((key) => ({
@@ -525,6 +540,7 @@ export default function DefectsPage() {
     try {
       localStorage.removeItem(LS_COLUMN_WIDTHS_KEY);
     } catch {}
+    setColumnWidths({});
     setColumnsState(defaults);
   };
 
@@ -533,6 +549,12 @@ export default function DefectsPage() {
       localStorage.setItem(LS_COLUMNS_KEY, JSON.stringify(columnsState));
     } catch {}
   }, [columnsState]);
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem(LS_COLUMN_WIDTHS_KEY, JSON.stringify(columnWidths));
+    } catch {}
+  }, [columnWidths]);
 
   React.useEffect(() => {
     try {
@@ -581,12 +603,15 @@ export default function DefectsPage() {
           loading={isPending}
           onView={setViewId}
           columns={columns}
-          storageKey={LS_COLUMN_WIDTHS_KEY}
         />
         <React.Suspense fallback={null}>
           <TableColumnsDrawer
             open={showColumnsDrawer}
             columns={columnsState}
+            widths={Object.fromEntries(
+              Object.keys(baseColumns).map((k) => [k, columnWidths[k] ?? baseColumns[k].width])
+            )}
+            onWidthsChange={setColumnWidths}
             onChange={setColumnsState}
             onClose={() => setShowColumnsDrawer(false)}
             onReset={handleResetColumns}
