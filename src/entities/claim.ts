@@ -6,6 +6,7 @@ import { useAuthStore } from '@/shared/store/authStore';
 import { filterByProjects } from '@/shared/utils/projectQuery';
 import { useNotify } from '@/shared/hooks/useNotify';
 import { fetchPaged, fetchByChunks } from '@/shared/api/fetchAll';
+import type { PostgrestSingleResponse } from '@supabase/supabase-js';
 import type { Claim } from '@/shared/types/claim';
 import type { ClaimWithNames } from '@/shared/types/claimWithNames';
 import type { ClaimDeleteParams } from '@/shared/types/claimDelete';
@@ -136,10 +137,11 @@ export function useClaims() {
   return useQuery({
     queryKey: [TABLE, projectId, projectIds.join(',')],
     queryFn: async () => {
-      let q: any = supabase
-        .from(TABLE)
-        .select(
-          `id, project_id, claim_status_id, claim_no, claimed_on,
+      const rows = await fetchPaged<any>((from, to) => {
+        let q: any = supabase
+          .from(TABLE)
+          .select(
+            `id, project_id, claim_status_id, claim_no, claimed_on,
           accepted_on, registered_on, resolved_on,
           engineer_id, owner, case_uid_id, pre_trial_claim, description, created_at, created_by,
           projects (id, name),
@@ -148,12 +150,12 @@ export function useClaims() {
           claim_units(unit_id),
           claim_defects(defect_id),
           claim_attachments(attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description, created_at, created_by))`,
-        );
-      q = filterByProjects(q, projectId, projectIds, onlyAssigned);
-      q = q.order('created_at', { ascending: false });
-      const { data, error } = await q;
-      if (error) throw error;
-      const ids = (data ?? []).map((r: any) => r.id);
+          );
+        q = filterByProjects(q, projectId, projectIds, onlyAssigned);
+        q = q.order('created_at', { ascending: false }).range(from, to);
+        return q as unknown as PromiseLike<PostgrestSingleResponse<any[]>>;
+      });
+      const ids = rows.map((r: any) => r.id);
       const { data: links } = ids.length
         ? await supabase
             .from(LINK_TABLE)
@@ -162,7 +164,7 @@ export function useClaims() {
         : { data: [] };
       const linkMap = new Map<number, number>();
       (links ?? []).forEach((l: any) => linkMap.set(l.child_id, l.parent_id));
-      return (data ?? []).map((r: any) =>
+      return (rows ?? []).map((r: any) =>
         mapClaim({
           ...r,
           parent_id: linkMap.get(r.id) ?? null,
@@ -272,10 +274,11 @@ export function useClaimsAll() {
   return useQuery({
     queryKey: ['claims-all'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from(TABLE)
-        .select(
-          `id, project_id, claim_status_id, claim_no, claimed_on,
+      const rows = await fetchPaged<any>((from, to) =>
+        supabase
+          .from(TABLE)
+          .select(
+            `id, project_id, claim_status_id, claim_no, claimed_on,
           accepted_on, registered_on, resolved_on,
           engineer_id, owner, case_uid_id, pre_trial_claim, description, created_at, created_by,
           projects (id, name),
@@ -283,10 +286,11 @@ export function useClaimsAll() {
           claim_units(unit_id),
           claim_defects(defect_id),
           claim_attachments(attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description, created_at, created_by))`,
-        )
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      const ids = (data ?? []).map((r: any) => r.id);
+          )
+          .order('created_at', { ascending: false })
+          .range(from, to) as unknown as PromiseLike<PostgrestSingleResponse<any[]>>,
+      );
+      const ids = rows.map((r: any) => r.id);
       const { data: links } = ids.length
         ? await supabase
             .from(LINK_TABLE)
@@ -295,7 +299,7 @@ export function useClaimsAll() {
         : { data: [] };
       const linkMap = new Map<number, number>();
       (links ?? []).forEach((l: any) => linkMap.set(l.child_id, l.parent_id));
-      return (data ?? []).map((r: any) =>
+      return (rows ?? []).map((r: any) =>
         mapClaim({
           ...r,
           parent_id: linkMap.get(r.id) ?? null,
