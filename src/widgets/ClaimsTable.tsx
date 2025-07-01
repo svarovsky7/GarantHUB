@@ -27,11 +27,15 @@ interface Props {
   filters: ClaimFilters;
   loading?: boolean;
   columns?: ColumnsType<any>;
+  /** Компоненты таблицы для ресайза */
+  components?: Record<string, any>;
   onView?: (id: number) => void;
   onAddChild?: (parent: ClaimWithNames) => void;
   onUnlink?: (id: number) => void;
   /** Ключ localStorage для хранения ширины колонок */
   storageKey?: string;
+  /** Извещение о изменении ширины столбцов */
+  onWidthsChange?: (map: Record<string, number>) => void;
 }
 
 export default function ClaimsTable({
@@ -39,10 +43,12 @@ export default function ClaimsTable({
   filters,
   loading,
   columns: columnsProp,
+  components: externalComponents,
   onView,
   onAddChild,
   onUnlink,
   storageKey,
+  onWidthsChange,
 }: Props) {
   const { mutateAsync: remove, isPending } = useDeleteClaim();
   const defaultColumns: ColumnsType<any> = useMemo(
@@ -126,8 +132,12 @@ export default function ClaimsTable({
     [onView, remove, isPending],
   );
 
-  const { columns: columnsWithResize, components } =
-    useResizableColumns(columnsProp ?? defaultColumns, { storageKey });
+  const { columns: columnsWithResize, components } = externalComponents
+    ? { columns: columnsProp ?? defaultColumns, components: externalComponents }
+    : useResizableColumns(columnsProp ?? defaultColumns, {
+        storageKey,
+        onWidthsChange,
+      });
 
   const filtered = useMemo(() => {
     return claims.filter((c) => {

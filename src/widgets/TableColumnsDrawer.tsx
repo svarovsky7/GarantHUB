@@ -1,5 +1,5 @@
 import React from 'react';
-import { Drawer, Switch, Button } from 'antd';
+import { Drawer, Switch, Button, InputNumber } from 'antd';
 import { UpOutlined, DownOutlined } from '@ant-design/icons';
 import type { TableColumnSetting } from '@/shared/types/tableColumnSetting';
 
@@ -30,12 +30,25 @@ export default function TableColumnsDrawer({ open, columns, onChange, onClose, o
     onChange(updated);
   };
 
+  const changeWidth = (index: number, width: number | null) => {
+    const updated = [...columns];
+    updated[index] = { ...updated[index], width: width ?? undefined };
+    onChange(updated);
+  };
+
   return (
     <Drawer title="Настройка столбцов" placement="right" onClose={onClose} open={open}>
       {columns.map((c, idx) => (
         <div key={c.key} style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
           <Switch checked={c.visible} onChange={(v) => toggle(idx, v)} size="small" />
           <span style={{ marginLeft: 8, flexGrow: 1 }}>{c.title || '(без названия)'}</span>
+          <InputNumber
+            value={c.width}
+            onChange={(v) => changeWidth(idx, v)}
+            size="small"
+            style={{ width: 80, marginRight: 4 }}
+            min={40}
+          />
           <Button
             size="small"
             type="text"
