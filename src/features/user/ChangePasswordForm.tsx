@@ -29,7 +29,7 @@ export default function ChangePasswordForm() {
       >
         <Input.Password />
       </Form.Item>
-      <Typography.Paragraph type="secondary">
+      <Typography.Paragraph type="secondary" style={{ marginBottom: 0 }}>
         Просмотр текущего пароля невозможен
       </Typography.Paragraph>
       <Form.Item>

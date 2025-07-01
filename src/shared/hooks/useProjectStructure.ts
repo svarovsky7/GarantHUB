@@ -4,11 +4,12 @@ import type { Project } from '@/shared/types/project';
 import type { ProjectStructureSelection } from '@/shared/types/projectStructure';
 import { useVisibleProjects } from '@/entities/project';
 import { useAuthStore } from '@/shared/store/authStore';
+import { LS_STRUCTURE_PAGE_SELECTION } from '@/shared/constants/storageKeys';
 
 /**
  * Ключ для хранения выбора проекта и корпуса в `localStorage`.
  */
-export const LS_KEY = 'structurePageSelection';
+export const LS_KEY = LS_STRUCTURE_PAGE_SELECTION;
 
 /**
  * Хук для выбора проекта, корпуса и секции.
