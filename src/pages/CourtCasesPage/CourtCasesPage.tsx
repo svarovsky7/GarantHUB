@@ -44,7 +44,6 @@ const TableColumnsDrawer = React.lazy(
   () => import('@/widgets/TableColumnsDrawer'),
 );
 import type { TableColumnSetting } from '@/shared/types/tableColumnSetting';
-import { useResizableColumns } from '@/shared/hooks/useResizableColumns';
 
  dayjs.locale('ru');
  dayjs.extend(isSameOrAfter);
@@ -481,6 +480,14 @@ export default function CourtCasesPage() {
     return defaults;
   });
 
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(LS_COLUMN_WIDTHS_KEY) || '{}');
+    } catch {
+      return {};
+    }
+  });
+
   /**
    * Сброс колонок к начальному состоянию
    */
@@ -493,6 +500,7 @@ export default function CourtCasesPage() {
     try {
       localStorage.removeItem(LS_COLUMN_WIDTHS_KEY);
     } catch {}
+    setColumnWidths({});
     setColumnsState(defaults);
   };
 
@@ -502,13 +510,22 @@ export default function CourtCasesPage() {
     } catch {}
   }, [columnsState]);
 
-  const columns: ColumnsType<CourtCase & any> = React.useMemo(
-    () => columnsState.filter((c) => c.visible).map((c) => baseColumns[c.key]),
-    [columnsState],
-  );
+  useEffect(() => {
+    try {
+      localStorage.setItem(LS_COLUMN_WIDTHS_KEY, JSON.stringify(columnWidths));
+    } catch {}
+  }, [columnWidths]);
 
-  const { columns: resizableColumns, components } =
-    useResizableColumns(columns, { storageKey: LS_COLUMN_WIDTHS_KEY });
+  const columns: ColumnsType<CourtCase & any> = React.useMemo(
+    () =>
+      columnsState
+        .filter((c) => c.visible)
+        .map((c) => ({
+          ...baseColumns[c.key],
+          width: columnWidths[c.key] ?? baseColumns[c.key].width,
+        })),
+    [columnsState, baseColumns, columnWidths],
+  );
 
 
   const total = cases.length;
@@ -566,6 +583,10 @@ export default function CourtCasesPage() {
           <TableColumnsDrawer
             open={showColumnsDrawer}
             columns={columnsState}
+            widths={Object.fromEntries(
+              Object.keys(baseColumns).map((k) => [k, columnWidths[k] ?? baseColumns[k].width])
+            )}
+            onWidthsChange={setColumnWidths}
             onChange={setColumnsState}
             onClose={() => setShowColumnsDrawer(false)}
             onReset={handleResetColumns}
@@ -607,8 +628,7 @@ export default function CourtCasesPage() {
 
           <Table
             rowKey="id"
-            columns={resizableColumns}
-            components={components}
+            columns={columns}
             sticky={{ offsetHeader: 64 }}
             dataSource={treeData}
             loading={casesLoading}
