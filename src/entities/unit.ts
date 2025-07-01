@@ -92,17 +92,17 @@ export const useUnitsByProject = (
     });
 
 
-export const useUnitsByIds = (ids) =>
-    useQuery({
+export const useUnitsByIds = (ids: number[]) =>
+    useQuery<import('@/shared/types/unit').Unit[], Error>({
         queryKey: ['units-by-ids', ids?.join(',')],
         enabled : Array.isArray(ids) && ids.length > 0,
         queryFn : async () => {
             const { data, error } = await supabase
                 .from('units')
-                .select('id, name, building, floor')
+                .select('id, name, building, floor, project_id')
                 .in('id', ids);
             if (error) throw error;
-            return data ?? [];
+            return (data ?? []) as import('@/shared/types/unit').Unit[];
         },
         staleTime: 5 * 60_000,
     });

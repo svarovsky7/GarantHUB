@@ -399,9 +399,11 @@ export default function ClaimsPage() {
           <TableColumnsDrawer
             open={showColumnsDrawer}
             columns={columnsState}
-            widths={Object.fromEntries(
-              Object.keys(baseColumns).map((k) => [k, columnWidths[k] ?? baseColumns[k].width])
-            )}
+            widths={
+              Object.fromEntries(
+                Object.keys(baseColumns).map((k) => [k, columnWidths[k] ?? baseColumns[k].width])
+              ) as Record<string, number>
+            }
             onWidthsChange={setColumnWidths}
             onChange={setColumnsState}
             onClose={() => setShowColumnsDrawer(false)}
