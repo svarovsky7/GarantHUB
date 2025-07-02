@@ -9,7 +9,6 @@ import AdminDataGrid from "@/shared/ui/AdminDataGrid";
 import { useNotify } from "@/shared/hooks/useNotify";
 import RoleSelect from "@/features/user/RoleSelect";
 import UserProjectsSelect from "@/features/user/UserProjectsSelect";
-import UserNameEdit from "@/features/user/UserNameEdit";
 
 // Интерфейс для пропсов с пагинацией
 interface UsersTableProps {
@@ -30,12 +29,7 @@ export default function UsersTable({
   // Таблица
   const columns = [
     { field: "id", headerName: "ID", width: 70 },
-    {
-      field: "name",
-      headerName: "Имя пользователя",
-      flex: 1,
-      renderCell: ({ row }) => <UserNameEdit user={row} />, 
-    },
+    { field: "name", headerName: "Имя пользователя", flex: 1 },
     { field: "email", headerName: "E-mail", flex: 1 },
     {
       field: "role",
