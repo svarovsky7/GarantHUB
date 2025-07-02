@@ -27,8 +27,6 @@ import { updateAttachmentDescription } from '@/entities/attachment';
 import { supabase } from '@/shared/api/supabaseClient';
 import { useVisibleProjects } from '@/entities/project';
 import { useUnitsByProject, useUnitsByIds } from '@/entities/unit';
-import useProjectBuildings from '@/shared/hooks/useProjectBuildings';
-import { useDebounce } from '@/shared/hooks/useDebounce';
 import { useUsers } from '@/entities/user';
 import { useClaimStatuses } from '@/entities/claimStatus';
 
@@ -64,7 +62,6 @@ export interface ClaimFormAntdEditProps {
 export interface ClaimFormAntdEditValues {
   project_id: number | null;
   unit_ids: number[];
-  building: string | null;
   claim_status_id: number | null;
   claim_no: string;
   claimed_on: Dayjs | null;
@@ -103,13 +100,7 @@ const ClaimFormAntdEdit = React.forwardRef<
   const globalProjectId = useProjectId();
   const projectIdWatch = Form.useWatch('project_id', form);
   const projectId = projectIdWatch != null ? Number(projectIdWatch) : globalProjectId;
-  const buildingWatch = Form.useWatch('building', form) ?? null;
-  const buildingDebounced = useDebounce(buildingWatch);
-  const { buildings = [] } = useProjectBuildings(projectId);
-  const { data: units = [] } = useUnitsByProject(
-    projectId,
-    buildingDebounced ?? undefined,
-  );
+  const { data: units = [] } = useUnitsByProject(projectId);
   const { data: users = [] } = useUsers();
   const { data: statuses = [] } = useClaimStatuses();
   const { data: caseUids = [] } = useCaseUids();
@@ -124,6 +115,13 @@ const ClaimFormAntdEdit = React.forwardRef<
   const unitIdsWatch = Form.useWatch('unit_ids', form) ?? [];
   const { data: selectedUnits = [] } = useUnitsByIds(
     Array.isArray(unitIdsWatch) ? unitIdsWatch : [],
+  );
+  const buildingsText = React.useMemo(
+    () =>
+      Array.from(
+        new Set(selectedUnits.map((u) => u.building).filter(Boolean)),
+      ).join(', '),
+    [selectedUnits],
   );
 
   useImperativeHandle(ref, () => ({
@@ -153,16 +151,6 @@ const ClaimFormAntdEdit = React.forwardRef<
       description: claim.description ?? '',
     });
   }, [claim, form]);
-
-  const prevProjectIdRef = React.useRef<number | null>(null);
-
-  useEffect(() => {
-    const prev = prevProjectIdRef.current;
-    if (prev != null && projectId != null && prev !== projectId) {
-      form.setFieldsValue({ unit_ids: [], building: undefined });
-    }
-    prevProjectIdRef.current = projectId ?? null;
-  }, [projectId, form]);
 
   const onFinish = async (values: ClaimFormAntdEditValues) => {
     if (!claim) return;
@@ -284,12 +272,8 @@ const ClaimFormAntdEdit = React.forwardRef<
           </Form.Item>
         </Col>
         <Col span={8}>
-          <Form.Item name="building" label="Корпус">
-            <Select
-              allowClear
-              options={buildings.map((b) => ({ value: b, label: b }))}
-              disabled={!projectId}
-            />
+          <Form.Item label="Корпус">
+            <Input value={buildingsText} disabled />
           </Form.Item>
         </Col>
         <Col span={8}>
@@ -422,7 +406,6 @@ const ClaimFormAntdEdit = React.forwardRef<
     </Form>
     </>
   );
-
 });
 
 export default ClaimFormAntdEdit;
