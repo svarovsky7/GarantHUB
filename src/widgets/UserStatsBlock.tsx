@@ -35,7 +35,7 @@ export default function UserStatsBlock() {
 
   return (
     <ConfigProvider locale={ruRU}>
-      <Card title="Статистика пользователя" style={{ maxWidth: 360, margin: '0 auto', width: '100%' }}>
+      <Card title="Статистика пользователя" style={{ maxWidth: 360, margin: 0, width: '100%' }}>
         <Space direction="vertical" size="middle" style={{ width: '100%' }}>
           <Select
             showSearch
