@@ -33,7 +33,6 @@ import { useClaimStatuses } from '@/entities/claimStatus';
 import { useCaseUids } from '@/entities/caseUid';
 import { useNotify } from '@/shared/hooks/useNotify';
 import { useProjectId } from '@/shared/hooks/useProjectId';
-import { useDebounce } from '@/shared/hooks/useDebounce';
 import { useAuthStore } from '@/shared/store/authStore';
 import { useRolePermission } from '@/entities/rolePermission';
 import type { RoleName } from '@/shared/types/rolePermission';
@@ -44,7 +43,6 @@ import FileDropZone from '@/shared/ui/FileDropZone';
 import { useClaimAttachments } from './model/useClaimAttachments';
 import type { RemoteClaimFile } from '@/shared/types/claimFile';
 import type { ClaimFormAntdEditRef } from '@/shared/types/claimFormAntdEditRef';
-import useProjectBuildings from '@/shared/hooks/useProjectBuildings';
 
 
 export interface ClaimFormAntdEditProps {
@@ -64,8 +62,6 @@ export interface ClaimFormAntdEditProps {
 export interface ClaimFormAntdEditValues {
   project_id: number | null;
   unit_ids: number[];
-  /** Корпус */
-  building: string | null;
   claim_status_id: number | null;
   claim_no: string;
   claimed_on: Dayjs | null;
@@ -104,13 +100,7 @@ const ClaimFormAntdEdit = React.forwardRef<
   const globalProjectId = useProjectId();
   const projectIdWatch = Form.useWatch('project_id', form);
   const projectId = projectIdWatch != null ? Number(projectIdWatch) : globalProjectId;
-  const { data: buildings = [] } = useProjectBuildings(projectId);
-  const buildingWatch = Form.useWatch('building', form) ?? null;
-  const buildingDebounced = useDebounce(buildingWatch);
-  const { data: units = [] } = useUnitsByProject(
-    projectId,
-    buildingDebounced ?? undefined,
-  );
+  const { data: units = [] } = useUnitsByProject(projectId);
   const { data: users = [] } = useUsers();
   const { data: statuses = [] } = useClaimStatuses();
   const { data: caseUids = [] } = useCaseUids();
@@ -126,6 +116,13 @@ const ClaimFormAntdEdit = React.forwardRef<
   const { data: selectedUnits = [] } = useUnitsByIds(
     Array.isArray(unitIdsWatch) ? unitIdsWatch : [],
   );
+  const buildingsText = React.useMemo(
+    () =>
+      Array.from(
+        new Set(selectedUnits.map((u) => u.building).filter(Boolean)),
+      ).join(', '),
+    [selectedUnits],
+  );
 
   useImperativeHandle(ref, () => ({
     submit: () => form.submit(),
@@ -136,8 +133,6 @@ const ClaimFormAntdEdit = React.forwardRef<
     changedFields[name as string]
       ? { background: '#fffbe6', padding: 4, borderRadius: 2 }
       : {};
-
-  const prevProjectIdRef = React.useRef<number | null>(null);
 
   useEffect(() => {
     if (!claim) return;
@@ -154,29 +149,8 @@ const ClaimFormAntdEdit = React.forwardRef<
       case_uid_id: claim.case_uid_id ?? null,
       pre_trial_claim: claim.pre_trial_claim ?? false,
       description: claim.description ?? '',
-      building: null,
     });
   }, [claim, form]);
-
-  useEffect(() => {
-    if (!form.getFieldValue('building') && selectedUnits.length) {
-      const uniq = Array.from(
-        new Set(selectedUnits.map((u) => u.building).filter(Boolean)),
-      );
-      if (uniq.length === 1) {
-        form.setFieldValue('building', uniq[0]);
-      }
-    }
-  }, [selectedUnits, form]);
-
-  // Сброс выбранных объектов при изменении проекта
-  useEffect(() => {
-    const prev = prevProjectIdRef.current;
-    if (prev != null && projectId != null && prev !== projectId) {
-      form.setFieldsValue({ unit_ids: [], building: undefined });
-    }
-    prevProjectIdRef.current = projectId ?? null;
-  }, [projectId, form]);
 
   const onFinish = async (values: ClaimFormAntdEditValues) => {
     if (!claim) return;
@@ -298,12 +272,8 @@ const ClaimFormAntdEdit = React.forwardRef<
           </Form.Item>
         </Col>
         <Col span={8}>
-          <Form.Item name="building" label="Корпус">
-            <Select
-              allowClear
-              options={buildings.map((b) => ({ value: b, label: b }))}
-              disabled={!projectId}
-            />
+          <Form.Item label="Корпус">
+            <Input value={buildingsText} disabled />
           </Form.Item>
         </Col>
         <Col span={8}>
