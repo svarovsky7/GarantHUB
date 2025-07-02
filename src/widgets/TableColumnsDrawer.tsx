@@ -36,11 +36,11 @@ export default function TableColumnsDrawer({ open, columns, onChange, onClose, w
   return (
     <Drawer title="Настройка столбцов" placement="right" onClose={onClose} open={open}>
       {columns.map((c, idx) => (
-        <div key={c.key} style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+        <div key={c.key} className="columns-drawer-row">
           <Switch checked={c.visible} onChange={(v) => toggle(idx, v)} size="small" />
-          <span style={{ marginLeft: 8, flexGrow: 1 }}>{c.title || '(без названия)'}</span>
+          <span>{c.title || '(без названия)'}</span>
           <InputNumber
-            style={{ width: 80, marginRight: 8 }}
+            className="columns-drawer-input"
             min={40}
             value={widths[c.key]}
             onChange={(v) =>
