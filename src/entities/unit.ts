@@ -11,6 +11,7 @@ import { useAuthStore } from '@/shared/store/authStore';
 import { filterByProjects } from '@/shared/utils/projectQuery';
 import { useNotify } from '@/shared/hooks/useNotify';
 import { getUnitNameComparator } from '@/shared/utils/unitNumberSort';
+import { fetchByChunks } from '@/shared/api/fetchAll';
 
 /* ---------- базовый SELECT ---------- */
 const SELECT = `
@@ -97,12 +98,13 @@ export const useUnitsByIds = (ids: number[]) =>
         queryKey: ['units-by-ids', ids?.join(',')],
         enabled : Array.isArray(ids) && ids.length > 0,
         queryFn : async () => {
-            const { data, error } = await supabase
-                .from('units')
-                .select('id, name, building, floor, project_id')
-                .in('id', ids);
-            if (error) throw error;
-            return (data ?? []) as import('@/shared/types/unit').Unit[];
+            const rows = await fetchByChunks(ids, (chunk) =>
+                supabase
+                    .from('units')
+                    .select('id, name, building, floor, project_id')
+                    .in('id', chunk),
+            );
+            return rows as import('@/shared/types/unit').Unit[];
         },
         staleTime: 5 * 60_000,
     });
