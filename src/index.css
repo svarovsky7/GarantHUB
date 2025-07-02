@@ -143,3 +143,16 @@ body {
   cursor: col-resize;
   z-index: 1;
 }
+
+/* Настройка столбцов таблицы */
+.columns-drawer-row {
+  display: grid;
+  grid-template-columns: auto 1fr 80px auto auto;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.columns-drawer-input {
+  width: 80px;
+}
