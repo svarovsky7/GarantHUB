@@ -5,7 +5,6 @@ import { useVisibleProjects } from '@/entities/project';
 import { useAuthStore } from '@/shared/store/authStore';
 import ProjectsMultiSelect from '@/features/project/ProjectsMultiSelect';
 import ProjectStatsCard from '@/widgets/ProjectStatsCard';
-import UserStatsBlock from '@/widgets/UserStatsBlock';
 
 /** Главная страница с инфографикой. */
 export default function DashboardPage() {
@@ -36,8 +35,6 @@ export default function DashboardPage() {
       {selected.map((id) => (
         <ProjectStatsCard key={id} projectId={id} />
       ))}
-
-      <UserStatsBlock />
     </Space>
   );
 }
