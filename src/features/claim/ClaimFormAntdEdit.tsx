@@ -1,4 +1,4 @@
-import React, { useEffect, useImperativeHandle } from 'react';
+import React, { useEffect, useImperativeHandle, useRef } from 'react';
 import type { Dayjs } from 'dayjs';
 import {
   Form,
@@ -26,7 +26,9 @@ import {
 import { updateAttachmentDescription } from '@/entities/attachment';
 import { supabase } from '@/shared/api/supabaseClient';
 import { useVisibleProjects } from '@/entities/project';
-import { useUnitsByProject } from '@/entities/unit';
+import { useUnitsByProject, useUnitsByIds } from '@/entities/unit';
+import useProjectBuildings from '@/shared/hooks/useProjectBuildings';
+import { useDebounce } from '@/shared/hooks/useDebounce';
 import { useUsers } from '@/entities/user';
 import { useClaimStatuses } from '@/entities/claimStatus';
 
@@ -62,6 +64,7 @@ export interface ClaimFormAntdEditProps {
 export interface ClaimFormAntdEditValues {
   project_id: number | null;
   unit_ids: number[];
+  building: string | null;
   claim_status_id: number | null;
   claim_no: string;
   claimed_on: Dayjs | null;
@@ -100,7 +103,13 @@ const ClaimFormAntdEdit = React.forwardRef<
   const globalProjectId = useProjectId();
   const projectIdWatch = Form.useWatch('project_id', form);
   const projectId = projectIdWatch != null ? Number(projectIdWatch) : globalProjectId;
-  const { data: units = [] } = useUnitsByProject(projectId);
+  const { buildings = [] } = useProjectBuildings(projectId);
+  const buildingWatch = Form.useWatch('building', form) ?? null;
+  const buildingDebounced = useDebounce(buildingWatch);
+  const { data: units = [] } = useUnitsByProject(
+    projectId,
+    buildingDebounced ?? undefined,
+  );
   const { data: users = [] } = useUsers();
   const { data: statuses = [] } = useClaimStatuses();
   const { data: caseUids = [] } = useCaseUids();
@@ -112,6 +121,30 @@ const ClaimFormAntdEdit = React.forwardRef<
     attachmentsState ?? useClaimAttachments({ claim: claim as any });
   const { changedFields, handleValuesChange } = useChangedFields(form, [claim]);
   const preTrialWatch = Form.useWatch('pre_trial_claim', form);
+  const unitIdsWatch = Form.useWatch('unit_ids', form) ?? [];
+  const { data: selectedUnits = [] } = useUnitsByIds(
+    Array.isArray(unitIdsWatch) ? unitIdsWatch : [],
+  );
+
+  const initBuildingRef = useRef(false);
+  useEffect(() => {
+    if (initBuildingRef.current) return;
+    const uniq = Array.from(
+      new Set(selectedUnits.map((u) => u.building).filter(Boolean)),
+    );
+    form.setFieldValue('building', uniq.length === 1 ? uniq[0] : null);
+    initBuildingRef.current = true;
+  }, [selectedUnits, form]);
+
+  const prevProjectIdRef = useRef<number | null>(null);
+  useEffect(() => {
+    const prev = prevProjectIdRef.current;
+    if (prev != null && projectId != null && prev !== projectId) {
+      form.setFieldsValue({ unit_ids: [], building: null });
+      initBuildingRef.current = false;
+    }
+    prevProjectIdRef.current = projectId ?? null;
+  }, [projectId]);
 
   useImperativeHandle(ref, () => ({
     submit: () => form.submit(),
@@ -138,38 +171,40 @@ const ClaimFormAntdEdit = React.forwardRef<
       case_uid_id: claim.case_uid_id ?? null,
       pre_trial_claim: claim.pre_trial_claim ?? false,
       description: claim.description ?? '',
+      building: null,
     });
   }, [claim, form]);
 
   const onFinish = async (values: ClaimFormAntdEditValues) => {
     if (!claim) return;
+    const { building: _bld, ...rest } = values;
     try {
       await update.mutateAsync({
         id: claim.id,
         updates: {
-          project_id: values.project_id ?? claim.project_id,
-          unit_ids: values.unit_ids,
-          claim_status_id: values.claim_status_id,
-          claim_no: values.claim_no,
-          claimed_on: values.claimed_on
-            ? values.claimed_on.format('YYYY-MM-DD')
+          project_id: rest.project_id ?? claim.project_id,
+          unit_ids: rest.unit_ids,
+          claim_status_id: rest.claim_status_id,
+          claim_no: rest.claim_no,
+          claimed_on: rest.claimed_on
+            ? rest.claimed_on.format('YYYY-MM-DD')
             : null,
-          accepted_on: values.accepted_on
-            ? values.accepted_on.format('YYYY-MM-DD')
+          accepted_on: rest.accepted_on
+            ? rest.accepted_on.format('YYYY-MM-DD')
             : null,
-          registered_on: values.registered_on
-            ? values.registered_on.format('YYYY-MM-DD')
+          registered_on: rest.registered_on
+            ? rest.registered_on.format('YYYY-MM-DD')
             : null,
-          engineer_id: values.engineer_id ?? null,
-          owner: values.owner ?? null,
-          case_uid_id: values.case_uid_id ?? null,
-          pre_trial_claim: values.pre_trial_claim ?? false,
-          description: values.description ?? '',
+          engineer_id: rest.engineer_id ?? null,
+          owner: rest.owner ?? null,
+          case_uid_id: rest.case_uid_id ?? null,
+          pre_trial_claim: rest.pre_trial_claim ?? false,
+          description: rest.description ?? '',
           updated_by: userId ?? undefined,
         } as any,
       });
 
-      if (!claim.pre_trial_claim && values.pre_trial_claim) {
+      if (!claim.pre_trial_claim && rest.pre_trial_claim) {
         await markClaimDefectsPreTrial(claim.id);
       }
 
@@ -258,6 +293,15 @@ const ClaimFormAntdEdit = React.forwardRef<
             style={highlight('project_id')}
           >
             <Select allowClear options={projects.map((p) => ({ value: p.id, label: p.name }))} />
+          </Form.Item>
+        </Col>
+        <Col span={8}>
+          <Form.Item name="building" label="Корпус" style={highlight('building')}>
+            <Select
+              allowClear
+              options={buildings.map((b) => ({ value: b, label: b }))}
+              disabled={!projectId}
+            />
           </Form.Item>
         </Col>
         <Col span={8}>
