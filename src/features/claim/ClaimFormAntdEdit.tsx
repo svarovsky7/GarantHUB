@@ -1,4 +1,4 @@
-import React, { useEffect, useImperativeHandle, useRef } from 'react';
+import React, { useEffect, useImperativeHandle } from 'react';
 import type { Dayjs } from 'dayjs';
 import {
   Form,
@@ -33,8 +33,6 @@ import { useClaimStatuses } from '@/entities/claimStatus';
 import { useCaseUids } from '@/entities/caseUid';
 import { useNotify } from '@/shared/hooks/useNotify';
 import { useProjectId } from '@/shared/hooks/useProjectId';
-import useProjectBuildings from '@/shared/hooks/useProjectBuildings';
-import { useDebounce } from '@/shared/hooks/useDebounce';
 import { useAuthStore } from '@/shared/store/authStore';
 import { useRolePermission } from '@/entities/rolePermission';
 import type { RoleName } from '@/shared/types/rolePermission';
@@ -63,7 +61,6 @@ export interface ClaimFormAntdEditProps {
 
 export interface ClaimFormAntdEditValues {
   project_id: number | null;
-  building: string | null;
   unit_ids: number[];
   claim_status_id: number | null;
   claim_no: string;
@@ -103,14 +100,7 @@ const ClaimFormAntdEdit = React.forwardRef<
   const globalProjectId = useProjectId();
   const projectIdWatch = Form.useWatch('project_id', form);
   const projectId = projectIdWatch != null ? Number(projectIdWatch) : globalProjectId;
-  const buildingWatch = Form.useWatch('building', form) ?? null;
-  const buildingDebounced = useDebounce(buildingWatch);
-  const { buildings = [] } = useProjectBuildings(projectId);
-  const { data: units = [] } = useUnitsByProject(
-    projectId,
-    buildingDebounced ?? undefined,
-  );
-  const prevProjectIdRef = useRef<number | null>(null);
+  const { data: units = [] } = useUnitsByProject(projectId);
   const { data: users = [] } = useUsers();
   const { data: statuses = [] } = useClaimStatuses();
   const { data: caseUids = [] } = useCaseUids();
@@ -126,15 +116,13 @@ const ClaimFormAntdEdit = React.forwardRef<
   const { data: selectedUnits = [] } = useUnitsByIds(
     Array.isArray(unitIdsWatch) ? unitIdsWatch : [],
   );
-
-  useEffect(() => {
-    const prev = prevProjectIdRef.current;
-    if (prev != null && projectId != null && prev !== projectId) {
-      form.setFieldsValue({ unit_ids: [], building: null });
-    }
-    prevProjectIdRef.current = projectId ?? null;
-  }, [projectId, form]);
-
+  const buildingsText = React.useMemo(
+    () =>
+      Array.from(
+        new Set(selectedUnits.map((u) => u.building).filter(Boolean)),
+      ).join(', '),
+    [selectedUnits],
+  );
 
   useImperativeHandle(ref, () => ({
     submit: () => form.submit(),
@@ -150,7 +138,6 @@ const ClaimFormAntdEdit = React.forwardRef<
     if (!claim) return;
     form.setFieldsValue({
       project_id: claim.project_id,
-      building: null,
       unit_ids: claim.unit_ids,
       claim_status_id: claim.claim_status_id,
       claim_no: claim.claim_no,
@@ -285,12 +272,8 @@ const ClaimFormAntdEdit = React.forwardRef<
           </Form.Item>
         </Col>
         <Col span={8}>
-          <Form.Item name="building" label="Корпус" style={highlight('building')}>
-            <Select
-              allowClear
-              options={buildings.map((b) => ({ value: b, label: b }))}
-              disabled={!projectId}
-            />
+          <Form.Item label="Корпус">
+            <Input value={buildingsText} disabled />
           </Form.Item>
         </Col>
         <Col span={8}>
