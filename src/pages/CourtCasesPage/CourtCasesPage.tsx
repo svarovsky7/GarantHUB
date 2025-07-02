@@ -221,7 +221,7 @@ export default function CourtCasesPage() {
     responsibleLawyer: users.find((u) => u.id === c.responsible_lawyer_id)?.name ?? c.responsibleLawyer,
     createdAt: c.created_at ? dayjs(c.created_at) : null,
     createdByName: users.find((u) => u.id === c.created_by)?.name ?? null,
-    daysSinceFixStart: c.fix_start_date ? dayjs(c.fix_end_date ?? dayjs()).diff(dayjs(c.fix_start_date), 'day') : null,
+    daysSinceFixStart: c.fix_start_date ? dayjs().diff(dayjs(c.fix_start_date), 'day') : null,
     statusName: stages.find((s) => s.id === c.status)?.name ?? null,
     statusColor: stages.find((s) => s.id === c.status)?.color ?? null,
   }));
