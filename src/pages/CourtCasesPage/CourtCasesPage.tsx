@@ -211,13 +211,25 @@ export default function CourtCasesPage() {
     )
       .join(', '),
     plaintiff:
-      personsList.find((p) => p.id === c.plaintiff_person_id)?.full_name ||
-      contractors.find((d) => d.id === c.plaintiff_contractor_id)?.name ||
-      c.plaintiff,
+      (c.parties ?? [])
+        .filter((p: any) => p.role === 'plaintiff')
+        .map((p: any) =>
+          p.person_id
+            ? personsList.find((pp) => pp.id === p.person_id)?.full_name
+            : contractors.find((cc) => cc.id === p.contractor_id)?.name,
+        )
+        .filter(Boolean)
+        .join(', '),
     defendant:
-      contractors.find((d) => d.id === c.defendant_contractor_id)?.name ||
-      personsList.find((p) => p.id === c.defendant_person_id)?.full_name ||
-      c.defendant,
+      (c.parties ?? [])
+        .filter((p: any) => p.role === 'defendant')
+        .map((p: any) =>
+          p.person_id
+            ? personsList.find((pp) => pp.id === p.person_id)?.full_name
+            : contractors.find((cc) => cc.id === p.contractor_id)?.name,
+        )
+        .filter(Boolean)
+        .join(', '),
     responsibleLawyer: users.find((u) => u.id === c.responsible_lawyer_id)?.name ?? c.responsibleLawyer,
     createdAt: c.created_at ? dayjs(c.created_at) : null,
     createdByName: users.find((u) => u.id === c.created_by)?.name ?? null,
