@@ -1,6 +1,15 @@
 import React from 'react';
 import dayjs from 'dayjs';
-import { ConfigProvider, Card, Select, DatePicker, Space, Skeleton, Statistic } from 'antd';
+import {
+  ConfigProvider,
+  Card,
+  Select,
+  DatePicker,
+  Space,
+  Skeleton,
+  Statistic,
+  Segmented,
+} from 'antd';
 import ruRU from 'antd/locale/ru_RU';
 import { useUsers } from '@/entities/user';
 import { useUserStats } from '@/shared/hooks/useUserStats';
@@ -17,6 +26,25 @@ export default function UserStatsBlock() {
   const { data: users = [], isPending } = useUsers();
   const [userId, setUserId] = React.useState<string | null>(null);
   const [range, setRange] = React.useState<[Dayjs, Dayjs] | null>(null);
+  /** Выбранный предустановленный период. */
+  const [preset, setPreset] = React.useState<'all' | 'month' | 'week' | null>(
+    null,
+  );
+
+  /**
+   * Предустановленные диапазоны дат.
+   * all   – с 01.01.2020 по сегодня
+   * month – за последний месяц
+   * week  – за последнюю неделю
+   */
+  const presets = React.useMemo(
+    () => ({
+      all: [dayjs('2020-01-01'), dayjs()],
+      month: [dayjs().subtract(1, 'month'), dayjs()],
+      week: [dayjs().subtract(1, 'week'), dayjs()],
+    }),
+    [],
+  );
 
   const period = React.useMemo(() => {
     if (!range) return null;
@@ -42,15 +70,32 @@ export default function UserStatsBlock() {
             allowClear
             placeholder="Выберите пользователя"
             options={userOptions}
+            optionFilterProp="label"
             value={userId ?? undefined}
             onChange={(val) => setUserId(val)}
             loading={isPending}
             style={{ width: '100%' }}
           />
+          <Segmented
+            options={[
+              { label: 'За все время', value: 'all' },
+              { label: '1 мес', value: 'month' },
+              { label: '1 неделя', value: 'week' },
+            ]}
+            onChange={(val) => {
+              setPreset(val as 'all' | 'month' | 'week');
+              setRange(presets[val as 'all' | 'month' | 'week']);
+            }}
+            value={preset ?? undefined}
+            style={{ width: '100%' }}
+          />
           <RangePicker
             style={{ width: '100%' }}
             value={range ?? undefined}
-            onChange={(v) => setRange(v as [Dayjs, Dayjs] | null)}
+            onChange={(v) => {
+              setPreset(null);
+              setRange(v as [Dayjs, Dayjs] | null);
+            }}
             format="DD.MM.YYYY"
           />
           {loadingStats && userId && period ? (
