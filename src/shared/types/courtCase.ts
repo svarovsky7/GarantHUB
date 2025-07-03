@@ -15,6 +15,19 @@ export interface Defect {
 
 export type CaseStatus = 'active' | 'won' | 'lost' | 'settled';
 
+export interface CourtCaseParty {
+  id: number;
+  /** Идентификатор судебного дела */
+  case_id: number;
+  /** Роль участника: истец или ответчик */
+  role: 'plaintiff' | 'defendant';
+  /** Ссылка на физлицо */
+  person_id: number | null;
+  /** Ссылка на контрагента */
+  contractor_id: number | null;
+  project_id: number;
+}
+
 export interface CourtCase {
   id: number;
   /** Идентификатор родительского дела */
@@ -26,14 +39,16 @@ export interface CourtCase {
   unit_ids: number[];
   date: string;
   number: string;
-  /** Истец - ссылка на физлицо */
-  plaintiff_person_id: number | null;
-  /** Истец - ссылка на контрагента */
-  plaintiff_contractor_id: number | null;
-  /** Ответчик - ссылка на физлицо */
-  defendant_person_id: number | null;
-  /** Ответчик - ссылка на контрагента */
-  defendant_contractor_id: number | null;
+  /** Участники дела */
+  parties?: CourtCaseParty[];
+  /** @deprecated используйте `parties` */
+  plaintiff_person_id?: number | null;
+  /** @deprecated используйте `parties` */
+  plaintiff_contractor_id?: number | null;
+  /** @deprecated используйте `parties` */
+  defendant_person_id?: number | null;
+  /** @deprecated используйте `parties` */
+  defendant_contractor_id?: number | null;
   responsible_lawyer_id: string | null;
   status: number;
   /** Автор создания записи */
