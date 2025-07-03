@@ -176,6 +176,7 @@ export default function CorrespondenceTable({
     {
       title: 'Отправитель',
       dataIndex: 'sender',
+      width: 160,
       sorter: (a, b) => (a.sender || '').localeCompare(b.sender || ''),
       render: (val: string, record: any) => (
         <span style={record.parent_id ? { color: '#888' } : {}}>{val}</span>
@@ -184,6 +185,7 @@ export default function CorrespondenceTable({
     {
       title: 'Получатель',
       dataIndex: 'receiver',
+      width: 160,
       sorter: (a, b) => (a.receiver || '').localeCompare(b.receiver || ''),
       render: (val: string, record: any) => (
         <span style={record.parent_id ? { color: '#888' } : {}}>{val}</span>
@@ -200,22 +202,26 @@ export default function CorrespondenceTable({
     {
       title: 'Проект',
       dataIndex: 'projectName',
+      width: 180,
       sorter: (a, b) => (a.projectName || '').localeCompare(b.projectName || ''),
     },
     {
       title: 'Объекты',
       dataIndex: 'unitNames',
+      width: 200,
       sorter: (a, b) => (a.unitNames || '').localeCompare(b.unitNames || ''),
     },
     {
       title: 'Категория',
       dataIndex: 'letterTypeName',
+      width: 160,
       sorter: (a, b) =>
           (a.letterTypeName || '').localeCompare(b.letterTypeName || ''),
     },
     {
       title: 'Статус',
       dataIndex: 'statusName',
+      width: 160,
       sorter: (a, b) => (a.statusName || '').localeCompare(b.statusName || ''),
       render: (_: any, row: any) => (
         <LetterStatusSelect
@@ -228,6 +234,7 @@ export default function CorrespondenceTable({
     {
       title: 'Ответственный',
       dataIndex: 'responsibleName',
+      width: 160,
       sorter: (a, b) =>
           (a.responsibleName || '').localeCompare(b.responsibleName || ''),
       render: (name: string) => name || '—',

@@ -351,6 +351,7 @@ export default function CorrespondencePage() {
       sender: {
         title: 'Отправитель',
         dataIndex: 'sender',
+        width: 160,
         sorter: (a: any, b: any) => (a.sender || '').localeCompare(b.sender || ''),
         render: (val: string, record: any) => (
           <span style={record.parent_id ? { color: '#888' } : {}}>{val}</span>
@@ -359,6 +360,7 @@ export default function CorrespondencePage() {
       receiver: {
         title: 'Получатель',
         dataIndex: 'receiver',
+        width: 160,
         sorter: (a: any, b: any) => (a.receiver || '').localeCompare(b.receiver || ''),
         render: (val: string, record: any) => (
           <span style={record.parent_id ? { color: '#888' } : {}}>{val}</span>
@@ -376,21 +378,25 @@ export default function CorrespondencePage() {
       projectName: {
         title: 'Проект',
         dataIndex: 'projectName',
+        width: 180,
         sorter: (a: any, b: any) => (a.projectName || '').localeCompare(b.projectName || ''),
       },
       unitNames: {
         title: 'Объекты',
         dataIndex: 'unitNames',
+        width: 200,
         sorter: (a: any, b: any) => (a.unitNames || '').localeCompare(b.unitNames || ''),
       },
       letterTypeName: {
         title: 'Категория',
         dataIndex: 'letterTypeName',
+        width: 160,
         sorter: (a: any, b: any) => (a.letterTypeName || '').localeCompare(b.letterTypeName || ''),
       },
       statusName: {
         title: 'Статус',
         dataIndex: 'statusName',
+        width: 160,
         sorter: (a: any, b: any) => (a.statusName || '').localeCompare(b.statusName || ''),
         render: (_: any, row: any) => (
           <LetterStatusSelect letterId={row.id} statusId={row.status_id} statusName={row.statusName} />
@@ -399,6 +405,7 @@ export default function CorrespondencePage() {
       responsibleName: {
         title: 'Ответственный',
         dataIndex: 'responsibleName',
+        width: 160,
         sorter: (a: any, b: any) => (a.responsibleName || '').localeCompare(b.responsibleName || ''),
         render: (name: string) => name || '—',
       },
