@@ -96,19 +96,14 @@ export function useAddCourtCase() {
         defendant_contractor_ids = [],
         ...rest
       } = payload as unknown as {
-        unit_ids?: number[] | string[];
-        attachment_ids?: number[] | string[];
-        plaintiff_person_ids?: number[] | string[];
-        plaintiff_contractor_ids?: number[] | string[];
-        defendant_person_ids?: number[] | string[];
-        defendant_contractor_ids?: number[] | string[];
+        unit_ids?: number[];
+        attachment_ids?: number[];
+        plaintiff_person_ids?: number[];
+        plaintiff_contractor_ids?: number[];
+        defendant_person_ids?: number[];
+        defendant_contractor_ids?: number[];
         [k: string]: any;
       };
-
-      const personPlIds = (plaintiff_person_ids as (number | string)[]).map(Number);
-      const contrPlIds = (plaintiff_contractor_ids as (number | string)[]).map(Number);
-      const personDefIds = (defendant_person_ids as (number | string)[]).map(Number);
-      const contrDefIds = (defendant_contractor_ids as (number | string)[]).map(Number);
 
       const { data: inserted, error } = await supabase
         .from(CASES_TABLE)
@@ -141,7 +136,7 @@ export function useAddCourtCase() {
       }
 
       const partyRows: any[] = [];
-      personPlIds.forEach((pid) =>
+      (plaintiff_person_ids as number[]).forEach((pid) =>
         partyRows.push({
           case_id: caseId,
           role: 'plaintiff',
@@ -150,7 +145,7 @@ export function useAddCourtCase() {
           project_id: rest.project_id,
         }),
       );
-      contrPlIds.forEach((cid) =>
+      (plaintiff_contractor_ids as number[]).forEach((cid) =>
         partyRows.push({
           case_id: caseId,
           role: 'plaintiff',
@@ -159,7 +154,7 @@ export function useAddCourtCase() {
           project_id: rest.project_id,
         }),
       );
-      personDefIds.forEach((pid) =>
+      (defendant_person_ids as number[]).forEach((pid) =>
         partyRows.push({
           case_id: caseId,
           role: 'defendant',
@@ -168,7 +163,7 @@ export function useAddCourtCase() {
           project_id: rest.project_id,
         }),
       );
-      contrDefIds.forEach((cid) =>
+      (defendant_contractor_ids as number[]).forEach((cid) =>
         partyRows.push({
           case_id: caseId,
           role: 'defendant',
