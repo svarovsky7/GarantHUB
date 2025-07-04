@@ -294,44 +294,46 @@ export default function AddCourtCaseFormAntd({
   const handleAddCase = async (values: any) => {
     try {
       const uidId = await getOrCreateCaseUid(values.case_uid);
-      const newCase = await addCaseMutation.mutateAsync({
-        project_id: values.project_id,
-        unit_ids: values.unit_ids || [],
-        number: values.number,
-        date: values.date.format('YYYY-MM-DD'),
-        case_uid_id: uidId,
-        plaintiff_person_ids: values.plaintiff_person_ids || [],
-        plaintiff_contractor_ids: values.plaintiff_contractor_ids || [],
-        defendant_person_ids: values.defendant_person_ids || [],
-        defendant_contractor_ids: values.defendant_contractor_ids || [],
-        responsible_lawyer_id: values.responsible_lawyer_id,
-        status: values.status,
-        fix_start_date: values.fix_start_date
-          ? (values.fix_start_date as Dayjs).format('YYYY-MM-DD')
-          : null,
-        fix_end_date: values.fix_end_date
-          ? (values.fix_end_date as Dayjs).format('YYYY-MM-DD')
-          : null,
-        description: values.description || '',
-        created_by: profileId,
-      } as any);
+    const newCase = await addCaseMutation.mutateAsync({
+      project_id: values.project_id,
+      unit_ids: values.unit_ids || [],
+      number: values.number,
+      date: values.date.format('YYYY-MM-DD'),
+      case_uid_id: uidId,
+      plaintiff_person_ids: (values.plaintiff_person_ids || []).map(Number),
+      plaintiff_contractor_ids: (values.plaintiff_contractor_ids || []).map(Number),
+      defendant_person_ids: (values.defendant_person_ids || []).map(Number),
+      defendant_contractor_ids: (values.defendant_contractor_ids || []).map(Number),
+      responsible_lawyer_id: values.responsible_lawyer_id,
+      status: values.status,
+      fix_start_date: values.fix_start_date
+        ? (values.fix_start_date as Dayjs).format('YYYY-MM-DD')
+        : null,
+      fix_end_date: values.fix_end_date
+        ? (values.fix_end_date as Dayjs).format('YYYY-MM-DD')
+        : null,
+      description: values.description || '',
+      created_by: profileId,
+    } as any);
 
-      let newAtts: { id: number }[] = [];
-      if (caseFiles.length) {
-        newAtts = await addCaseAttachments(
-          caseFiles.map((f) => ({
-            file: f.file,
-            type_id: f.type_id,
-            description: f.description,
-          })),
-          newCase.id,
-        );
-        await updateCaseMutation.mutateAsync({
-          id: newCase.id,
-          updates: { attachment_ids: newAtts.map((a) => a.id) },
-        });
-        qc.invalidateQueries({ queryKey: ['court_cases'] });
-      }
+    let newAtts: { id: number }[] = [];
+    if (caseFiles.length) {
+      newAtts = await addCaseAttachments(
+        caseFiles.map((f) => ({
+          file: f.file,
+          type_id: f.type_id,
+          description: f.description,
+        })),
+        newCase.id,
+      );
+      await updateCaseMutation.mutateAsync({
+        id: newCase.id,
+        updates: { attachment_ids: newAtts.map((a) => a.id) },
+      });
+      qc.invalidateQueries({ queryKey: ['court_cases'] });
+    }
+
+    // стороны сохраняются внутри useAddCourtCase
 
       const claims: any[] = (values.claims || []).filter((c: any) =>
         ['claimed_amount', 'confirmed_amount', 'paid_amount', 'agreed_amount'].some((k) => c[k] != null && c[k] !== '')
