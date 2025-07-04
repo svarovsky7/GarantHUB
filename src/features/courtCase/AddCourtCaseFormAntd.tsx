@@ -152,7 +152,6 @@ export default function AddCourtCaseFormAntd({
       created_by: profileId,
     } as any);
 
-
     let newAtts: { id: number }[] = [];
     if (caseFiles.length) {
       newAtts = await addCaseAttachments(
