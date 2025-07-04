@@ -317,7 +317,6 @@ export default function AddCourtCaseFormAntd({
       created_by: profileId,
     } as any);
 
-
     let newAtts: { id: number }[] = [];
     if (caseFiles.length) {
       newAtts = await addCaseAttachments(
@@ -335,48 +334,7 @@ export default function AddCourtCaseFormAntd({
       qc.invalidateQueries({ queryKey: ['court_cases'] });
     }
 
-    const parties: any[] = [];
-    (values.plaintiff_person_ids || []).forEach((pid: number) =>
-      parties.push({
-        role: 'plaintiff',
-        person_id: pid,
-        contractor_id: null,
-        project_id: values.project_id,
-      }),
-    );
-    (values.plaintiff_contractor_ids || []).forEach((cid: number) =>
-      parties.push({
-        role: 'plaintiff',
-        contractor_id: cid,
-        person_id: null,
-        project_id: values.project_id,
-      }),
-    );
-    (values.defendant_person_ids || []).forEach((pid: number) =>
-      parties.push({
-        role: 'defendant',
-        person_id: pid,
-        contractor_id: null,
-        project_id: values.project_id,
-      }),
-    );
-    (values.defendant_contractor_ids || []).forEach((cid: number) =>
-      parties.push({
-        role: 'defendant',
-        contractor_id: cid,
-        person_id: null,
-        project_id: values.project_id,
-      }),
-    );
-    if (parties.length) {
-      await updateCaseMutation.mutateAsync({
-        id: newCase.id,
-        updates: {
-          parties,
-        },
-      });
-      qc.invalidateQueries({ queryKey: ['court_cases'] });
-    }
+
 
       const claims: any[] = (values.claims || []).filter((c: any) =>
         ['claimed_amount', 'confirmed_amount', 'paid_amount', 'agreed_amount'].some((k) => c[k] != null && c[k] !== '')
