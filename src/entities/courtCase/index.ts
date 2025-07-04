@@ -118,7 +118,10 @@ export function useAddCourtCase() {
           court_case_id: caseId,
           unit_id: uid,
         }));
-        await supabase.from(CASE_UNITS_TABLE).insert(rows);
+        const { error: unitsErr } = await supabase
+          .from(CASE_UNITS_TABLE)
+          .insert(rows);
+        if (unitsErr) throw unitsErr;
       }
 
       if (attachment_ids.length) {
@@ -126,7 +129,10 @@ export function useAddCourtCase() {
           court_case_id: caseId,
           attachment_id: aid,
         }));
-        await supabase.from(CASE_ATTACH_TABLE).insert(rows);
+        const { error: attErr } = await supabase
+          .from(CASE_ATTACH_TABLE)
+          .insert(rows);
+        if (attErr) throw attErr;
       }
 
       const partyRows: any[] = [];
@@ -167,7 +173,10 @@ export function useAddCourtCase() {
         }),
       );
       if (partyRows.length) {
-        await supabase.from(CASE_PARTIES_TABLE).insert(partyRows);
+        const { error: partiesErr } = await supabase
+          .from(CASE_PARTIES_TABLE)
+          .insert(partyRows);
+        if (partiesErr) throw partiesErr;
       }
 
       return { ...inserted, unit_ids, attachment_ids, parties: partyRows } as CourtCase;
@@ -204,7 +213,10 @@ export function useUpdateCourtCase() {
         await supabase.from(CASE_UNITS_TABLE).delete().eq('court_case_id', id);
         if (unit_ids.length) {
           const rows = unit_ids.map((uid) => ({ court_case_id: id, unit_id: uid }));
-          await supabase.from(CASE_UNITS_TABLE).insert(rows);
+          const { error: unitsErr } = await supabase
+            .from(CASE_UNITS_TABLE)
+            .insert(rows);
+          if (unitsErr) throw unitsErr;
         }
       }
 
@@ -215,7 +227,10 @@ export function useUpdateCourtCase() {
             court_case_id: id,
             attachment_id: aid,
           }));
-          await supabase.from(CASE_ATTACH_TABLE).insert(rows);
+          const { error: attErr } = await supabase
+            .from(CASE_ATTACH_TABLE)
+            .insert(rows);
+          if (attErr) throw attErr;
         }
       }
 
@@ -229,7 +244,10 @@ export function useUpdateCourtCase() {
             contractor_id: p.contractor_id ?? null,
             project_id: p.project_id,
           }));
-          await supabase.from(CASE_PARTIES_TABLE).insert(rows);
+          const { error: partiesErr } = await supabase
+            .from(CASE_PARTIES_TABLE)
+            .insert(rows);
+          if (partiesErr) throw partiesErr;
         }
       }
 

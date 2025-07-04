@@ -445,7 +445,13 @@ export default function AddCourtCaseFormAntd({
                   disabled={!projectId}
                   style={{ width: '100%' }}
                 />
-                <Button icon={<PlusOutlined />} onClick={() => { setPartyRole('plaintiff'); setPersonModal(null); }} />
+                <Button
+                  icon={<PlusOutlined />}
+                  onClick={() => {
+                    setPartyRole('plaintiff');
+                    setPersonModal({});
+                  }}
+                />
               </Space.Compact>
             </Form.Item>
             <Form.Item name="plaintiff_contractor_ids" label="Истцы (контрагенты)">
@@ -459,7 +465,13 @@ export default function AddCourtCaseFormAntd({
                   options={contractors.map((c) => ({ value: c.id, label: c.name }))}
                   style={{ width: '100%' }}
                 />
-                <Button icon={<PlusOutlined />} onClick={() => { setPartyRole('plaintiff'); setContractorModal(null); }} />
+                <Button
+                  icon={<PlusOutlined />}
+                  onClick={() => {
+                    setPartyRole('plaintiff');
+                    setContractorModal({});
+                  }}
+                />
               </Space.Compact>
             </Form.Item>
           </Col>
@@ -475,7 +487,13 @@ export default function AddCourtCaseFormAntd({
                   options={projectPersons.map((p) => ({ value: p.id, label: p.full_name }))}
                   style={{ width: '100%' }}
                 />
-                <Button icon={<PlusOutlined />} onClick={() => { setPartyRole('defendant'); setPersonModal(null); }} />
+                <Button
+                  icon={<PlusOutlined />}
+                  onClick={() => {
+                    setPartyRole('defendant');
+                    setPersonModal({});
+                  }}
+                />
               </Space.Compact>
             </Form.Item>
             <Form.Item name="defendant_contractor_ids" label="Ответчики (контрагенты)">
@@ -489,7 +507,13 @@ export default function AddCourtCaseFormAntd({
                   options={contractors.map((c) => ({ value: c.id, label: c.name }))}
                   style={{ width: '100%' }}
                 />
-                <Button icon={<PlusOutlined />} onClick={() => { setPartyRole('defendant'); setContractorModal(null); }} />
+                <Button
+                  icon={<PlusOutlined />}
+                  onClick={() => {
+                    setPartyRole('defendant');
+                    setContractorModal({});
+                  }}
+                />
               </Space.Compact>
             </Form.Item>
           </Col>
