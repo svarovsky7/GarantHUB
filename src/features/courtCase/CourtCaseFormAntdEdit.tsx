@@ -1,25 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import dayjs, { Dayjs } from 'dayjs';
-import {
-  Form,
-  Input,
-  Select,
-  DatePicker,
-  Row,
-  Col,
-  Button,
-  Skeleton,
-  Radio,
-  Space,
-  Popconfirm,
-  Tag,
-} from 'antd';
+import { Form, Input, Select, DatePicker, Row, Col, Button, Skeleton, Radio, Space } from 'antd';
 import { useVisibleProjects } from '@/entities/project';
 import { useUnitsByProject } from '@/entities/unit';
-import { useContractors, useDeleteContractor } from '@/entities/contractor';
+import { useContractors } from '@/entities/contractor';
 import { useUsers } from '@/entities/user';
 import { useCourtCaseStatuses } from '@/entities/courtCaseStatus';
-import { usePersons, useDeletePerson } from '@/entities/person';
+import { usePersons } from '@/entities/person';
 import { useCourtCase, useUpdateCourtCaseFull } from '@/entities/courtCase';
 import FileDropZone from '@/shared/ui/FileDropZone';
 import AttachmentEditorTable from '@/shared/ui/AttachmentEditorTable';
@@ -29,9 +16,6 @@ import { downloadZip } from '@/shared/utils/downloadZip';
 import { signedUrl } from '@/entities/courtCase';
 import { useChangedFields } from '@/shared/hooks/useChangedFields';
 import CaseClaimsEditorTable from '@/widgets/CaseClaimsEditorTable';
-import PersonModalId from '@/features/person/PersonModalId';
-import ContractorModalId from '@/features/contractor/ContractorModalId';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 
 export interface CourtCaseFormAntdEditProps {
   caseId: string;
@@ -55,8 +39,6 @@ export default function CourtCaseFormAntdEdit({
   const { data: users = [] } = useUsers();
   const { data: stages = [] } = useCourtCaseStatuses();
   const { data: personsList = [] } = usePersons();
-  const deletePerson = useDeletePerson();
-  const deleteContractor = useDeleteContractor();
   const update = useUpdateCourtCaseFull();
   const notify = useNotify();
   const attachments = useCaseAttachments({ courtCase });
@@ -67,9 +49,6 @@ export default function CourtCaseFormAntdEdit({
 
   const [plaintiffType, setPlaintiffType] = useState<'person' | 'contractor'>('person');
   const [defendantType, setDefendantType] = useState<'person' | 'contractor'>('contractor');
-  const [personModal, setPersonModal] = useState<any | null>(null);
-  const [contractorModal, setContractorModal] = useState<any | null>(null);
-  const [partyRole, setPartyRole] = useState<'plaintiff' | 'defendant' | null>(null);
 
   const highlight = (name: string) =>
     changedFields[name]
@@ -98,34 +77,6 @@ export default function CourtCaseFormAntdEdit({
   }, [courtCase, form]);
 
   const handleFiles = (files: File[]) => attachments.addFiles(files);
-
-  /** Delete selected person from DB and clear field */
-  const removePerson = async (
-    field: 'plaintiff_id' | 'defendant_id',
-    id: number,
-  ) => {
-    try {
-      await deletePerson.mutateAsync(id);
-      form.setFieldValue(field, null);
-      notify.success('Физлицо удалено');
-    } catch (e: any) {
-      notify.error(e.message);
-    }
-  };
-
-  /** Delete selected contractor from DB and clear field */
-  const removeContractor = async (
-    field: 'plaintiff_id' | 'defendant_id',
-    id: number,
-  ) => {
-    try {
-      await deleteContractor.mutateAsync(id);
-      form.setFieldValue(field, null);
-      notify.success('Контрагент удален');
-    } catch (e: any) {
-      notify.error(e.message);
-    }
-  };
 
   const handleDownloadArchive = async () => {
     const files = [
@@ -278,62 +229,26 @@ export default function CourtCaseFormAntdEdit({
                 <Radio.Button value="person">Физлицо</Radio.Button>
                 <Radio.Button value="contractor">Контрагент</Radio.Button>
               </Radio.Group>
-              <Space.Compact style={{ width: '100%' }}>
-                <Form.Item
-                  name="plaintiff_id"
-                  noStyle
-                  rules={[{ required: true }]}
-                  style={{ ...highlight('plaintiff_id'), flex: 1 }}
-                >
-                  {plaintiffType === 'person' ? (
-                    <Select
-                      showSearch
-                      optionFilterProp="label"
-                      options={personsList.map((p) => ({ value: p.id, label: p.full_name }))}
-                    />
-                  ) : (
-                    <Select
-                      showSearch
-                      optionFilterProp="label"
-                      options={contractors.map((c) => ({ value: c.id, label: c.name }))}
-                    />
-                  )}
-                </Form.Item>
-                <Button
-                  icon={<PlusOutlined />}
-                  onClick={() => {
-                    setPartyRole('plaintiff');
-                    plaintiffType === 'person' ? setPersonModal(null) : setContractorModal(null);
-                  }}
-                />
-                <Button
-                  icon={<EditOutlined />}
-                  disabled={!form.getFieldValue('plaintiff_id')}
-                  onClick={() => {
-                    const id = form.getFieldValue('plaintiff_id');
-                    setPartyRole('plaintiff');
-                    if (plaintiffType === 'person') {
-                      setPersonModal(personsList.find((p) => p.id === id) || null);
-                    } else {
-                      setContractorModal(contractors.find((c) => c.id === id) || null);
-                    }
-                  }}
-                />
-                <Popconfirm
-                  title="Удалить?"
-                  okText="Да"
-                  cancelText="Нет"
-                  onConfirm={() => {
-                    const id = form.getFieldValue('plaintiff_id');
-                    if (!id) return;
-                    plaintiffType === 'person'
-                      ? removePerson('plaintiff_id', id)
-                      : removeContractor('plaintiff_id', id);
-                  }}
-                >
-                  <Button danger icon={<DeleteOutlined />} disabled={!form.getFieldValue('plaintiff_id')} />
-                </Popconfirm>
-              </Space.Compact>
+              <Form.Item
+                name="plaintiff_id"
+                noStyle
+                rules={[{ required: true }]}
+                style={highlight('plaintiff_id')}
+              >
+                {plaintiffType === 'person' ? (
+                  <Select
+                    showSearch
+                    optionFilterProp="label"
+                    options={personsList.map((p) => ({ value: p.id, label: p.full_name }))}
+                  />
+                ) : (
+                  <Select
+                    showSearch
+                    optionFilterProp="label"
+                    options={contractors.map((c) => ({ value: c.id, label: c.name }))}
+                  />
+                )}
+              </Form.Item>
             </Space>
           </Form.Item>
         </Col>
@@ -350,62 +265,26 @@ export default function CourtCaseFormAntdEdit({
                 <Radio.Button value="person">Физлицо</Radio.Button>
                 <Radio.Button value="contractor">Контрагент</Radio.Button>
               </Radio.Group>
-              <Space.Compact style={{ width: '100%' }}>
-                <Form.Item
-                  name="defendant_id"
-                  noStyle
-                  rules={[{ required: true }]}
-                  style={{ ...highlight('defendant_id'), flex: 1 }}
-                >
-                  {defendantType === 'person' ? (
-                    <Select
-                      showSearch
-                      optionFilterProp="label"
-                      options={personsList.map((p) => ({ value: p.id, label: p.full_name }))}
-                    />
-                  ) : (
-                    <Select
-                      showSearch
-                      optionFilterProp="label"
-                      options={contractors.map((c) => ({ value: c.id, label: c.name }))}
-                    />
-                  )}
-                </Form.Item>
-                <Button
-                  icon={<PlusOutlined />}
-                  onClick={() => {
-                    setPartyRole('defendant');
-                    defendantType === 'person' ? setPersonModal(null) : setContractorModal(null);
-                  }}
-                />
-                <Button
-                  icon={<EditOutlined />}
-                  disabled={!form.getFieldValue('defendant_id')}
-                  onClick={() => {
-                    const id = form.getFieldValue('defendant_id');
-                    setPartyRole('defendant');
-                    if (defendantType === 'person') {
-                      setPersonModal(personsList.find((p) => p.id === id) || null);
-                    } else {
-                      setContractorModal(contractors.find((c) => c.id === id) || null);
-                    }
-                  }}
-                />
-                <Popconfirm
-                  title="Удалить?"
-                  okText="Да"
-                  cancelText="Нет"
-                  onConfirm={() => {
-                    const id = form.getFieldValue('defendant_id');
-                    if (!id) return;
-                    defendantType === 'person'
-                      ? removePerson('defendant_id', id)
-                      : removeContractor('defendant_id', id);
-                  }}
-                >
-                  <Button danger icon={<DeleteOutlined />} disabled={!form.getFieldValue('defendant_id')} />
-                </Popconfirm>
-              </Space.Compact>
+              <Form.Item
+                name="defendant_id"
+                noStyle
+                rules={[{ required: true }]}
+                style={highlight('defendant_id')}
+              >
+                {defendantType === 'person' ? (
+                  <Select
+                    showSearch
+                    optionFilterProp="label"
+                    options={personsList.map((p) => ({ value: p.id, label: p.full_name }))}
+                  />
+                ) : (
+                  <Select
+                    showSearch
+                    optionFilterProp="label"
+                    options={contractors.map((c) => ({ value: c.id, label: c.name }))}
+                  />
+                )}
+              </Form.Item>
             </Space>
           </Form.Item>
         </Col>
@@ -493,35 +372,5 @@ export default function CourtCaseFormAntdEdit({
         </Button>
       </Form.Item>
     </Form>
-
-    <PersonModalId
-      open={!!personModal}
-      onClose={() => {
-        setPersonModal(null);
-        setPartyRole(null);
-      }}
-      onSelect={(id) => {
-        if (!partyRole) return;
-        const field = partyRole === 'plaintiff' ? 'plaintiff_id' : 'defendant_id';
-        form.setFieldValue(field, id);
-        setPartyRole(null);
-      }}
-      unitId={Form.useWatch('unit_ids', form)?.[0] ?? null}
-      initialData={personModal}
-    />
-    <ContractorModalId
-      open={!!contractorModal}
-      onClose={() => {
-        setContractorModal(null);
-        setPartyRole(null);
-      }}
-      onSelect={(id) => {
-        if (!partyRole) return;
-        const field = partyRole === 'plaintiff' ? 'plaintiff_id' : 'defendant_id';
-        form.setFieldValue(field, id);
-        setPartyRole(null);
-      }}
-      initialData={contractorModal}
-    />
   );
 }
