@@ -11,7 +11,11 @@ import { useNotify } from '@/shared/hooks/useNotify';
 export interface ContractorModalIdProps {
   open: boolean;
   onClose: () => void;
-  onSelect: (id: number) => void;
+  /**
+   * Возвращает id созданной/обновлённой записи или `null`,
+   * если контрагент был удалён.
+   */
+  onSelect: (id: number | null) => void;
   initialData?: any | null;
 }
 
@@ -56,7 +60,7 @@ export default function ContractorModalId({
     try {
       await remove.mutateAsync(initialData.id);
       notify.success('Контрагент удалён');
-      onSelect(initialData.id);
+      onSelect(null);
       onClose();
     } catch (e: any) {
       notify.error(e.message);

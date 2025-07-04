@@ -13,7 +13,11 @@ export interface PersonModalIdProps {
   open: boolean;
   onClose: () => void;
   unitId?: number | null;
-  onSelect: (id: number) => void;
+  /**
+   * Возвращает идентификатор созданной/обновлённой записи или `null`,
+   * если запись была удалена.
+   */
+  onSelect: (id: number | null) => void;
   initialData?: any | null;
 }
 
@@ -63,7 +67,7 @@ export default function PersonModalId({
       await remove.mutateAsync(initialData.id);
       notify.success('Физлицо удалено');
       qc.invalidateQueries({ queryKey: ['projectPersons'] });
-      onSelect(initialData.id);
+      onSelect(null);
       onClose();
     } catch (e: any) {
       notify.error(e.message);
