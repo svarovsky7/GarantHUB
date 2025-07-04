@@ -115,20 +115,6 @@ export default function CourtCasesFilters({
           onChange={(v) => onChange({ ...values, status: v })}
         />
       </Form.Item>
-      <Form.Item label="Истец">
-        <Input
-          placeholder="Истец"
-          value={values.plaintiff}
-          onChange={(e) => onChange({ ...values, plaintiff: e.target.value })}
-        />
-      </Form.Item>
-      <Form.Item label="Ответчик">
-        <Input
-          placeholder="Ответчик"
-          value={values.defendant}
-          onChange={(e) => onChange({ ...values, defendant: e.target.value })}
-        />
-      </Form.Item>
       <Form.Item label="Период начала устранения">
         <DatePicker.RangePicker
           allowClear

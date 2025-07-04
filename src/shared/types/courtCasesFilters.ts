@@ -10,8 +10,6 @@ export interface CourtCasesFiltersValues {
   number?: string;
   dateRange?: [Dayjs, Dayjs];
   status?: number;
-  plaintiff?: string;
-  defendant?: string;
   fixStartRange?: [Dayjs, Dayjs];
   lawyerId?: string;
   hideClosed?: boolean;
