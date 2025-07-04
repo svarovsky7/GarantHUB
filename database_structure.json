@@ -498,13 +498,6 @@
   },
   {
     "table_name": "court_case_parties",
-    "column_name": "role",
-    "data_type": "text",
-    "is_nullable": "NO",
-    "column_default": null
-  },
-  {
-    "table_name": "court_case_parties",
     "column_name": "contractor_id",
     "data_type": "integer",
     "is_nullable": "YES",
@@ -530,6 +523,13 @@
     "data_type": "timestamp with time zone",
     "is_nullable": "YES",
     "column_default": "now()"
+  },
+  {
+    "table_name": "court_case_parties",
+    "column_name": "role",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
   },
   {
     "table_name": "court_case_units",
