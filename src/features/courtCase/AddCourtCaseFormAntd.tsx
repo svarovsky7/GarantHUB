@@ -11,6 +11,7 @@ import {
   Radio,
   Popconfirm,
   Modal,
+  Tag,
 } from 'antd';
 import { Dayjs } from 'dayjs';
 import { useVisibleProjects } from '@/entities/project';
@@ -158,6 +159,136 @@ export default function AddCourtCaseFormAntd({
 
   const handleCaseFiles = (files: File[]) => addCaseFiles(files);
 
+  /**
+   * Remove selected person id from form and delete record.
+   */
+  const removePerson = async (
+    field: 'plaintiff_person_ids' | 'defendant_person_ids',
+    id: number,
+  ) => {
+    try {
+      await deletePersonMutation.mutateAsync(id);
+      const list: number[] = form.getFieldValue(field) || [];
+      form.setFieldValue(
+        field,
+        list.filter((pid) => pid !== id),
+      );
+      notify.success('Физлицо удалено');
+    } catch (e: any) {
+      notify.error(e.message);
+    }
+  };
+
+  /**
+   * Remove selected contractor id from form and delete record.
+   */
+  const removeContractor = async (
+    field: 'plaintiff_contractor_ids' | 'defendant_contractor_ids',
+    id: number,
+  ) => {
+    try {
+      await deleteContractorMutation.mutateAsync(id);
+      const list: number[] = form.getFieldValue(field) || [];
+      form.setFieldValue(
+        field,
+        list.filter((cid) => cid !== id),
+      );
+      notify.success('Контрагент удален');
+    } catch (e: any) {
+      notify.error(e.message);
+    }
+  };
+
+  /**
+   * Tag renderer with edit/remove actions for persons.
+   */
+  const personTagRender = (
+    field: 'plaintiff_person_ids' | 'defendant_person_ids',
+    role: 'plaintiff' | 'defendant',
+  ) =>
+    (tagProps: any) => {
+      const { label, value, closable, onClose } = tagProps;
+      return (
+        <Tag
+          closable={closable}
+          onClose={onClose}
+          style={{ display: 'flex', alignItems: 'center' }}
+        >
+          <span>{label}</span>
+          <EditOutlined
+            style={{ marginLeft: 4 }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setPartyRole(role);
+              setPersonModal(
+                personsList.find((p) => p.id === Number(value)) || null,
+              );
+            }}
+          />
+          <Popconfirm
+            title="Удалить?"
+            okText="Да"
+            cancelText="Нет"
+            onConfirm={() => removePerson(field, Number(value))}
+          >
+            <DeleteOutlined
+              style={{ marginLeft: 4, color: '#ff4d4f' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+            />
+          </Popconfirm>
+        </Tag>
+      );
+    };
+
+  /**
+   * Tag renderer with edit/remove actions for contractors.
+   */
+  const contractorTagRender = (
+    field: 'plaintiff_contractor_ids' | 'defendant_contractor_ids',
+    role: 'plaintiff' | 'defendant',
+  ) =>
+    (tagProps: any) => {
+      const { label, value, closable, onClose } = tagProps;
+      return (
+        <Tag
+          closable={closable}
+          onClose={onClose}
+          style={{ display: 'flex', alignItems: 'center' }}
+        >
+          <span>{label}</span>
+          <EditOutlined
+            style={{ marginLeft: 4 }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setPartyRole(role);
+              setContractorModal(
+                contractors.find((c) => c.id === Number(value)) || null,
+              );
+            }}
+          />
+          <Popconfirm
+            title="Удалить?"
+            okText="Да"
+            cancelText="Нет"
+            onConfirm={() => removeContractor(field, Number(value))}
+          >
+            <DeleteOutlined
+              style={{ marginLeft: 4, color: '#ff4d4f' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+            />
+          </Popconfirm>
+        </Tag>
+      );
+    };
+
   const handleAddCase = async (values: any) => {
     try {
       const uidId = await getOrCreateCaseUid(values.case_uid);
@@ -301,35 +432,55 @@ export default function AddCourtCaseFormAntd({
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item name="plaintiff_person_ids" label="Истцы (физлица)">
-              <Select
-                mode="multiple"
-                loading={personsLoading}
-                options={projectPersons.map((p) => ({ value: p.id, label: p.full_name }))}
-                disabled={!projectId}
-              />
+              <Space.Compact style={{ width: '100%' }}>
+                <Select
+                  mode="multiple"
+                  tagRender={personTagRender('plaintiff_person_ids', 'plaintiff')}
+                  loading={personsLoading}
+                  options={projectPersons.map((p) => ({ value: p.id, label: p.full_name }))}
+                  disabled={!projectId}
+                  style={{ width: '100%' }}
+                />
+                <Button icon={<PlusOutlined />} onClick={() => { setPartyRole('plaintiff'); setPersonModal(null); }} />
+              </Space.Compact>
             </Form.Item>
             <Form.Item name="plaintiff_contractor_ids" label="Истцы (контрагенты)">
-              <Select
-                mode="multiple"
-                loading={contractorsLoading}
-                options={contractors.map((c) => ({ value: c.id, label: c.name }))}
-              />
+              <Space.Compact style={{ width: '100%' }}>
+                <Select
+                  mode="multiple"
+                  tagRender={contractorTagRender('plaintiff_contractor_ids', 'plaintiff')}
+                  loading={contractorsLoading}
+                  options={contractors.map((c) => ({ value: c.id, label: c.name }))}
+                  style={{ width: '100%' }}
+                />
+                <Button icon={<PlusOutlined />} onClick={() => { setPartyRole('plaintiff'); setContractorModal(null); }} />
+              </Space.Compact>
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item name="defendant_person_ids" label="Ответчики (физлица)">
-              <Select
-                mode="multiple"
-                loading={personsLoading}
-                options={projectPersons.map((p) => ({ value: p.id, label: p.full_name }))}
-              />
+              <Space.Compact style={{ width: '100%' }}>
+                <Select
+                  mode="multiple"
+                  tagRender={personTagRender('defendant_person_ids', 'defendant')}
+                  loading={personsLoading}
+                  options={projectPersons.map((p) => ({ value: p.id, label: p.full_name }))}
+                  style={{ width: '100%' }}
+                />
+                <Button icon={<PlusOutlined />} onClick={() => { setPartyRole('defendant'); setPersonModal(null); }} />
+              </Space.Compact>
             </Form.Item>
             <Form.Item name="defendant_contractor_ids" label="Ответчики (контрагенты)">
-              <Select
-                mode="multiple"
-                loading={contractorsLoading}
-                options={contractors.map((c) => ({ value: c.id, label: c.name }))}
-              />
+              <Space.Compact style={{ width: '100%' }}>
+                <Select
+                  mode="multiple"
+                  tagRender={contractorTagRender('defendant_contractor_ids', 'defendant')}
+                  loading={contractorsLoading}
+                  options={contractors.map((c) => ({ value: c.id, label: c.name }))}
+                  style={{ width: '100%' }}
+                />
+                <Button icon={<PlusOutlined />} onClick={() => { setPartyRole('defendant'); setContractorModal(null); }} />
+              </Space.Compact>
             </Form.Item>
           </Col>
         </Row>
