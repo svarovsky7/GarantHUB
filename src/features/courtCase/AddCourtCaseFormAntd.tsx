@@ -294,6 +294,7 @@ export default function AddCourtCaseFormAntd({
   const handleAddCase = async (values: any) => {
     try {
       const uidId = await getOrCreateCaseUid(values.case_uid);
+
     const newCase = await addCaseMutation.mutateAsync({
       project_id: values.project_id,
       unit_ids: values.unit_ids || [],
@@ -333,7 +334,7 @@ export default function AddCourtCaseFormAntd({
       qc.invalidateQueries({ queryKey: ['court_cases'] });
     }
 
-    // стороны сохраняются внутри useAddCourtCase
+
 
       const claims: any[] = (values.claims || []).filter((c: any) =>
         ['claimed_amount', 'confirmed_amount', 'paid_amount', 'agreed_amount'].some((k) => c[k] != null && c[k] !== '')
