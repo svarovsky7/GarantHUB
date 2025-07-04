@@ -504,7 +504,11 @@ export default function CourtCaseFormAntdEdit({
       onSelect={(id) => {
         if (!partyRole) return;
         const field = partyRole === 'plaintiff' ? 'plaintiff_id' : 'defendant_id';
-        form.setFieldValue(field, id);
+        if (id == null) {
+          form.setFieldValue(field, null);
+        } else {
+          form.setFieldValue(field, id);
+        }
         setPartyRole(null);
       }}
       unitId={Form.useWatch('unit_ids', form)?.[0] ?? null}
@@ -519,7 +523,11 @@ export default function CourtCaseFormAntdEdit({
       onSelect={(id) => {
         if (!partyRole) return;
         const field = partyRole === 'plaintiff' ? 'plaintiff_id' : 'defendant_id';
-        form.setFieldValue(field, id);
+        if (id == null) {
+          form.setFieldValue(field, null);
+        } else {
+          form.setFieldValue(field, id);
+        }
         setPartyRole(null);
       }}
       initialData={contractorModal}

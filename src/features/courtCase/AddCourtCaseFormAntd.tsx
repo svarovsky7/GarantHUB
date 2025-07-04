@@ -207,14 +207,15 @@ export default function AddCourtCaseFormAntd({
     role: 'plaintiff' | 'defendant',
   ) =>
     (tagProps: any) => {
-      const { label, value, closable, onClose } = tagProps;
+      const { value, closable, onClose } = tagProps;
+      const person = personsList.find((p) => p.id === Number(value));
       return (
         <Tag
           closable={closable}
           onClose={onClose}
           style={{ display: 'flex', alignItems: 'center' }}
         >
-          <span>{label}</span>
+          <span>{person?.full_name || value}</span>
           <EditOutlined
             style={{ marginLeft: 4 }}
             onClick={(e) => {
@@ -252,14 +253,15 @@ export default function AddCourtCaseFormAntd({
     role: 'plaintiff' | 'defendant',
   ) =>
     (tagProps: any) => {
-      const { label, value, closable, onClose } = tagProps;
+      const { value, closable, onClose } = tagProps;
+      const contractor = contractors.find((c) => c.id === Number(value));
       return (
         <Tag
           closable={closable}
           onClose={onClose}
           style={{ display: 'flex', alignItems: 'center' }}
         >
-          <span>{label}</span>
+          <span>{contractor?.name || value}</span>
           <EditOutlined
             style={{ marginLeft: 4 }}
             onClick={(e) => {
@@ -435,6 +437,8 @@ export default function AddCourtCaseFormAntd({
               <Space.Compact style={{ width: '100%' }}>
                 <Select
                   mode="multiple"
+                  showSearch
+                  optionFilterProp="label"
                   tagRender={personTagRender('plaintiff_person_ids', 'plaintiff')}
                   loading={personsLoading}
                   options={projectPersons.map((p) => ({ value: p.id, label: p.full_name }))}
@@ -448,6 +452,8 @@ export default function AddCourtCaseFormAntd({
               <Space.Compact style={{ width: '100%' }}>
                 <Select
                   mode="multiple"
+                  showSearch
+                  optionFilterProp="label"
                   tagRender={contractorTagRender('plaintiff_contractor_ids', 'plaintiff')}
                   loading={contractorsLoading}
                   options={contractors.map((c) => ({ value: c.id, label: c.name }))}
@@ -462,6 +468,8 @@ export default function AddCourtCaseFormAntd({
               <Space.Compact style={{ width: '100%' }}>
                 <Select
                   mode="multiple"
+                  showSearch
+                  optionFilterProp="label"
                   tagRender={personTagRender('defendant_person_ids', 'defendant')}
                   loading={personsLoading}
                   options={projectPersons.map((p) => ({ value: p.id, label: p.full_name }))}
@@ -474,6 +482,8 @@ export default function AddCourtCaseFormAntd({
               <Space.Compact style={{ width: '100%' }}>
                 <Select
                   mode="multiple"
+                  showSearch
+                  optionFilterProp="label"
                   tagRender={contractorTagRender('defendant_contractor_ids', 'defendant')}
                   loading={contractorsLoading}
                   options={contractors.map((c) => ({ value: c.id, label: c.name }))}
@@ -576,9 +586,17 @@ export default function AddCourtCaseFormAntd({
           setPartyRole(null);
         }}
         onSelect={(id) => {
-          const field = partyRole === 'defendant' ? 'defendant_person_ids' : 'plaintiff_person_ids';
-          const current = form.getFieldValue(field) || [];
-          form.setFieldValue(field, Array.from(new Set([...current, id])));
+          const field =
+            partyRole === 'defendant' ? 'defendant_person_ids' : 'plaintiff_person_ids';
+          const current: number[] = form.getFieldValue(field) || [];
+          if (id == null) {
+            form.setFieldValue(
+              field,
+              current.filter((v) => v !== personModal?.id),
+            );
+          } else {
+            form.setFieldValue(field, Array.from(new Set([...current, id])));
+          }
           setPartyRole(null);
         }}
         unitId={Form.useWatch('unit_ids', form)?.[0] ?? null}
@@ -591,9 +609,19 @@ export default function AddCourtCaseFormAntd({
           setPartyRole(null);
         }}
         onSelect={(id) => {
-          const field = partyRole === 'plaintiff' ? 'plaintiff_contractor_ids' : 'defendant_contractor_ids';
-          const current = form.getFieldValue(field) || [];
-          form.setFieldValue(field, Array.from(new Set([...current, id])));
+          const field =
+            partyRole === 'plaintiff'
+              ? 'plaintiff_contractor_ids'
+              : 'defendant_contractor_ids';
+          const current: number[] = form.getFieldValue(field) || [];
+          if (id == null) {
+            form.setFieldValue(
+              field,
+              current.filter((v) => v !== contractorModal?.id),
+            );
+          } else {
+            form.setFieldValue(field, Array.from(new Set([...current, id])));
+          }
           setPartyRole(null);
         }}
         initialData={contractorModal}
