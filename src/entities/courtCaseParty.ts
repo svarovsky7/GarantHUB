@@ -6,7 +6,9 @@ import type { CourtCaseParty } from '@/shared/types/courtCaseParty';
 const TABLE = 'court_case_parties';
 
 const FIELDS =
-  'id, case_id, person_id, contractor_id, project_id, role, created_at, persons(full_name), contractors(name)';
+  'id, case_id, person_id, contractor_id, project_id, role, created_at,' +
+  ' persons(full_name, passport_series, passport_number, phone, email),' +
+  ' contractors(name, inn)';
 
 export function useCaseParties(caseId?: number | null) {
   return useQuery({
@@ -20,8 +22,14 @@ export function useCaseParties(caseId?: number | null) {
         .order('id');
       if (error) throw error;
       return (data ?? []) as (CourtCaseParty & {
-        persons?: { full_name: string } | null;
-        contractors?: { name: string } | null;
+        persons?: {
+          full_name: string;
+          passport_series?: string | null;
+          passport_number?: string | null;
+          phone?: string | null;
+          email?: string | null;
+        } | null;
+        contractors?: { name: string; inn?: string | null } | null;
       })[];
     },
     staleTime: 5 * 60_000,
@@ -37,8 +45,14 @@ export function useCasePartiesByCaseIds(caseIds: number[]) {
         supabase.from(TABLE).select(FIELDS).in('case_id', chunk),
       );
       return (rows ?? []) as (CourtCaseParty & {
-        persons?: { full_name: string } | null;
-        contractors?: { name: string } | null;
+        persons?: {
+          full_name: string;
+          passport_series?: string | null;
+          passport_number?: string | null;
+          phone?: string | null;
+          email?: string | null;
+        } | null;
+        contractors?: { name: string; inn?: string | null } | null;
       })[];
     },
     staleTime: 5 * 60_000,
@@ -59,7 +73,7 @@ export function useAddCaseParties() {
     },
     onSuccess: (rows) => {
       if (rows.length) {
-        qc.invalidateQueries({ queryKey: [TABLE, rows[0].case_id] });
+        qc.invalidateQueries({ queryKey: [TABLE] });
       }
     },
   });
@@ -78,8 +92,8 @@ export function useUpdateCaseParty() {
       if (error) throw error;
       return data as CourtCaseParty;
     },
-    onSuccess: (row) => {
-      qc.invalidateQueries({ queryKey: [TABLE, row.case_id] });
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [TABLE] });
     },
   });
 }
@@ -99,6 +113,6 @@ export function useDeleteCaseParty() {
       if (delErr) throw delErr;
       return caseId;
     },
-    onSuccess: (caseId) => qc.invalidateQueries({ queryKey: [TABLE, caseId] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [TABLE] }),
   });
 }

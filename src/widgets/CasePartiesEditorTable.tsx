@@ -61,7 +61,21 @@ export default function CasePartiesEditorTable({ caseId, projectId }: Props) {
     {
       title: 'Сторона',
       dataIndex: 'name',
-      render: (v: string, row) => v,
+      render: (_: string, row) => (
+        <>
+          <div>{row.name}</div>
+          {row.persons && (
+            <div style={{ fontSize: 12, color: '#888' }}>
+              {row.persons.passport_series} {row.persons.passport_number}
+              {row.persons.phone ? `, ${row.persons.phone}` : ''}
+              {row.persons.email ? `, ${row.persons.email}` : ''}
+            </div>
+          )}
+          {row.contractors?.inn && (
+            <div style={{ fontSize: 12, color: '#888' }}>ИНН {row.contractors.inn}</div>
+          )}
+        </>
+      ),
     },
     {
       title: '',
