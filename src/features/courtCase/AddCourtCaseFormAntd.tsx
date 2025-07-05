@@ -8,14 +8,23 @@ import {
   Select,
   Button,
   Space,
+  Radio,
+  Popconfirm,
+  Modal,
+  Tag,
 } from 'antd';
 import { Dayjs } from 'dayjs';
 import { useVisibleProjects } from '@/entities/project';
 import { useUnitsByProject } from '@/entities/unit';
 import useProjectBuildings from '@/shared/hooks/useProjectBuildings';
 import { useDebounce } from '@/shared/hooks/useDebounce';
+import {
+  useContractors,
+  useDeleteContractor,
+} from '@/entities/contractor';
 import { useUsers } from '@/entities/user';
 import { useCourtCaseStatuses } from '@/entities/courtCaseStatus';
+import { usePersons, useDeletePerson } from '@/entities/person';
 import { useAddCourtCase, useUpdateCourtCase } from '@/entities/courtCase';
 import { addCaseAttachments } from '@/entities/attachment';
 import { useAddCaseClaims } from '@/entities/courtCaseClaim';
@@ -27,6 +36,9 @@ import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useAuthStore } from '@/shared/store/authStore';
 import FileDropZone from '@/shared/ui/FileDropZone';
 import { useNotify } from '@/shared/hooks/useNotify';
+import PersonModalId from '@/features/person/PersonModalId';
+import ContractorModalId from '@/features/contractor/ContractorModalId';
+import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useCaseFiles } from './model/useCaseFiles';
 
 /**
@@ -101,6 +113,7 @@ export default function AddCourtCaseFormAntd({
     projectId,
     buildingDebounced ?? undefined,
   );
+  const { data: contractors = [], isPending: contractorsLoading } = useContractors();
   const { data: users = [], isPending: usersLoading } = useUsers();
   const { data: stages = [], isPending: stagesLoading } = useCourtCaseStatuses();
   const { data: personsList = [] } = usePersons();
@@ -108,6 +121,8 @@ export default function AddCourtCaseFormAntd({
   const addCaseMutation = useAddCourtCase();
   const updateCaseMutation = useUpdateCourtCase();
   const addClaimsMutation = useAddCaseClaims();
+  const deletePersonMutation = useDeletePerson();
+  const deleteContractorMutation = useDeleteContractor();
   const notify = useNotify();
   const qc = useQueryClient();
 
@@ -118,8 +133,11 @@ export default function AddCourtCaseFormAntd({
     }
   }, [stages, form]);
 
+  const [personModal, setPersonModal] = useState<any | null>(null);
+  const [contractorModal, setContractorModal] = useState<any | null>(null);
+  const [partyRole, setPartyRole] = useState<'plaintiff' | 'defendant' | null>(null);
   const [showClaims, setShowClaims] = useState(false);
-  const { caseFiles, addFiles: addCaseFiles, setDescription: setCaseFileDescription, removeFile, reset: resetCaseFiles } = useCaseFiles();
+  const { caseFiles, addFiles: addCaseFiles, setType: setCaseFileType, setDescription: setCaseFileDescription, removeFile: removeCaseFile, reset: resetCaseFiles } = useCaseFiles();
 
   useEffect(() => {
     if (showClaims && !(form.getFieldValue('claims')?.length)) {
@@ -127,8 +145,151 @@ export default function AddCourtCaseFormAntd({
     }
   }, [showClaims, form]);
 
+  const { data: projectPersons = [], isPending: personsLoading } = useQuery({
+    queryKey: ['projectPersons'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('persons')
+        .select('id, full_name')
+        .order('full_name');
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
   const handleCaseFiles = (files: File[]) => addCaseFiles(files);
 
+  /**
+   * Remove selected person id from form and delete record.
+   */
+  const removePerson = async (
+    field: 'plaintiff_person_ids' | 'defendant_person_ids',
+    id: number,
+  ) => {
+    try {
+      await deletePersonMutation.mutateAsync(id);
+      const list: number[] = form.getFieldValue(field) || [];
+      form.setFieldValue(
+        field,
+        list.filter((pid) => pid !== id),
+      );
+      notify.success('Физлицо удалено');
+    } catch (e: any) {
+      notify.error(e.message);
+    }
+  };
+
+  /**
+   * Remove selected contractor id from form and delete record.
+   */
+  const removeContractor = async (
+    field: 'plaintiff_contractor_ids' | 'defendant_contractor_ids',
+    id: number,
+  ) => {
+    try {
+      await deleteContractorMutation.mutateAsync(id);
+      const list: number[] = form.getFieldValue(field) || [];
+      form.setFieldValue(
+        field,
+        list.filter((cid) => cid !== id),
+      );
+      notify.success('Контрагент удален');
+    } catch (e: any) {
+      notify.error(e.message);
+    }
+  };
+
+  /**
+   * Tag renderer with edit/remove actions for persons.
+   */
+  const personTagRender = (
+    field: 'plaintiff_person_ids' | 'defendant_person_ids',
+    role: 'plaintiff' | 'defendant',
+  ) =>
+    (tagProps: any) => {
+      const { value, closable, onClose } = tagProps;
+      const person = personsList.find((p) => p.id === Number(value));
+      return (
+        <Tag
+          closable={closable}
+          onClose={onClose}
+          style={{ display: 'flex', alignItems: 'center' }}
+        >
+          <span>{person?.full_name || value}</span>
+          <EditOutlined
+            style={{ marginLeft: 4 }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setPartyRole(role);
+              setPersonModal(
+                personsList.find((p) => p.id === Number(value)) || null,
+              );
+            }}
+          />
+          <Popconfirm
+            title="Удалить?"
+            okText="Да"
+            cancelText="Нет"
+            onConfirm={() => removePerson(field, Number(value))}
+          >
+            <DeleteOutlined
+              style={{ marginLeft: 4, color: '#ff4d4f' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+            />
+          </Popconfirm>
+        </Tag>
+      );
+    };
+
+  /**
+   * Tag renderer with edit/remove actions for contractors.
+   */
+  const contractorTagRender = (
+    field: 'plaintiff_contractor_ids' | 'defendant_contractor_ids',
+    role: 'plaintiff' | 'defendant',
+  ) =>
+    (tagProps: any) => {
+      const { value, closable, onClose } = tagProps;
+      const contractor = contractors.find((c) => c.id === Number(value));
+      return (
+        <Tag
+          closable={closable}
+          onClose={onClose}
+          style={{ display: 'flex', alignItems: 'center' }}
+        >
+          <span>{contractor?.name || value}</span>
+          <EditOutlined
+            style={{ marginLeft: 4 }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setPartyRole(role);
+              setContractorModal(
+                contractors.find((c) => c.id === Number(value)) || null,
+              );
+            }}
+          />
+          <Popconfirm
+            title="Удалить?"
+            okText="Да"
+            cancelText="Нет"
+            onConfirm={() => removeContractor(field, Number(value))}
+          >
+            <DeleteOutlined
+              style={{ marginLeft: 4, color: '#ff4d4f' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+            />
+          </Popconfirm>
+        </Tag>
+      );
+    };
 
   const handleAddCase = async (values: any) => {
     try {
@@ -140,6 +301,10 @@ export default function AddCourtCaseFormAntd({
       number: values.number,
       date: values.date.format('YYYY-MM-DD'),
       case_uid_id: uidId,
+      plaintiff_person_ids: (values.plaintiff_person_ids || []).map(Number),
+      plaintiff_contractor_ids: (values.plaintiff_contractor_ids || []).map(Number),
+      defendant_person_ids: (values.defendant_person_ids || []).map(Number),
+      defendant_contractor_ids: (values.defendant_contractor_ids || []).map(Number),
       responsible_lawyer_id: values.responsible_lawyer_id,
       status: values.status,
       fix_start_date: values.fix_start_date
@@ -168,6 +333,7 @@ export default function AddCourtCaseFormAntd({
       });
       qc.invalidateQueries({ queryKey: ['court_cases'] });
     }
+
 
 
       const claims: any[] = (values.claims || []).filter((c: any) =>
@@ -267,6 +433,94 @@ export default function AddCourtCaseFormAntd({
             </Form.Item>
           </Col>
         </Row>
+        {/* Row 5 */}
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item name="plaintiff_person_ids" label="Истцы (физлица)">
+              <Space.Compact style={{ width: '100%' }}>
+                <Select
+                  mode="multiple"
+                  showSearch
+                  optionFilterProp="label"
+                  tagRender={personTagRender('plaintiff_person_ids', 'plaintiff')}
+                  loading={personsLoading}
+                  options={projectPersons.map((p) => ({ value: p.id, label: p.full_name }))}
+                  disabled={!projectId}
+                  style={{ width: '100%' }}
+                />
+                <Button
+                  icon={<PlusOutlined />}
+                  onClick={() => {
+                    setPartyRole('plaintiff');
+                    setPersonModal({});
+                  }}
+                />
+              </Space.Compact>
+            </Form.Item>
+            <Form.Item name="plaintiff_contractor_ids" label="Истцы (контрагенты)">
+              <Space.Compact style={{ width: '100%' }}>
+                <Select
+                  mode="multiple"
+                  showSearch
+                  optionFilterProp="label"
+                  tagRender={contractorTagRender('plaintiff_contractor_ids', 'plaintiff')}
+                  loading={contractorsLoading}
+                  options={contractors.map((c) => ({ value: c.id, label: c.name }))}
+                  style={{ width: '100%' }}
+                />
+                <Button
+                  icon={<PlusOutlined />}
+                  onClick={() => {
+                    setPartyRole('plaintiff');
+                    setContractorModal({});
+                  }}
+                />
+              </Space.Compact>
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item name="defendant_person_ids" label="Ответчики (физлица)">
+              <Space.Compact style={{ width: '100%' }}>
+                <Select
+                  mode="multiple"
+                  showSearch
+                  optionFilterProp="label"
+                  tagRender={personTagRender('defendant_person_ids', 'defendant')}
+                  loading={personsLoading}
+                  options={projectPersons.map((p) => ({ value: p.id, label: p.full_name }))}
+                  style={{ width: '100%' }}
+                />
+                <Button
+                  icon={<PlusOutlined />}
+                  onClick={() => {
+                    setPartyRole('defendant');
+                    setPersonModal({});
+                  }}
+                />
+              </Space.Compact>
+            </Form.Item>
+            <Form.Item name="defendant_contractor_ids" label="Ответчики (контрагенты)">
+              <Space.Compact style={{ width: '100%' }}>
+                <Select
+                  mode="multiple"
+                  showSearch
+                  optionFilterProp="label"
+                  tagRender={contractorTagRender('defendant_contractor_ids', 'defendant')}
+                  loading={contractorsLoading}
+                  options={contractors.map((c) => ({ value: c.id, label: c.name }))}
+                  style={{ width: '100%' }}
+                />
+                <Button
+                  icon={<PlusOutlined />}
+                  onClick={() => {
+                    setPartyRole('defendant');
+                    setContractorModal({});
+                  }}
+                />
+              </Space.Compact>
+            </Form.Item>
+          </Col>
+        </Row>
         {/* Row 4 */}
         <Row gutter={16}>
           <Col span={12}>
@@ -352,6 +606,53 @@ export default function AddCourtCaseFormAntd({
         </Form.Item>
       </Form>
 
+      <PersonModalId
+        open={!!personModal}
+        onClose={() => {
+          setPersonModal(null);
+          setPartyRole(null);
+        }}
+        onSelect={(id) => {
+          const field =
+            partyRole === 'defendant' ? 'defendant_person_ids' : 'plaintiff_person_ids';
+          const current: number[] = form.getFieldValue(field) || [];
+          if (id == null) {
+            form.setFieldValue(
+              field,
+              current.filter((v) => v !== personModal?.id),
+            );
+          } else {
+            form.setFieldValue(field, Array.from(new Set([...current, id])));
+          }
+          setPartyRole(null);
+        }}
+        unitId={Form.useWatch('unit_ids', form)?.[0] ?? null}
+        initialData={personModal}
+      />
+      <ContractorModalId
+        open={!!contractorModal}
+        onClose={() => {
+          setContractorModal(null);
+          setPartyRole(null);
+        }}
+        onSelect={(id) => {
+          const field =
+            partyRole === 'plaintiff'
+              ? 'plaintiff_contractor_ids'
+              : 'defendant_contractor_ids';
+          const current: number[] = form.getFieldValue(field) || [];
+          if (id == null) {
+            form.setFieldValue(
+              field,
+              current.filter((v) => v !== contractorModal?.id),
+            );
+          } else {
+            form.setFieldValue(field, Array.from(new Set([...current, id])));
+          }
+          setPartyRole(null);
+        }}
+        initialData={contractorModal}
+      />
 
     </>
   );

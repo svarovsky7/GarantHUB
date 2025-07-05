@@ -210,6 +210,26 @@ export default function CourtCasesPage() {
       ),
     )
       .join(', '),
+    plaintiff:
+      (c.parties ?? [])
+        .filter((p: any) => p.role === 'plaintiff')
+        .map((p: any) =>
+          p.person_id
+            ? personsList.find((pp) => pp.id === p.person_id)?.full_name
+            : contractors.find((cc) => cc.id === p.contractor_id)?.name,
+        )
+        .filter(Boolean)
+        .join(', '),
+    defendant:
+      (c.parties ?? [])
+        .filter((p: any) => p.role === 'defendant')
+        .map((p: any) =>
+          p.person_id
+            ? personsList.find((pp) => pp.id === p.person_id)?.full_name
+            : contractors.find((cc) => cc.id === p.contractor_id)?.name,
+        )
+        .filter(Boolean)
+        .join(', '),
     responsibleLawyer: users.find((u) => u.id === c.responsible_lawyer_id)?.name ?? c.responsibleLawyer,
     createdAt: c.created_at ? dayjs(c.created_at) : null,
     createdByName: users.find((u) => u.id === c.created_by)?.name ?? null,
@@ -235,6 +255,8 @@ export default function CourtCasesPage() {
       !filters.dateRange ||
       (dayjs(c.date).isSameOrAfter(filters.dateRange[0], 'day') &&
         dayjs(c.date).isSameOrBefore(filters.dateRange[1], 'day'));
+    const matchesPlaintiff = !filters.plaintiff || c.plaintiff.toLowerCase().includes(filters.plaintiff.toLowerCase());
+    const matchesDefendant = !filters.defendant || c.defendant.toLowerCase().includes(filters.defendant.toLowerCase());
     const matchesFixStart =
       !filters.fixStartRange ||
       (c.fix_start_date &&
@@ -252,6 +274,8 @@ export default function CourtCasesPage() {
       matchesBuilding &&
       matchesNumber &&
       matchesDate &&
+      matchesPlaintiff &&
+      matchesDefendant &&
       matchesFixStart &&
       matchesLawyer &&
       matchesClosed
@@ -357,6 +381,18 @@ export default function CourtCasesPage() {
       dataIndex: 'daysSinceFixStart',
       width: 200,
       sorter: (a, b) => (a.daysSinceFixStart ?? 0) - (b.daysSinceFixStart ?? 0),
+    },
+    plaintiff: {
+      title: 'Истец',
+      dataIndex: 'plaintiff',
+      width: 160,
+      sorter: (a, b) => (a.plaintiff || '').localeCompare(b.plaintiff || ''),
+    },
+    defendant: {
+      title: 'Ответчик',
+      dataIndex: 'defendant',
+      width: 160,
+      sorter: (a, b) => (a.defendant || '').localeCompare(b.defendant || ''),
     },
     fix_start_date: {
       title: 'Дата начала устранения',
