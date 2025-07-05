@@ -161,9 +161,6 @@ export default function CourtCasesPage() {
       projectId: initialValues.project_id,
       objectId: initialValues.unit_ids ? initialValues.unit_ids[0] : undefined,
       building: undefined,
-      caseUid: '',
-      parties: '',
-      description: '',
     } as CourtCasesFiltersValues;
   });
 
@@ -216,13 +213,7 @@ export default function CourtCasesPage() {
 
   const resetFilters = () =>
     setFilters(
-      (f) =>
-        ({
-          hideClosed: f.hideClosed,
-          caseUid: '',
-          parties: '',
-          description: '',
-        }) as CourtCasesFiltersValues,
+      (f) => ({ hideClosed: f.hideClosed }) as CourtCasesFiltersValues,
     );
 
   const closedStageId = React.useMemo(() => {
@@ -231,7 +222,6 @@ export default function CourtCasesPage() {
 
   const casesData = cases.map((c: any) => ({
     ...c,
-    case_uid: c.case_uid ?? null,
     plaintiffs: (partiesMap.get(c.id)?.plaintiffs || []).join(", "),
     defendants: (partiesMap.get(c.id)?.defendants || []).join(", "),
     projectName: projects.find((p) => p.id === c.project_id)?.name ?? "",
@@ -303,16 +293,6 @@ export default function CourtCasesPage() {
         ));
     const matchesLawyer =
       !filters.lawyerId || String(c.responsible_lawyer_id) === filters.lawyerId;
-    const matchesUid =
-      !filters.caseUid ||
-      (c.case_uid ?? '').toLowerCase().includes(filters.caseUid.toLowerCase());
-    const matchesParties =
-      !filters.parties ||
-      c.plaintiffs.toLowerCase().includes(filters.parties.toLowerCase()) ||
-      c.defendants.toLowerCase().includes(filters.parties.toLowerCase());
-    const matchesDescription =
-      !filters.description ||
-      (c.description ?? '').toLowerCase().includes(filters.description.toLowerCase());
     const matchesClosed =
       !filters.hideClosed || !closedStageId || c.status !== closedStageId;
     const matchesIds = !filters.ids || filters.ids.includes(c.id);
@@ -322,12 +302,9 @@ export default function CourtCasesPage() {
       matchesProject &&
       matchesObject &&
       matchesBuilding &&
-      matchesUid &&
       matchesNumber &&
       matchesDate &&
       matchesFixStart &&
-      matchesParties &&
-      matchesDescription &&
       matchesLawyer &&
       matchesClosed
     );

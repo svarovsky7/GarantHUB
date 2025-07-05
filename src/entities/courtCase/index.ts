@@ -20,9 +20,7 @@ export function useCourtCases() {
   return useQuery({
     queryKey: [CASES_TABLE, projectId, projectIds.join(',')],
     queryFn: async () => {
-      let query = supabase
-        .from(CASES_TABLE)
-        .select('*, case_uids(uid)');
+      let query = supabase.from(CASES_TABLE).select('*');
       if (onlyAssigned) {
         query = query.in('project_id', projectIds.length ? projectIds : [-1]);
       }
@@ -67,7 +65,6 @@ export function useCourtCases() {
 
       return (data ?? []).map((row: any) => ({
         ...row,
-        case_uid: row.case_uids?.uid ?? null,
         unit_ids: unitMap.get(row.id) || [],
         parent_id: linkMap.get(row.id) ?? null,
         total_claim_amount: claimMap.get(row.id) ?? null,
@@ -405,7 +402,7 @@ export function useCourtCase(caseId: number | string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from(CASES_TABLE)
-        .select('*, case_uids(uid)')
+        .select('*')
         .eq('id', id)
         .single();
       if (error) throw error;
@@ -429,7 +426,6 @@ export function useCourtCase(caseId: number | string | undefined) {
       }
       const result = {
         ...(data as any),
-        case_uid: (data as any).case_uids?.uid ?? null,
         unit_ids: unitIds,
         attachment_ids: attIds,
         attachments,
