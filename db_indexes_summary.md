@@ -42,11 +42,6 @@
 ## court_case_claims
 - `court_case_claims_pkey` - `UNIQUE id`
 
-## court_case_claim_links
-- `court_case_claim_links_pkey` - `UNIQUE id`
-- `idx_court_case_claim_links_case` - `case_id`
-- `idx_court_case_claim_links_claim` - `claim_id`
-
 ## court_case_defects
 - `court_case_defects_pkey` - `UNIQUE case_id, defect_id`
 
