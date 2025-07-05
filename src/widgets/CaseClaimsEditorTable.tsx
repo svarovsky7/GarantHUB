@@ -148,7 +148,7 @@ export default function CaseClaimsEditorTable({ caseId }: Props) {
   }
 
   return (
-    <div>
+    <div style={{ maxWidth: 1040 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
         <span style={{ fontWeight: 500 }}>Исковые требования</span>
         <Button type="dashed" icon={<PlusOutlined />} onClick={handleAdd}>
