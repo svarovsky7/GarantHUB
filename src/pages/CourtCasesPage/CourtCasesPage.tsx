@@ -394,20 +394,6 @@ export default function CourtCasesPage() {
       sorter: (a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf(),
       render: (v: string) => dayjs(v).format("DD.MM.YYYY"),
     },
-    status: {
-      title: "Статус",
-      dataIndex: "status",
-      width: 160,
-      sorter: (a, b) => a.status - b.status,
-      render: (_: number, row) => (
-        <CourtCaseStatusSelect
-          caseId={row.id}
-          statusId={row.status}
-          statusName={row.statusName}
-          statusColor={row.statusColor}
-        />
-      ),
-    },
     plaintiffs: {
       title: "Истец",
       dataIndex: "plaintiffs",
@@ -428,11 +414,19 @@ export default function CourtCasesPage() {
         (a.totalClaimAmount ?? 0) - (b.totalClaimAmount ?? 0),
       render: (v: number) => formatRub(v),
     },
-    daysSinceFixStart: {
-      title: "Прошло дней с начала устранения",
-      dataIndex: "daysSinceFixStart",
-      width: 200,
-      sorter: (a, b) => (a.daysSinceFixStart ?? 0) - (b.daysSinceFixStart ?? 0),
+    status: {
+      title: "Статус",
+      dataIndex: "status",
+      width: 160,
+      sorter: (a, b) => a.status - b.status,
+      render: (_: number, row) => (
+        <CourtCaseStatusSelect
+          caseId={row.id}
+          statusId={row.status}
+          statusName={row.statusName}
+          statusColor={row.statusColor}
+        />
+      ),
     },
     fix_start_date: {
       title: "Дата начала устранения",
@@ -451,6 +445,12 @@ export default function CourtCasesPage() {
       sorter: (a, b) =>
         dayjs(a.fix_end_date || 0).valueOf() -
         dayjs(b.fix_end_date || 0).valueOf(),
+    },
+    daysSinceFixStart: {
+      title: "Прошло дней с начала устранения",
+      dataIndex: "daysSinceFixStart",
+      width: 200,
+      sorter: (a, b) => (a.daysSinceFixStart ?? 0) - (b.daysSinceFixStart ?? 0),
     },
     responsibleLawyer: {
       title: "Юрист",
