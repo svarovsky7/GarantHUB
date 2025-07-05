@@ -218,7 +218,7 @@ export default function CourtCasePartiesTable({ fields, add, remove }: Props) {
       ),
     },
     {
-      title: "",
+      title: "Действия",
       dataIndex: "actions",
       width: 60,
       render: (_: unknown, field) => (
@@ -236,7 +236,7 @@ export default function CourtCasePartiesTable({ fields, add, remove }: Props) {
   ];
 
   return (
-    <div>
+    <div style={{ maxWidth: 640 }}>
       <div
         style={{
           display: "flex",
