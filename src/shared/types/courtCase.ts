@@ -28,6 +28,8 @@ export interface CourtCase {
   number: string;
   responsible_lawyer_id: string | null;
   status: number;
+  /** Общая сумма исковых требований */
+  total_claim_amount?: number | null;
   /** Автор создания записи */
   created_by?: string | null;
   /** Дата создания записи */

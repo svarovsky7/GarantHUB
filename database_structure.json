@@ -637,6 +637,13 @@
     "column_default": null
   },
   {
+    "table_name": "court_cases",
+    "column_name": "total_claim_amount",
+    "data_type": "numeric",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
     "table_name": "defect_attachments",
     "column_name": "defect_id",
     "data_type": "bigint",
