@@ -3,13 +3,13 @@ import {
   Table,
   Form,
   Select,
+  InputNumber,
   Button,
   Tooltip,
   Skeleton,
   Typography,
 } from 'antd';
-import { formatRub } from '@/shared/utils/formatCurrency';
-import RubInput from '@/shared/ui/RubInput';
+import { formatRub, parseRub } from '@/shared/utils/formatCurrency';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useLawsuitClaimTypes } from '@/entities/lawsuitClaimType';
@@ -61,7 +61,12 @@ export default function CourtCaseClaimsTable({ fields, add, remove }: Props) {
       width: 150,
       render: (_: unknown, field: any) => (
         <Form.Item name={[field.name, 'claimed_amount']} noStyle>
-          <RubInput />
+          <InputNumber
+            min={0}
+            style={{ width: '100%' }}
+            formatter={(v) => formatRub(Number(v))}
+            parser={parseRub}
+          />
         </Form.Item>
       ),
     },
@@ -71,7 +76,12 @@ export default function CourtCaseClaimsTable({ fields, add, remove }: Props) {
       width: 150,
       render: (_: unknown, field: any) => (
         <Form.Item name={[field.name, 'confirmed_amount']} noStyle>
-          <RubInput />
+          <InputNumber
+            min={0}
+            style={{ width: '100%' }}
+            formatter={(v) => formatRub(Number(v))}
+            parser={parseRub}
+          />
         </Form.Item>
       ),
     },
@@ -81,7 +91,12 @@ export default function CourtCaseClaimsTable({ fields, add, remove }: Props) {
       width: 150,
       render: (_: unknown, field: any) => (
         <Form.Item name={[field.name, 'paid_amount']} noStyle>
-          <RubInput />
+          <InputNumber
+            min={0}
+            style={{ width: '100%' }}
+            formatter={(v) => formatRub(Number(v))}
+            parser={parseRub}
+          />
         </Form.Item>
       ),
     },
@@ -91,7 +106,12 @@ export default function CourtCaseClaimsTable({ fields, add, remove }: Props) {
       width: 150,
       render: (_: unknown, field: any) => (
         <Form.Item name={[field.name, 'agreed_amount']} noStyle>
-          <RubInput />
+          <InputNumber
+            min={0}
+            style={{ width: '100%' }}
+            formatter={(v) => formatRub(Number(v))}
+            parser={parseRub}
+          />
         </Form.Item>
       ),
     },
