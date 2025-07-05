@@ -27,7 +27,7 @@ import { useAddCaseClaims } from "@/entities/courtCaseClaim";
 import { useCaseUids, getOrCreateCaseUid } from "@/entities/courtCaseUid";
 import CourtCaseClaimsTable from "@/widgets/CourtCaseClaimsTable";
 import CourtCasePartiesTable from "@/widgets/CourtCasePartiesTable";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useProjectId } from "@/shared/hooks/useProjectId";
 import { useAuthStore } from "@/shared/store/authStore";
 import FileDropZone from "@/shared/ui/FileDropZone";
@@ -35,6 +35,8 @@ import { useNotify } from "@/shared/hooks/useNotify";
 import { useCaseFiles } from "./model/useCaseFiles";
 import { useAddCaseParties } from "@/entities/courtCaseParty";
 import type { CasePartyRole } from "@/shared/types/courtCaseParty";
+import { useAddCaseClaimLinks } from "@/entities/courtCaseClaimLink";
+import { supabase } from "@/shared/api/supabaseClient";
 
 /**
  * Props for {@link AddCourtCaseFormAntd} component.
@@ -63,6 +65,7 @@ export default function AddCourtCaseFormAntd({
   const projectId = projectIdStr != null ? Number(projectIdStr) : null;
   const buildingWatch = Form.useWatch("building", form) ?? null;
   const buildingDebounced = useDebounce(buildingWatch);
+  const unitIdsWatch: number[] = Form.useWatch("unit_ids", form) || [];
   const profileId = useAuthStore((s) => s.profile?.id);
   const prevProjectIdRef = useRef<number | null>(null);
 
@@ -119,8 +122,38 @@ export default function AddCourtCaseFormAntd({
   const updateCaseMutation = useUpdateCourtCase();
   const addClaimsMutation = useAddCaseClaims();
   const addPartiesMutation = useAddCaseParties();
+  const addClaimLinksMutation = useAddCaseClaimLinks();
   const notify = useNotify();
   const qc = useQueryClient();
+
+  const { data: relatedClaims = [], isPending: relatedClaimsLoading } = useQuery({
+    queryKey: ["claims-for-case", projectId, unitIdsWatch.join(",")],
+    enabled: !!projectId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("claims")
+        .select("id, claim_no, claim_units(unit_id)")
+        .eq("project_id", projectId as number);
+      if (error) throw error;
+      return (data ?? []).map((r: any) => ({
+        id: r.id,
+        claim_no: r.claim_no,
+        unit_ids: (r.claim_units ?? []).map((u: any) => u.unit_id),
+      }));
+    },
+  });
+
+  const relatedClaimOptions = React.useMemo(
+    () =>
+      relatedClaims
+        .filter((c: any) =>
+          unitIdsWatch.length
+            ? c.unit_ids.some((u: number) => unitIdsWatch.includes(u))
+            : true,
+        )
+        .map((c: any) => ({ value: c.id, label: c.claim_no })),
+    [relatedClaims, unitIdsWatch],
+  );
 
   // Set default litigation stage when loaded
   useEffect(() => {
@@ -211,6 +244,13 @@ export default function AddCourtCaseFormAntd({
             paid_amount: c.paid_amount ? Number(c.paid_amount) : null,
             agreed_amount: c.agreed_amount ? Number(c.agreed_amount) : null,
           })),
+        );
+      }
+
+      const linked: number[] = values.related_claim_ids || [];
+      if (linked.length) {
+        await addClaimLinksMutation.mutateAsync(
+          linked.map((id: number) => ({ case_id: newCase.id, claim_id: id })),
         );
       }
 
@@ -403,6 +443,21 @@ export default function AddCourtCaseFormAntd({
             />
           )}
         </Form.List>
+        <Form.Item name="related_claim_ids" label="Связанные претензии">
+          <Select
+            mode="multiple"
+            allowClear
+            showSearch
+            loading={relatedClaimsLoading}
+            options={relatedClaimOptions}
+            filterOption={(i, o) =>
+              String(o?.label ?? '')
+                .toLowerCase()
+                .includes(i.toLowerCase())
+            }
+            disabled={!projectId}
+          />
+        </Form.Item>
         {/* Row 7 */}
         <Row gutter={16}>
           <Col span={24}>
