@@ -25,8 +25,8 @@
 
 ## claim_units
 - `claim_units_pkey` - `UNIQUE claim_id, unit_id`
-- `idx_claim_units_unit` - `unit_id`
 - `idx_claim_units_claim` - `claim_id`
+- `idx_claim_units_unit` - `unit_id`
 
 ## claims
 - `claims_pkey` - `UNIQUE id`
@@ -38,15 +38,12 @@
 
 ## court_case_attachments
 - `court_case_attachments_pkey` - `UNIQUE court_case_id, attachment_id`
-- `idx_court_case_attachments_file` - `attachment_id`
 
 ## court_case_claims
 - `court_case_claims_pkey` - `UNIQUE id`
 
 ## court_case_defects
 - `court_case_defects_pkey` - `UNIQUE case_id, defect_id`
-- `idx_case_defects_case` - `case_id`
-- `idx_case_defects_defect` - `defect_id`
 
 ## court_case_links
 - `court_case_links_child_id_key` - `UNIQUE child_id`
@@ -54,19 +51,12 @@
 
 ## court_case_parties
 - `court_case_parties_pkey` - `UNIQUE id`
-- `idx_case_parties_case` - `case_id`
-- `idx_case_parties_contractor` - `contractor_id`
-- `idx_case_parties_person` - `person_id`
 
 ## court_case_units
 - `court_case_units_pkey` - `UNIQUE court_case_id, unit_id`
-- `idx_court_case_units_unit` - `unit_id`
 
 ## court_cases
 - `court_cases_pkey` - `UNIQUE id`
-- `idx_court_cases_lawyer` - `responsible_lawyer_id`
-- `idx_court_cases_project` - `project_id`
-- `idx_court_cases_status` - `status`
 
 ## defect_attachments
 - `defect_attachments_pkey` - `UNIQUE defect_id, attachment_id`
@@ -75,6 +65,7 @@
 ## defect_deadlines
 - `defect_deadlines_pkey` - `UNIQUE id`
 - `defect_deadlines_project_id_ticket_type_id_key` - `UNIQUE project_id, defect_type_id`
+
 ## defect_types
 - `ticket_types_pkey` - `UNIQUE id`
 
@@ -86,10 +77,6 @@
 
 ## letter_attachments
 - `letter_attachments_pkey` - `UNIQUE letter_id, attachment_id`
-
-## unit_attachments
-- `unit_attachments_pkey` - `UNIQUE unit_id, attachment_id`
-- `idx_unit_attachments_file` - `attachment_id`
 
 ## letter_links
 - `idx_letter_links_parent` - `parent_id`
@@ -131,6 +118,10 @@
 ## statuses
 - `statuses_pkey` - `UNIQUE id`
 
+## unit_attachments
+- `idx_unit_attachments_file` - `attachment_id`
+- `unit_attachments_pkey` - `UNIQUE unit_id, attachment_id`
+
 ## unit_sort_orders
 - `unit_sort_orders_pkey` - `UNIQUE id`
 - `unit_sort_orders_project_id_building_floor_key` - `UNIQUE project_id, building, floor`
@@ -139,4 +130,3 @@
 - `idx_units_project` - `project_id`
 - `idx_units_project_building` - `project_id, building`
 - `units_pkey` - `UNIQUE id`
-
