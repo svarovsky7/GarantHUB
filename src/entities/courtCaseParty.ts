@@ -59,12 +59,7 @@ export function useAddCaseParties() {
     },
     onSuccess: (rows) => {
       if (rows.length) {
-        const caseId = rows[0].case_id;
-        qc.setQueryData<(CourtCaseParty & { persons?: { full_name: string } | null; contractors?: { name: string } | null; })[]>(
-          [TABLE, caseId],
-          (curr = []) => [...curr, ...rows],
-        );
-        qc.invalidateQueries({ queryKey: [TABLE, caseId] });
+        qc.invalidateQueries({ queryKey: [TABLE, rows[0].case_id] });
       }
     },
   });
