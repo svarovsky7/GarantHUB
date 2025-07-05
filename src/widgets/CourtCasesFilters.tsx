@@ -97,6 +97,20 @@ export default function CourtCasesFilters({
           onChange={(e) => onChange({ ...values, number: e.target.value })}
         />
       </Form.Item>
+      <Form.Item label="UID">
+        <Input
+          placeholder="UID"
+          value={values.uid}
+          onChange={(e) => onChange({ ...values, uid: e.target.value })}
+        />
+      </Form.Item>
+      <Form.Item label="Стороны">
+        <Input
+          placeholder="Истец/Ответчик"
+          value={values.parties}
+          onChange={(e) => onChange({ ...values, parties: e.target.value })}
+        />
+      </Form.Item>
       <Form.Item label="Дата дела">
         <DatePicker.RangePicker
           allowClear
@@ -132,6 +146,13 @@ export default function CourtCasesFilters({
           options={users.map((u) => ({ value: u.id, label: u.name }))}
           value={values.lawyerId}
           onChange={(v) => onChange({ ...values, lawyerId: v })}
+        />
+      </Form.Item>
+      <Form.Item label="Описание">
+        <Input
+          placeholder="Описание"
+          value={values.description}
+          onChange={(e) => onChange({ ...values, description: e.target.value })}
         />
       </Form.Item>
       <Form.Item label="Скрыть закрытые" valuePropName="checked">

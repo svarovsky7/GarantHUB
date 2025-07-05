@@ -2,7 +2,7 @@ import { supabase } from '@/shared/api/supabaseClient';
 import { useQuery } from '@tanstack/react-query';
 import type { CaseUid } from '@/shared/types/caseUid';
 
-const TABLE = 'case_uids';
+const TABLE = 'court_cases_uids';
 
 /** Получить список уникальных идентификаторов дел */
 export const useCaseUids = () =>

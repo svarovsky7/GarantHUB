@@ -222,6 +222,7 @@ export default function CourtCasesPage() {
 
   const casesData = cases.map((c: any) => ({
     ...c,
+    caseUid: c.caseUid,
     plaintiffs: (partiesMap.get(c.id)?.plaintiffs || []).join(", "),
     defendants: (partiesMap.get(c.id)?.defendants || []).join(", "),
     projectName: projects.find((p) => p.id === c.project_id)?.name ?? "",
@@ -276,6 +277,17 @@ export default function CourtCasesPage() {
     const matchesNumber =
       !filters.number ||
       c.number.toLowerCase().includes(filters.number.toLowerCase());
+    const matchesUid =
+      !filters.uid ||
+      (c.caseUid || '').toLowerCase().includes(filters.uid.toLowerCase());
+    const matchesParties =
+      !filters.parties ||
+      (c.plaintiffs + ' ' + c.defendants)
+        .toLowerCase()
+        .includes(filters.parties.toLowerCase());
+    const matchesDescription =
+      !filters.description ||
+      (c.description || '').toLowerCase().includes(filters.description.toLowerCase());
     const matchesDate =
       !filters.dateRange ||
       (dayjs(c.date).isSameOrAfter(filters.dateRange[0], "day") &&
@@ -303,6 +315,9 @@ export default function CourtCasesPage() {
       matchesObject &&
       matchesBuilding &&
       matchesNumber &&
+      matchesUid &&
+      matchesParties &&
+      matchesDescription &&
       matchesDate &&
       matchesFixStart &&
       matchesLawyer &&
@@ -386,6 +401,12 @@ export default function CourtCasesPage() {
       dataIndex: "number",
       width: 120,
       sorter: (a, b) => a.number.localeCompare(b.number),
+    },
+    caseUid: {
+      title: "UID",
+      dataIndex: "caseUid",
+      width: 120,
+      sorter: (a, b) => (a.caseUid || "").localeCompare(b.caseUid || ""),
     },
     date: {
       title: "Дата дела",

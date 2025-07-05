@@ -33,7 +33,7 @@ import { useAuthStore } from '@/shared/store/authStore';
 import type { RoleName } from '@/shared/types/rolePermission';
 import { useRolePermission } from '@/entities/rolePermission';
 import { PRETRIAL_FLAG } from '@/shared/types/rolePermission';
-import { useCaseUids } from '@/entities/caseUid';
+import { useCaseUids } from '@/entities/courtCaseUid';
 import useProjectBuildings from '@/shared/hooks/useProjectBuildings';
 
 export interface ClaimFormAntdProps {

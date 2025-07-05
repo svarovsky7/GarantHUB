@@ -8,9 +8,14 @@ export interface CourtCasesFiltersValues {
   building?: string;
   objectId?: number;
   number?: string;
+  /** Уникальный идентификатор */
+  uid?: string;
+  /** Истцы/Ответчики */
+  parties?: string;
   dateRange?: [Dayjs, Dayjs];
   status?: number;
   fixStartRange?: [Dayjs, Dayjs];
   lawyerId?: string;
+  description?: string;
   hideClosed?: boolean;
 }
