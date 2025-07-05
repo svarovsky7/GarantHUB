@@ -145,7 +145,7 @@ export default function CasePartiesEditorTable({ caseId, projectId }: Props) {
   }
 
   return (
-    <div style={{ maxWidth: 640 }}>
+    <div style={{ maxWidth: 1040 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
         <span style={{ fontWeight: 500 }}>Стороны дела</span>
         <Button type="dashed" icon={<PlusOutlined />} onClick={() => setModal({ mode: 'add' })}>

@@ -236,7 +236,7 @@ export default function CourtCasePartiesTable({ fields, add, remove }: Props) {
   ];
 
   return (
-    <div style={{ maxWidth: 640 }}>
+    <div style={{ maxWidth: 1040 }}>
       <div
         style={{
           display: "flex",
