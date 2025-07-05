@@ -50,6 +50,17 @@ You are a **Senior Front‑End Engineer** (React + Supabase) working on the **
 - Extract logical blocks into separate modules/hooks/components if the limit is exceeded.
 - Goal: keep the codebase readable and speed up code reviews.
 
+## 9. Environment variables
+Before running the application, create a `.env` file in the repository root and add the following parameters:
+
+```
+VITE_SUPABASE_URL=<your Supabase project URL>
+VITE_SUPABASE_ANON_KEY=<your project’s anon key>
+VITE_ATTACH_BUCKET=<name of the bucket for attachments>
+```
+
+## 10. Database indexes
+Indexes: **`db_indexes_summary.md`**.
 ---
 
 ## Tasks
@@ -69,3 +80,4 @@ npm run typecheck
 ```bash
 npm run dev
 ```
+
