@@ -12,6 +12,7 @@ import { useVisibleProjects } from '@/entities/project';
 import { useUnitsByIds } from '@/entities/unit';
 import { useUsers } from '@/entities/user';
 import { useCourtCaseStatuses } from '@/entities/courtCaseStatus';
+import { useCasePartiesByCaseIds } from '@/entities/courtCaseParty';
 import { useRolePermission } from '@/entities/rolePermission';
 import { useAuthStore } from '@/shared/store/authStore';
 import type { RoleName } from '@/shared/types/rolePermission';
@@ -54,6 +55,8 @@ const LS_FILTERS_VISIBLE_KEY = 'courtCasesFiltersVisible';
 
 export default function CourtCasesPage() {
   const { data: cases = [], isPending: casesLoading } = useCourtCases();
+  const caseIds = React.useMemo(() => cases.map((c) => c.id), [cases]);
+  const { data: parties = [] } = useCasePartiesByCaseIds(caseIds);
   const deleteCaseMutation = useDeleteCourtCase();
   const notify = useNotify();
   const linkCases = useLinkCases();
@@ -118,6 +121,18 @@ export default function CourtCasesPage() {
     });
     return map;
   }, [caseUnits]);
+
+  const partiesMap = React.useMemo(() => {
+    const map = new Map<number, { plaintiffs: string[]; defendants: string[] }>();
+    (parties ?? []).forEach((p) => {
+      const entry = map.get(p.case_id) || { plaintiffs: [], defendants: [] };
+      const name = p.persons?.full_name ?? p.contractors?.name ?? '';
+      if (p.role === 'plaintiff') entry.plaintiffs.push(name);
+      else if (p.role === 'defendant') entry.defendants.push(name);
+      map.set(p.case_id, entry);
+    });
+    return map;
+  }, [parties]);
 
   const [filters, setFilters] = useState<CourtCasesFiltersValues>(() => {
     let hideClosed = false;
@@ -186,6 +201,8 @@ export default function CourtCasesPage() {
 
   const casesData = cases.map((c: any) => ({
     ...c,
+    plaintiffs: (partiesMap.get(c.id)?.plaintiffs || []).join(', '),
+    defendants: (partiesMap.get(c.id)?.defendants || []).join(', '),
     projectName: projects.find((p) => p.id === c.project_id)?.name ?? '',
     projectObject: (c.unit_ids ?? [])
       .map((id: number) => caseUnits.find((u) => u.id === id)?.name)
@@ -320,6 +337,18 @@ export default function CourtCasesPage() {
       dataIndex: 'projectObject',
       width: 160,
       sorter: (a, b) => (a.projectObject || '').localeCompare(b.projectObject || ''),
+    },
+    plaintiffs: {
+      title: 'Истец',
+      dataIndex: 'plaintiffs',
+      width: 200,
+      sorter: (a, b) => (a.plaintiffs || '').localeCompare(b.plaintiffs || ''),
+    },
+    defendants: {
+      title: 'Ответчик',
+      dataIndex: 'defendants',
+      width: 200,
+      sorter: (a, b) => (a.defendants || '').localeCompare(b.defendants || ''),
     },
     number: {
       title: '№ дела',

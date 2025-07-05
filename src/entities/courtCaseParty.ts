@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/shared/api/supabaseClient';
+import { fetchByChunks } from '@/shared/api/fetchAll';
 import type { CourtCaseParty } from '@/shared/types/courtCaseParty';
 
 const TABLE = 'court_case_parties';
@@ -19,6 +20,23 @@ export function useCaseParties(caseId?: number | null) {
         .order('id');
       if (error) throw error;
       return (data ?? []) as (CourtCaseParty & {
+        persons?: { full_name: string } | null;
+        contractors?: { name: string } | null;
+      })[];
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
+export function useCasePartiesByCaseIds(caseIds: number[]) {
+  return useQuery({
+    queryKey: [TABLE, 'by-ids', caseIds.join(',')],
+    enabled: Array.isArray(caseIds) && caseIds.length > 0,
+    queryFn: async () => {
+      const rows = await fetchByChunks(caseIds, (chunk) =>
+        supabase.from(TABLE).select(FIELDS).in('case_id', chunk),
+      );
+      return (rows ?? []) as (CourtCaseParty & {
         persons?: { full_name: string } | null;
         contractors?: { name: string } | null;
       })[];

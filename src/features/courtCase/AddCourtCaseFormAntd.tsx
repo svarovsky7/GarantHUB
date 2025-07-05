@@ -21,12 +21,15 @@ import { addCaseAttachments } from '@/entities/attachment';
 import { useAddCaseClaims } from '@/entities/courtCaseClaim';
 import { useCaseUids, getOrCreateCaseUid } from '@/entities/caseUid';
 import CourtCaseClaimsTable from '@/widgets/CourtCaseClaimsTable';
+import CourtCasePartiesTable from '@/widgets/CourtCasePartiesTable';
 import { useQueryClient } from '@tanstack/react-query';
 import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useAuthStore } from '@/shared/store/authStore';
 import FileDropZone from '@/shared/ui/FileDropZone';
 import { useNotify } from '@/shared/hooks/useNotify';
 import { useCaseFiles } from './model/useCaseFiles';
+import { useAddCaseParties } from '@/entities/courtCaseParty';
+import type { CasePartyRole } from '@/shared/types/courtCaseParty';
 
 /**
  * Props for {@link AddCourtCaseFormAntd} component.
@@ -106,6 +109,7 @@ export default function AddCourtCaseFormAntd({
   const addCaseMutation = useAddCourtCase();
   const updateCaseMutation = useUpdateCourtCase();
   const addClaimsMutation = useAddCaseClaims();
+  const addPartiesMutation = useAddCaseParties();
   const notify = useNotify();
   const qc = useQueryClient();
 
@@ -165,6 +169,19 @@ export default function AddCourtCaseFormAntd({
         updates: { attachment_ids: newAtts.map((a) => a.id) },
       });
       qc.invalidateQueries({ queryKey: ['court_cases'] });
+    }
+
+    const parties: any[] = values.parties || [];
+    if (parties.length) {
+      await addPartiesMutation.mutateAsync(
+        parties.map((p: any) => ({
+          case_id: newCase.id,
+          project_id: values.project_id,
+          role: p.role as CasePartyRole,
+          person_id: p.type === 'person' ? p.entityId : null,
+          contractor_id: p.type === 'contractor' ? p.entityId : null,
+        })),
+      );
     }
 
 
@@ -303,6 +320,11 @@ export default function AddCourtCaseFormAntd({
             </Form.Item>
           </Col>
         </Row>
+        <Form.List name="parties">
+          {(fields, { add, remove }) => (
+            <CourtCasePartiesTable fields={fields} add={add} remove={remove} />
+          )}
+        </Form.List>
         {/* Row 6: Требования */}
         {!showClaims ? (
           <Row gutter={16}>
