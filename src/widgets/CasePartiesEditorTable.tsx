@@ -1,5 +1,14 @@
 import React, { useState } from 'react';
-import { Table, Button, Select, Popconfirm, Tooltip, Skeleton, Modal } from 'antd';
+import {
+  Table,
+  Button,
+  Select,
+  Popconfirm,
+  Tooltip,
+  Skeleton,
+  Modal,
+  Typography,
+} from 'antd';
 import { PlusOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import {
@@ -155,7 +164,14 @@ export default function CasePartiesEditorTable({ caseId, projectId }: Props) {
 
 interface ModalProps {
   open: boolean;
-  persons: { id: number; full_name: string }[];
+  persons: {
+    id: number;
+    full_name: string;
+    passport_series?: string | null;
+    passport_number?: string | null;
+    phone?: string | null;
+    email?: string | null;
+  }[];
   contractors: { id: number; name: string }[];
   initial?: { role: CasePartyRole; type: 'person' | 'contractor'; entityId: number };
   onClose: () => void;
@@ -179,6 +195,21 @@ function CasePartyModal({ open, persons, contractors, initial, onClose, onSubmit
     type === 'person'
       ? persons.map((p) => ({ value: p.id, label: p.full_name }))
       : contractors.map((c) => ({ value: c.id, label: c.name }));
+
+  const selectedPerson =
+    type === 'person' ? persons.find((p) => p.id === entityId) : null;
+
+  const info = selectedPerson
+    ? [
+        selectedPerson.passport_series && selectedPerson.passport_number
+          ? `паспорт: ${selectedPerson.passport_series} ${selectedPerson.passport_number}`
+          : null,
+        selectedPerson.phone ? `тел: ${selectedPerson.phone}` : null,
+        selectedPerson.email ? `email: ${selectedPerson.email}` : null,
+      ]
+        .filter(Boolean)
+        .join(', ')
+    : '';
 
   const handleOk = () => {
     if (entityId != null) {
@@ -219,6 +250,9 @@ function CasePartyModal({ open, persons, contractors, initial, onClose, onSubmit
               .includes(input.toLowerCase())
           }
         />
+        {type === 'person' && info && (
+          <Typography.Text type="secondary">{info}</Typography.Text>
+        )}
       </div>
     </Modal>
   );

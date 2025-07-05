@@ -8,6 +8,7 @@ import {
   Skeleton,
   Space,
   Popconfirm,
+  Typography,
 } from "antd";
 import { PlusOutlined, DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
@@ -124,13 +125,30 @@ export default function CourtCasePartiesTable({ fields, add, remove }: Props) {
               type === "contractor"
                 ? contractors.map((c) => ({ value: c.id, label: c.name }))
                 : persons.map((p) => ({ value: p.id, label: p.full_name }));
+
+            const selectedPerson =
+              type === "person" ? persons.find((p) => p.id === entityId) : null;
+
+            const info = selectedPerson
+              ? [
+                  selectedPerson.passport_series && selectedPerson.passport_number
+                    ? `паспорт: ${selectedPerson.passport_series} ${selectedPerson.passport_number}`
+                    : null,
+                  selectedPerson.phone ? `тел: ${selectedPerson.phone}` : null,
+                  selectedPerson.email ? `email: ${selectedPerson.email}` : null,
+                ]
+                  .filter(Boolean)
+                  .join(', ')
+              : '';
+
             return (
-              <Space.Compact style={{ width: "100%" }}>
-                <Form.Item
-                  name={[field.name, "entityId"]}
-                  rules={[{ required: true }]}
-                  noStyle
-                >
+              <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
+                <Space.Compact style={{ width: "100%" }}>
+                  <Form.Item
+                    name={[field.name, "entityId"]}
+                    rules={[{ required: true }]}
+                    noStyle
+                  >
                   <Select
                     allowClear
                     showSearch
@@ -189,7 +207,13 @@ export default function CourtCasePartiesTable({ fields, add, remove }: Props) {
                     disabled={!entityId}
                   />
                 </Popconfirm>
-              </Space.Compact>
+                </Space.Compact>
+                {type === "person" && info && (
+                  <Typography.Text type="secondary" style={{ marginTop: 4 }}>
+                    {info}
+                  </Typography.Text>
+                )}
+              </div>
             );
           }}
         </Form.Item>
