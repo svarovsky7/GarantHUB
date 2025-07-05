@@ -10,6 +10,9 @@
 - `case_uids_pkey` - `UNIQUE id`
 - `case_uids_uid_key` - `UNIQUE uid`
 
+## case_uid_cases
+- `case_uid_cases_pkey` - `UNIQUE case_uid_id, court_case_id`
+
 ## claim_attachments
 - `claim_attachments_pkey` - `UNIQUE claim_id, attachment_id`
 

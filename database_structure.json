@@ -1294,4 +1294,18 @@
     "is_nullable": "YES",
     "column_default": null
   }
+  {
+    "table_name": "case_uid_cases",
+    "column_name": "case_uid_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "case_uid_cases",
+    "column_name": "court_case_id",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": null
+  }
 ]

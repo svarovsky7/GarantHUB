@@ -49,6 +49,12 @@ export default function CourtCaseClaimsTable({
 
   const columns: ColumnsType<any> = [
     {
+      title: '№',
+      dataIndex: 'index',
+      width: 60,
+      render: (_: unknown, __: any, index: number) => index + 1,
+    },
+    {
       title: 'Требование',
       dataIndex: 'type',
       width: 280,
@@ -140,7 +146,7 @@ export default function CourtCaseClaimsTable({
   }
 
   return (
-    <div>
+    <div style={{ maxWidth: 1040 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
         <span style={{ fontWeight: 500 }}>Исковые требования</span>
         <Button type="dashed" icon={<PlusOutlined />} onClick={() => add({})}>
@@ -155,14 +161,15 @@ export default function CourtCaseClaimsTable({
         dataSource={fields}
         summary={() => (
           <Table.Summary.Row>
-            <Table.Summary.Cell index={0}>
+            <Table.Summary.Cell index={0} />
+            <Table.Summary.Cell index={1}>
               <Typography.Text strong>Итого</Typography.Text>
             </Table.Summary.Cell>
-            <Table.Summary.Cell index={1}>{formatRub(totals.claimed)}</Table.Summary.Cell>
-            <Table.Summary.Cell index={2}>{formatRub(totals.confirmed)}</Table.Summary.Cell>
-            <Table.Summary.Cell index={3}>{formatRub(totals.paid)}</Table.Summary.Cell>
-            <Table.Summary.Cell index={4}>{formatRub(totals.agreed)}</Table.Summary.Cell>
-            <Table.Summary.Cell index={5} />
+            <Table.Summary.Cell index={2}>{formatRub(totals.claimed)}</Table.Summary.Cell>
+            <Table.Summary.Cell index={3}>{formatRub(totals.confirmed)}</Table.Summary.Cell>
+            <Table.Summary.Cell index={4}>{formatRub(totals.paid)}</Table.Summary.Cell>
+            <Table.Summary.Cell index={5}>{formatRub(totals.agreed)}</Table.Summary.Cell>
+            <Table.Summary.Cell index={6} />
           </Table.Summary.Row>
         )}
       />

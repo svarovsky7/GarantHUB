@@ -22,6 +22,8 @@ export interface CourtCase {
   project_id: number;
   /** Ссылка на уникальный идентификатор дела */
   case_uid_id?: number | null;
+  /** Уникальный идентификатор дела */
+  case_uid?: string | null;
   /** Идентификаторы объектов проекта */
   unit_ids: number[];
   date: string;

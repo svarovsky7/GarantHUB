@@ -97,6 +97,27 @@ export default function CourtCasesFilters({
           onChange={(e) => onChange({ ...values, number: e.target.value })}
         />
       </Form.Item>
+      <Form.Item label="UID">
+        <Input
+          placeholder="UID"
+          value={values.caseUid}
+          onChange={(e) => onChange({ ...values, caseUid: e.target.value })}
+        />
+      </Form.Item>
+      <Form.Item label="Стороны дела">
+        <Input
+          placeholder="Сторона"
+          value={values.parties}
+          onChange={(e) => onChange({ ...values, parties: e.target.value })}
+        />
+      </Form.Item>
+      <Form.Item label="Описание">
+        <Input
+          placeholder="Описание"
+          value={values.description}
+          onChange={(e) => onChange({ ...values, description: e.target.value })}
+        />
+      </Form.Item>
       <Form.Item label="Дата дела">
         <DatePicker.RangePicker
           allowClear
