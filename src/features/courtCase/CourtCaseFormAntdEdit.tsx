@@ -23,6 +23,7 @@ import { downloadZip } from '@/shared/utils/downloadZip';
 import { signedUrl } from '@/entities/courtCase';
 import { useChangedFields } from '@/shared/hooks/useChangedFields';
 import CaseClaimsEditorTable from '@/widgets/CaseClaimsEditorTable';
+import CasePartiesEditorTable from '@/widgets/CasePartiesEditorTable';
 
 export interface CourtCaseFormAntdEditProps {
   caseId: string;
@@ -250,6 +251,11 @@ export default function CourtCaseFormAntdEdit({
           </Form.Item>
         </Col>
       </Row>
+      {courtCase && (
+        <div style={{ marginBottom: 16 }}>
+          <CasePartiesEditorTable caseId={Number(caseId)} projectId={courtCase.project_id} />
+        </div>
+      )}
       <div style={{ marginBottom: 16 }}>
         <CaseClaimsEditorTable caseId={Number(caseId)} />
       </div>
