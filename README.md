@@ -36,3 +36,12 @@ VITE_ATTACH_BUCKET=<название корзины для вложений>
 Индексы: [db_indexes_summary.md](db_indexes_summary.md).
 
 
+
+## Обновление схемы базы данных
+
+Для добавления колонки `total_claim_amount` выполните файл [sql/update_total_claim_amount.sql](sql/update_total_claim_amount.sql):
+```bash
+psql -f sql/update_total_claim_amount.sql
+```
+
+

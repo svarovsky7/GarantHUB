@@ -16,6 +16,7 @@ import {
 } from "antd";
 import ruRU from "antd/locale/ru_RU";
 import type { ColumnsType } from "antd/es/table";
+import { formatRub } from "@/shared/utils/formatCurrency";
 import type { CourtCase } from "@/shared/types/courtCase";
 import { useVisibleProjects } from "@/entities/project";
 import { useUnitsByIds } from "@/entities/unit";
@@ -242,6 +243,7 @@ export default function CourtCasesPage() {
           .filter(Boolean),
       ),
     ).join(", "),
+    totalClaimAmount: c.total_claim_amount ?? 0,
     responsibleLawyer:
       users.find((u) => u.id === c.responsible_lawyer_id)?.name ??
       c.responsibleLawyer,
@@ -417,6 +419,14 @@ export default function CourtCasesPage() {
       dataIndex: "defendants",
       width: 200,
       sorter: (a, b) => (a.defendants || "").localeCompare(b.defendants || ""),
+    },
+    totalClaimAmount: {
+      title: "Сумма требований",
+      dataIndex: "totalClaimAmount",
+      width: 150,
+      sorter: (a, b) =>
+        (a.totalClaimAmount ?? 0) - (b.totalClaimAmount ?? 0),
+      render: (v: number) => formatRub(v),
     },
     daysSinceFixStart: {
       title: "Прошло дней с начала устранения",
