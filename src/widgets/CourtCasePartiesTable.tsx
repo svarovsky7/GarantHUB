@@ -106,7 +106,9 @@ export default function CourtCasePartiesTable({ fields, add, remove }: Props) {
           noStyle
           shouldUpdate={(prev, curr) =>
             prev.parties?.[field.name]?.type !==
-            curr.parties?.[field.name]?.type
+              curr.parties?.[field.name]?.type ||
+            prev.parties?.[field.name]?.entityId !==
+              curr.parties?.[field.name]?.entityId
           }
         >
           {() => {
@@ -124,13 +126,18 @@ export default function CourtCasePartiesTable({ fields, add, remove }: Props) {
               type === "contractor"
                 ? contractors.map((c) => ({ value: c.id, label: c.name }))
                 : persons.map((p) => ({ value: p.id, label: p.full_name }));
+            const selectedPerson =
+              type === "person" && entityId
+                ? persons.find((p) => p.id === entityId)
+                : null;
             return (
-              <Space.Compact style={{ width: "100%" }}>
-                <Form.Item
-                  name={[field.name, "entityId"]}
-                  rules={[{ required: true }]}
-                  noStyle
-                >
+              <>
+                <Space.Compact style={{ width: "100%" }}>
+                  <Form.Item
+                    name={[field.name, "entityId"]}
+                    rules={[{ required: true }]}
+                    noStyle
+                  >
                   <Select
                     allowClear
                     showSearch
@@ -189,7 +196,15 @@ export default function CourtCasePartiesTable({ fields, add, remove }: Props) {
                     disabled={!entityId}
                   />
                 </Popconfirm>
-              </Space.Compact>
+                </Space.Compact>
+                {selectedPerson && (
+                  <div style={{ fontSize: 12, color: "#888" }}>
+                    {selectedPerson.passport_series} {selectedPerson.passport_number}
+                    {selectedPerson.phone ? `, ${selectedPerson.phone}` : ""}
+                    {selectedPerson.email ? `, ${selectedPerson.email}` : ""}
+                  </div>
+                )}
+              </>
             );
           }}
         </Form.Item>
