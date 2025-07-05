@@ -49,6 +49,7 @@ import AddCourtCaseFormAntd from "@/features/courtCase/AddCourtCaseFormAntd";
 import CourtCaseViewModal from "@/features/courtCase/CourtCaseViewModal";
 import CourtCasesFilters from "@/widgets/CourtCasesFilters";
 import type { CourtCasesFiltersValues } from "@/shared/types/courtCasesFilters";
+import { useCourtCasesFilterOptions } from "@/features/courtCase/model/useCourtCasesFilterOptions";
 const TableColumnsDrawer = React.lazy(
   () => import("@/widgets/TableColumnsDrawer"),
 );
@@ -257,73 +258,24 @@ export default function CourtCasesPage() {
     statusColor: stages.find((s) => s.id === c.status)?.color ?? null,
   }));
 
-  const idOptions = React.useMemo(
-    () =>
-      Array.from(new Set(cases.map((c) => c.id))).map((id) => ({
-        value: id,
-        label: String(id),
-      })),
-    [cases],
+  const {
+    filteredCases,
+    projectOptions,
+    buildingOptions,
+    unitOptions,
+    statusOptions,
+    userOptions,
+    idOptions,
+  } = useCourtCasesFilterOptions(
+    casesData,
+    projects,
+    caseUnits,
+    stages,
+    users,
+    filters,
+    closedStageId,
   );
 
-  const filteredCases = casesData.filter((c: any) => {
-    const matchesStatus = !filters.status || c.status === filters.status;
-    const matchesProject =
-      !filters.projectId || c.project_id === filters.projectId;
-    const matchesObject =
-      !filters.objectId || (c.unit_ids ?? []).includes(filters.objectId);
-    const matchesBuilding =
-      !filters.building || c.buildingNamesList?.includes(filters.building);
-    const matchesNumber =
-      !filters.number ||
-      c.number.toLowerCase().includes(filters.number.toLowerCase());
-    const matchesUid =
-      !filters.uid ||
-      (c.caseUid || '').toLowerCase().includes(filters.uid.toLowerCase());
-    const matchesParties =
-      !filters.parties ||
-      (c.plaintiffs + ' ' + c.defendants)
-        .toLowerCase()
-        .includes(filters.parties.toLowerCase());
-    const matchesDescription =
-      !filters.description ||
-      (c.description || '').toLowerCase().includes(filters.description.toLowerCase());
-    const matchesDate =
-      !filters.dateRange ||
-      (dayjs(c.date).isSameOrAfter(filters.dateRange[0], "day") &&
-        dayjs(c.date).isSameOrBefore(filters.dateRange[1], "day"));
-    const matchesFixStart =
-      !filters.fixStartRange ||
-      (c.fix_start_date &&
-        dayjs(c.fix_start_date).isSameOrAfter(
-          filters.fixStartRange[0],
-          "day",
-        ) &&
-        dayjs(c.fix_start_date).isSameOrBefore(
-          filters.fixStartRange[1],
-          "day",
-        ));
-    const matchesLawyer =
-      !filters.lawyerId || String(c.responsible_lawyer_id) === filters.lawyerId;
-    const matchesClosed =
-      !filters.hideClosed || !closedStageId || c.status !== closedStageId;
-    const matchesIds = !filters.ids || filters.ids.includes(c.id);
-    return (
-      matchesIds &&
-      matchesStatus &&
-      matchesProject &&
-      matchesObject &&
-      matchesBuilding &&
-      matchesNumber &&
-      matchesUid &&
-      matchesParties &&
-      matchesDescription &&
-      matchesDate &&
-      matchesFixStart &&
-      matchesLawyer &&
-      matchesClosed
-    );
-  });
 
   const treeData = React.useMemo(() => {
     const map = new Map<number, any>();
@@ -725,10 +677,10 @@ export default function CourtCasesPage() {
                 values={filters}
                 onChange={handleFiltersChange}
                 onReset={resetFilters}
-                projects={projects}
-                units={caseUnits}
-                stages={stages}
-                users={users}
+                projects={projectOptions}
+                units={unitOptions}
+                stages={statusOptions}
+                users={userOptions}
                 idOptions={idOptions}
               />
             </Card>
