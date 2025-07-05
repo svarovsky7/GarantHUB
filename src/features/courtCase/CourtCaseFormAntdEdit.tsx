@@ -26,7 +26,6 @@ import { signedUrl } from '@/entities/courtCase';
 import { useChangedFields } from '@/shared/hooks/useChangedFields';
 import CaseClaimsEditorTable from '@/widgets/CaseClaimsEditorTable';
 import CasePartiesEditorTable from '@/widgets/CasePartiesEditorTable';
-import CaseClaimsLinkSelect from '@/widgets/CaseClaimsLinkSelect';
 
 export interface CourtCaseFormAntdEditProps {
   caseId: string;
@@ -287,15 +286,6 @@ export default function CourtCaseFormAntdEdit({
       <div style={{ marginBottom: 16 }}>
         <CaseClaimsEditorTable caseId={Number(caseId)} />
       </div>
-      {courtCase && (
-        <div style={{ marginBottom: 16 }}>
-          <CaseClaimsLinkSelect
-            caseId={Number(caseId)}
-            projectId={courtCase.project_id}
-            unitIds={courtCase.unit_ids}
-          />
-        </div>
-      )}
       <Form.Item label="Файлы" style={attachments.attachmentsChanged ? { background: '#fffbe6', padding: 4, borderRadius: 2 } : {}}>
         <FileDropZone onFiles={handleFiles} />
         <Button
