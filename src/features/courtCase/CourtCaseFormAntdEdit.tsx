@@ -9,6 +9,7 @@ import {
   Col,
   Button,
   Skeleton,
+  AutoComplete,
 } from 'antd';
 import { useVisibleProjects } from '@/entities/project';
 import { useUnitsByProject } from '@/entities/unit';
@@ -193,12 +194,15 @@ export default function CourtCaseFormAntdEdit({
             rules={[{ required: true }]}
             style={highlight('case_uid')}
           >
-            <Select
-              mode="tags"
-              open={false}
-              tokenSeparators={[',']}
+            <AutoComplete
+              allowClear
               placeholder="UID"
-              options={caseUids.map((u) => ({ value: u.uid, label: u.uid }))}
+              options={caseUids.map((u) => ({ value: u.uid }))}
+              filterOption={(input, option) =>
+                String(option?.value ?? '')
+                  .toLowerCase()
+                  .includes(input.toLowerCase())
+              }
             />
           </Form.Item>
         </Col>

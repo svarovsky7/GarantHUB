@@ -1,5 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Form, Row, Col, Input, DatePicker, Select, Button, Space } from "antd";
+import {
+  Form,
+  Row,
+  Col,
+  Input,
+  DatePicker,
+  Select,
+  Button,
+  Space,
+  AutoComplete,
+} from "antd";
 import { Dayjs } from "dayjs";
 import { useVisibleProjects } from "@/entities/project";
 import { useUnitsByProject } from "@/entities/unit";
@@ -79,7 +89,7 @@ export default function AddCourtCaseFormAntd({
       form.setFieldValue("status", initialValues.status);
     }
     if (initialValues.case_uid) {
-      form.setFieldValue("case_uid", [initialValues.case_uid]);
+      form.setFieldValue("case_uid", initialValues.case_uid);
     }
   }, [initialValues, globalProjectId, profileId, form]);
 
@@ -131,10 +141,7 @@ export default function AddCourtCaseFormAntd({
 
   const handleAddCase = async (values: any) => {
     try {
-      const caseUid = Array.isArray(values.case_uid)
-        ? values.case_uid[0]
-        : values.case_uid;
-      const uidId = await getOrCreateCaseUid(caseUid);
+      const uidId = await getOrCreateCaseUid(values.case_uid);
 
       const newCase = await addCaseMutation.mutateAsync({
         project_id: values.project_id,
@@ -282,12 +289,15 @@ export default function AddCourtCaseFormAntd({
               validateTrigger="onBlur"
               rules={[{ required: true, message: "Укажите UID" }]}
             >
-              <Select
-                mode="tags"
-                open={false}
-                tokenSeparators={[","]}
+              <AutoComplete
+                allowClear
                 placeholder="UID"
-                options={caseUids.map((u) => ({ value: u.uid, label: u.uid }))}
+                options={caseUids.map((u) => ({ value: u.uid }))}
+                filterOption={(input, option) =>
+                  String(option?.value ?? '')
+                    .toLowerCase()
+                    .includes(input.toLowerCase())
+                }
               />
             </Form.Item>
           </Col>
