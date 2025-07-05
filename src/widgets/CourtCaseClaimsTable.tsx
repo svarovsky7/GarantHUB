@@ -10,7 +10,7 @@ import {
 } from 'antd';
 import { formatRub } from '@/shared/utils/formatCurrency';
 import RubInput from '@/shared/ui/RubInput';
-import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PlusOutlined, DeleteOutlined, UpOutlined, DownOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useLawsuitClaimTypes } from '@/entities/lawsuitClaimType';
 
@@ -21,9 +21,15 @@ interface Props {
   fields: any[];
   add: (defaultValue?: any) => void;
   remove: (index: number) => void;
+  move: (from: number, to: number) => void;
 }
 
-export default function CourtCaseClaimsTable({ fields, add, remove }: Props) {
+export default function CourtCaseClaimsTable({
+  fields,
+  add,
+  remove,
+  move,
+}: Props) {
   const { data: claimTypes = [], isPending: loading } = useLawsuitClaimTypes();
   const form = Form.useFormInstance();
 
@@ -98,11 +104,33 @@ export default function CourtCaseClaimsTable({ fields, add, remove }: Props) {
     {
       title: '',
       dataIndex: 'actions',
-      width: 60,
+      width: 90,
       render: (_: unknown, field: any) => (
-        <Tooltip title="Удалить">
-          <Button size="small" type="text" danger icon={<DeleteOutlined />} onClick={() => remove(field.name)} />
-        </Tooltip>
+        <>
+          <Button
+            size="small"
+            type="text"
+            icon={<UpOutlined />}
+            disabled={field.name === 0}
+            onClick={() => move(field.name, field.name - 1)}
+          />
+          <Button
+            size="small"
+            type="text"
+            icon={<DownOutlined />}
+            disabled={field.name === fields.length - 1}
+            onClick={() => move(field.name, field.name + 1)}
+          />
+          <Tooltip title="Удалить">
+            <Button
+              size="small"
+              type="text"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => remove(field.name)}
+            />
+          </Tooltip>
+        </>
       ),
     },
   ];

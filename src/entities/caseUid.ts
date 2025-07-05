@@ -33,3 +33,18 @@ export async function getOrCreateCaseUid(uid: string): Promise<number> {
   if (insErr) throw insErr;
   return inserted!.id as number;
 }
+
+/**
+ * Проверяет уникальность идентификатора судебного дела.
+ * @param uid UID для проверки
+ * @returns `true`, если UID свободен
+ */
+export async function isCaseUidUnique(uid: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select('id')
+    .eq('uid', uid)
+    .maybeSingle();
+  if (error && error.code !== 'PGRST116') throw error;
+  return !data?.id;
+}

@@ -16,10 +16,18 @@ import useProjectBuildings from '@/shared/hooks/useProjectBuildings';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import { useUsers } from '@/entities/user';
 import { useCourtCaseStatuses } from '@/entities/courtCaseStatus';
-import { useAddCourtCase, useUpdateCourtCase } from '@/entities/courtCase';
+import {
+  useAddCourtCase,
+  useUpdateCourtCase,
+  isCaseNumberUnique,
+} from '@/entities/courtCase';
 import { addCaseAttachments } from '@/entities/attachment';
 import { useAddCaseClaims } from '@/entities/courtCaseClaim';
-import { useCaseUids, getOrCreateCaseUid } from '@/entities/caseUid';
+import {
+  useCaseUids,
+  getOrCreateCaseUid,
+  isCaseUidUnique,
+} from '@/entities/caseUid';
 import CourtCaseClaimsTable from '@/widgets/CourtCaseClaimsTable';
 import CourtCasePartiesTable from '@/widgets/CourtCasePartiesTable';
 import { useQueryClient } from '@tanstack/react-query';
@@ -120,14 +128,7 @@ export default function AddCourtCaseFormAntd({
     }
   }, [stages, form]);
 
-  const [showClaims, setShowClaims] = useState(false);
   const { caseFiles, addFiles: addCaseFiles, setDescription: setCaseFileDescription, removeFile, reset: resetCaseFiles } = useCaseFiles();
-
-  useEffect(() => {
-    if (showClaims && !(form.getFieldValue('claims')?.length)) {
-      form.setFieldValue('claims', [{}]);
-    }
-  }, [showClaims, form]);
 
   const handleCaseFiles = (files: File[]) => addCaseFiles(files);
 
@@ -254,7 +255,21 @@ export default function AddCourtCaseFormAntd({
             <Form.Item
               name="case_uid"
               label="Уникальный идентификатор"
-              rules={[{ required: true, message: 'Укажите UID' }]}
+              validateTrigger="onBlur"
+              rules={[
+                { required: true, message: 'Укажите UID' },
+                {
+                  validator: async (_, value) => {
+                    if (!value) return Promise.resolve();
+                    const unique = await isCaseUidUnique(value);
+                    if (!unique) {
+                      notify.error('UID уже используется');
+                      return Promise.reject(new Error('UID не уникален'));
+                    }
+                    return Promise.resolve();
+                  },
+                },
+              ]}
             >
               <Select
                 mode="tags"
@@ -269,7 +284,25 @@ export default function AddCourtCaseFormAntd({
         {/* Row 3 */}
         <Row gutter={16}>
           <Col span={8}>
-            <Form.Item name="number" label="Номер дела" rules={[{ required: true, message: 'Укажите номер' }]}> 
+            <Form.Item
+              name="number"
+              label="Номер дела"
+              validateTrigger="onBlur"
+              rules={[
+                { required: true, message: 'Укажите номер' },
+                {
+                  validator: async (_, value) => {
+                    if (!value) return Promise.resolve();
+                    const unique = await isCaseNumberUnique(value);
+                    if (!unique) {
+                      notify.error('Номер дела уже используется');
+                      return Promise.reject(new Error('Номер не уникален'));
+                    }
+                    return Promise.resolve();
+                  },
+                },
+              ]}
+            >
               <Input />
             </Form.Item>
           </Col>
@@ -326,21 +359,16 @@ export default function AddCourtCaseFormAntd({
           )}
         </Form.List>
         {/* Row 6: Требования */}
-        {!showClaims ? (
-          <Row gutter={16}>
-            <Col span={24} style={{ textAlign: 'right' }}>
-              <Button type="dashed" onClick={() => setShowClaims(true)}>
-                Добавить требования
-              </Button>
-            </Col>
-          </Row>
-        ) : (
-          <Form.List name="claims">
-            {(fields, { add, remove }) => (
-              <CourtCaseClaimsTable fields={fields} add={add} remove={remove} />
-            )}
-          </Form.List>
-        )}
+        <Form.List name="claims">
+          {(fields, { add, remove, move }) => (
+            <CourtCaseClaimsTable
+              fields={fields}
+              add={add}
+              remove={remove}
+              move={move}
+            />
+          )}
+        </Form.List>
         {/* Row 7 */}
         <Row gutter={16}>
           <Col span={24}>

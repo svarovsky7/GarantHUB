@@ -537,3 +537,18 @@ export async function signedUrl(path: string, filename = ''): Promise<string> {
   if (error) throw error;
   return data.signedUrl;
 }
+
+/**
+ * Проверяет уникальность номера судебного дела.
+ * @param number Номер для проверки
+ * @returns `true`, если номер свободен
+ */
+export async function isCaseNumberUnique(number: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from(CASES_TABLE)
+    .select('id')
+    .eq('number', number)
+    .maybeSingle();
+  if (error && error.code !== 'PGRST116') throw error;
+  return !data?.id;
+}
