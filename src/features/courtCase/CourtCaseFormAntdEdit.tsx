@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import dayjs, { Dayjs } from 'dayjs';
 import {
   Form,
@@ -9,17 +9,11 @@ import {
   Col,
   Button,
   Skeleton,
-  Radio,
-  Space,
-  Popconfirm,
-  Tag,
 } from 'antd';
 import { useVisibleProjects } from '@/entities/project';
 import { useUnitsByProject } from '@/entities/unit';
-import { useContractors, useDeleteContractor } from '@/entities/contractor';
 import { useUsers } from '@/entities/user';
 import { useCourtCaseStatuses } from '@/entities/courtCaseStatus';
-import { usePersons, useDeletePerson } from '@/entities/person';
 import { useCourtCase, useUpdateCourtCaseFull } from '@/entities/courtCase';
 import FileDropZone from '@/shared/ui/FileDropZone';
 import AttachmentEditorTable from '@/shared/ui/AttachmentEditorTable';
@@ -29,9 +23,6 @@ import { downloadZip } from '@/shared/utils/downloadZip';
 import { signedUrl } from '@/entities/courtCase';
 import { useChangedFields } from '@/shared/hooks/useChangedFields';
 import CaseClaimsEditorTable from '@/widgets/CaseClaimsEditorTable';
-import PersonModalId from '@/features/person/PersonModalId';
-import ContractorModalId from '@/features/contractor/ContractorModalId';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 
 export interface CourtCaseFormAntdEditProps {
   caseId: string;
@@ -51,12 +42,8 @@ export default function CourtCaseFormAntdEdit({
   const { data: projects = [] } = useVisibleProjects();
   const projectId = Form.useWatch('project_id', form);
   const { data: units = [] } = useUnitsByProject(projectId);
-  const { data: contractors = [] } = useContractors();
   const { data: users = [] } = useUsers();
   const { data: stages = [] } = useCourtCaseStatuses();
-  const { data: personsList = [] } = usePersons();
-  const deletePerson = useDeletePerson();
-  const deleteContractor = useDeleteContractor();
   const update = useUpdateCourtCaseFull();
   const notify = useNotify();
   const attachments = useCaseAttachments({ courtCase });
@@ -65,11 +52,6 @@ export default function CourtCaseFormAntdEdit({
     [courtCase],
   );
 
-  const [plaintiffType, setPlaintiffType] = useState<'person' | 'contractor'>('person');
-  const [defendantType, setDefendantType] = useState<'person' | 'contractor'>('contractor');
-  const [personModal, setPersonModal] = useState<any | null>(null);
-  const [contractorModal, setContractorModal] = useState<any | null>(null);
-  const [partyRole, setPartyRole] = useState<'plaintiff' | 'defendant' | null>(null);
 
   const highlight = (name: string) =>
     changedFields[name]
@@ -83,49 +65,17 @@ export default function CourtCaseFormAntdEdit({
       unit_ids: courtCase.unit_ids,
       number: courtCase.number,
       date: dayjs(courtCase.date),
-      plaintiff_id:
-        courtCase.plaintiff_person_id ?? courtCase.plaintiff_contractor_id ?? null,
-      defendant_id:
-        courtCase.defendant_person_id ?? courtCase.defendant_contractor_id ?? null,
       responsible_lawyer_id: courtCase.responsible_lawyer_id ?? undefined,
       status: courtCase.status,
       fix_start_date: courtCase.fix_start_date ? dayjs(courtCase.fix_start_date) : null,
       fix_end_date: courtCase.fix_end_date ? dayjs(courtCase.fix_end_date) : null,
       description: courtCase.description,
     });
-    setPlaintiffType(courtCase.plaintiff_person_id ? 'person' : 'contractor');
-    setDefendantType(courtCase.defendant_person_id ? 'person' : 'contractor');
+    
   }, [courtCase, form]);
 
   const handleFiles = (files: File[]) => attachments.addFiles(files);
 
-  /** Delete selected person from DB and clear field */
-  const removePerson = async (
-    field: 'plaintiff_id' | 'defendant_id',
-    id: number,
-  ) => {
-    try {
-      await deletePerson.mutateAsync(id);
-      form.setFieldValue(field, null);
-      notify.success('Физлицо удалено');
-    } catch (e: any) {
-      notify.error(e.message);
-    }
-  };
-
-  /** Delete selected contractor from DB and clear field */
-  const removeContractor = async (
-    field: 'plaintiff_id' | 'defendant_id',
-    id: number,
-  ) => {
-    try {
-      await deleteContractor.mutateAsync(id);
-      form.setFieldValue(field, null);
-      notify.success('Контрагент удален');
-    } catch (e: any) {
-      notify.error(e.message);
-    }
-  };
 
   const handleDownloadArchive = async () => {
     const files = [
@@ -156,10 +106,6 @@ export default function CourtCaseFormAntdEdit({
           unit_ids: values.unit_ids,
           number: values.number,
           date: values.date ? (values.date as Dayjs).format('YYYY-MM-DD') : courtCase?.date,
-          plaintiff_person_id: plaintiffType === 'person' ? values.plaintiff_id : null,
-          plaintiff_contractor_id: plaintiffType === 'contractor' ? values.plaintiff_id : null,
-          defendant_person_id: defendantType === 'person' ? values.defendant_id : null,
-          defendant_contractor_id: defendantType === 'contractor' ? values.defendant_id : null,
           responsible_lawyer_id: values.responsible_lawyer_id ?? null,
           status: values.status,
           fix_start_date: values.fix_start_date ? (values.fix_start_date as Dayjs).format('YYYY-MM-DD') : null,
@@ -267,152 +213,6 @@ export default function CourtCaseFormAntdEdit({
       </Row>
       <Row gutter={16}>
         <Col span={12}>
-          <Form.Item label="Истец" style={{ marginBottom: 0 }}>
-            <Space direction="vertical" style={{ width: '100%' }}>
-              <Radio.Group
-                value={plaintiffType}
-                onChange={(e) => {
-                  setPlaintiffType(e.target.value);
-                  form.setFieldValue('plaintiff_id', null);
-                }}
-              >
-                <Radio.Button value="person">Физлицо</Radio.Button>
-                <Radio.Button value="contractor">Контрагент</Radio.Button>
-              </Radio.Group>
-              <Space.Compact style={{ width: '100%' }}>
-                <Form.Item
-                  name="plaintiff_id"
-                  noStyle
-                  rules={[{ required: true }]}
-                  style={{ ...highlight('plaintiff_id'), flex: 1 }}
-                >
-                  {plaintiffType === 'person' ? (
-                    <Select
-                      showSearch
-                      optionFilterProp="label"
-                      options={personsList.map((p) => ({ value: p.id, label: p.full_name }))}
-                    />
-                  ) : (
-                    <Select
-                      showSearch
-                      optionFilterProp="label"
-                      options={contractors.map((c) => ({ value: c.id, label: c.name }))}
-                    />
-                  )}
-                </Form.Item>
-                <Button
-                  icon={<PlusOutlined />}
-                  onClick={() => {
-                    setPartyRole('plaintiff');
-                    plaintiffType === 'person' ? setPersonModal(null) : setContractorModal(null);
-                  }}
-                />
-                <Button
-                  icon={<EditOutlined />}
-                  disabled={!form.getFieldValue('plaintiff_id')}
-                  onClick={() => {
-                    const id = form.getFieldValue('plaintiff_id');
-                    setPartyRole('plaintiff');
-                    if (plaintiffType === 'person') {
-                      setPersonModal(personsList.find((p) => p.id === id) || null);
-                    } else {
-                      setContractorModal(contractors.find((c) => c.id === id) || null);
-                    }
-                  }}
-                />
-                <Popconfirm
-                  title="Удалить?"
-                  okText="Да"
-                  cancelText="Нет"
-                  onConfirm={() => {
-                    const id = form.getFieldValue('plaintiff_id');
-                    if (!id) return;
-                    plaintiffType === 'person'
-                      ? removePerson('plaintiff_id', id)
-                      : removeContractor('plaintiff_id', id);
-                  }}
-                >
-                  <Button danger icon={<DeleteOutlined />} disabled={!form.getFieldValue('plaintiff_id')} />
-                </Popconfirm>
-              </Space.Compact>
-            </Space>
-          </Form.Item>
-        </Col>
-        <Col span={12}>
-          <Form.Item label="Ответчик" style={{ marginBottom: 0 }}>
-            <Space direction="vertical" style={{ width: '100%' }}>
-              <Radio.Group
-                value={defendantType}
-                onChange={(e) => {
-                  setDefendantType(e.target.value);
-                  form.setFieldValue('defendant_id', null);
-                }}
-              >
-                <Radio.Button value="person">Физлицо</Radio.Button>
-                <Radio.Button value="contractor">Контрагент</Radio.Button>
-              </Radio.Group>
-              <Space.Compact style={{ width: '100%' }}>
-                <Form.Item
-                  name="defendant_id"
-                  noStyle
-                  rules={[{ required: true }]}
-                  style={{ ...highlight('defendant_id'), flex: 1 }}
-                >
-                  {defendantType === 'person' ? (
-                    <Select
-                      showSearch
-                      optionFilterProp="label"
-                      options={personsList.map((p) => ({ value: p.id, label: p.full_name }))}
-                    />
-                  ) : (
-                    <Select
-                      showSearch
-                      optionFilterProp="label"
-                      options={contractors.map((c) => ({ value: c.id, label: c.name }))}
-                    />
-                  )}
-                </Form.Item>
-                <Button
-                  icon={<PlusOutlined />}
-                  onClick={() => {
-                    setPartyRole('defendant');
-                    defendantType === 'person' ? setPersonModal(null) : setContractorModal(null);
-                  }}
-                />
-                <Button
-                  icon={<EditOutlined />}
-                  disabled={!form.getFieldValue('defendant_id')}
-                  onClick={() => {
-                    const id = form.getFieldValue('defendant_id');
-                    setPartyRole('defendant');
-                    if (defendantType === 'person') {
-                      setPersonModal(personsList.find((p) => p.id === id) || null);
-                    } else {
-                      setContractorModal(contractors.find((c) => c.id === id) || null);
-                    }
-                  }}
-                />
-                <Popconfirm
-                  title="Удалить?"
-                  okText="Да"
-                  cancelText="Нет"
-                  onConfirm={() => {
-                    const id = form.getFieldValue('defendant_id');
-                    if (!id) return;
-                    defendantType === 'person'
-                      ? removePerson('defendant_id', id)
-                      : removeContractor('defendant_id', id);
-                  }}
-                >
-                  <Button danger icon={<DeleteOutlined />} disabled={!form.getFieldValue('defendant_id')} />
-                </Popconfirm>
-              </Space.Compact>
-            </Space>
-          </Form.Item>
-        </Col>
-      </Row>
-      <Row gutter={16}>
-        <Col span={12}>
           <Form.Item
             name="fix_start_date"
             label="Дата начала устранения"
@@ -495,43 +295,6 @@ export default function CourtCaseFormAntdEdit({
       </Form.Item>
     </Form>
 
-    <PersonModalId
-      open={!!personModal}
-      onClose={() => {
-        setPersonModal(null);
-        setPartyRole(null);
-      }}
-      onSelect={(id) => {
-        if (!partyRole) return;
-        const field = partyRole === 'plaintiff' ? 'plaintiff_id' : 'defendant_id';
-        if (id == null) {
-          form.setFieldValue(field, null);
-        } else {
-          form.setFieldValue(field, id);
-        }
-        setPartyRole(null);
-      }}
-      unitId={Form.useWatch('unit_ids', form)?.[0] ?? null}
-      initialData={personModal}
-    />
-    <ContractorModalId
-      open={!!contractorModal}
-      onClose={() => {
-        setContractorModal(null);
-        setPartyRole(null);
-      }}
-      onSelect={(id) => {
-        if (!partyRole) return;
-        const field = partyRole === 'plaintiff' ? 'plaintiff_id' : 'defendant_id';
-        if (id == null) {
-          form.setFieldValue(field, null);
-        } else {
-          form.setFieldValue(field, id);
-        }
-        setPartyRole(null);
-      }}
-      initialData={contractorModal}
-    />
     </>
   );
 }

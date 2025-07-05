@@ -52,8 +52,6 @@ export default function ExportCourtCasesButton({
         'Дата дела': dayjs(c.date).format('DD.MM.YYYY'),
         Статус: stages[c.status] || c.status,
         'Дело закрыто': closedStageId ? (c.status === closedStageId ? 'Да' : 'Нет') : '',
-        Истец: (c as any).plaintiff ?? '',
-        Ответчик: (c as any).defendant ?? '',
         'Ответственный юрист': (c as any).responsibleLawyer ?? '',
         'Дата начала устранения': c.fix_start_date
           ? dayjs(c.fix_start_date).format('DD.MM.YYYY')
