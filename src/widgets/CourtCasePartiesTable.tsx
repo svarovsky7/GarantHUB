@@ -130,6 +130,10 @@ export default function CourtCasePartiesTable({ fields, add, remove }: Props) {
               type === "person" && entityId
                 ? persons.find((p) => p.id === entityId)
                 : null;
+            const selectedContractor =
+              type === "contractor" && entityId
+                ? contractors.find((c) => c.id === entityId)
+                : null;
             return (
               <>
                 <Space.Compact style={{ width: "100%" }}>
@@ -203,6 +207,9 @@ export default function CourtCasePartiesTable({ fields, add, remove }: Props) {
                     {selectedPerson.phone ? `, ${selectedPerson.phone}` : ""}
                     {selectedPerson.email ? `, ${selectedPerson.email}` : ""}
                   </div>
+                )}
+                {selectedContractor?.inn && (
+                  <div style={{ fontSize: 12, color: "#888" }}>ИНН {selectedContractor.inn}</div>
                 )}
               </>
             );
