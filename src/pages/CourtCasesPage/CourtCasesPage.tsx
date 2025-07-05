@@ -1,21 +1,30 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import dayjs from 'dayjs';
-import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
-import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
-import 'dayjs/locale/ru';
-import { ConfigProvider, Button, Card, Table, Space, Popconfirm, Tooltip, Typography } from 'antd';
-import ruRU from 'antd/locale/ru_RU';
-import type { ColumnsType } from 'antd/es/table';
-import type { CourtCase } from '@/shared/types/courtCase';
-import { useVisibleProjects } from '@/entities/project';
-import { useUnitsByIds } from '@/entities/unit';
-import { useUsers } from '@/entities/user';
-import { useCourtCaseStatuses } from '@/entities/courtCaseStatus';
-import { useCasePartiesByCaseIds } from '@/entities/courtCaseParty';
-import { useRolePermission } from '@/entities/rolePermission';
-import { useAuthStore } from '@/shared/store/authStore';
-import type { RoleName } from '@/shared/types/rolePermission';
+import React, { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
+import dayjs from "dayjs";
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+import "dayjs/locale/ru";
+import {
+  ConfigProvider,
+  Button,
+  Card,
+  Table,
+  Space,
+  Popconfirm,
+  Tooltip,
+  Typography,
+} from "antd";
+import ruRU from "antd/locale/ru_RU";
+import type { ColumnsType } from "antd/es/table";
+import type { CourtCase } from "@/shared/types/courtCase";
+import { useVisibleProjects } from "@/entities/project";
+import { useUnitsByIds } from "@/entities/unit";
+import { useUsers } from "@/entities/user";
+import { useCourtCaseStatuses } from "@/entities/courtCaseStatus";
+import { useCasePartiesByCaseIds } from "@/entities/courtCaseParty";
+import { useRolePermission } from "@/entities/rolePermission";
+import { useAuthStore } from "@/shared/store/authStore";
+import type { RoleName } from "@/shared/types/rolePermission";
 import {
   PlusOutlined,
   DeleteOutlined,
@@ -24,34 +33,34 @@ import {
   BranchesOutlined,
   SettingOutlined,
   EyeOutlined,
-} from '@ant-design/icons';
+} from "@ant-design/icons";
 import {
   useCourtCases,
   useDeleteCourtCase,
   useLinkCases,
   useUnlinkCase,
-} from '@/entities/courtCase';
-import { useNotify } from '@/shared/hooks/useNotify';
-import CourtCaseStatusSelect from '@/features/courtCase/CourtCaseStatusSelect';
-import LinkCasesDialog from '@/features/courtCase/LinkCasesDialog';
-import ExportCourtCasesButton from '@/features/courtCase/ExportCourtCasesButton';
-import AddCourtCaseFormAntd from '@/features/courtCase/AddCourtCaseFormAntd';
-import CourtCaseViewModal from '@/features/courtCase/CourtCaseViewModal';
-import CourtCasesFilters from '@/widgets/CourtCasesFilters';
-import type { CourtCasesFiltersValues } from '@/shared/types/courtCasesFilters';
+} from "@/entities/courtCase";
+import { useNotify } from "@/shared/hooks/useNotify";
+import CourtCaseStatusSelect from "@/features/courtCase/CourtCaseStatusSelect";
+import LinkCasesDialog from "@/features/courtCase/LinkCasesDialog";
+import ExportCourtCasesButton from "@/features/courtCase/ExportCourtCasesButton";
+import AddCourtCaseFormAntd from "@/features/courtCase/AddCourtCaseFormAntd";
+import CourtCaseViewModal from "@/features/courtCase/CourtCaseViewModal";
+import CourtCasesFilters from "@/widgets/CourtCasesFilters";
+import type { CourtCasesFiltersValues } from "@/shared/types/courtCasesFilters";
 const TableColumnsDrawer = React.lazy(
-  () => import('@/widgets/TableColumnsDrawer'),
+  () => import("@/widgets/TableColumnsDrawer"),
 );
-import type { TableColumnSetting } from '@/shared/types/tableColumnSetting';
+import type { TableColumnSetting } from "@/shared/types/tableColumnSetting";
 
- dayjs.locale('ru');
- dayjs.extend(isSameOrAfter);
- dayjs.extend(isSameOrBefore);
+dayjs.locale("ru");
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
 
-const LS_KEY = 'courtCasesHideClosed';
-const LS_COLUMNS_KEY = 'courtCasesColumns';
-const LS_COLUMN_WIDTHS_KEY = 'courtCasesColumnWidths';
-const LS_FILTERS_VISIBLE_KEY = 'courtCasesFiltersVisible';
+const LS_KEY = "courtCasesHideClosed";
+const LS_COLUMNS_KEY = "courtCasesColumns";
+const LS_COLUMN_WIDTHS_KEY = "courtCasesColumnWidths";
+const LS_FILTERS_VISIBLE_KEY = "courtCasesFiltersVisible";
 
 export default function CourtCasesPage() {
   const { data: cases = [], isPending: casesLoading } = useCourtCases();
@@ -79,18 +88,21 @@ export default function CourtCasesPage() {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const initialValues = {
-    project_id: searchParams.get('project_id')
-      ? Number(searchParams.get('project_id')!)
+    project_id: searchParams.get("project_id")
+      ? Number(searchParams.get("project_id")!)
       : undefined,
-    unit_ids: searchParams.get('unit_id')
-      ? [Number(searchParams.get('unit_id')!)]
+    unit_ids: searchParams.get("unit_id")
+      ? [Number(searchParams.get("unit_id")!)]
       : undefined,
-    responsible_lawyer_id: searchParams.get('responsible_lawyer_id') || undefined,
-    status: searchParams.get('status') ? Number(searchParams.get('status')!) : undefined,
+    responsible_lawyer_id:
+      searchParams.get("responsible_lawyer_id") || undefined,
+    status: searchParams.get("status")
+      ? Number(searchParams.get("status")!)
+      : undefined,
   };
 
   React.useEffect(() => {
-    if (searchParams.get('open_form') === '1') {
+    if (searchParams.get("open_form") === "1") {
       setShowAddForm(true);
     }
   }, [searchParams]);
@@ -123,12 +135,15 @@ export default function CourtCasesPage() {
   }, [caseUnits]);
 
   const partiesMap = React.useMemo(() => {
-    const map = new Map<number, { plaintiffs: string[]; defendants: string[] }>();
+    const map = new Map<
+      number,
+      { plaintiffs: string[]; defendants: string[] }
+    >();
     (parties ?? []).forEach((p) => {
       const entry = map.get(p.case_id) || { plaintiffs: [], defendants: [] };
-      const name = p.persons?.full_name ?? p.contractors?.name ?? '';
-      if (p.role === 'plaintiff') entry.plaintiffs.push(name);
-      else if (p.role === 'defendant') entry.defendants.push(name);
+      const name = p.persons?.full_name ?? p.contractors?.name ?? "";
+      if (p.role === "plaintiff") entry.plaintiffs.push(name);
+      else if (p.role === "defendant") entry.defendants.push(name);
       map.set(p.case_id, entry);
     });
     return map;
@@ -149,10 +164,10 @@ export default function CourtCasesPage() {
   });
 
   useEffect(() => {
-    const caseId = searchParams.get('case_id');
+    const caseId = searchParams.get("case_id");
     if (caseId) setViewId(Number(caseId));
-    const prj = searchParams.get('project_id');
-    const obj = searchParams.get('unit_id');
+    const prj = searchParams.get("project_id");
+    const obj = searchParams.get("unit_id");
     setFilters((f) => ({
       ...f,
       projectId: prj ? Number(prj) : f.projectId,
@@ -164,17 +179,20 @@ export default function CourtCasesPage() {
     const handler = (e: StorageEvent) => {
       if (e.key === LS_KEY) {
         try {
-          setFilters((f) => ({ ...f, hideClosed: JSON.parse(e.newValue || 'false') }));
+          setFilters((f) => ({
+            ...f,
+            hideClosed: JSON.parse(e.newValue || "false"),
+          }));
         } catch {}
       }
       if (e.key === LS_FILTERS_VISIBLE_KEY) {
         try {
-          setShowFilters(JSON.parse(e.newValue || 'true'));
+          setShowFilters(JSON.parse(e.newValue || "true"));
         } catch {}
       }
     };
-    window.addEventListener('storage', handler);
-    return () => window.removeEventListener('storage', handler);
+    window.addEventListener("storage", handler);
+    return () => window.removeEventListener("storage", handler);
   }, []);
 
   useEffect(() => {
@@ -193,21 +211,23 @@ export default function CourtCasesPage() {
   };
 
   const resetFilters = () =>
-    setFilters((f) => ({ hideClosed: f.hideClosed } as CourtCasesFiltersValues));
+    setFilters(
+      (f) => ({ hideClosed: f.hideClosed }) as CourtCasesFiltersValues,
+    );
 
   const closedStageId = React.useMemo(() => {
-    return stages.find((s) => s.name.toLowerCase().includes('закры'))?.id;
+    return stages.find((s) => s.name.toLowerCase().includes("закры"))?.id;
   }, [stages]);
 
   const casesData = cases.map((c: any) => ({
     ...c,
-    plaintiffs: (partiesMap.get(c.id)?.plaintiffs || []).join(', '),
-    defendants: (partiesMap.get(c.id)?.defendants || []).join(', '),
-    projectName: projects.find((p) => p.id === c.project_id)?.name ?? '',
+    plaintiffs: (partiesMap.get(c.id)?.plaintiffs || []).join(", "),
+    defendants: (partiesMap.get(c.id)?.defendants || []).join(", "),
+    projectName: projects.find((p) => p.id === c.project_id)?.name ?? "",
     projectObject: (c.unit_ids ?? [])
       .map((id: number) => caseUnits.find((u) => u.id === id)?.name)
       .filter(Boolean)
-      .join(', '),
+      .join(", "),
     buildingNamesList: Array.from(
       new Set(
         (c.unit_ids ?? [])
@@ -221,39 +241,56 @@ export default function CourtCasesPage() {
           .map((id: number) => buildingMap.get(id))
           .filter(Boolean),
       ),
-    )
-      .join(', '),
-    responsibleLawyer: users.find((u) => u.id === c.responsible_lawyer_id)?.name ?? c.responsibleLawyer,
+    ).join(", "),
+    responsibleLawyer:
+      users.find((u) => u.id === c.responsible_lawyer_id)?.name ??
+      c.responsibleLawyer,
     createdAt: c.created_at ? dayjs(c.created_at) : null,
     createdByName: users.find((u) => u.id === c.created_by)?.name ?? null,
-    daysSinceFixStart: c.fix_start_date ? dayjs().diff(dayjs(c.fix_start_date), 'day') : null,
+    daysSinceFixStart: c.fix_start_date
+      ? dayjs().diff(dayjs(c.fix_start_date), "day")
+      : null,
     statusName: stages.find((s) => s.id === c.status)?.name ?? null,
     statusColor: stages.find((s) => s.id === c.status)?.color ?? null,
   }));
 
   const idOptions = React.useMemo(
-    () => Array.from(new Set(cases.map((c) => c.id))).map((id) => ({ value: id, label: String(id) })),
+    () =>
+      Array.from(new Set(cases.map((c) => c.id))).map((id) => ({
+        value: id,
+        label: String(id),
+      })),
     [cases],
   );
 
   const filteredCases = casesData.filter((c: any) => {
     const matchesStatus = !filters.status || c.status === filters.status;
-    const matchesProject = !filters.projectId || c.project_id === filters.projectId;
+    const matchesProject =
+      !filters.projectId || c.project_id === filters.projectId;
     const matchesObject =
       !filters.objectId || (c.unit_ids ?? []).includes(filters.objectId);
     const matchesBuilding =
       !filters.building || c.buildingNamesList?.includes(filters.building);
-    const matchesNumber = !filters.number || c.number.toLowerCase().includes(filters.number.toLowerCase());
+    const matchesNumber =
+      !filters.number ||
+      c.number.toLowerCase().includes(filters.number.toLowerCase());
     const matchesDate =
       !filters.dateRange ||
-      (dayjs(c.date).isSameOrAfter(filters.dateRange[0], 'day') &&
-        dayjs(c.date).isSameOrBefore(filters.dateRange[1], 'day'));
+      (dayjs(c.date).isSameOrAfter(filters.dateRange[0], "day") &&
+        dayjs(c.date).isSameOrBefore(filters.dateRange[1], "day"));
     const matchesFixStart =
       !filters.fixStartRange ||
       (c.fix_start_date &&
-        dayjs(c.fix_start_date).isSameOrAfter(filters.fixStartRange[0], 'day') &&
-        dayjs(c.fix_start_date).isSameOrBefore(filters.fixStartRange[1], 'day'));
-    const matchesLawyer = !filters.lawyerId || String(c.responsible_lawyer_id) === filters.lawyerId;
+        dayjs(c.fix_start_date).isSameOrAfter(
+          filters.fixStartRange[0],
+          "day",
+        ) &&
+        dayjs(c.fix_start_date).isSameOrBefore(
+          filters.fixStartRange[1],
+          "day",
+        ));
+    const matchesLawyer =
+      !filters.lawyerId || String(c.responsible_lawyer_id) === filters.lawyerId;
     const matchesClosed =
       !filters.hideClosed || !closedStageId || c.status !== closedStageId;
     const matchesIds = !filters.ids || filters.ids.includes(c.id);
@@ -294,78 +331,70 @@ export default function CourtCasesPage() {
 
   const baseColumns: Record<string, ColumnsType<CourtCase & any>[number]> = {
     treeIcon: {
-      title: '',
-      dataIndex: 'treeIcon',
+      title: "",
+      dataIndex: "treeIcon",
       width: 40,
       render: (_: any, record) => {
         if (!record.parent_id) {
           return (
             <Tooltip title="Основное дело">
-              <FileTextOutlined style={{ color: '#1890ff', fontSize: 17 }} />
+              <FileTextOutlined style={{ color: "#1890ff", fontSize: 17 }} />
             </Tooltip>
           );
         }
         return (
           <Tooltip title="Связанное дело">
-            <BranchesOutlined style={{ color: '#52c41a', fontSize: 16 }} />
+            <BranchesOutlined style={{ color: "#52c41a", fontSize: 16 }} />
           </Tooltip>
         );
       },
     },
     id: {
-      title: 'ID',
-      dataIndex: 'id',
+      title: "ID",
+      dataIndex: "id",
       width: 80,
       sorter: (a, b) => a.id - b.id,
-      defaultSortOrder: 'descend',
-      render: (id: number) => <span style={{ whiteSpace: 'nowrap' }}>{id}</span>,
+      defaultSortOrder: "descend",
+      render: (id: number) => (
+        <span style={{ whiteSpace: "nowrap" }}>{id}</span>
+      ),
     },
     projectName: {
-      title: 'Проект',
-      dataIndex: 'projectName',
+      title: "Проект",
+      dataIndex: "projectName",
       width: 180,
-      sorter: (a, b) => (a.projectName || '').localeCompare(b.projectName || ''),
+      sorter: (a, b) =>
+        (a.projectName || "").localeCompare(b.projectName || ""),
     },
     buildings: {
-      title: 'Корпус',
-      dataIndex: 'buildings',
+      title: "Корпус",
+      dataIndex: "buildings",
       width: 120,
-      sorter: (a, b) => (a.buildings || '').localeCompare(b.buildings || ''),
+      sorter: (a, b) => (a.buildings || "").localeCompare(b.buildings || ""),
     },
     projectObject: {
-      title: 'Объект',
-      dataIndex: 'projectObject',
+      title: "Объект",
+      dataIndex: "projectObject",
       width: 160,
-      sorter: (a, b) => (a.projectObject || '').localeCompare(b.projectObject || ''),
-    },
-    plaintiffs: {
-      title: 'Истец',
-      dataIndex: 'plaintiffs',
-      width: 200,
-      sorter: (a, b) => (a.plaintiffs || '').localeCompare(b.plaintiffs || ''),
-    },
-    defendants: {
-      title: 'Ответчик',
-      dataIndex: 'defendants',
-      width: 200,
-      sorter: (a, b) => (a.defendants || '').localeCompare(b.defendants || ''),
+      sorter: (a, b) =>
+        (a.projectObject || "").localeCompare(b.projectObject || ""),
     },
     number: {
-      title: '№ дела',
-      dataIndex: 'number',
+      title: "№ дела",
+      dataIndex: "number",
       width: 120,
       sorter: (a, b) => a.number.localeCompare(b.number),
     },
     date: {
-      title: 'Дата дела',
-      dataIndex: 'date',
+      title: "Дата дела",
+      dataIndex: "date",
       width: 120,
       sorter: (a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf(),
-      render: (v: string) => dayjs(v).format('DD.MM.YYYY'),
+      render: (v: string) => dayjs(v).format("DD.MM.YYYY"),
     },
     status: {
-      title: 'Статус',
-      dataIndex: 'status',
+      title: "Статус",
+      dataIndex: "status",
       width: 160,
       sorter: (a, b) => a.status - b.status,
       render: (_: number, row) => (
@@ -377,77 +406,113 @@ export default function CourtCasesPage() {
         />
       ),
     },
+    plaintiffs: {
+      title: "Истец",
+      dataIndex: "plaintiffs",
+      width: 200,
+      sorter: (a, b) => (a.plaintiffs || "").localeCompare(b.plaintiffs || ""),
+    },
+    defendants: {
+      title: "Ответчик",
+      dataIndex: "defendants",
+      width: 200,
+      sorter: (a, b) => (a.defendants || "").localeCompare(b.defendants || ""),
+    },
     daysSinceFixStart: {
-      title: 'Прошло дней с начала устранения',
-      dataIndex: 'daysSinceFixStart',
+      title: "Прошло дней с начала устранения",
+      dataIndex: "daysSinceFixStart",
       width: 200,
       sorter: (a, b) => (a.daysSinceFixStart ?? 0) - (b.daysSinceFixStart ?? 0),
     },
     fix_start_date: {
-      title: 'Дата начала устранения',
-      dataIndex: 'fix_start_date',
+      title: "Дата начала устранения",
+      dataIndex: "fix_start_date",
       width: 120,
-      render: (v: string | null) => (v ? dayjs(v).format('DD.MM.YYYY') : ''),
-      sorter: (a, b) => dayjs(a.fix_start_date || 0).valueOf() - dayjs(b.fix_start_date || 0).valueOf(),
+      render: (v: string | null) => (v ? dayjs(v).format("DD.MM.YYYY") : ""),
+      sorter: (a, b) =>
+        dayjs(a.fix_start_date || 0).valueOf() -
+        dayjs(b.fix_start_date || 0).valueOf(),
     },
     fix_end_date: {
-      title: 'Дата окончания устранения',
-      dataIndex: 'fix_end_date',
+      title: "Дата окончания устранения",
+      dataIndex: "fix_end_date",
       width: 120,
-      render: (v: string | null) => (v ? dayjs(v).format('DD.MM.YYYY') : ''),
-      sorter: (a, b) => dayjs(a.fix_end_date || 0).valueOf() - dayjs(b.fix_end_date || 0).valueOf(),
+      render: (v: string | null) => (v ? dayjs(v).format("DD.MM.YYYY") : ""),
+      sorter: (a, b) =>
+        dayjs(a.fix_end_date || 0).valueOf() -
+        dayjs(b.fix_end_date || 0).valueOf(),
     },
     responsibleLawyer: {
-      title: 'Юрист',
-      dataIndex: 'responsibleLawyer',
+      title: "Юрист",
+      dataIndex: "responsibleLawyer",
       width: 180,
-      sorter: (a, b) => (a.responsibleLawyer || '').localeCompare(b.responsibleLawyer || ''),
+      sorter: (a, b) =>
+        (a.responsibleLawyer || "").localeCompare(b.responsibleLawyer || ""),
     },
     createdAt: {
-      title: 'Добавлено',
-      dataIndex: 'createdAt',
+      title: "Добавлено",
+      dataIndex: "createdAt",
       width: 160,
       sorter: (a, b) =>
-        (a.createdAt ? a.createdAt.valueOf() : 0) - (b.createdAt ? b.createdAt.valueOf() : 0),
-      render: (v: dayjs.Dayjs | null) => (v ? v.format('DD.MM.YYYY HH:mm') : ''),
+        (a.createdAt ? a.createdAt.valueOf() : 0) -
+        (b.createdAt ? b.createdAt.valueOf() : 0),
+      render: (v: dayjs.Dayjs | null) =>
+        v ? v.format("DD.MM.YYYY HH:mm") : "",
     },
     createdByName: {
-      title: 'Автор',
-      dataIndex: 'createdByName',
+      title: "Автор",
+      dataIndex: "createdByName",
       width: 160,
-      sorter: (a, b) => (a.createdByName || '').localeCompare(b.createdByName || ''),
+      sorter: (a, b) =>
+        (a.createdByName || "").localeCompare(b.createdByName || ""),
     },
     actions: {
-      title: 'Действия',
-      key: 'actions',
+      title: "Действия",
+      key: "actions",
       width: 140,
       render: (_: any, record) => (
         <Space size="middle">
           <Tooltip title="Просмотр">
-            <Button type="text" icon={<EyeOutlined />} onClick={() => setViewId(record.id)} />
+            <Button
+              type="text"
+              icon={<EyeOutlined />}
+              onClick={() => setViewId(record.id)}
+            />
           </Tooltip>
-          <Button type="text" icon={<PlusOutlined />} onClick={() => setLinkFor(record)} />
+          <Button
+            type="text"
+            icon={<PlusOutlined />}
+            onClick={() => setLinkFor(record)}
+          />
           {record.parent_id && (
             <Tooltip title="Исключить из связи">
               <Button
                 type="text"
-                icon={<LinkOutlined style={{ color: '#c41d7f', textDecoration: 'line-through', fontWeight: 700 }} />}
+                icon={
+                  <LinkOutlined
+                    style={{
+                      color: "#c41d7f",
+                      textDecoration: "line-through",
+                      fontWeight: 700,
+                    }}
+                  />
+                }
                 onClick={() => unlinkCase.mutate(record.id)}
               />
             </Tooltip>
           )}
-          {perm?.delete_tables.includes('court_cases') && (
-              <Popconfirm
-                title="Удалить дело?"
-                okText="Да"
-                cancelText="Нет"
-                onConfirm={() =>
-                  deleteCaseMutation.mutate({
-                    id: record.id,
-                    project_id: record.project_id,
-                  })
-                }
-              >
+          {perm?.delete_tables.includes("court_cases") && (
+            <Popconfirm
+              title="Удалить дело?"
+              okText="Да"
+              cancelText="Нет"
+              onConfirm={() =>
+                deleteCaseMutation.mutate({
+                  id: record.id,
+                  project_id: record.project_id,
+                })
+              }
+            >
               <Button type="text" danger icon={<DeleteOutlined />} />
             </Popconfirm>
           )}
@@ -460,34 +525,38 @@ export default function CourtCasesPage() {
     const defaults = Object.keys(baseColumns).map((key) => ({
       key,
       title: baseColumns[key].title as string,
-      visible: !['createdAt', 'createdByName'].includes(key),
+      visible: !["createdAt", "createdByName"].includes(key),
     }));
     try {
       const saved = localStorage.getItem(LS_COLUMNS_KEY);
       if (saved) {
         let parsed = JSON.parse(saved) as TableColumnSetting[];
         parsed = parsed.map((c) => {
-          if (typeof c.title !== 'string') {
+          if (typeof c.title !== "string") {
             const def = defaults.find((d) => d.key === c.key);
-            return { ...c, title: def?.title ?? '' };
+            return { ...c, title: def?.title ?? "" };
           }
           return c;
         });
         const filtered = parsed.filter((c) => baseColumns[c.key]);
-        const missing = defaults.filter((d) => !filtered.some((f) => f.key === d.key));
+        const missing = defaults.filter(
+          (d) => !filtered.some((f) => f.key === d.key),
+        );
         return [...filtered, ...missing];
       }
     } catch {}
     return defaults;
   });
 
-  const [columnWidths, setColumnWidths] = useState<Record<string, number>>(() => {
-    try {
-      return JSON.parse(localStorage.getItem(LS_COLUMN_WIDTHS_KEY) || '{}');
-    } catch {
-      return {};
-    }
-  });
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>(
+    () => {
+      try {
+        return JSON.parse(localStorage.getItem(LS_COLUMN_WIDTHS_KEY) || "{}");
+      } catch {
+        return {};
+      }
+    },
+  );
 
   /**
    * Сброс колонок к начальному состоянию
@@ -496,7 +565,7 @@ export default function CourtCasesPage() {
     const defaults = Object.keys(baseColumns).map((key) => ({
       key,
       title: baseColumns[key].title as string,
-      visible: !['createdAt', 'createdByName'].includes(key),
+      visible: !["createdAt", "createdByName"].includes(key),
     }));
     try {
       localStorage.removeItem(LS_COLUMN_WIDTHS_KEY);
@@ -528,10 +597,10 @@ export default function CourtCasesPage() {
     [columnsState, baseColumns, columnWidths],
   );
 
-
   const total = cases.length;
   const closedCount = React.useMemo(
-    () => cases.filter((c) => closedStageId && c.status === closedStageId).length,
+    () =>
+      cases.filter((c) => closedStageId && c.status === closedStageId).length,
     [cases, closedStageId],
   );
   const openCount = total - closedCount;
@@ -540,24 +609,24 @@ export default function CourtCasesPage() {
   return (
     <ConfigProvider locale={ruRU}>
       <>
-        {perm?.edit_tables.includes('court_cases') && (
+        {perm?.edit_tables.includes("court_cases") && (
           <Button
             type="primary"
             onClick={() => setShowAddForm((p) => !p)}
             style={{ marginRight: 8 }}
           >
-            {showAddForm ? 'Скрыть форму' : 'Добавить дело'}
+            {showAddForm ? "Скрыть форму" : "Добавить дело"}
           </Button>
         )}
         <Button onClick={() => setShowFilters((p) => !p)}>
-          {showFilters ? 'Скрыть фильтры' : 'Показать фильтры'}
+          {showFilters ? "Скрыть фильтры" : "Показать фильтры"}
         </Button>
         <Button
           icon={<SettingOutlined />}
           style={{ marginLeft: 8 }}
           onClick={() => setShowColumnsDrawer(true)}
         />
-        <span style={{ marginLeft: 8, display: 'inline-block' }}>
+        <span style={{ marginLeft: 8, display: "inline-block" }}>
           <ExportCourtCasesButton
             cases={filteredCases}
             stages={Object.fromEntries(stages.map((s) => [s.id, s.name]))}
@@ -578,7 +647,9 @@ export default function CourtCasesPage() {
           parent={linkFor}
           cases={casesData}
           onClose={() => setLinkFor(null)}
-          onSubmit={(ids) => linkCases.mutate({ parentId: String(linkFor!.id), childIds: ids })}
+          onSubmit={(ids) =>
+            linkCases.mutate({ parentId: String(linkFor!.id), childIds: ids })
+          }
         />
         <React.Suspense fallback={null}>
           <TableColumnsDrawer
@@ -586,7 +657,10 @@ export default function CourtCasesPage() {
             columns={columnsState}
             widths={
               Object.fromEntries(
-                Object.keys(baseColumns).map((k) => [k, columnWidths[k] ?? baseColumns[k].width])
+                Object.keys(baseColumns).map((k) => [
+                  k,
+                  columnWidths[k] ?? baseColumns[k].width,
+                ]),
               ) as Record<string, number>
             }
             onWidthsChange={setColumnWidths}
@@ -601,7 +675,7 @@ export default function CourtCasesPage() {
           onClose={() => {
             setViewId(null);
             const params = new URLSearchParams(searchParams);
-            params.delete('case_id');
+            params.delete("case_id");
             setSearchParams(params, { replace: true });
           }}
         />
@@ -641,17 +715,24 @@ export default function CourtCasesPage() {
               onChange: (_p, size) => size && setPageSize(size),
             }}
             size="middle"
-            expandable={{ expandRowByClick: true, defaultExpandAllRows: false, indentSize: 24 }}
-            rowClassName={(record) => (record.parent_id ? 'child-case-row' : 'main-case-row')}
+            expandable={{
+              expandRowByClick: true,
+              defaultExpandAllRows: false,
+              indentSize: 24,
+            }}
+            rowClassName={(record) =>
+              record.parent_id ? "child-case-row" : "main-case-row"
+            }
           />
 
-          <Typography.Text style={{ display: 'block', marginTop: 8 }}>
-            Всего дел: {total}, из них закрытых: {closedCount} и не закрытых: {openCount}
+          <Typography.Text style={{ display: "block", marginTop: 8 }}>
+            Всего дел: {total}, из них закрытых: {closedCount} и не закрытых:{" "}
+            {openCount}
           </Typography.Text>
-        <Typography.Text style={{ display: 'block', marginTop: 4 }}>
-          Готовых дел к выгрузке: {readyToExport}
-        </Typography.Text>
-      </div>
+          <Typography.Text style={{ display: "block", marginTop: 4 }}>
+            Готовых дел к выгрузке: {readyToExport}
+          </Typography.Text>
+        </div>
       </>
     </ConfigProvider>
   );
