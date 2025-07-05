@@ -73,7 +73,12 @@ export default function CourtCaseClaimsTable({
       dataIndex: 'claimed',
       width: 150,
       render: (_: unknown, field: any) => (
-        <Form.Item name={[field.name, 'claimed_amount']} noStyle>
+        <Form.Item
+          name={[field.name, 'claimed_amount']}
+          noStyle
+          valuePropName="value"
+          trigger="onCommit"
+        >
           <RubInput />
         </Form.Item>
       ),
@@ -83,7 +88,12 @@ export default function CourtCaseClaimsTable({
       dataIndex: 'confirmed',
       width: 150,
       render: (_: unknown, field: any) => (
-        <Form.Item name={[field.name, 'confirmed_amount']} noStyle>
+        <Form.Item
+          name={[field.name, 'confirmed_amount']}
+          noStyle
+          valuePropName="value"
+          trigger="onCommit"
+        >
           <RubInput />
         </Form.Item>
       ),
@@ -93,7 +103,12 @@ export default function CourtCaseClaimsTable({
       dataIndex: 'paid',
       width: 150,
       render: (_: unknown, field: any) => (
-        <Form.Item name={[field.name, 'paid_amount']} noStyle>
+        <Form.Item
+          name={[field.name, 'paid_amount']}
+          noStyle
+          valuePropName="value"
+          trigger="onCommit"
+        >
           <RubInput />
         </Form.Item>
       ),
@@ -103,7 +118,12 @@ export default function CourtCaseClaimsTable({
       dataIndex: 'agreed',
       width: 150,
       render: (_: unknown, field: any) => (
-        <Form.Item name={[field.name, 'agreed_amount']} noStyle>
+        <Form.Item
+          name={[field.name, 'agreed_amount']}
+          noStyle
+          valuePropName="value"
+          trigger="onCommit"
+        >
           <RubInput />
         </Form.Item>
       ),
