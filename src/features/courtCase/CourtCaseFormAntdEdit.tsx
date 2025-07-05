@@ -15,6 +15,7 @@ import { useUnitsByProject } from '@/entities/unit';
 import { useUsers } from '@/entities/user';
 import { useCourtCaseStatuses } from '@/entities/courtCaseStatus';
 import { useCourtCase, useUpdateCourtCaseFull } from '@/entities/courtCase';
+import { useCaseUids, getOrCreateCaseUid } from '@/entities/courtCaseUid';
 import FileDropZone from '@/shared/ui/FileDropZone';
 import AttachmentEditorTable from '@/shared/ui/AttachmentEditorTable';
 import { useCaseAttachments } from './model/useCaseAttachments';
@@ -45,6 +46,7 @@ export default function CourtCaseFormAntdEdit({
   const { data: units = [] } = useUnitsByProject(projectId);
   const { data: users = [] } = useUsers();
   const { data: stages = [] } = useCourtCaseStatuses();
+  const { data: caseUids = [] } = useCaseUids();
   const update = useUpdateCourtCaseFull();
   const notify = useNotify();
   const attachments = useCaseAttachments({ courtCase });
@@ -71,6 +73,7 @@ export default function CourtCaseFormAntdEdit({
       fix_start_date: courtCase.fix_start_date ? dayjs(courtCase.fix_start_date) : null,
       fix_end_date: courtCase.fix_end_date ? dayjs(courtCase.fix_end_date) : null,
       description: courtCase.description,
+      case_uid: courtCase.caseUid ?? undefined,
     });
     
   }, [courtCase, form]);
@@ -100,6 +103,7 @@ export default function CourtCaseFormAntdEdit({
 
   const onFinish = async (values: any) => {
     try {
+      const uidId = await getOrCreateCaseUid(values.case_uid);
       const uploaded = await update.mutateAsync({
         id: Number(caseId),
         updates: {
@@ -112,6 +116,7 @@ export default function CourtCaseFormAntdEdit({
           fix_start_date: values.fix_start_date ? (values.fix_start_date as Dayjs).format('YYYY-MM-DD') : null,
           fix_end_date: values.fix_end_date ? (values.fix_end_date as Dayjs).format('YYYY-MM-DD') : null,
           description: values.description || '',
+          case_uid_id: uidId,
         },
         newAttachments: attachments.newFiles,
         removedAttachmentIds: attachments.removedIds.map(Number),
@@ -177,6 +182,24 @@ export default function CourtCaseFormAntdEdit({
             style={highlight('responsible_lawyer_id')}
           >
             <Select options={users.map((u) => ({ value: u.id, label: u.name }))} />
+          </Form.Item>
+        </Col>
+      </Row>
+      <Row gutter={16}>
+        <Col span={8}>
+          <Form.Item
+            name="case_uid"
+            label="Уникальный идентификатор"
+            rules={[{ required: true }]}
+            style={highlight('case_uid')}
+          >
+            <Select
+              mode="tags"
+              open={false}
+              tokenSeparators={[',']}
+              placeholder="UID"
+              options={caseUids.map((u) => ({ value: u.uid, label: u.uid }))}
+            />
           </Form.Item>
         </Col>
       </Row>

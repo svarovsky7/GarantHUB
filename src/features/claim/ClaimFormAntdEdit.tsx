@@ -30,7 +30,7 @@ import { useUnitsByProject, useUnitsByIds } from '@/entities/unit';
 import { useUsers } from '@/entities/user';
 import { useClaimStatuses } from '@/entities/claimStatus';
 
-import { useCaseUids } from '@/entities/caseUid';
+import { useCaseUids } from '@/entities/courtCaseUid';
 import { useNotify } from '@/shared/hooks/useNotify';
 import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useAuthStore } from '@/shared/store/authStore';

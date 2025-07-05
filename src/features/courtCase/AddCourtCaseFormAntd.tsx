@@ -23,11 +23,7 @@ import {
 } from '@/entities/courtCase';
 import { addCaseAttachments } from '@/entities/attachment';
 import { useAddCaseClaims } from '@/entities/courtCaseClaim';
-import {
-  useCaseUids,
-  getOrCreateCaseUid,
-  isCaseUidUnique,
-} from '@/entities/caseUid';
+import { useCaseUids, getOrCreateCaseUid } from '@/entities/courtCaseUid';
 import CourtCaseClaimsTable from '@/widgets/CourtCaseClaimsTable';
 import CourtCasePartiesTable from '@/widgets/CourtCasePartiesTable';
 import { useQueryClient } from '@tanstack/react-query';
@@ -256,20 +252,7 @@ export default function AddCourtCaseFormAntd({
               name="case_uid"
               label="Уникальный идентификатор"
               validateTrigger="onBlur"
-              rules={[
-                { required: true, message: 'Укажите UID' },
-                {
-                  validator: async (_, value) => {
-                    if (!value) return Promise.resolve();
-                    const unique = await isCaseUidUnique(value);
-                    if (!unique) {
-                      notify.error('UID уже используется');
-                      return Promise.reject(new Error('UID не уникален'));
-                    }
-                    return Promise.resolve();
-                  },
-                },
-              ]}
+              rules={[{ required: true, message: 'Укажите UID' }]}
             >
               <Select
                 mode="tags"
