@@ -14,7 +14,8 @@ export function useCaseClaims(caseId?: number | null) {
         .select(
           'id, case_id, claim_type_id, claimed_amount, confirmed_amount, paid_amount, agreed_amount'
         )
-        .eq('case_id', caseId as number);
+        .eq('case_id', caseId as number)
+        .order('id', { ascending: true });
       if (error) throw error;
       return (data ?? []) as CourtCaseClaim[];
     },
