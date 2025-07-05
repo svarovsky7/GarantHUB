@@ -150,7 +150,6 @@ export default function AddCourtCaseFormAntd({
       created_by: profileId,
     } as any);
 
-
     let newAtts: { id: number }[] = [];
     if (caseFiles.length) {
       newAtts = await addCaseAttachments(
@@ -167,6 +166,8 @@ export default function AddCourtCaseFormAntd({
       });
       qc.invalidateQueries({ queryKey: ['court_cases'] });
     }
+
+
 
 
       const claims: any[] = (values.claims || []).filter((c: any) =>
