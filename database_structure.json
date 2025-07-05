@@ -105,20 +105,6 @@
     "column_default": "now()"
   },
   {
-    "table_name": "court_cases_uids",
-    "column_name": "id",
-    "data_type": "integer",
-    "is_nullable": "NO",
-    "column_default": "nextval('court_cases_uids_id_seq'::regclass)"
-  },
-  {
-    "table_name": "court_cases_uids",
-    "column_name": "uid",
-    "data_type": "text",
-    "is_nullable": "NO",
-    "column_default": null
-  },
-  {
     "table_name": "claim_attachments",
     "column_name": "claim_id",
     "data_type": "bigint",
@@ -641,6 +627,20 @@
     "column_name": "total_claim_amount",
     "data_type": "numeric",
     "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "court_cases_uids",
+    "column_name": "id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": "nextval('court_cases_uids_id_seq'::regclass)"
+  },
+  {
+    "table_name": "court_cases_uids",
+    "column_name": "uid",
+    "data_type": "text",
+    "is_nullable": "NO",
     "column_default": null
   },
   {
