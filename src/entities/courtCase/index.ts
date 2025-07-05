@@ -90,12 +90,25 @@ export function useAddCourtCase() {
       const {
         unit_ids = [],
         attachment_ids = [],
+        plaintiff_person_ids = [],
+        plaintiff_contractor_ids = [],
+        defendant_person_ids = [],
+        defendant_contractor_ids = [],
         ...rest
       } = payload as unknown as {
         unit_ids?: number[] | string[];
         attachment_ids?: number[] | string[];
+        plaintiff_person_ids?: number[] | string[];
+        plaintiff_contractor_ids?: number[] | string[];
+        defendant_person_ids?: number[] | string[];
+        defendant_contractor_ids?: number[] | string[];
         [k: string]: any;
       };
+
+      const personPlIds = (plaintiff_person_ids as (number | string)[]).map(Number);
+      const contrPlIds = (plaintiff_contractor_ids as (number | string)[]).map(Number);
+      const personDefIds = (defendant_person_ids as (number | string)[]).map(Number);
+      const contrDefIds = (defendant_contractor_ids as (number | string)[]).map(Number);
 
       const { data: inserted, error } = await supabase
         .from(CASES_TABLE)
@@ -127,7 +140,51 @@ export function useAddCourtCase() {
         if (attErr) throw attErr;
       }
 
-      return { ...inserted, unit_ids, attachment_ids } as CourtCase;
+      const partyRows: any[] = [];
+      personPlIds.forEach((pid) =>
+        partyRows.push({
+          case_id: caseId,
+          role: 'plaintiff',
+          person_id: pid,
+          contractor_id: null,
+          project_id: rest.project_id,
+        }),
+      );
+      contrPlIds.forEach((cid) =>
+        partyRows.push({
+          case_id: caseId,
+          role: 'plaintiff',
+          contractor_id: cid,
+          person_id: null,
+          project_id: rest.project_id,
+        }),
+      );
+      personDefIds.forEach((pid) =>
+        partyRows.push({
+          case_id: caseId,
+          role: 'defendant',
+          person_id: pid,
+          contractor_id: null,
+          project_id: rest.project_id,
+        }),
+      );
+      contrDefIds.forEach((cid) =>
+        partyRows.push({
+          case_id: caseId,
+          role: 'defendant',
+          contractor_id: cid,
+          person_id: null,
+          project_id: rest.project_id,
+        }),
+      );
+      if (partyRows.length) {
+        const { error: partiesErr } = await supabase
+          .from(CASE_PARTIES_TABLE)
+          .insert(partyRows);
+        if (partiesErr) throw partiesErr;
+      }
+
+      return { ...inserted, unit_ids, attachment_ids, parties: partyRows } as CourtCase;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: [CASES_TABLE] }),
   });
@@ -140,10 +197,12 @@ export function useUpdateCourtCase() {
       const {
         unit_ids,
         attachment_ids,
+        parties,
         ...rest
       } = updates as unknown as {
         unit_ids?: number[];
         attachment_ids?: number[];
+        parties?: any[];
         [k: string]: any;
       };
 
@@ -180,6 +239,22 @@ export function useUpdateCourtCase() {
         }
       }
 
+      if (Array.isArray(parties)) {
+        await supabase.from(CASE_PARTIES_TABLE).delete().eq('case_id', id);
+        if (parties.length) {
+          const rows = parties.map((p: any) => ({
+            case_id: id,
+            role: p.role,
+            person_id: p.person_id ?? null,
+            contractor_id: p.contractor_id ?? null,
+            project_id: p.project_id,
+          }));
+          const { error: partiesErr } = await supabase
+            .from(CASE_PARTIES_TABLE)
+            .insert(rows);
+          if (partiesErr) throw partiesErr;
+        }
+      }
 
       const { data } = await supabase
         .from(CASES_TABLE)
