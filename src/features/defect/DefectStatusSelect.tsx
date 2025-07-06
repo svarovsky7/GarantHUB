@@ -1,5 +1,5 @@
 import React from 'react';
-import { Select, Tag, Modal } from 'antd';
+import { Select, Tag } from 'antd';
 import { useDefectStatuses } from '@/entities/defectStatus';
 import { useUpdateDefectStatus } from '@/entities/defect';
 
@@ -8,8 +8,6 @@ interface Props {
   statusId: number | null;
   statusName?: string | null;
   statusColor?: string | null;
-  /** Признак, что дефект содержит заблокированные объекты */
-  locked?: boolean;
 }
 
 /** Выпадающий список для смены статуса дефекта в таблице */
@@ -18,7 +16,6 @@ export default function DefectStatusSelect({
   statusId,
   statusName,
   statusColor,
-  locked,
 }: Props) {
   const { data: statuses = [], isLoading } = useDefectStatuses();
   const update = useUpdateDefectStatus();
@@ -47,14 +44,6 @@ export default function DefectStatusSelect({
   );
 
   const handleChange = (value: number) => {
-    if (locked) {
-      Modal.warning({
-        title: 'Объект заблокирован',
-        content: 'Работы по устранению замечаний запрещено выполнять.',
-      });
-      setEditing(false);
-      return;
-    }
     (update as any).mutate({ id: defectId, statusId: value });
     setEditing(false);
   };
@@ -63,16 +52,7 @@ export default function DefectStatusSelect({
     return (
       <Tag
         color={current?.color}
-        onClick={() => {
-          if (locked) {
-            Modal.warning({
-              title: 'Объект заблокирован',
-              content: 'Работы по устранению замечаний запрещено выполнять.',
-            });
-          } else {
-            setEditing(true);
-          }
-        }}
+        onClick={() => setEditing(true)}
         style={{ cursor: 'pointer' }}
       >
         {current?.name ?? '—'}
