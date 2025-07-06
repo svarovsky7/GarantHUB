@@ -219,14 +219,15 @@ export default function DefectsPage() {
     const unitMap = new Map(units.map((u) => [u.id, u.name]));
     const projectMap = new Map(projects.map((p) => [p.id, p.name]));
 
-    return {
-      ids: mapNumOptions(filtered('id').map((d) => d.id)),
-      claimIds: mapNumOptions(filtered('claimId').flatMap((d) => d.claimIds)),
-      units: Array.from(new Set(filtered('units').flatMap((d) => d.unitIds)))
+      return {
+        ids: mapNumOptions(filtered('id').map((d) => d.id)),
+      units: Array.from(
+        new Set(filtered('units').flatMap((d) => d.unitIds)),
+      )
         .map((id) => ({ label: unitMap.get(id) ?? String(id), value: id }))
         .sort((a, b) => naturalCompare(a.label, b.label)),
-      buildings: mapStrOptions(
-        filtered('building').flatMap((d) => d.buildingNamesList || []),
+        buildings: mapStrOptions(
+          filtered('building').flatMap((d) => d.buildingNamesList || []),
       ),
       projects: Array.from(
         new Set(filtered('projectId').flatMap((d) => d.projectIds || [])),
@@ -239,7 +240,6 @@ export default function DefectsPage() {
       ),
       fixBy: mapStrOptions(filtered('fixBy').map((d) => d.fixByName)),
       engineers: mapStrOptions(filtered('engineer').map((d) => d.engineerName)),
-      authors: mapStrOptions(filtered('author').map((d) => d.createdByName)),
     };
   }, [filteredData, filters, units, projects]);
   const [viewId, setViewId] = useState<number | null>(null);
