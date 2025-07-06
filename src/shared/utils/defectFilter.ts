@@ -10,6 +10,7 @@ export function filterDefects<T extends {
   unitIds: number[];
   created_at: string | null;
   received_at: string | null;
+  fixed_at: string | null;
   projectIds?: number[];
   type_id: number | null;
   status_id: number | null;
@@ -17,6 +18,8 @@ export function filterDefects<T extends {
   fixByName?: string;
   engineerName?: string | null;
   buildingNamesList?: string[];
+  claimIds: number[];
+  createdByName?: string | null;
 }>(rows: T[], f: DefectFilters): T[] {
   return rows.filter((d) => {
     if (Array.isArray(f.id) && f.id.length > 0 && !f.id.includes(d.id)) {
@@ -58,10 +61,20 @@ export function filterDefects<T extends {
       return false;
     }
     if (
+      Array.isArray(f.claimId) &&
+      f.claimId.length > 0 &&
+      !d.claimIds.some((c) => f.claimId!.includes(c))
+    ) {
+      return false;
+    }
+    if (
       Array.isArray(f.fixBy) &&
       f.fixBy.length > 0 &&
       (!d.fixByName || !f.fixBy.includes(d.fixByName))
     ) {
+      return false;
+    }
+    if (f.author && d.createdByName !== f.author) {
       return false;
     }
     if (f.engineer && d.engineerName !== f.engineer) {
@@ -71,6 +84,20 @@ export function filterDefects<T extends {
       const [from, to] = f.period;
       const rec = dayjs(d.received_at);
       if (!rec.isSameOrAfter(from, 'day') || !rec.isSameOrBefore(to, 'day')) {
+        return false;
+      }
+    }
+    if (f.createdPeriod && f.createdPeriod.length === 2) {
+      const [from, to] = f.createdPeriod;
+      const created = dayjs(d.created_at);
+      if (!created.isSameOrAfter(from, 'day') || !created.isSameOrBefore(to, 'day')) {
+        return false;
+      }
+    }
+    if (f.fixedPeriod && f.fixedPeriod.length === 2) {
+      const [from, to] = f.fixedPeriod;
+      const fixed = dayjs(d.fixed_at);
+      if (!fixed.isSameOrAfter(from, 'day') || !fixed.isSameOrBefore(to, 'day')) {
         return false;
       }
     }
