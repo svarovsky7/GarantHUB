@@ -418,12 +418,16 @@ export default function AddCourtCaseFormAntd({
           )}
         </Form.List>
         <Form.Item label="Связанные претензии">
-          <RelatedClaimsList
-            projectId={projectId}
-            unitIds={unitIdsWatch}
-            value={relatedIdsWatch}
-            onChange={(ids) => form.setFieldValue('related_claim_ids', ids)}
-          />
+          <div style={{ maxWidth: 1040 }}>
+            <RelatedClaimsList
+              projectId={projectId}
+              unitIds={unitIdsWatch}
+              value={relatedIdsWatch}
+              onChange={(ids) =>
+                form.setFieldValue('related_claim_ids', ids)
+              }
+            />
+          </div>
         </Form.Item>
         {/* Row 7 */}
         <Row gutter={16}>
