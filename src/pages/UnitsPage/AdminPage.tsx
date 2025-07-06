@@ -7,7 +7,6 @@ import BrigadesAdmin from "../../widgets/BrigadesAdmin";
 import ClaimStatusesAdmin from "../../widgets/ClaimStatusesAdmin";
 import DefectTypesAdmin from "../../widgets/DefectTypesAdmin";
 import DefectStatusesAdmin from "../../widgets/DefectStatusesAdmin";
-import DefectDeadlinesAdmin from "../../widgets/DefectDeadlinesAdmin";
 import UsersTable from "../../widgets/UsersTable";
 import CourtCaseStatusesAdmin from "../../widgets/CourtCaseStatusesAdmin";
 import LawsuitClaimTypesAdmin from "../../widgets/LawsuitClaimTypesAdmin";
@@ -40,10 +39,6 @@ export default function AdminPage() {
           rowsPerPageOptions={[5, 10, 25, 50, 100]}
         />
 
-        <DefectDeadlinesAdmin
-          pageSize={5}
-          rowsPerPageOptions={[5, 10, 25, 50, 100]}
-        />
 
         <CourtCaseStatusesAdmin
           pageSize={5}

@@ -25,7 +25,6 @@ import {
 import AttachmentEditorTable from '@/shared/ui/AttachmentEditorTable';
 import { useDefectTypes } from '@/entities/defectType';
 import { useDefectStatuses } from '@/entities/defectStatus';
-import { useDefectDeadlines } from '@/entities/defectDeadline';
 import { useBrigades } from '@/entities/brigade';
 import { useContractors } from '@/entities/contractor';
 import type { ColumnsType } from 'antd/es/table';
@@ -134,23 +133,12 @@ const FixByField: React.FC<FixByFieldProps> = React.memo(
 export default function DefectEditableTable({ fields, add, remove, projectId, fileMap = {}, onFilesChange, showFiles = true, defaultReceivedAt }: Props) {
   const { data: defectTypes = [], isPending: loadingTypes } = useDefectTypes();
   const { data: defectStatuses = [], isPending: loadingStatuses } = useDefectStatuses();
-  const { data: deadlines = [] } = useDefectDeadlines();
   const { data: brigades = [] } = useBrigades();
   const { data: contractors = [] } = useContractors();
   const form = Form.useFormInstance();
 
   const [fileModalIdx, setFileModalIdx] = React.useState<number | null>(null);
   const [expandedKeys, setExpandedKeys] = React.useState<React.Key[]>([]);
-
-  const getFixDays = (typeId: number | null | undefined) => {
-    if (!projectId || !typeId) return null;
-    const rec = deadlines.find(
-      (d) => d.project_id === projectId && d.defect_type_id === typeId,
-    );
-    return rec?.fix_days ?? null;
-  };
-
-
   const columns: ColumnsType<any> = useMemo(
     () =>
       [
@@ -282,27 +270,6 @@ export default function DefectEditableTable({ fields, add, remove, projectId, fi
                   +{d}
                 </Tag>
               ))}
-              {(() => {
-                const t = form.getFieldValue(['defects', field.name, 'type_id']);
-                const fd = getFixDays(t);
-                return fd ? (
-                  <Tag
-                    color="green"
-                    onClick={() => {
-                      const rec = form.getFieldValue(['defects', field.name, 'received_at']);
-                      if (rec) {
-                        form.setFieldValue(
-                          ['defects', field.name, 'fixed_at'],
-                          dayjs(rec).add(fd, 'day'),
-                        );
-                      }
-                    }}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    +{fd}
-                  </Tag>
-                ) : null;
-              })()}
             </Space>
           </Space>
         ),
