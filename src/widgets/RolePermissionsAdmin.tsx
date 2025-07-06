@@ -27,7 +27,12 @@ const TABLES = ['defects', 'court_cases', 'letters', 'claims'];
 interface RightRow {
   key: string;
   label: string;
-  field: 'pages' | 'edit_tables' | 'delete_tables' | 'only_assigned_project';
+  field:
+    | 'pages'
+    | 'edit_tables'
+    | 'delete_tables'
+    | 'only_assigned_project'
+    | 'can_lock_units';
   value?: string;
 }
 
@@ -53,15 +58,20 @@ export default function RolePermissionsAdmin() {
     upsert.mutate({ ...current, [field]: Array.from(list) });
   };
 
-  const handleProjectToggle = (role: RoleName, value: boolean) => {
+  const handleBoolToggle = (
+    role: RoleName,
+    field: 'only_assigned_project' | 'can_lock_units',
+    value: boolean,
+  ) => {
     const current = merged.find((m) => m.role_name === role)!;
-    upsert.mutate({ ...current, only_assigned_project: value });
+    upsert.mutate({ ...current, [field]: value });
   };
 
   /** Общие права, не привязанные к разделам */
   const generalRights: RightRow[] = [
     { key: 'only_project', label: 'Только свой проект', field: 'only_assigned_project' },
     { key: 'pretrial', label: 'Досудебные претензии', field: 'pages', value: PRETRIAL_FLAG },
+    { key: 'lock_unit', label: 'Блокировка объектов', field: 'can_lock_units' },
   ];
 
   /** Доступ к разделам приложения */
@@ -100,12 +110,14 @@ export default function RolePermissionsAdmin() {
       dataIndex: role,
       render: (_: unknown, row: RightRow) => {
         const record = merged.find((m) => m.role_name === role)!;
-        if (row.field === 'only_assigned_project') {
+        if (row.field === 'only_assigned_project' || row.field === 'can_lock_units') {
           return (
             <Switch
               size="small"
-              checked={record.only_assigned_project}
-              onChange={(checked) => handleProjectToggle(role, checked)}
+              checked={record[row.field as keyof RolePermission] as boolean}
+              onChange={(checked) =>
+                handleBoolToggle(role, row.field as 'only_assigned_project' | 'can_lock_units', checked)
+              }
             />
           );
         }
