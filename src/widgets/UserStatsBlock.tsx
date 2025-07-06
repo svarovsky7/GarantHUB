@@ -36,10 +36,15 @@ export default function UserStatsBlock({
   const { data: roles = [] } = useRoles();
   const [userIds, setUserIds] = React.useState<string[]>([]);
   const [role, setRole] = React.useState<string | null>(null);
-  const [range, setRange] = React.useState<[Dayjs, Dayjs] | null>(null);
-  /** Выбранный предустановленный период. */
-  const [preset, setPreset] = React.useState<'all' | 'month' | 'week' | null>(
-    null,
+  const presetRanges = {
+    all: [dayjs('2020-01-01'), dayjs()],
+    month: [dayjs().subtract(1, 'month'), dayjs()],
+    week: [dayjs().subtract(1, 'week'), dayjs()],
+  };
+
+  const [preset, setPreset] = React.useState<'all' | 'month' | 'week' | null>('all');
+  const [range, setRange] = React.useState<[Dayjs, Dayjs]>(
+    presetRanges.all as [Dayjs, Dayjs],
   );
 
   /**
@@ -48,22 +53,15 @@ export default function UserStatsBlock({
    * month – за последний месяц
    * week  – за последнюю неделю
    */
-  const presets = React.useMemo(
-    () => ({
-      all: [dayjs('2020-01-01'), dayjs()],
-      month: [dayjs().subtract(1, 'month'), dayjs()],
-      week: [dayjs().subtract(1, 'week'), dayjs()],
-    }),
-    [],
-  );
+  const presets = presetRanges;
 
-  const period = React.useMemo(() => {
-    if (!range) return null;
-    return [
+  const period = React.useMemo(
+    () => [
       range[0].startOf('day').toISOString(),
       range[1].endOf('day').toISOString(),
-    ] as [string, string];
-  }, [range]);
+    ] as [string, string],
+    [range],
+  );
 
   const filteredUsers = React.useMemo(() => {
     return users.filter((u) => {
@@ -93,29 +91,62 @@ export default function UserStatsBlock({
 
   React.useEffect(() => {
     setUserIds([]);
-    setRange(null);
-    setPreset(null);
+    setRange(presetRanges.all as [Dayjs, Dayjs]);
+    setPreset('all');
     setRole(null);
   }, [resetSignal]);
 
-  const tableData = React.useMemo(() =>
-    userIds.map((id, idx) => {
-      const stats = data?.[idx];
-      const u = filteredUsers.find((f) => f.id === id);
-      return {
-        key: id,
-        name: u?.name ?? u?.email ?? id,
-        claim: stats?.claimCount ?? 0,
-        claimResp: stats?.claimResponsibleCount ?? 0,
-        defect: stats?.defectCount ?? 0,
-        defectResp: stats?.defectResponsibleCount ?? 0,
-        caseCount: stats?.courtCaseCount ?? 0,
-        caseResp: stats?.courtCaseResponsibleCount ?? 0,
-      };
-    }),
-  [userIds, data, filteredUsers]);
+  const tableData = React.useMemo(
+    () =>
+      userIds.map((id, idx) => {
+        const stats = data?.[idx];
+        const u = filteredUsers.find((f) => f.id === id);
+        return {
+          key: id,
+          name: u?.name ?? u?.email ?? id,
+          claim: stats?.claimCount ?? 0,
+          claimResp: stats?.claimResponsibleCount ?? 0,
+          defect: stats?.defectCount ?? 0,
+          defectResp: stats?.defectResponsibleCount ?? 0,
+          caseCount: stats?.courtCaseCount ?? 0,
+          caseResp: stats?.courtCaseResponsibleCount ?? 0,
+        };
+      }),
+    [userIds, data, filteredUsers],
+  );
+
+  const totals = React.useMemo(
+    () =>
+      tableData.reduce(
+        (acc, row) => {
+          acc.claim += row.claim;
+          acc.claimResp += row.claimResp;
+          acc.defect += row.defect;
+          acc.defectResp += row.defectResp;
+          acc.caseCount += row.caseCount;
+          acc.caseResp += row.caseResp;
+          return acc;
+        },
+        {
+          claim: 0,
+          claimResp: 0,
+          defect: 0,
+          defectResp: 0,
+          caseCount: 0,
+          caseResp: 0,
+        },
+      ),
+    [tableData],
+  );
 
   const columns: ColumnsType<(typeof tableData)[number]> = [
+    {
+      title: '№',
+      dataIndex: 'index',
+      width: 60,
+      align: 'right',
+      render: (_, __, i) => i + 1,
+    },
     {
       title: 'Пользователь',
       dataIndex: 'name',
@@ -126,42 +157,76 @@ export default function UserStatsBlock({
       dataIndex: 'claim',
       align: 'right',
       sorter: (a, b) => a.claim - b.claim,
+      render: (v: number) =>
+        v
+          ? `${v} (${totals.claim ? Math.round((v / totals.claim) * 100) : 0}%)`
+          : '—',
     },
     {
       title: 'Претензий за ним',
       dataIndex: 'claimResp',
       align: 'right',
       sorter: (a, b) => a.claimResp - b.claimResp,
+      render: (v: number) =>
+        v
+          ? `${v} (${
+              totals.claimResp ? Math.round((v / totals.claimResp) * 100) : 0
+            }%)`
+          : '—',
     },
     {
       title: 'Создано дефектов',
       dataIndex: 'defect',
       align: 'right',
       sorter: (a, b) => a.defect - b.defect,
+      render: (v: number) =>
+        v
+          ? `${v} (${
+              totals.defect ? Math.round((v / totals.defect) * 100) : 0
+            }%)`
+          : '—',
     },
     {
       title: 'Дефектов за ним',
       dataIndex: 'defectResp',
       align: 'right',
       sorter: (a, b) => a.defectResp - b.defectResp,
+      render: (v: number) =>
+        v
+          ? `${v} (${
+              totals.defectResp ? Math.round((v / totals.defectResp) * 100) : 0
+            }%)`
+          : '—',
     },
     {
       title: 'Создано дел',
       dataIndex: 'caseCount',
       align: 'right',
       sorter: (a, b) => a.caseCount - b.caseCount,
+      render: (v: number) =>
+        v
+          ? `${v} (${
+              totals.caseCount ? Math.round((v / totals.caseCount) * 100) : 0
+            }%)`
+          : '—',
     },
     {
       title: 'Дел за ним',
       dataIndex: 'caseResp',
       align: 'right',
       sorter: (a, b) => a.caseResp - b.caseResp,
+      render: (v: number) =>
+        v
+          ? `${v} (${
+              totals.caseResp ? Math.round((v / totals.caseResp) * 100) : 0
+            }%)`
+          : '—',
     },
   ];
 
   return (
     <ConfigProvider locale={ruRU}>
-      <Card title="Статистика пользователя" style={{ width: 1024 }}>
+      <Card title="Статистика пользователя" style={{ width: 1600 }}>
         <Space direction="vertical" size="middle" style={{ width: '100%' }}>
           <Select
             allowClear
@@ -191,17 +256,17 @@ export default function UserStatsBlock({
             ]}
             onChange={(val) => {
               setPreset(val as 'all' | 'month' | 'week');
-              setRange(presets[val as 'all' | 'month' | 'week'] as [Dayjs, Dayjs]);
+              setRange(presetRanges[val as 'all' | 'month' | 'week'] as [Dayjs, Dayjs]);
             }}
             value={preset ?? undefined}
             style={{ width: '100%' }}
           />
           <RangePicker
-            style={{ width: '100%' }}
-            value={range ?? undefined}
+            style={{ width: 260 }}
+            value={range}
             onChange={(v) => {
               setPreset(null);
-              setRange(v as [Dayjs, Dayjs] | null);
+              setRange(v as [Dayjs, Dayjs]);
             }}
             format="DD.MM.YYYY"
           />
@@ -214,6 +279,30 @@ export default function UserStatsBlock({
               dataSource={tableData}
               pagination={false}
               size="small"
+              summary={() => (
+                <Table.Summary.Row>
+                  <Table.Summary.Cell index={0} />
+                  <Table.Summary.Cell index={1}>Итого</Table.Summary.Cell>
+                  <Table.Summary.Cell index={2} align="right">
+                    {totals.claim || '—'}
+                  </Table.Summary.Cell>
+                  <Table.Summary.Cell index={3} align="right">
+                    {totals.claimResp || '—'}
+                  </Table.Summary.Cell>
+                  <Table.Summary.Cell index={4} align="right">
+                    {totals.defect || '—'}
+                  </Table.Summary.Cell>
+                  <Table.Summary.Cell index={5} align="right">
+                    {totals.defectResp || '—'}
+                  </Table.Summary.Cell>
+                  <Table.Summary.Cell index={6} align="right">
+                    {totals.caseCount || '—'}
+                  </Table.Summary.Cell>
+                  <Table.Summary.Cell index={7} align="right">
+                    {totals.caseResp || '—'}
+                  </Table.Summary.Cell>
+                </Table.Summary.Row>
+              )}
             />
           ) : null}
         </Space>
