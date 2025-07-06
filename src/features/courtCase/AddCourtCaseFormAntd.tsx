@@ -6,6 +6,7 @@ import {
   Input,
   DatePicker,
   Select,
+  Switch,
   Button,
   Space,
   AutoComplete,
@@ -67,12 +68,7 @@ export default function AddCourtCaseFormAntd({
   const buildingDebounced = useDebounce(buildingWatch);
   const unitIdsWatch: number[] = Form.useWatch("unit_ids", form) || [];
   const [relatedIds, setRelatedIds] = React.useState<number[]>([]);
-  useEffect(() => {
-    setRelatedIds(form.getFieldValue('related_claim_ids') || []);
-  }, [form]);
-  useEffect(() => {
-    form.setFieldValue('related_claim_ids', relatedIds);
-  }, [relatedIds, form]);
+  const [preTrialOnly, setPreTrialOnly] = React.useState(true);
   const profileId = useAuthStore((s) => s.profile?.id);
   const prevProjectIdRef = useRef<number | null>(null);
 
@@ -231,10 +227,9 @@ export default function AddCourtCaseFormAntd({
         );
       }
 
-      const linked: number[] = values.related_claim_ids || [];
-      if (linked.length) {
+      if (relatedIds.length) {
         await addClaimLinksMutation.mutateAsync(
-          linked.map((id: number) => ({ case_id: newCase.id, claim_id: id })),
+          relatedIds.map((id) => ({ case_id: newCase.id, claim_id: id })),
         );
       }
 
@@ -429,12 +424,21 @@ export default function AddCourtCaseFormAntd({
           )}
         </Form.List>
         <Form.Item label="Связанные претензии">
+          <div style={{ marginBottom: 8 }}>
+            <Switch
+              size="small"
+              checked={preTrialOnly}
+              onChange={setPreTrialOnly}
+            />
+            <span style={{ marginLeft: 8 }}>только досудебные претензии</span>
+          </div>
           <div style={{ maxWidth: 1040 }}>
             <RelatedClaimsList
               projectId={projectId}
               unitIds={unitIdsWatch}
               value={relatedIds}
               onChange={setRelatedIds}
+              preTrialOnly={preTrialOnly}
             />
           </div>
         </Form.Item>

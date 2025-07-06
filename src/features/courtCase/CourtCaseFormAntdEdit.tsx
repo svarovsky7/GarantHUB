@@ -10,6 +10,7 @@ import {
   Button,
   Skeleton,
   AutoComplete,
+  Switch,
 } from 'antd';
 import { useVisibleProjects } from '@/entities/project';
 import { useUnitsByProject } from '@/entities/unit';
@@ -62,6 +63,7 @@ export default function CourtCaseFormAntdEdit({
   const addLinks = useAddCaseClaimLinks();
   const deleteLink = useDeleteCaseClaimLink();
   const [relatedIds, setRelatedIds] = React.useState<number[]>([]);
+  const [preTrialOnly, setPreTrialOnly] = React.useState(true);
 
   useEffect(() => {
     setRelatedIds(links.map((l) => l.claim_id));
@@ -323,12 +325,21 @@ export default function CourtCaseFormAntdEdit({
         <CaseClaimsEditorTable caseId={Number(caseId)} />
       </div>
       <Form.Item label="Связанные претензии">
+        <div style={{ marginBottom: 8 }}>
+          <Switch
+            size="small"
+            checked={preTrialOnly}
+            onChange={setPreTrialOnly}
+          />
+          <span style={{ marginLeft: 8 }}>только досудебные претензии</span>
+        </div>
         <div style={{ maxWidth: 1040 }}>
           <RelatedClaimsList
             projectId={projectId ?? null}
             unitIds={unitIdsWatch}
             value={relatedIds}
             onChange={handleRelatedChange}
+            preTrialOnly={preTrialOnly}
           />
         </div>
       </Form.Item>
