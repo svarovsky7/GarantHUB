@@ -18,21 +18,6 @@ body {
   gap: 16px;
 }
 
-.defects-filter-grid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(220px, 1fr));
-  grid-auto-flow: column;
-  gap: 16px;
-}
-
-.defects-filter-grid .MuiTextField-root,
-.defects-filter-grid .MuiFormControl-root,
-.defects-filter-grid .ant-input,
-.defects-filter-grid .ant-select,
-.defects-filter-grid button {
-  width: 100%;
-}
-
 .filter-grid .MuiTextField-root,
 .filter-grid .MuiFormControl-root,
 .filter-grid .ant-input,
