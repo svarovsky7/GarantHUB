@@ -76,6 +76,7 @@
 
 ## defects
 - `defects_pkey` - `UNIQUE id`
+- `idx_defects_engineer` - `engineer_id`
 
 ## lawsuit_claim_types
 - `lawsuit_claim_types_pkey` - `UNIQUE id`

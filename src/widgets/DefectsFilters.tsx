@@ -14,6 +14,7 @@ interface Options {
   types: { label: string; value: number }[];
   statuses: { label: string; value: number }[];
   fixBy: { label: string; value: string }[];
+  engineers: { label: string; value: string }[];
   buildings: { label: string; value: string }[];
 }
 
@@ -98,6 +99,9 @@ export default function DefectsFilters({
       </Form.Item>
       <Form.Item name="fixBy" label="Кем устраняется">
         <Select mode="multiple" allowClear options={options.fixBy} showSearch optionFilterProp="label" />
+      </Form.Item>
+      <Form.Item name="engineer" label="Закрепленный инженер">
+        <Select allowClear options={options.engineers} showSearch optionFilterProp="label" />
       </Form.Item>
       <Form.Item name="hideClosed" label="Скрыть закрытые" valuePropName="checked">
         <Switch />
