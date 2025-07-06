@@ -67,10 +67,6 @@
 - `defect_attachments_pkey` - `UNIQUE defect_id, attachment_id`
 - `idx_defect_attachments_file` - `attachment_id`
 
-## defect_deadlines
-- `defect_deadlines_pkey` - `UNIQUE id`
-- `defect_deadlines_project_id_ticket_type_id_key` - `UNIQUE project_id, defect_type_id`
-
 ## defect_types
 - `ticket_types_pkey` - `UNIQUE id`
 
