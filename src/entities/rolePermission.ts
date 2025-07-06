@@ -5,7 +5,7 @@ import { DEFAULT_ROLE_PERMISSIONS } from '@/shared/types/rolePermission';
 
 const TABLE = 'role_permissions';
 const FIELDS =
-  'role_name, pages, edit_tables, delete_tables, only_assigned_project, can_lock_units';
+  'role_name, pages, edit_tables, delete_tables, only_assigned_project';
 
 /** Получить настройки ролей */
 export const useRolePermissions = () =>

@@ -18,8 +18,7 @@ const SELECT = `
   id, name, building, floor,
   project_id,
   project:projects ( id, name ),
-  person_id,
-  locked
+  person_id
 `;
 
 // sanitize теперь включает person_id!
@@ -279,37 +278,3 @@ export const useRenameBuilding = () => {
 };
 
 /** Удалить все квартиры в секции корпуса */
-
-export const useLockedUnitIds = () =>
-    useQuery<number[]>({
-        queryKey: ['locked-units'],
-        queryFn: async () => {
-            const { data, error } = await supabase
-                .from('units')
-                .select('id')
-                .eq('locked', true);
-            if (error) throw error;
-            return (data ?? []).map((r: any) => r.id as number);
-        },
-        staleTime: 5 * 60_000,
-    });
-
-export const useSetUnitLock = () => {
-    const qc = useQueryClient();
-    const notify = useNotify();
-    return useMutation<void, Error, { id: number; locked: boolean }>({
-        mutationFn: async ({ id, locked }) => {
-            const { error } = await supabase
-                .from('units')
-                .update({ locked })
-                .eq('id', id);
-            if (error) throw error;
-        },
-        onSuccess: (_d, vars) => {
-            qc.invalidateQueries({ queryKey: ['units'] });
-            qc.invalidateQueries({ queryKey: ['locked-units'] });
-            notify.success(vars.locked ? 'Объект заблокирован' : 'Блокировка снята');
-        },
-        onError: (e) => notify.error(e.message),
-    });
-};

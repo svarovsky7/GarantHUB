@@ -19,7 +19,7 @@ import {
 
 import ruRU from "antd/locale/ru_RU";
 import { useDefects, useDeleteDefect } from "@/entities/defect";
-import { useUnitsByIds, useLockedUnitIds } from "@/entities/unit";
+import { useUnitsByIds } from "@/entities/unit";
 import { useVisibleProjects } from "@/entities/project";
 import { useBrigades } from "@/entities/brigade";
 import { useContractors } from "@/entities/contractor";
@@ -76,7 +76,6 @@ export default function DefectsPage() {
     [claims, defectUnitIds],
   );
   const { data: units = [] } = useUnitsByIds(unitIds);
-  const { data: lockedUnitIds = [] } = useLockedUnitIds();
   const { data: projects = [] } = useVisibleProjects();
   const { data: brigades = [] } = useBrigades();
   const { data: contractors = [] } = useContractors();
@@ -616,7 +615,6 @@ const LS_COLUMN_WIDTHS_KEY = "defectsColumnWidths";
           loading={isPending}
           onView={setViewId}
           columns={columns}
-          lockedUnitIds={lockedUnitIds}
         />
         <React.Suspense fallback={null}>
           <TableColumnsDrawer
