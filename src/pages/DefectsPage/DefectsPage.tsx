@@ -8,6 +8,7 @@ import {
   Tooltip,
   Popconfirm,
   message,
+  Modal,
 } from "antd";
 import {
   SettingOutlined,
@@ -358,6 +359,7 @@ const LS_COLUMN_WIDTHS_KEY = "defectsColumnWidths";
             statusId={row.status_id}
             statusName={row.defectStatusName}
             statusColor={row.defectStatusColor}
+            locked={row.unit_id != null && lockedUnitIds.includes(row.unit_id)}
           />
         ),
       },
@@ -451,7 +453,20 @@ const LS_COLUMN_WIDTHS_KEY = "defectsColumnWidths";
                   icon={
                     <CheckOutlined style={{ color: "#52c41a", fontSize: 16 }} />
                   }
-                  onClick={() => setFixId(row.id)}
+                  onClick={() => {
+                    if (
+                      row.unit_id != null &&
+                      lockedUnitIds.includes(row.unit_id)
+                    ) {
+                      Modal.warning({
+                        title: "Объект заблокирован",
+                        content:
+                          "Работы по устранению замечаний запрещено выполнять.",
+                      });
+                      return;
+                    }
+                    setFixId(row.id);
+                  }}
                 />
               </Tooltip>
             )}
