@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import {
   Form,
   Row,
@@ -66,8 +66,13 @@ export default function AddCourtCaseFormAntd({
   const buildingWatch = Form.useWatch("building", form) ?? null;
   const buildingDebounced = useDebounce(buildingWatch);
   const unitIdsWatch: number[] = Form.useWatch("unit_ids", form) || [];
-  const relatedIdsWatch: number[] =
-    Form.useWatch("related_claim_ids", form) || [];
+  const [relatedIds, setRelatedIds] = React.useState<number[]>([]);
+  useEffect(() => {
+    setRelatedIds(form.getFieldValue('related_claim_ids') || []);
+  }, [form]);
+  useEffect(() => {
+    form.setFieldValue('related_claim_ids', relatedIds);
+  }, [relatedIds, form]);
   const profileId = useAuthStore((s) => s.profile?.id);
   const prevProjectIdRef = useRef<number | null>(null);
 
@@ -234,6 +239,7 @@ export default function AddCourtCaseFormAntd({
       }
 
       form.resetFields();
+      setRelatedIds([]);
       resetCaseFiles();
       notify.success("Дело успешно добавлено!");
       onCreated?.();
@@ -427,8 +433,8 @@ export default function AddCourtCaseFormAntd({
             <RelatedClaimsList
               projectId={projectId}
               unitIds={unitIdsWatch}
-              value={relatedIdsWatch}
-              onChange={(ids) => form.setFieldValue("related_claim_ids", ids)}
+              value={relatedIds}
+              onChange={setRelatedIds}
             />
           </div>
         </Form.Item>
