@@ -1,6 +1,6 @@
 import React from 'react';
 import dayjs from 'dayjs';
-import { Table, Switch, Space, Typography, Button } from 'antd';
+import { Table, Typography, Button } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { DownOutlined, EyeOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
@@ -51,7 +51,8 @@ export default function RelatedClaimsList({
         .select(
           `id, claim_no, claimed_on, claim_status_id, statuses(name), claim_units(unit_id), claim_defects(defect_id)`
         )
-        .eq('project_id', projectId as number);
+        .eq('project_id', projectId as number)
+        .eq('pre_trial_claim', true);
       if (error) throw error;
       return (data ?? []).map((r: any) => ({
         id: r.id,
@@ -64,15 +65,9 @@ export default function RelatedClaimsList({
     },
   });
 
-  const [onlyObject, setOnlyObject] = React.useState(false);
   const [viewId, setViewId] = React.useState<number | null>(null);
 
-  const filtered = React.useMemo(() => {
-    if (!onlyObject) return claims;
-    return claims.filter((c) =>
-      c.unit_ids.some((u) => unitIds.includes(u))
-    );
-  }, [claims, onlyObject, unitIds]);
+  const filtered = React.useMemo(() => claims, [claims]);
 
   const columns: ColumnsType<ClaimRow> = [
     { title: '№ претензии', dataIndex: 'claim_no', width: 120 },
@@ -105,10 +100,6 @@ export default function RelatedClaimsList({
 
   return (
     <>
-      <Space style={{ marginBottom: 8 }} align="center">
-        <Typography.Text>Только выбранный объект</Typography.Text>
-        <Switch checked={onlyObject} onChange={setOnlyObject} />
-      </Space>
       <Table<ClaimRow>
         rowKey="id"
         columns={columns}
