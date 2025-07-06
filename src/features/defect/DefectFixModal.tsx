@@ -6,6 +6,7 @@ import AttachmentEditorTable from "@/shared/ui/AttachmentEditorTable";
 import { useBrigades } from "@/entities/brigade";
 import { useContractors } from "@/entities/contractor";
 import { useFixDefect, useDefect, signedUrl } from "@/entities/defect";
+import { useLockedUnitIds } from "@/entities/unit";
 import { useUsers } from "@/entities/user";
 import { useNotify } from "@/shared/hooks/useNotify";
 import type {
@@ -26,6 +27,7 @@ export default function DefectFixModal({ defectId, open, onClose }: Props) {
   const { data: contractors = [] } = useContractors();
   const { data: users = [] } = useUsers();
   const { data: defect } = useDefect(defectId ?? undefined);
+  const { data: lockedUnitIds = [] } = useLockedUnitIds();
   const fix = useFixDefect();
   const notify = useNotify();
 
@@ -83,6 +85,17 @@ export default function DefectFixModal({ defectId, open, onClose }: Props) {
    */
   const handleOk = async () => {
     if (!defectId) return;
+    if (
+      defect &&
+      defect.unit_id != null &&
+      lockedUnitIds.includes(defect.unit_id)
+    ) {
+      Modal.warning({
+        title: "Объект заблокирован",
+        content: "Работы по устранению замечаний запрещено выполнять.",
+      });
+      return;
+    }
     if (!fixBy.brigade_id && !fixBy.contractor_id) {
       notify.error("Укажите исполнителя");
       return;
@@ -175,10 +188,20 @@ export default function DefectFixModal({ defectId, open, onClose }: Props) {
               mime: f.mime_type,
               description: f.description,
             }))}
-            newFiles={files.map((f) => ({ file: f.file, mime: f.file.type, description: f.description }))}
+            newFiles={files.map((f) => ({
+              file: f.file,
+              mime: f.file.type,
+              description: f.description,
+            }))}
             onRemoveRemote={removeRemote}
             onRemoveNew={removeFile}
-            onDescNew={(idx, d) => setFiles(files.map((ff, i) => (i === idx ? { ...ff, description: d } : ff)))}
+            onDescNew={(idx, d) =>
+              setFiles(
+                files.map((ff, i) =>
+                  i === idx ? { ...ff, description: d } : ff,
+                ),
+              )
+            }
             showDetails
             getSignedUrl={(p, n) => signedUrl(p, n)}
           />
