@@ -1,6 +1,15 @@
-import React, { useState, useMemo } from 'react';
-import { ConfigProvider, Alert, Card, Button, Tooltip, Popconfirm, message, Space, Typography } from 'antd';
-import ruRU from 'antd/locale/ru_RU';
+import React, { useState, useMemo } from "react";
+import {
+  ConfigProvider,
+  Alert,
+  Button,
+  Tooltip,
+  Popconfirm,
+  message,
+  Space,
+  Typography,
+} from "antd";
+import ruRU from "antd/locale/ru_RU";
 import {
   SettingOutlined,
   EyeOutlined,
@@ -9,42 +18,42 @@ import {
   LinkOutlined,
   FileTextOutlined,
   BranchesOutlined,
-} from '@ant-design/icons';
-import ExportClaimsButton from '@/features/claim/ExportClaimsButton';
-import { useSnackbar } from 'notistack';
+} from "@ant-design/icons";
+import ExportClaimsButton from "@/features/claim/ExportClaimsButton";
+import { useSnackbar } from "notistack";
 import {
   useClaims,
   useClaimsAll,
   useDeleteClaim,
   useLinkClaims,
   useUnlinkClaim,
-} from '@/entities/claim';
-import { useUsers } from '@/entities/user';
-import { useUnitsByIds, useLockedUnitIds } from '@/entities/unit';
-import { useRolePermission } from '@/entities/rolePermission';
-import { useAuthStore } from '@/shared/store/authStore';
-import type { RoleName } from '@/shared/types/rolePermission';
-import formatUnitShortName from '@/shared/utils/formatUnitShortName';
-import ClaimsTable from '@/widgets/ClaimsTable';
-import ClaimsFilters from '@/widgets/ClaimsFilters';
-import ClaimFormAntd from '@/features/claim/ClaimFormAntd';
-import ClaimViewModal from '@/features/claim/ClaimViewModal';
+} from "@/entities/claim";
+import { useUsers } from "@/entities/user";
+import { useUnitsByIds, useLockedUnitIds } from "@/entities/unit";
+import { useRolePermission } from "@/entities/rolePermission";
+import { useAuthStore } from "@/shared/store/authStore";
+import type { RoleName } from "@/shared/types/rolePermission";
+import formatUnitShortName from "@/shared/utils/formatUnitShortName";
+import ClaimsTable from "@/widgets/ClaimsTable";
+import ClaimsFilters from "@/widgets/ClaimsFilters";
+import ClaimFormAntd from "@/features/claim/ClaimFormAntd";
+import ClaimViewModal from "@/features/claim/ClaimViewModal";
 import ClaimStatusSelect from "@/features/claim/ClaimStatusSelect";
 import dayjs from "dayjs";
-import LinkClaimsDialog from '@/features/claim/LinkClaimsDialog';
+import LinkClaimsDialog from "@/features/claim/LinkClaimsDialog";
 const TableColumnsDrawer = React.lazy(
-  () => import('@/widgets/TableColumnsDrawer'),
+  () => import("@/widgets/TableColumnsDrawer"),
 );
-import type { TableColumnSetting } from '@/shared/types/tableColumnSetting';
-import type { ColumnsType } from 'antd/es/table';
-import { useSearchParams } from 'react-router-dom';
-import type { ClaimWithNames } from '@/shared/types/claimWithNames';
-import { filterClaims } from '@/shared/utils/claimFilter';
-import { naturalCompare } from '@/shared/utils/naturalSort';
-import type { ClaimFilters } from '@/shared/types/claimFilters';
+import type { TableColumnSetting } from "@/shared/types/tableColumnSetting";
+import type { ColumnsType } from "antd/es/table";
+import { useSearchParams } from "react-router-dom";
+import type { ClaimWithNames } from "@/shared/types/claimWithNames";
+import { filterClaims } from "@/shared/utils/claimFilter";
+import { naturalCompare } from "@/shared/utils/naturalSort";
+import type { ClaimFilters } from "@/shared/types/claimFilters";
 
-const LS_COLUMNS_KEY = 'claimsColumns';
-const LS_COLUMN_WIDTHS_KEY = 'claimsColumnWidths';
+const LS_COLUMNS_KEY = "claimsColumns";
+const LS_COLUMN_WIDTHS_KEY = "claimsColumnWidths";
 
 export default function ClaimsPage() {
   const { enqueueSnackbar } = useSnackbar();
@@ -64,46 +73,43 @@ export default function ClaimsPage() {
   const isLoading = perm?.only_assigned_project ? loadingAssigned : loadingAll;
   const error = errorAssigned || errorAll;
   const deleteClaimMutation = useDeleteClaim();
-  const { data: users = [] } = useUsers();
+  const { data: users = [], isPending: usersLoading } = useUsers();
   const unitIds = useMemo(
     () => Array.from(new Set(claims.flatMap((t) => t.unit_ids))),
     [claims],
   );
-  const { data: units = [] } = useUnitsByIds(unitIds);
+  const { data: units = [], isPending: unitsLoading } = useUnitsByIds(unitIds);
   const { data: lockedUnitIds = [] } = useLockedUnitIds();
+  const filtersLoading = usersLoading || unitsLoading;
   const checkingDefectMap = useMemo(() => new Map<number, boolean>(), []);
   const [searchParams] = useSearchParams();
   const initialValues = {
-    project_id: searchParams.get('project_id')
-      ? Number(searchParams.get('project_id')!)
+    project_id: searchParams.get("project_id")
+      ? Number(searchParams.get("project_id")!)
       : undefined,
-    unit_ids: searchParams.get('unit_id')
-      ? [Number(searchParams.get('unit_id')!)]
+    unit_ids: searchParams.get("unit_id")
+      ? [Number(searchParams.get("unit_id")!)]
       : [],
-    engineer_id: searchParams.get('engineer_id') || undefined,
+    engineer_id: searchParams.get("engineer_id") || undefined,
   };
-  const [filters, setFilters] = useState({});
-  const [showAddForm, setShowAddForm] = useState(
-    searchParams.get('open_form') === '1',
-  );
-  const LS_SHOW_FILTERS = 'claims:showFilters';
-  const [showFilters, setShowFilters] = useState<boolean>(() => {
+  const LS_HIDE_CLOSED = "claimsHideClosed";
+  const [filters, setFilters] = useState<ClaimFilters>(() => {
     try {
-      return JSON.parse(localStorage.getItem(LS_SHOW_FILTERS) || 'true');
+      const saved = localStorage.getItem(LS_HIDE_CLOSED);
+      const hideClosed = saved ? JSON.parse(saved) : false;
+      return hideClosed ? { hideClosed } : {};
     } catch {
-      return true;
+      return {} as ClaimFilters;
     }
   });
+  const [showAddForm, setShowAddForm] = useState(
+    searchParams.get("open_form") === "1",
+  );
   React.useEffect(() => {
-    if (searchParams.get('open_form') === '1') {
+    if (searchParams.get("open_form") === "1") {
       setShowAddForm(true);
     }
   }, [searchParams]);
-  React.useEffect(() => {
-    try {
-      localStorage.setItem(LS_SHOW_FILTERS, JSON.stringify(showFilters));
-    } catch {}
-  }, [showFilters]);
   const [viewId, setViewId] = useState<number | null>(null);
   const [linkFor, setLinkFor] = useState<ClaimWithNames | null>(null);
   const linkClaims = useLinkClaims();
@@ -114,16 +120,16 @@ export default function ClaimsPage() {
     const defaults = Object.keys(base).map((key) => ({
       key,
       title: base[key].title as string,
-      visible: !['createdAt', 'createdByName'].includes(key),
+      visible: !["createdAt", "createdByName"].includes(key),
     }));
     try {
       const saved = localStorage.getItem(LS_COLUMNS_KEY);
       if (saved) {
         let parsed = JSON.parse(saved) as TableColumnSetting[];
         parsed = parsed.map((c) => {
-          if (typeof c.title !== 'string') {
+          if (typeof c.title !== "string") {
             const def = defaults.find((d) => d.key === c.key);
-            return { ...c, title: def?.title ?? '' };
+            return { ...c, title: def?.title ?? "" };
           }
           return c;
         });
@@ -137,13 +143,15 @@ export default function ClaimsPage() {
     return defaults;
   });
 
-  const [columnWidths, setColumnWidths] = useState<Record<string, number>>(() => {
-    try {
-      return JSON.parse(localStorage.getItem(LS_COLUMN_WIDTHS_KEY) || '{}');
-    } catch {
-      return {};
-    }
-  });
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>(
+    () => {
+      try {
+        return JSON.parse(localStorage.getItem(LS_COLUMN_WIDTHS_KEY) || "{}");
+      } catch {
+        return {};
+      }
+    },
+  );
 
   /**
    * Сброс колонок к начальному состоянию
@@ -153,7 +161,7 @@ export default function ClaimsPage() {
     const defaults = Object.keys(base).map((key) => ({
       key,
       title: base[key].title as string,
-      visible: !['createdAt', 'createdByName'].includes(key),
+      visible: !["createdAt", "createdByName"].includes(key),
     }));
     try {
       localStorage.removeItem(LS_COLUMN_WIDTHS_KEY);
@@ -210,9 +218,17 @@ export default function ClaimsPage() {
     () =>
       claims.map((c) => ({
         ...c,
-        unitNames: c.unit_ids.map((id) => unitMap[id]).filter(Boolean).join(', '),
-        unitNumbers: c.unit_ids.map((id) => unitNumberMap[id]).filter(Boolean).join(', '),
-        buildings: Array.from(new Set(c.unit_ids.map((id) => buildingMap[id]).filter(Boolean))).join(', '),
+        unitNames: c.unit_ids
+          .map((id) => unitMap[id])
+          .filter(Boolean)
+          .join(", "),
+        unitNumbers: c.unit_ids
+          .map((id) => unitNumberMap[id])
+          .filter(Boolean)
+          .join(", "),
+        buildings: Array.from(
+          new Set(c.unit_ids.map((id) => buildingMap[id]).filter(Boolean)),
+        ).join(", "),
         responsibleEngineerName: userMap[c.engineer_id] ?? null,
         createdByName: userMap[c.created_by as string] ?? null,
       })),
@@ -228,59 +244,82 @@ export default function ClaimsPage() {
       filterClaims(claimsWithNames, without(key));
 
     const uniq = (values: (string | number | undefined | null)[]) =>
-      Array.from(new Set(values.filter(Boolean) as (string | number)[])).sort(naturalCompare);
+      Array.from(new Set(values.filter(Boolean) as (string | number)[])).sort(
+        naturalCompare,
+      );
     const mapOptions = (vals: (string | number | undefined | null)[]) =>
       uniq(vals).map((v) => ({ label: String(v), value: v }));
 
     return {
-      projects: mapOptions(filtered('project').map((c) => c.projectName)),
+      projects: mapOptions(filtered("project").map((c) => c.projectName)),
       units: mapOptions(
-        filtered('units').flatMap((c) =>
-          c.unitNumbers ? c.unitNumbers.split(',').map((n) => n.trim()) : [],
+        filtered("units").flatMap((c) =>
+          c.unitNumbers ? c.unitNumbers.split(",").map((n) => n.trim()) : [],
         ),
       ),
       buildings: mapOptions(
-        filtered('building').flatMap((c) =>
-          c.buildings ? c.buildings.split(',').map((n) => n.trim()) : [],
+        filtered("building").flatMap((c) =>
+          c.buildings ? c.buildings.split(",").map((n) => n.trim()) : [],
         ),
       ),
-      statuses: mapOptions(filtered('status').map((c) => c.statusName)),
+      statuses: mapOptions(filtered("status").map((c) => c.statusName)),
       responsibleEngineers: mapOptions(
-        filtered('responsible').map((c) => c.responsibleEngineerName),
+        filtered("responsible").map((c) => c.responsibleEngineerName),
       ),
-      ids: mapOptions(filtered('id').map((c) => c.id)),
-      authors: mapOptions(filtered('author').map((c) => c.createdByName)),
+      ids: mapOptions(filtered("id").map((c) => c.id)),
+      authors: mapOptions(filtered("author").map((c) => c.createdByName)),
     };
   }, [claimsWithNames, filters]);
 
   function getBaseColumns() {
     return {
       treeIcon: {
-        title: '',
-        dataIndex: 'treeIcon',
+        title: "",
+        dataIndex: "treeIcon",
         width: 40,
         render: (_: any, record: any) => {
           if (!record.parent_id) {
             return (
               <Tooltip title="Основная претензия">
-                <FileTextOutlined style={{ color: '#1890ff', fontSize: 17 }} />
+                <FileTextOutlined style={{ color: "#1890ff", fontSize: 17 }} />
               </Tooltip>
             );
           }
           return (
             <Tooltip title="Связанная претензия">
-              <BranchesOutlined style={{ color: '#52c41a', fontSize: 16 }} />
+              <BranchesOutlined style={{ color: "#52c41a", fontSize: 16 }} />
             </Tooltip>
           );
         },
       },
-      id: { title: 'ID', dataIndex: 'id', width: 80, sorter: (a: any, b: any) => a.id - b.id },
-      projectName: { title: 'Проект', dataIndex: 'projectName', width: 180, sorter: (a: any, b: any) => a.projectName.localeCompare(b.projectName) },
-      buildings: { title: 'Корпус', dataIndex: 'buildings', width: 120, sorter: (a: any, b: any) => (a.buildings || '').localeCompare(b.buildings || '') },
-      unitNames: { title: 'Объекты', dataIndex: 'unitNames', width: 160, sorter: (a: any, b: any) => a.unitNames.localeCompare(b.unitNames) },
+      id: {
+        title: "ID",
+        dataIndex: "id",
+        width: 80,
+        sorter: (a: any, b: any) => a.id - b.id,
+      },
+      projectName: {
+        title: "Проект",
+        dataIndex: "projectName",
+        width: 180,
+        sorter: (a: any, b: any) => a.projectName.localeCompare(b.projectName),
+      },
+      buildings: {
+        title: "Корпус",
+        dataIndex: "buildings",
+        width: 120,
+        sorter: (a: any, b: any) =>
+          (a.buildings || "").localeCompare(b.buildings || ""),
+      },
+      unitNames: {
+        title: "Объекты",
+        dataIndex: "unitNames",
+        width: 160,
+        sorter: (a: any, b: any) => a.unitNames.localeCompare(b.unitNames),
+      },
       statusId: {
-        title: 'Статус',
-        dataIndex: 'claim_status_id',
+        title: "Статус",
+        dataIndex: "claim_status_id",
         width: 160,
         sorter: (a: any, b: any) => a.statusName.localeCompare(b.statusName),
         render: (_: any, row: any) => (
@@ -289,42 +328,113 @@ export default function ClaimsPage() {
             statusId={row.claim_status_id}
             statusColor={row.statusColor}
             statusName={row.statusName}
-            locked={row.unit_ids?.some((id: number) => lockedUnitIds.includes(id))}
+            locked={row.unit_ids?.some((id: number) =>
+              lockedUnitIds.includes(id),
+            )}
           />
         ),
       },
-      claim_no: { title: '№ претензии', dataIndex: 'claim_no', width: 160, sorter: (a: any, b: any) => a.claim_no.localeCompare(b.claim_no) },
-      claimedOn: { title: 'Дата претензии', dataIndex: 'claimedOn', width: 120, sorter: (a: any, b: any) => (a.claimedOn ? a.claimedOn.valueOf() : 0) - (b.claimedOn ? b.claimedOn.valueOf() : 0), render: (v: any) => fmt(v) },
-      acceptedOn: { title: 'Дата получения Застройщиком', dataIndex: 'acceptedOn', width: 120, sorter: (a: any, b: any) => (a.acceptedOn ? a.acceptedOn.valueOf() : 0) - (b.acceptedOn ? b.acceptedOn.valueOf() : 0), render: (v: any) => fmt(v) },
-      registeredOn: { title: 'Дата регистрации претензии', dataIndex: 'registeredOn', width: 120, sorter: (a: any, b: any) => (a.registeredOn ? a.registeredOn.valueOf() : 0) - (b.registeredOn ? b.registeredOn.valueOf() : 0), render: (v: any) => fmt(v) },
-      resolvedOn: { title: 'Дата устранения', dataIndex: 'resolvedOn', width: 120, sorter: (a: any, b: any) => (a.resolvedOn ? a.resolvedOn.valueOf() : 0) - (b.resolvedOn ? b.resolvedOn.valueOf() : 0), render: (v: any) => fmt(v) },
-      responsibleEngineerName: { title: 'Закрепленный инженер', dataIndex: 'responsibleEngineerName', width: 180, sorter: (a: any, b: any) => (a.responsibleEngineerName || '').localeCompare(b.responsibleEngineerName || '') },
+      claim_no: {
+        title: "№ претензии",
+        dataIndex: "claim_no",
+        width: 160,
+        sorter: (a: any, b: any) => a.claim_no.localeCompare(b.claim_no),
+      },
+      claimedOn: {
+        title: "Дата претензии",
+        dataIndex: "claimedOn",
+        width: 120,
+        sorter: (a: any, b: any) =>
+          (a.claimedOn ? a.claimedOn.valueOf() : 0) -
+          (b.claimedOn ? b.claimedOn.valueOf() : 0),
+        render: (v: any) => fmt(v),
+      },
+      acceptedOn: {
+        title: "Дата получения Застройщиком",
+        dataIndex: "acceptedOn",
+        width: 120,
+        sorter: (a: any, b: any) =>
+          (a.acceptedOn ? a.acceptedOn.valueOf() : 0) -
+          (b.acceptedOn ? b.acceptedOn.valueOf() : 0),
+        render: (v: any) => fmt(v),
+      },
+      registeredOn: {
+        title: "Дата регистрации претензии",
+        dataIndex: "registeredOn",
+        width: 120,
+        sorter: (a: any, b: any) =>
+          (a.registeredOn ? a.registeredOn.valueOf() : 0) -
+          (b.registeredOn ? b.registeredOn.valueOf() : 0),
+        render: (v: any) => fmt(v),
+      },
+      resolvedOn: {
+        title: "Дата устранения",
+        dataIndex: "resolvedOn",
+        width: 120,
+        sorter: (a: any, b: any) =>
+          (a.resolvedOn ? a.resolvedOn.valueOf() : 0) -
+          (b.resolvedOn ? b.resolvedOn.valueOf() : 0),
+        render: (v: any) => fmt(v),
+      },
+      responsibleEngineerName: {
+        title: "Закрепленный инженер",
+        dataIndex: "responsibleEngineerName",
+        width: 180,
+        sorter: (a: any, b: any) =>
+          (a.responsibleEngineerName || "").localeCompare(
+            b.responsibleEngineerName || "",
+          ),
+      },
       createdAt: {
-        title: 'Добавлено',
-        dataIndex: 'createdAt',
+        title: "Добавлено",
+        dataIndex: "createdAt",
         width: 160,
         sorter: (a: any, b: any) =>
           (a.createdAt ? a.createdAt.valueOf() : 0) -
           (b.createdAt ? b.createdAt.valueOf() : 0),
         render: (v: any) => fmtDateTime(v),
       },
-      createdByName: { title: 'Автор', dataIndex: 'createdByName', width: 160, sorter: (a: any, b: any) => (a.createdByName || '').localeCompare(b.createdByName || '') },
+      createdByName: {
+        title: "Автор",
+        dataIndex: "createdByName",
+        width: 160,
+        sorter: (a: any, b: any) =>
+          (a.createdByName || "").localeCompare(b.createdByName || ""),
+      },
       actions: {
-        title: 'Действия',
-        key: 'actions',
+        title: "Действия",
+        key: "actions",
         width: 140,
         render: (_: any, record: ClaimWithNames) => (
           <Space size="middle">
             <Tooltip title="Просмотр">
-              <Button size="small" type="text" icon={<EyeOutlined />} onClick={() => setViewId(record.id)} />
+              <Button
+                size="small"
+                type="text"
+                icon={<EyeOutlined />}
+                onClick={() => setViewId(record.id)}
+              />
             </Tooltip>
-            <Button size="small" type="text" icon={<PlusOutlined />} onClick={() => setLinkFor(record)} />
+            <Button
+              size="small"
+              type="text"
+              icon={<PlusOutlined />}
+              onClick={() => setLinkFor(record)}
+            />
             {record.parent_id && (
               <Tooltip title="Исключить из связи">
                 <Button
                   size="small"
                   type="text"
-                  icon={<LinkOutlined style={{ color: '#c41d7f', textDecoration: 'line-through', fontWeight: 700 }} />}
+                  icon={
+                    <LinkOutlined
+                      style={{
+                        color: "#c41d7f",
+                        textDecoration: "line-through",
+                        fontWeight: 700,
+                      }}
+                    />
+                  }
                   onClick={() => unlinkClaim.mutate(record.id)}
                 />
               </Tooltip>
@@ -335,11 +445,17 @@ export default function ClaimsPage() {
               cancelText="Нет"
               onConfirm={async () => {
                 await deleteClaimMutation.mutateAsync({ id: record.id });
-                message.success('Удалено');
+                message.success("Удалено");
               }}
               disabled={deleteClaimMutation.isPending}
             >
-              <Button size="small" type="text" danger icon={<DeleteOutlined />} loading={deleteClaimMutation.isPending} />
+              <Button
+                size="small"
+                type="text"
+                danger
+                icon={<DeleteOutlined />}
+                loading={deleteClaimMutation.isPending}
+              />
             </Popconfirm>
           </Space>
         ),
@@ -354,13 +470,17 @@ export default function ClaimsPage() {
     });
     return cols;
   }, [columnWidths, deleteClaimMutation.isPending]);
-  const columns: ColumnsType<any> = useMemo(() => columnsState.filter((c) => c.visible).map((c) => baseColumns[c.key]), [columnsState, baseColumns]);
+  const columns: ColumnsType<any> = useMemo(
+    () => columnsState.filter((c) => c.visible).map((c) => baseColumns[c.key]),
+    [columnsState, baseColumns],
+  );
 
   /** Общее количество претензий после учёта прав доступа */
   const total = claimsWithNames.length;
   /** Количество претензий со статусом, содержащим "закры" */
   const closedCount = useMemo(
-    () => claimsWithNames.filter((c) => /закры/i.test(c.statusName ?? '')).length,
+    () =>
+      claimsWithNames.filter((c) => /закры/i.test(c.statusName ?? "")).length,
     [claimsWithNames],
   );
   /** Количество открытых претензий */
@@ -371,17 +491,41 @@ export default function ClaimsPage() {
     [claimsWithNames, filters],
   );
 
+  const applyFilters = (vals: ClaimFilters) => {
+    setFilters(vals);
+    if (Object.prototype.hasOwnProperty.call(vals, "hideClosed")) {
+      try {
+        localStorage.setItem(LS_HIDE_CLOSED, JSON.stringify(vals.hideClosed));
+      } catch {}
+    }
+    const count = filterClaims(claimsWithNames, vals).length;
+    message.success(`Фильтры применены (${count} результатов)`);
+  };
+
+  const resetFilters = () => {
+    setFilters({});
+    try {
+      localStorage.setItem(LS_HIDE_CLOSED, "false");
+    } catch {}
+    message.info("Фильтры сброшены");
+  };
+
   return (
     <ConfigProvider locale={ruRU}>
       <>
-        <Button type="primary" onClick={() => setShowAddForm((p) => !p)} style={{ marginRight: 8 }}>
-          {showAddForm ? 'Скрыть форму' : 'Добавить претензию'}
+        <Button
+          type="primary"
+          onClick={() => setShowAddForm((p) => !p)}
+          style={{ marginRight: 8 }}
+        >
+          {showAddForm ? "Скрыть форму" : "Добавить претензию"}
         </Button>
-        <Button onClick={() => setShowFilters((p) => !p)}>
-          {showFilters ? 'Скрыть фильтры' : 'Показать фильтры'}
-        </Button>
-        <Button icon={<SettingOutlined />} style={{ marginLeft: 8 }} onClick={() => setShowColumnsDrawer(true)} />
-        <span style={{ marginLeft: 8, display: 'inline-block' }}>
+        <Button
+          icon={<SettingOutlined />}
+          style={{ marginLeft: 8 }}
+          onClick={() => setShowColumnsDrawer(true)}
+        />
+        <span style={{ marginLeft: 8, display: "inline-block" }}>
           <ExportClaimsButton claims={claimsWithNames} filters={filters} />
         </span>
         {showAddForm && (
@@ -403,7 +547,7 @@ export default function ClaimsPage() {
               { parentId: String(linkFor!.id), childIds: ids },
               {
                 onSuccess: () => {
-                  message.success('Претензии связаны');
+                  message.success("Претензии связаны");
                   setLinkFor(null);
                 },
                 onError: (e) => message.error(e.message),
@@ -417,7 +561,10 @@ export default function ClaimsPage() {
             columns={columnsState}
             widths={
               Object.fromEntries(
-                Object.keys(baseColumns).map((k) => [k, columnWidths[k] ?? baseColumns[k].width])
+                Object.keys(baseColumns).map((k) => [
+                  k,
+                  columnWidths[k] ?? baseColumns[k].width,
+                ]),
               ) as Record<string, number>
             }
             onWidthsChange={setColumnWidths}
@@ -427,11 +574,15 @@ export default function ClaimsPage() {
           />
         </React.Suspense>
         <div style={{ marginTop: 24 }}>
-          {showFilters && (
-            <Card style={{ marginBottom: 24 }}>
-              <ClaimsFilters options={options} onChange={setFilters} />
-            </Card>
-          )}
+          <div style={{ marginBottom: 24, maxWidth: 1040 }}>
+            <ClaimsFilters
+              options={options}
+              loading={filtersLoading}
+              initialValues={filters}
+              onSubmit={applyFilters}
+              onReset={resetFilters}
+            />
+          </div>
           {error ? (
             <Alert type="error" message={error.message} />
           ) : (
@@ -447,25 +598,29 @@ export default function ClaimsPage() {
             />
           )}
         </div>
-        <Typography.Text style={{ display: 'block', marginTop: 8 }}>
+        <Typography.Text style={{ display: "block", marginTop: 8 }}>
           Всего претензий: {total}, из них закрытых: {closedCount} и не
           закрытых: {openCount}
         </Typography.Text>
-        <Typography.Text style={{ display: 'block', marginTop: 4 }}>
+        <Typography.Text style={{ display: "block", marginTop: 4 }}>
           Готовых претензий к выгрузке: {readyToExport}
         </Typography.Text>
-        <ClaimViewModal open={viewId !== null} claimId={viewId} onClose={() => setViewId(null)} />
+        <ClaimViewModal
+          open={viewId !== null}
+          claimId={viewId}
+          onClose={() => setViewId(null)}
+        />
       </>
     </ConfigProvider>
   );
 }
 
 function fmt(d: any) {
-  return d && dayjs.isDayjs(d) && d.isValid() ? d.format('DD.MM.YYYY') : '—';
+  return d && dayjs.isDayjs(d) && d.isValid() ? d.format("DD.MM.YYYY") : "—";
 }
 
 function fmtDateTime(d: any) {
   return d && dayjs.isDayjs(d) && d.isValid()
-    ? d.format('DD.MM.YYYY HH:mm')
-    : '—';
+    ? d.format("DD.MM.YYYY HH:mm")
+    : "—";
 }
