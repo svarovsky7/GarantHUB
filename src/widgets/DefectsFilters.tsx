@@ -9,12 +9,14 @@ const LS_HIDE_CLOSED_KEY = 'defectsHideClosed';
 
 interface Options {
   ids: { label: string; value: number }[];
+  claimIds: { label: string; value: number }[];
   units: { label: string; value: number }[];
   projects: { label: string; value: number }[];
   types: { label: string; value: number }[];
   statuses: { label: string; value: number }[];
   fixBy: { label: string; value: string }[];
   engineers: { label: string; value: string }[];
+  authors: { label: string; value: string }[];
   buildings: { label: string; value: string }[];
 }
 
@@ -75,42 +77,71 @@ export default function DefectsFilters({
   };
 
   return (
-    <Form form={form} layout="vertical" onValuesChange={handleValuesChange} className="filter-grid">
-      <Form.Item name="id" label="ID дефекта">
-        <Select mode="multiple" allowClear options={options.ids} showSearch optionFilterProp="label" />
-      </Form.Item>
-      <Form.Item name="projectId" label="Проекты">
-        <Select mode="multiple" allowClear options={options.projects} showSearch optionFilterProp="label" />
-      </Form.Item>
-      <Form.Item name="building" label="Корпус">
-        <Select mode="multiple" allowClear options={options.buildings} showSearch optionFilterProp="label" />
-      </Form.Item>
-      <Form.Item name="units" label="Объекты">
-        <Select mode="multiple" allowClear options={options.units} showSearch optionFilterProp="label" />
-      </Form.Item>
-      <Form.Item name="statusId" label="Статус">
-        <Select mode="multiple" allowClear options={options.statuses} showSearch optionFilterProp="label" />
-      </Form.Item>
-      <Form.Item name="typeId" label="Тип">
-        <Select mode="multiple" allowClear options={options.types} showSearch optionFilterProp="label" />
-      </Form.Item>
-      <Form.Item name="period" label="Дата получения">
-        <RangePicker style={{ width: '100%' }} format="DD.MM.YYYY" />
-      </Form.Item>
-      <Form.Item name="fixBy" label="Кем устраняется">
-        <Select mode="multiple" allowClear options={options.fixBy} showSearch optionFilterProp="label" />
-      </Form.Item>
-      <Form.Item name="engineer" label="Закрепленный инженер">
-        <Select allowClear options={options.engineers} showSearch optionFilterProp="label" />
-      </Form.Item>
-      <Form.Item name="hideClosed" label="Скрыть закрытые" valuePropName="checked">
-        <Switch />
-      </Form.Item>
-      <Form.Item>
-        <Button onClick={reset} block>
-          Сброс
-        </Button>
-      </Form.Item>
+    <Form form={form} layout="vertical" onValuesChange={handleValuesChange}>
+      <div className="defects-filter-grid">
+        <div className="defects-filter-col">
+          <Form.Item name="id" label="ID дефекта">
+            <Select mode="multiple" allowClear options={options.ids} showSearch optionFilterProp="label" />
+          </Form.Item>
+          <Form.Item name="claimId" label="ID претензии">
+            <Select mode="multiple" allowClear options={options.claimIds} showSearch optionFilterProp="label" />
+          </Form.Item>
+          <Form.Item name="statusId" label="Статус">
+            <Select mode="multiple" allowClear options={options.statuses} showSearch optionFilterProp="label" />
+          </Form.Item>
+        </div>
+        <div className="defects-filter-col">
+          <Form.Item name="author" label="Автор">
+            <Select allowClear options={options.authors} showSearch optionFilterProp="label" />
+          </Form.Item>
+          <Form.Item name="engineer" label="Закрепленный инженер">
+            <Select allowClear options={options.engineers} showSearch optionFilterProp="label" />
+          </Form.Item>
+          <Form.Item name="fixBy" label="Кем устраняется">
+            <Select mode="multiple" allowClear options={options.fixBy} showSearch optionFilterProp="label" />
+          </Form.Item>
+        </div>
+        <div className="defects-filter-col">
+          <Form.Item name="createdPeriod" label="Добавлено">
+            <RangePicker style={{ width: '100%' }} format="DD.MM.YYYY" />
+          </Form.Item>
+          <Form.Item name="period" label="Дата получения">
+            <RangePicker style={{ width: '100%' }} format="DD.MM.YYYY" />
+          </Form.Item>
+          <Form.Item name="fixedPeriod" label="Дата устранения">
+            <RangePicker style={{ width: '100%' }} format="DD.MM.YYYY" />
+          </Form.Item>
+        </div>
+        <div className="defects-filter-col">
+          <Form.Item name="projectId" label="Проект">
+            <Select mode="multiple" allowClear options={options.projects} showSearch optionFilterProp="label" />
+          </Form.Item>
+          <Form.Item name="building" label="Корпус">
+            <Select mode="multiple" allowClear options={options.buildings} showSearch optionFilterProp="label" />
+          </Form.Item>
+          <Form.Item name="units" label="Объекты">
+            <Select mode="multiple" allowClear options={options.units} showSearch optionFilterProp="label" />
+          </Form.Item>
+        </div>
+        <div className="defects-filter-col">
+          <Form.Item name="typeId" label="Тип">
+            <Select mode="multiple" allowClear options={options.types} showSearch optionFilterProp="label" />
+          </Form.Item>
+          <Form.Item name="description" label="Описание">
+            <Select disabled />
+          </Form.Item>
+          <Form.Item name="hideClosed" label="Скрыть закрытые" valuePropName="checked">
+            <Switch />
+          </Form.Item>
+        </div>
+      </div>
+      <div className="defects-filter-footer">
+        <Form.Item>
+          <Button onClick={reset} block>
+            Сброс
+          </Button>
+        </Form.Item>
+      </div>
     </Form>
   );
 }

@@ -221,11 +221,12 @@ export default function DefectsPage() {
 
       return {
         ids: mapNumOptions(filtered('id').map((d) => d.id)),
-      units: Array.from(
-        new Set(filtered('units').flatMap((d) => d.unitIds)),
-      )
-        .map((id) => ({ label: unitMap.get(id) ?? String(id), value: id }))
-        .sort((a, b) => naturalCompare(a.label, b.label)),
+        claimIds: mapNumOptions(filtered('claimId').flatMap((d) => d.claimIds)),
+        units: Array.from(
+          new Set(filtered('units').flatMap((d) => d.unitIds)),
+        )
+          .map((id) => ({ label: unitMap.get(id) ?? String(id), value: id }))
+          .sort((a, b) => naturalCompare(a.label, b.label)),
         buildings: mapStrOptions(
           filtered('building').flatMap((d) => d.buildingNamesList || []),
       ),
@@ -240,6 +241,7 @@ export default function DefectsPage() {
       ),
       fixBy: mapStrOptions(filtered('fixBy').map((d) => d.fixByName)),
       engineers: mapStrOptions(filtered('engineer').map((d) => d.engineerName)),
+      authors: mapStrOptions(filtered('author').map((d) => d.createdByName)),
     };
   }, [filteredData, filters, units, projects]);
   const [viewId, setViewId] = useState<number | null>(null);
