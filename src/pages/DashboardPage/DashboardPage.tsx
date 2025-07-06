@@ -37,7 +37,7 @@ export default function DashboardPage() {
         <ProjectStatsCard key={id} projectId={id} />
       ))}
 
-      <UserStatsBlock />
+      <UserStatsBlock projectIds={selected} />
     </Space>
   );
 }

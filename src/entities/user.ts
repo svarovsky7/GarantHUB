@@ -21,10 +21,16 @@ export const useUsers = () => {
                 .select(FIELDS)
                 .order('id');
             if (error) throw error;
-            return (data ?? []).map((u: any) => ({
+            const users = (data ?? []).map((u: any) => ({
                 ...u,
                 project_ids: u.profiles_projects?.map((p: any) => p.project_id) ?? [],
             }));
+            users.sort((a: any, b: any) => {
+                const an = a.name ?? a.email ?? '';
+                const bn = b.name ?? b.email ?? '';
+                return an.localeCompare(bn);
+            });
+            return users;
         },
         staleTime: 5 * 60_000,
     });
