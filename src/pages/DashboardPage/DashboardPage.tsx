@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Card, Typography, Skeleton, Space } from 'antd';
+import { Card, Typography, Skeleton, Space, Button } from 'antd';
 import { useSnackbar } from 'notistack';
 import { useVisibleProjects } from '@/entities/project';
 import { useAuthStore } from '@/shared/store/authStore';
@@ -13,6 +13,7 @@ export default function DashboardPage() {
   const { data: projects = [], isPending, error } = useVisibleProjects();
   const profile = useAuthStore((s) => s.profile);
   const [selected, setSelected] = React.useState<number[]>([]);
+  const [resetCounter, setResetCounter] = React.useState(0);
 
   useEffect(() => {
     if (error) enqueueSnackbar('Ошибка загрузки проектов.', { variant: 'error' });
@@ -20,8 +21,16 @@ export default function DashboardPage() {
 
   if (isPending) return <Skeleton active />;
 
+  const handleReset = () => {
+    setSelected([]);
+    setResetCounter((c) => c + 1);
+  };
+
   return (
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
+      <Button onClick={handleReset} style={{ alignSelf: 'flex-start' }}>
+        Сбросить фильтры
+      </Button>
       <Card>
         <Typography.Title level={5} style={{ margin: 0 }}>
           Добро пожаловать, {profile?.name ?? profile?.email ?? 'гость'}!
@@ -37,7 +46,7 @@ export default function DashboardPage() {
         <ProjectStatsCard key={id} projectId={id} />
       ))}
 
-      <UserStatsBlock projectIds={selected} />
+      <UserStatsBlock projectIds={selected} resetSignal={resetCounter} />
     </Space>
   );
 }
