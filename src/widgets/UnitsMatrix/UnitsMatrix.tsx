@@ -19,6 +19,9 @@ import useUnitsMatrix from "@/shared/hooks/useUnitsMatrix";
 import { supabase } from "@/shared/api/supabaseClient";
 import { useNavigate, createSearchParams } from 'react-router-dom';
 import { useAuthStore } from '@/shared/store/authStore';
+import { useRolePermission } from '@/entities/rolePermission';
+import type { RoleName } from '@/shared/types/rolePermission';
+import { useSetUnitLock } from '@/entities/unit';
 import { getUnitNameComparator } from '@/shared/utils/unitNumberSort';
 import type { SortDirection } from '@/shared/types/sortDirection';
 import { useUnitSortOrders, useUpsertUnitSortOrder } from '@/entities/unitSortOrder';
@@ -53,6 +56,9 @@ export default function UnitsMatrix({
   } = useUnitsMatrix(numericProjectId, building);
   const navigate = useNavigate();
   const profileId = useAuthStore((s) => s.profile?.id);
+  const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
+  const { data: perm } = useRolePermission(role);
+  const setLock = useSetUnitLock();
 
   // Диалоги редактирования/удаления
   const [editDialog, setEditDialog] = useState({
@@ -106,8 +112,19 @@ export default function UnitsMatrix({
     setEditDialog({ open: true, type: "unit", target: unit, value: unit.name });
   const handleDeleteUnit = (unit) =>
     setConfirmDialog({ open: true, type: "unit", target: unit });
-  const handleUnitAction = (unit) =>
-    setActionDialog({ open: true, unit, action: "" });
+  const handleUnitAction = (unit) => {
+    if (unit.locked) {
+      Modal.confirm({
+        title: 'Объект заблокирован',
+        content: 'Работы по устранению замечаний запрещено выполнять.',
+        okText: 'Продолжить',
+        cancelText: 'Отмена',
+        onOk: () => setActionDialog({ open: true, unit, action: '' }),
+      });
+      return;
+    }
+    setActionDialog({ open: true, unit, action: '' });
+  };
 
   const handleSortFloor = (floor: string | number) => {
     setSortDirections((prev) => {
@@ -430,6 +447,20 @@ export default function UnitsMatrix({
               >
                 Посмотреть архив
               </AntButton>
+              {perm?.can_lock_units && (
+                <AntButton
+                  danger={actionDialog.unit?.locked}
+                  onClick={async () => {
+                    const id = actionDialog.unit?.id;
+                    if (!id) return;
+                    await setLock.mutateAsync({ id, locked: !actionDialog.unit?.locked });
+                    await fetchUnits();
+                    setActionDialog({ open: false, unit: null, action: '' });
+                  }}
+                >
+                  {actionDialog.unit?.locked ? 'Снять блокировку' : 'Заблокировать объект'}
+                </AntButton>
+              )}
             </div>
           )}
         </Modal>

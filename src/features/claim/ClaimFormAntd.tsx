@@ -11,12 +11,13 @@ import {
   Tooltip,
   Space,
   Popconfirm,
+  Modal,
 } from 'antd';
 
 import ClaimAttachmentsBlock from './ClaimAttachmentsBlock';
 import dayjs from 'dayjs';
 import { useVisibleProjects } from '@/entities/project';
-import { useUnitsByProject } from '@/entities/unit';
+import { useUnitsByProject, useLockedUnitIds } from '@/entities/unit';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import { useUsers } from '@/entities/user';
 import { useClaimStatuses } from '@/entities/claimStatus';
@@ -91,6 +92,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
     projectId,
     buildingDebounced ?? undefined,
   );
+  const { data: lockedUnitIds = [] } = useLockedUnitIds();
   const { data: users = [] } = useUsers();
   const { data: statuses = [] } = useClaimStatuses();
   const create = useCreateClaim();
@@ -199,6 +201,16 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
 
   const onFinish = async (values: ClaimFormValues) => {
     if (!showDefectsForm) return;
+    if (values.unit_ids?.some((id) => lockedUnitIds.includes(id))) {
+      Modal.confirm({
+        title: 'Объект заблокирован',
+        content:
+          'Работы по устранению замечаний запрещено выполнять.',
+        okText: 'Продолжить',
+        cancelText: 'Отмена',
+      });
+      return;
+    }
     const { defects: defs, building: _bld, ...rest } = values;
     if (!defs || defs.length === 0) {
       notify.error('Добавьте хотя бы один дефект');
@@ -245,22 +257,27 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
       }
     }
 
-    await create.mutateAsync({
-      ...rest,
-      attachments: files.map((f) => ({
-        file: f.file,
-        type_id: null,
-        description: f.description,
-      })),
-      project_id: values.project_id ?? globalProjectId,
-      claimed_on: values.claimed_on ? values.claimed_on.format('YYYY-MM-DD') : null,
-      accepted_on: values.accepted_on ? values.accepted_on.format('YYYY-MM-DD') : null,
-      registered_on: values.registered_on ? values.registered_on.format('YYYY-MM-DD') : null,
-      resolved_on: values.resolved_on ? values.resolved_on.format('YYYY-MM-DD') : null,
-      owner: values.owner ?? null,
-      case_uid_id: values.case_uid_id ?? null,
-      defect_ids: defectIds,
-    } as any);
+    try {
+      await create.mutateAsync({
+        ...rest,
+        attachments: files.map((f) => ({
+          file: f.file,
+          type_id: null,
+          description: f.description,
+        })),
+        project_id: values.project_id ?? globalProjectId,
+        claimed_on: values.claimed_on ? values.claimed_on.format('YYYY-MM-DD') : null,
+        accepted_on: values.accepted_on ? values.accepted_on.format('YYYY-MM-DD') : null,
+        registered_on: values.registered_on ? values.registered_on.format('YYYY-MM-DD') : null,
+        resolved_on: values.resolved_on ? values.resolved_on.format('YYYY-MM-DD') : null,
+        owner: values.owner ?? null,
+        case_uid_id: values.case_uid_id ?? null,
+        defect_ids: defectIds,
+      } as any);
+    } catch (e: any) {
+      notify.error(e.message);
+      return;
+    }
     form.resetFields();
     setFiles([]);
     setDefectFiles({});
