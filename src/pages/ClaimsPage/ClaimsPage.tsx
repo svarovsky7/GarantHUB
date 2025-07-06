@@ -20,7 +20,7 @@ import {
   useUnlinkClaim,
 } from '@/entities/claim';
 import { useUsers } from '@/entities/user';
-import { useUnitsByIds, useLockedUnitIds } from '@/entities/unit';
+import { useUnitsByIds } from '@/entities/unit';
 import { useRolePermission } from '@/entities/rolePermission';
 import { useAuthStore } from '@/shared/store/authStore';
 import type { RoleName } from '@/shared/types/rolePermission';
@@ -70,7 +70,6 @@ export default function ClaimsPage() {
     [claims],
   );
   const { data: units = [] } = useUnitsByIds(unitIds);
-  const { data: lockedUnitIds = [] } = useLockedUnitIds();
   const checkingDefectMap = useMemo(() => new Map<number, boolean>(), []);
   const [searchParams] = useSearchParams();
   const initialValues = {
@@ -425,7 +424,6 @@ export default function ClaimsPage() {
               filters={filters}
               loading={isLoading}
               columns={columns}
-              lockedUnitIds={lockedUnitIds}
               onView={(id) => setViewId(id)}
               onAddChild={setLinkFor}
               onUnlink={(id) => unlinkClaim.mutate(id)}

@@ -44,7 +44,7 @@ import { useAuthStore } from '@/shared/store/authStore';
 import { useUsers } from '@/entities/user';
 import { useLetterTypes } from '@/entities/letterType';
 import { useVisibleProjects } from '@/entities/project';
-import { useUnitsByProject, useUnitsByIds, useLockedUnitIds } from '@/entities/unit';
+import { useUnitsByProject, useUnitsByIds } from '@/entities/unit';
 import { useNotify } from '@/shared/hooks/useNotify';
 import { useLetterStatuses } from '@/entities/letterStatus';
 import { useContractors } from '@/entities/contractor';
@@ -202,7 +202,6 @@ export default function CorrespondencePage() {
       [letters],
   );
   const { data: allUnits = [] } = useUnitsByIds(unitIds);
-  const { data: lockedUnitIds = [] } = useLockedUnitIds();
 
   const contactOptions = React.useMemo(
     () => [
@@ -689,11 +688,10 @@ export default function CorrespondencePage() {
             users={users}
             letterTypes={letterTypes}
             projects={projects}
-          units={allUnits}
-          statuses={statuses}
-          columns={columns}
-          lockedUnitIds={lockedUnitIds}
-        />
+            units={allUnits}
+            statuses={statuses}
+            columns={columns}
+          />
           <Typography.Text style={{ display: 'block', marginTop: 8 }}>
             Всего писем: {total}, из них закрытых: {closedCount} и не закрытых: {openCount}
           </Typography.Text>

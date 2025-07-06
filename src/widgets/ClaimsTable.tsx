@@ -29,7 +29,6 @@ interface Props {
   onView?: (id: number) => void;
   onAddChild?: (parent: ClaimWithNames) => void;
   onUnlink?: (id: number) => void;
-  lockedUnitIds?: number[];
 }
 
 export default function ClaimsTable({
@@ -40,7 +39,6 @@ export default function ClaimsTable({
   onView,
   onAddChild,
   onUnlink,
-  lockedUnitIds = [],
 }: Props) {
   const { mutateAsync: remove, isPending } = useDeleteClaim();
   const defaultColumns: ColumnsType<any> = useMemo(
@@ -182,11 +180,9 @@ export default function ClaimsTable({
     const closed = row.statusName?.toLowerCase().includes('закры');
     const preTrial = row.pre_trial_claim ||
       row.statusName?.toLowerCase().includes('досудеб');
-    const locked = row.unit_ids?.some((id) => lockedUnitIds.includes(id));
     if (checking || row.hasCheckingDefect) return 'claim-checking-row';
     if (preTrial) return 'claim-pretrial-row';
     if (closed) return 'claim-closed-row';
-    if (locked) return 'locked-object-row';
     return '';
   };
 
