@@ -5,4 +5,5 @@ export interface Unit {
   building?: string | null;
   floor?: number | null;
   person_id?: string | null;
+  locked?: boolean | null;
 }
