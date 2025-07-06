@@ -34,6 +34,8 @@ export interface DefectRecord {
   created_at: string | null;
   /** Уникальный идентификатор судебного дела */
   case_uid_id?: number | null;
+  /** Закрепленный инженер */
+  engineer_id: string | null;
 }
 
 /** Дефект с дополнительной информацией для отображения */
@@ -58,6 +60,8 @@ export interface DefectWithInfo extends DefectRecord {
   defectStatusColor?: string | null;
   /** Название исполнителя */
   fixByName?: string;
+  /** Имя закрепленного инженера */
+  engineerName?: string | null;
   /** Пользователь, подтвердивший устранение */
   fixedByUserName?: string | null;
   /** Идентификаторы проектов, связанные с замечаниями */

@@ -8,4 +8,6 @@ export interface DefectWithFiles extends DefectRecord {
   defect_type?: { id: number; name: string } | null;
   /** Статус дефекта */
   defect_status?: { id: number; name: string; color: string | null } | null;
+  /** Имя закрепленного инженера */
+  engineerName?: string | null;
 }

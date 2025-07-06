@@ -26,6 +26,7 @@ export interface NewDefect {
   fixed_by: string | null;
   /** Уникальный идентификатор судебного дела */
   case_uid_id?: number | null;
+  engineer_id: string | null;
 }
 
 const TABLE = 'defects';
@@ -41,10 +42,10 @@ export function useDefects() {
       const rows = await fetchPaged<DefectRecord>((from, to) =>
         supabase
           .from(TABLE)
-          .select(
-            'id, description, type_id, status_id, project_id, unit_id, created_by, updated_by, updated_at, brigade_id, contractor_id, is_warranty, received_at, fixed_at, fixed_by, created_at,' +
-              ' defect_type:defect_types!fk_defects_type(id,name), defect_status:statuses!fk_defects_status(id,name,color), fixed_by_user:profiles!fk_defects_fixed_by(id,name)'
-          )
+        .select(
+          'id, description, type_id, status_id, project_id, unit_id, created_by, updated_by, updated_at, brigade_id, contractor_id, is_warranty, received_at, fixed_at, fixed_by, engineer_id, created_at,' +
+            ' defect_type:defect_types!fk_defects_type(id,name), defect_status:statuses!fk_defects_status(id,name,color), engineer:profiles!fk_defects_engineer(id,name), fixed_by_user:profiles!fk_defects_fixed_by(id,name)'
+        )
           .order('id', { ascending: false })
           .range(from, to) as unknown as PromiseLike<PostgrestSingleResponse<DefectRecord[]>>,
       );
@@ -68,8 +69,8 @@ export function useDefect(id?: number) {
       const { data, error } = await supabase
         .from(TABLE)
         .select(
-          'id, description, type_id, status_id, project_id, unit_id, created_by, updated_by, updated_at, brigade_id, contractor_id, is_warranty, received_at, fixed_at, fixed_by, created_at,' +
-          ' defect_type:defect_types!fk_defects_type(id,name), defect_status:statuses!fk_defects_status(id,name,color), fixed_by_user:profiles!fk_defects_fixed_by(id,name)'
+          'id, description, type_id, status_id, project_id, unit_id, created_by, updated_by, updated_at, brigade_id, contractor_id, is_warranty, received_at, fixed_at, fixed_by, engineer_id, created_at,' +
+          ' defect_type:defect_types!fk_defects_type(id,name), defect_status:statuses!fk_defects_status(id,name,color), engineer:profiles!fk_defects_engineer(id,name), fixed_by_user:profiles!fk_defects_fixed_by(id,name)'
         )
         .eq('id', id as number)
         .single();
@@ -82,7 +83,11 @@ export function useDefect(id?: number) {
         .eq('defect_id', id as number);
       if (attachErr) throw attachErr;
       const attachments = (attachRows ?? []).map((r: any) => r.attachments);
-      return { ...(data as any), attachments } as DefectWithFiles;
+      return {
+        ...(data as any),
+        attachments,
+        engineerName: (data as any).engineer?.name ?? null,
+      } as DefectWithFiles;
     },
     staleTime: 5 * 60_000,
   });
@@ -123,7 +128,7 @@ export function useDefectsWithNames(ids?: number[]) {
       const { data, error } = await supabase
         .from(TABLE)
         .select(
-          'id, description, type_id, status_id, project_id, unit_id, created_by, updated_by, updated_at, brigade_id, contractor_id, is_warranty, received_at, fixed_at, fixed_by, defect_type:defect_types!fk_defects_type(id,name), defect_status:statuses!fk_defects_status(id,name,color), fixed_by_user:profiles!fk_defects_fixed_by(id,name)'
+          'id, description, type_id, status_id, project_id, unit_id, created_by, updated_by, updated_at, brigade_id, contractor_id, is_warranty, received_at, fixed_at, fixed_by, engineer_id, defect_type:defect_types!fk_defects_type(id,name), defect_status:statuses!fk_defects_status(id,name,color), engineer:profiles!fk_defects_engineer(id,name), fixed_by_user:profiles!fk_defects_fixed_by(id,name)'
         )
         .in('id', ids as number[]);
       if (error) throw error;
@@ -143,10 +148,12 @@ export function useDefectsWithNames(ids?: number[]) {
         received_at: d.received_at,
         fixed_at: d.fixed_at,
         fixed_by: d.fixed_by,
+        engineer_id: d.engineer_id,
         defectTypeName: d.defect_type?.name ?? null,
         defectStatusName: d.defect_status?.name ?? null,
         defectStatusColor: d.defect_status?.color ?? null,
         fixedByUserName: d.fixed_by_user?.name ?? null,
+        engineerName: d.engineer?.name ?? null,
       })) as DefectWithNames[];
     },
     staleTime: 5 * 60_000,
@@ -277,6 +284,7 @@ export function useFixDefect() {
       brigade_id,
       contractor_id,
       fixed_at,
+      engineer_id,
       attachments = [],
       removedAttachmentIds = [],
       updatedAttachments = [],
@@ -285,6 +293,7 @@ export function useFixDefect() {
       brigade_id: number | null;
       contractor_id: number | null;
       fixed_at: string | null;
+      engineer_id: string | null;
       attachments: { file: File; type_id: number | null }[];
       removedAttachmentIds?: number[];
       updatedAttachments?: { id: number; type_id: number | null }[];
@@ -345,6 +354,7 @@ export function useFixDefect() {
           brigade_id,
           contractor_id,
           fixed_at,
+          engineer_id,
           fixed_by: userId,
           status_id: checkingId,
           updated_by: userId ?? undefined,
