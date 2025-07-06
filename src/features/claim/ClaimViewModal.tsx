@@ -1,12 +1,18 @@
-import React from 'react';
-import { Modal, Skeleton, Typography, Button } from 'antd';
-import { useClaim, useClaimAll, signedUrl, closeDefectsForClaim } from '@/entities/claim';
-import ClaimFormAntdEdit from './ClaimFormAntdEdit';
-import ClaimAttachmentsBlock from './ClaimAttachmentsBlock';
-import TicketDefectsEditorTable from '@/widgets/TicketDefectsEditorTable';
-import DefectAddModal from '@/features/defect/DefectAddModal';
-import DefectViewModal from '@/features/defect/DefectViewModal';
-import dayjs from 'dayjs';
+import React from "react";
+import { Modal, Skeleton, Typography, Button } from "antd";
+import {
+  useClaim,
+  useClaimAll,
+  signedUrl,
+  closeDefectsForClaim,
+} from "@/entities/claim";
+import ClaimFormAntdEdit from "./ClaimFormAntdEdit";
+import ClaimAttachmentsBlock from "./ClaimAttachmentsBlock";
+import TicketDefectsEditorTable from "@/widgets/TicketDefectsEditorTable";
+import DefectAddModal from "@/features/defect/DefectAddModal";
+import DefectViewModal from "@/features/defect/DefectViewModal";
+import ClaimRelatedClaimsBlock from "./ClaimRelatedClaimsBlock";
+import dayjs from "dayjs";
 import {
   useCreateDefects,
   useDeleteDefect,
@@ -14,23 +20,26 @@ import {
   useUpdateDefect,
   removeDefectAttachmentsBulk,
   type NewDefect,
-} from '@/entities/defect';
-import { useDefectTypes } from '@/entities/defectType';
-import { useDefectStatuses } from '@/entities/defectStatus';
-import { useBrigades } from '@/entities/brigade';
-import { useContractors } from '@/entities/contractor';
-import { useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/shared/api/supabaseClient';
-import { addDefectAttachments, updateAttachmentDescription } from '@/entities/attachment';
-import { useClaimAttachments } from './model/useClaimAttachments';
-import type { ClaimFormAntdEditRef } from '@/shared/types/claimFormAntdEditRef';
-import { useAuthStore } from '@/shared/store/authStore';
-import { useRolePermission } from '@/entities/rolePermission';
-import type { RoleName } from '@/shared/types/rolePermission';
-import FilePreviewModal from '@/shared/ui/FilePreviewModal';
-import type { PreviewFile } from '@/shared/types/previewFile';
-import type { NewDefectFile } from '@/shared/types/defectFile';
-import type { RemoteClaimFile } from '@/shared/types/claimFile';
+} from "@/entities/defect";
+import { useDefectTypes } from "@/entities/defectType";
+import { useDefectStatuses } from "@/entities/defectStatus";
+import { useBrigades } from "@/entities/brigade";
+import { useContractors } from "@/entities/contractor";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/shared/api/supabaseClient";
+import {
+  addDefectAttachments,
+  updateAttachmentDescription,
+} from "@/entities/attachment";
+import { useClaimAttachments } from "./model/useClaimAttachments";
+import type { ClaimFormAntdEditRef } from "@/shared/types/claimFormAntdEditRef";
+import { useAuthStore } from "@/shared/store/authStore";
+import { useRolePermission } from "@/entities/rolePermission";
+import type { RoleName } from "@/shared/types/rolePermission";
+import FilePreviewModal from "@/shared/ui/FilePreviewModal";
+import type { PreviewFile } from "@/shared/types/previewFile";
+import type { NewDefectFile } from "@/shared/types/defectFile";
+import type { RemoteClaimFile } from "@/shared/types/claimFile";
 
 interface Props {
   open: boolean;
@@ -43,7 +52,9 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
   const { data: perm } = useRolePermission(role);
   const claimAssigned = useClaim(claimId ?? undefined);
   const claimAll = useClaimAll(claimId ?? undefined);
-  const claim = perm?.only_assigned_project ? claimAssigned.data : claimAll.data;
+  const claim = perm?.only_assigned_project
+    ? claimAssigned.data
+    : claimAll.data;
   const attachments = useClaimAttachments({ claim: claim as any });
   const formRef = React.useRef<ClaimFormAntdEditRef>(null);
   const createDefs = useCreateDefects();
@@ -55,16 +66,30 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
   const { data: contractors = [] } = useContractors();
   const qc = useQueryClient();
   const [defectIds, setDefectIds] = React.useState<number[]>([]);
-  const [newDefs, setNewDefs] = React.useState<Array<{ tmpId: number } & NewDefect>>([]);
+  const [newDefs, setNewDefs] = React.useState<
+    Array<{ tmpId: number } & NewDefect>
+  >([]);
   const [removedIds, setRemovedIds] = React.useState<number[]>([]);
-  const [editedDefs, setEditedDefs] = React.useState<Record<number, Partial<NewDefect>>>({});
+  const [editedDefs, setEditedDefs] = React.useState<
+    Record<number, Partial<NewDefect>>
+  >({});
   const [showAdd, setShowAdd] = React.useState(false);
   const [viewDefId, setViewDefId] = React.useState<number | null>(null);
-  const [previewFile, setPreviewFile] = React.useState<PreviewFile | null>(null);
-  const [defectFiles, setDefectFiles] = React.useState<Record<number, NewDefectFile[]>>({});
-  const [defectRemoteFiles, setDefectRemoteFiles] = React.useState<Record<number, RemoteClaimFile[]>>({});
-  const [defectRemovedMap, setDefectRemovedMap] = React.useState<Record<number, number[]>>({});
-  const [defectChangedDesc, setDefectChangedDesc] = React.useState<Record<number, string>>({});
+  const [previewFile, setPreviewFile] = React.useState<PreviewFile | null>(
+    null,
+  );
+  const [defectFiles, setDefectFiles] = React.useState<
+    Record<number, NewDefectFile[]>
+  >({});
+  const [defectRemoteFiles, setDefectRemoteFiles] = React.useState<
+    Record<number, RemoteClaimFile[]>
+  >({});
+  const [defectRemovedMap, setDefectRemovedMap] = React.useState<
+    Record<number, number[]>
+  >({});
+  const [defectChangedDesc, setDefectChangedDesc] = React.useState<
+    Record<number, string>
+  >({});
   const defectDescInit = React.useRef<Record<number, string>>({});
   const tmpIdRef = React.useRef(-1);
 
@@ -92,17 +117,18 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
     }
     const load = async () => {
       const { data, error } = await supabase
-        .from('defect_attachments')
+        .from("defect_attachments")
         .select(
-          'defect_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description)',
+          "defect_id, attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description)",
         )
-        .in('defect_id', defectIds);
+        .in("defect_id", defectIds);
       if (error) return;
       const map: Record<number, RemoteClaimFile[]> = {};
       (data ?? []).forEach((r: any) => {
         const a = r.attachments;
         if (!a) return;
-        const name = a.original_name ?? a.storage_path.split('/').pop() ?? 'file';
+        const name =
+          a.original_name ?? a.storage_path.split("/").pop() ?? "file";
         const file: RemoteClaimFile = {
           id: a.id,
           name,
@@ -114,7 +140,7 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
         };
         if (!map[r.defect_id]) map[r.defect_id] = [];
         map[r.defect_id].push(file);
-        defectDescInit.current[a.id] = a.description ?? '';
+        defectDescInit.current[a.id] = a.description ?? "";
       });
       setDefectRemoteFiles(map);
       setDefectChangedDesc({});
@@ -159,12 +185,12 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
   const getFixByName = React.useCallback(
     (d: { brigade_id: number | null; contractor_id: number | null }) => {
       if (d.brigade_id)
-        return brigades.find((b) => b.id === d.brigade_id)?.name || 'Бригада';
+        return brigades.find((b) => b.id === d.brigade_id)?.name || "Бригада";
       if (d.contractor_id)
         return (
-          contractors.find((c) => c.id === d.contractor_id)?.name || 'Подрядчик'
+          contractors.find((c) => c.id === d.contractor_id)?.name || "Подрядчик"
         );
-      return '—';
+      return "—";
     },
     [brigades, contractors],
   );
@@ -186,11 +212,12 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
       received_at: d.received_at,
       fixed_at: d.fixed_at,
       fixed_by: null,
-      defectTypeName: d.type_id != null ? defectTypeMap[d.type_id] ?? null : null,
+      defectTypeName:
+        d.type_id != null ? (defectTypeMap[d.type_id] ?? null) : null,
       defectStatusName:
-        d.status_id != null ? statusMap[d.status_id]?.name ?? null : null,
+        d.status_id != null ? (statusMap[d.status_id]?.name ?? null) : null,
       defectStatusColor:
-        d.status_id != null ? statusMap[d.status_id]?.color ?? null : null,
+        d.status_id != null ? (statusMap[d.status_id]?.color ?? null) : null,
       fixByName: getFixByName(d),
     }));
     return [...existing, ...created];
@@ -243,11 +270,7 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
     });
   };
 
-  const changeDefRemoteDesc = (
-    defId: number,
-    fileId: string,
-    desc: string,
-  ) => {
+  const changeDefRemoteDesc = (defId: number, fileId: string, desc: string) => {
     setDefectRemoteFiles((p) => ({
       ...p,
       [defId]: (p[defId] ?? []).map((f) =>
@@ -255,7 +278,7 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
       ),
     }));
     setDefectChangedDesc((prev) => {
-      const init = defectDescInit.current[Number(fileId)] ?? '';
+      const init = defectDescInit.current[Number(fileId)] ?? "";
       if (init === desc) {
         const { [Number(fileId)]: _om, ...rest } = prev;
         return rest;
@@ -266,7 +289,7 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
 
   const handleChangeDef = (
     id: number,
-    field: keyof NewDefect | 'id',
+    field: keyof NewDefect | "id",
     value: any,
   ) => {
     if (id < 0) {
@@ -285,12 +308,10 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
     if (!claim) return;
     try {
       const createdIds = newDefs.length
-        ? await createDefs.mutateAsync(
-            newDefs.map(({ tmpId, ...d }) => d),
-          )
+        ? await createDefs.mutateAsync(newDefs.map(({ tmpId, ...d }) => d))
         : [];
       if (createdIds.length) {
-        await supabase.from('claim_defects').insert(
+        await supabase.from("claim_defects").insert(
           createdIds.map((id) => ({
             claim_id: claim.id,
             defect_id: id,
@@ -302,11 +323,15 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
           const filesFor = defectFiles[newDefs[i].tmpId] ?? [];
           if (filesFor.length) {
             const uploaded = await addDefectAttachments(
-              filesFor.map((f) => ({ file: f.file, type_id: null, description: f.description })),
+              filesFor.map((f) => ({
+                file: f.file,
+                type_id: null,
+                description: f.description,
+              })),
               createdIds[i],
             );
             if (uploaded.length) {
-              await supabase.from('defect_attachments').insert(
+              await supabase.from("defect_attachments").insert(
                 uploaded.map((u: any) => ({
                   defect_id: createdIds[i],
                   attachment_id: u.id,
@@ -322,22 +347,31 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
         const filesFor = defectFiles[id] ?? [];
         if (filesFor.length) {
           const uploaded = await addDefectAttachments(
-            filesFor.map((f) => ({ file: f.file, type_id: null, description: f.description })),
+            filesFor.map((f) => ({
+              file: f.file,
+              type_id: null,
+              description: f.description,
+            })),
             id,
           );
           if (uploaded.length) {
-            await supabase.from('defect_attachments').insert(
-              uploaded.map((u: any) => ({ defect_id: id, attachment_id: u.id })),
-            );
+            await supabase
+              .from("defect_attachments")
+              .insert(
+                uploaded.map((u: any) => ({
+                  defect_id: id,
+                  attachment_id: u.id,
+                })),
+              );
           }
         }
       }
       if (removedIds.length) {
         await supabase
-          .from('claim_defects')
+          .from("claim_defects")
           .delete()
-          .eq('claim_id', claim.id)
-          .in('defect_id', removedIds);
+          .eq("claim_id", claim.id)
+          .in("defect_id", removedIds);
         for (const id of removedIds) {
           await deleteDef.mutateAsync(id);
         }
@@ -362,13 +396,13 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
       if (updates.length) {
         await Promise.all(updates.map((u) => updateDef.mutateAsync(u)));
       }
-      qc.invalidateQueries({ queryKey: ['defects'] });
-      qc.invalidateQueries({ queryKey: ['claims'] });
-      qc.invalidateQueries({ queryKey: ['claims', claim.id] });
-      qc.invalidateQueries({ queryKey: ['claim-all', claim.id] });
-      qc.invalidateQueries({ queryKey: ['claims-simple'] });
-      qc.invalidateQueries({ queryKey: ['claims-simple-all'] });
-      qc.invalidateQueries({ queryKey: ['claims-all'] });
+      qc.invalidateQueries({ queryKey: ["defects"] });
+      qc.invalidateQueries({ queryKey: ["claims"] });
+      qc.invalidateQueries({ queryKey: ["claims", claim.id] });
+      qc.invalidateQueries({ queryKey: ["claim-all", claim.id] });
+      qc.invalidateQueries({ queryKey: ["claims-simple"] });
+      qc.invalidateQueries({ queryKey: ["claims-simple-all"] });
+      qc.invalidateQueries({ queryKey: ["claims-all"] });
       setEditedDefs({});
       setNewDefs([]);
       setRemovedIds([]);
@@ -378,7 +412,7 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
       defectDescInit.current = Object.fromEntries(
         Object.values(defectRemoteFiles)
           .flat()
-          .map((f) => [Number(f.id), f.description ?? '']),
+          .map((f) => [Number(f.id), f.description ?? ""]),
       );
       onClose();
     } catch (e) {
@@ -386,9 +420,7 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
     }
   };
   if (!open || !claimId) return null;
-  const titleText = claim
-    ? `Претензия №${claim.claim_no}`
-    : 'Претензия';
+  const titleText = claim ? `Претензия №${claim.claim_no}` : "Претензия";
 
   return (
     <>
@@ -397,77 +429,96 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
         onCancel={onClose}
         footer={null}
         width="80%"
-        title={<Typography.Title level={4} style={{ margin: 0 }}>{titleText}</Typography.Title>}
+        title={
+          <Typography.Title level={4} style={{ margin: 0 }}>
+            {titleText}
+          </Typography.Title>
+        }
       >
-      {claim ? (
-        <>
-          <ClaimFormAntdEdit
-            ref={formRef}
-            embedded
-            claimId={String(claimId)}
-            onCancel={onClose}
-            onSaved={handleSaved}
-            showAttachments={false}
-            hideActions
-            attachmentsState={attachments}
-          />
-          <div style={{ marginTop: 16 }}>
-            {displayDefs.length ? (
-              <TicketDefectsEditorTable
-                items={displayDefs}
-                defectTypes={defectTypes}
-                statuses={defectStatuses}
-                brigades={brigades}
-                contractors={contractors}
-                onChange={handleChangeDef}
-                onRemove={handleRemove}
-                onView={setViewDefId}
-                fileMap={defectFiles}
-                remoteFileMap={defectRemoteFiles}
-                onFilesChange={changeDefFiles}
-                onRemoveRemoteFile={removeDefRemote}
-                onDescRemoteFile={changeDefRemoteDesc}
-                getSignedUrl={(p, n) => signedUrl(p, n)}
-              />
-            ) : (
-              <Typography.Text>Дефекты не указаны</Typography.Text>
-            )}
-            <div style={{ textAlign: 'right', marginTop: 8 }}>
-              <Button size="small" type="primary" onClick={() => setShowAdd(true)}>
-                Добавить дефекты
+        {claim ? (
+          <>
+            <ClaimFormAntdEdit
+              ref={formRef}
+              embedded
+              claimId={String(claimId)}
+              onCancel={onClose}
+              onSaved={handleSaved}
+              showAttachments={false}
+              hideActions
+              attachmentsState={attachments}
+            />
+            <div style={{ marginTop: 16 }}>
+              {displayDefs.length ? (
+                <TicketDefectsEditorTable
+                  items={displayDefs}
+                  defectTypes={defectTypes}
+                  statuses={defectStatuses}
+                  brigades={brigades}
+                  contractors={contractors}
+                  onChange={handleChangeDef}
+                  onRemove={handleRemove}
+                  onView={setViewDefId}
+                  fileMap={defectFiles}
+                  remoteFileMap={defectRemoteFiles}
+                  onFilesChange={changeDefFiles}
+                  onRemoveRemoteFile={removeDefRemote}
+                  onDescRemoteFile={changeDefRemoteDesc}
+                  getSignedUrl={(p, n) => signedUrl(p, n)}
+                />
+              ) : (
+                <Typography.Text>Дефекты не указаны</Typography.Text>
+              )}
+              <div style={{ textAlign: "right", marginTop: 8 }}>
+                <Button
+                  size="small"
+                  type="primary"
+                  onClick={() => setShowAdd(true)}
+                >
+                  Добавить дефекты
+                </Button>
+              </div>
+            </div>
+            <ClaimRelatedClaimsBlock claimId={claim.id} />
+            <ClaimAttachmentsBlock
+              remoteFiles={attachments.remoteFiles}
+              newFiles={attachments.newFiles}
+              onFiles={attachments.addFiles}
+              onRemoveRemote={attachments.removeRemote}
+              onRemoveNew={attachments.removeNew}
+              onDescRemote={attachments.setRemoteDescription}
+              onDescNew={attachments.setDescription}
+              getSignedUrl={(path, name) => signedUrl(path, name)}
+              onPreview={(f) => setPreviewFile(f)}
+            />
+            <div style={{ textAlign: "right", marginTop: 16 }}>
+              <Button
+                style={{ marginRight: 8 }}
+                onClick={onClose}
+                disabled={formRef.current?.isSubmitting}
+              >
+                Отмена
+              </Button>
+              <Button
+                type="primary"
+                onClick={() => formRef.current?.submit()}
+                loading={formRef.current?.isSubmitting}
+              >
+                Сохранить
               </Button>
             </div>
-          </div>
-          <ClaimAttachmentsBlock
-            remoteFiles={attachments.remoteFiles}
-            newFiles={attachments.newFiles}
-            onFiles={attachments.addFiles}
-            onRemoveRemote={attachments.removeRemote}
-            onRemoveNew={attachments.removeNew}
-            onDescRemote={attachments.setRemoteDescription}
-            onDescNew={attachments.setDescription}
-            getSignedUrl={(path, name) => signedUrl(path, name)}
-            onPreview={(f) => setPreviewFile(f)}
-          />
-          <div style={{ textAlign: 'right', marginTop: 16 }}>
-            <Button style={{ marginRight: 8 }} onClick={onClose} disabled={formRef.current?.isSubmitting}>
-              Отмена
-            </Button>
-            <Button type="primary" onClick={() => formRef.current?.submit()} loading={formRef.current?.isSubmitting}>
-              Сохранить
-            </Button>
-          </div>
-        </>
-      ) : (
-        <Skeleton active />
-      )}
-      <DefectAddModal
-        open={showAdd}
-        projectId={claim?.project_id}
-        defaultReceivedAt={claim?.accepted_on ? dayjs(claim.accepted_on) : null}
-        onClose={() => setShowAdd(false)}
-        onSubmit={handleAddDefs}
-      />
+          </>
+        ) : (
+          <Skeleton active />
+        )}
+        <DefectAddModal
+          open={showAdd}
+          projectId={claim?.project_id}
+          defaultReceivedAt={
+            claim?.accepted_on ? dayjs(claim.accepted_on) : null
+          }
+          onClose={() => setShowAdd(false)}
+          onSubmit={handleAddDefs}
+        />
       </Modal>
       <DefectViewModal
         open={viewDefId !== null}

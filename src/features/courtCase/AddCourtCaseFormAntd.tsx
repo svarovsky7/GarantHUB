@@ -66,7 +66,8 @@ export default function AddCourtCaseFormAntd({
   const buildingWatch = Form.useWatch("building", form) ?? null;
   const buildingDebounced = useDebounce(buildingWatch);
   const unitIdsWatch: number[] = Form.useWatch("unit_ids", form) || [];
-  const relatedIdsWatch: number[] = Form.useWatch("related_claim_ids", form) || [];
+  const relatedIdsWatch: number[] =
+    Form.useWatch("related_claim_ids", form) || [];
   const profileId = useAuthStore((s) => s.profile?.id);
   const prevProjectIdRef = useRef<number | null>(null);
 
@@ -127,8 +128,6 @@ export default function AddCourtCaseFormAntd({
   const notify = useNotify();
   const qc = useQueryClient();
 
-
-
   // Set default litigation stage when loaded
   useEffect(() => {
     if (stages.length && !form.getFieldValue("status")) {
@@ -148,6 +147,13 @@ export default function AddCourtCaseFormAntd({
 
   const handleAddCase = async (values: any) => {
     try {
+      const parties: any[] = values.parties || [];
+      const hasPlaintiff = parties.some((p) => p.role === "plaintiff");
+      const hasDefendant = parties.some((p) => p.role === "defendant");
+      if (!hasPlaintiff || !hasDefendant) {
+        notify.error("Добавьте как минимум одного истца и одного ответчика");
+        return;
+      }
       const uidId = await getOrCreateCaseUid(values.case_uid);
 
       const newCase = await addCaseMutation.mutateAsync({
@@ -185,7 +191,6 @@ export default function AddCourtCaseFormAntd({
         qc.invalidateQueries({ queryKey: ["court_cases"] });
       }
 
-      const parties: any[] = values.parties || [];
       if (parties.length) {
         await addPartiesMutation.mutateAsync(
           parties.map((p: any) => ({
@@ -308,7 +313,7 @@ export default function AddCourtCaseFormAntd({
                 placeholder="UID"
                 options={caseUids.map((u) => ({ value: u.uid }))}
                 filterOption={(input, option) =>
-                  String(option?.value ?? '')
+                  String(option?.value ?? "")
                     .toLowerCase()
                     .includes(input.toLowerCase())
                 }
@@ -423,9 +428,7 @@ export default function AddCourtCaseFormAntd({
               projectId={projectId}
               unitIds={unitIdsWatch}
               value={relatedIdsWatch}
-              onChange={(ids) =>
-                form.setFieldValue('related_claim_ids', ids)
-              }
+              onChange={(ids) => form.setFieldValue("related_claim_ids", ids)}
             />
           </div>
         </Form.Item>
