@@ -12,7 +12,7 @@ import {
 } from 'antd';
 import ruRU from 'antd/locale/ru_RU';
 import { useUsers } from '@/entities/user';
-import { useUserStats } from '@/shared/hooks/useUserStats';
+import { useMultipleUserStats } from '@/shared/hooks/useUserStats';
 import { Dayjs } from 'dayjs';
 
 const { RangePicker } = DatePicker;
@@ -22,9 +22,13 @@ const { RangePicker } = DatePicker;
  */
 dayjs.locale('ru');
 
-export default function UserStatsBlock() {
+export default function UserStatsBlock({
+  projectIds,
+}: {
+  projectIds?: number[];
+}) {
   const { data: users = [], isPending } = useUsers();
-  const [userId, setUserId] = React.useState<string | null>(null);
+  const [userIds, setUserIds] = React.useState<string[]>([]);
   const [range, setRange] = React.useState<[Dayjs, Dayjs] | null>(null);
   /** Выбранный предустановленный период. */
   const [preset, setPreset] = React.useState<'all' | 'month' | 'week' | null>(
@@ -54,25 +58,40 @@ export default function UserStatsBlock() {
     ] as [string, string];
   }, [range]);
 
-  const { data, isPending: loadingStats } = useUserStats(userId, period);
+  const filteredUsers = React.useMemo(() => {
+    if (!projectIds?.length) return users;
+    return users.filter((u) =>
+      u.project_ids.some((pid) => projectIds.includes(pid)),
+    );
+  }, [users, projectIds]);
 
-  const userOptions = users.map((u) => ({
+  const { data, isPending: loadingStats } = useMultipleUserStats(
+    userIds,
+    period,
+  );
+
+  const userOptions = filteredUsers.map((u) => ({
     value: u.id,
     label: u.name ?? u.email,
   }));
 
+  React.useEffect(() => {
+    setUserIds((ids) => ids.filter((id) => filteredUsers.some((u) => u.id === id)));
+  }, [filteredUsers]);
+
   return (
     <ConfigProvider locale={ruRU}>
-      <Card title="Статистика пользователя" style={{ maxWidth: 360, margin: 0, width: '100%' }}>
+      <Card title="Статистика пользователя" style={{ width: '100%' }}>
         <Space direction="vertical" size="middle" style={{ width: '100%' }}>
           <Select
+            mode="multiple"
             showSearch
             allowClear
             placeholder="Выберите пользователя"
             options={userOptions}
             optionFilterProp="label"
-            value={userId ?? undefined}
-            onChange={(val) => setUserId(val)}
+            value={userIds}
+            onChange={(val) => setUserIds(val)}
             loading={isPending}
             style={{ width: '100%' }}
           />
@@ -98,63 +117,40 @@ export default function UserStatsBlock() {
             }}
             format="DD.MM.YYYY"
           />
-          {loadingStats && userId && period ? (
+          {loadingStats && userIds.length && period ? (
             <Skeleton active paragraph={{ rows: 2 }} />
           ) : null}
-          {data && !loadingStats ? (
-            <Space direction="vertical" style={{ width: '100%' }} size="small">
-              <Statistic title="Создано замечаний" value={data.claimCount} />
-              {data.claimStatusCounts.map((s) => (
-                <div
-                  key={`c-${s.statusId}`}
-                  style={{ display: 'flex', justifyContent: 'space-between' }}
-                >
-                  <span>{s.statusName ?? 'Без статуса'}</span>
-                  <span>{s.count}</span>
-                </div>
-              ))}
-              <Statistic title="Замечаний за инженером" value={data.claimResponsibleCount} style={{ marginTop: 8 }} />
-              {data.claimResponsibleStatusCounts.map((s) => (
-                <div
-                  key={`cr-${s.statusId}`}
-                  style={{ display: 'flex', justifyContent: 'space-between' }}
-                >
-                  <span>{s.statusName ?? 'Без статуса'}</span>
-                  <span>{s.count}</span>
-                </div>
-              ))}
-              <Statistic title="Создано дефектов" value={data.defectCount} style={{ marginTop: 8 }} />
-              {data.defectStatusCounts.map((s) => (
-                <div
-                  key={`d-${s.statusId}`}
-                  style={{ display: 'flex', justifyContent: 'space-between' }}
-                >
-                  <span>{s.statusName ?? 'Без статуса'}</span>
-                  <span>{s.count}</span>
-                </div>
-              ))}
-              <Statistic title="Дефектов за инженером" value={data.defectResponsibleCount} style={{ marginTop: 8 }} />
-              {data.defectResponsibleStatusCounts.map((s) => (
-                <div
-                  key={`dr-${s.statusId}`}
-                  style={{ display: 'flex', justifyContent: 'space-between' }}
-                >
-                  <span>{s.statusName ?? 'Без статуса'}</span>
-                  <span>{s.count}</span>
-                </div>
-              ))}
-              <Statistic title="Создано судебных дел" value={data.courtCaseCount} style={{ marginTop: 8 }} />
-              <Statistic title="Судебных дел за юристом" value={data.courtCaseResponsibleCount} style={{ marginTop: 8 }} />
-              {data.courtCaseStatusCounts.map((s) => (
-                <div
-                  key={`cc-${s.statusId}`}
-                  style={{ display: 'flex', justifyContent: 'space-between' }}
-                >
-                  <span>{s.statusName ?? 'Без статуса'}</span>
-                  <span>{s.count}</span>
-                </div>
-              ))}
-            </Space>
+          {data && userIds.length && !loadingStats ? (
+            <table className="ant-table" style={{ width: '100%' }}>
+              <thead>
+                <tr>
+                  <th>Пользователь</th>
+                  <th>Создано претензий</th>
+                  <th>Претензий за ним</th>
+                  <th>Создано дефектов</th>
+                  <th>Дефектов за ним</th>
+                  <th>Создано дел</th>
+                  <th>Дел за ним</th>
+                </tr>
+              </thead>
+              <tbody>
+                {userIds.map((id, idx) => {
+                  const stats = data[idx];
+                  const u = filteredUsers.find((f) => f.id === id);
+                  return (
+                    <tr key={id}>
+                      <td>{u?.name ?? u?.email ?? id}</td>
+                      <td>{stats?.claimCount ?? 0}</td>
+                      <td>{stats?.claimResponsibleCount ?? 0}</td>
+                      <td>{stats?.defectCount ?? 0}</td>
+                      <td>{stats?.defectResponsibleCount ?? 0}</td>
+                      <td>{stats?.courtCaseCount ?? 0}</td>
+                      <td>{stats?.courtCaseResponsibleCount ?? 0}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           ) : null}
         </Space>
       </Card>
