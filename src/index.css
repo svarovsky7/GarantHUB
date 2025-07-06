@@ -133,6 +133,9 @@ body {
 .claim-pretrial-row {
   background: #fff1f0 !important;
 }
+.claim-linked-row {
+  background: #f6ffed !important;
+}
 .defect-pretrial-row {
   background: #fff1f0 !important;
 }
