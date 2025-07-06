@@ -2,7 +2,12 @@ import React from "react";
 import dayjs from "dayjs";
 import { Table, Typography, Button } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { DownOutlined, EyeOutlined, LinkOutlined } from "@ant-design/icons";
+import {
+  DownOutlined,
+  EyeOutlined,
+  LinkOutlined,
+  CheckOutlined,
+} from "@ant-design/icons";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/shared/api/supabaseClient";
 import { useDefectsWithNames } from "@/entities/defect";
@@ -18,6 +23,7 @@ interface ClaimRow {
   statusName: string | null;
   unit_ids: number[];
   defect_ids: number[];
+  pre_trial_claim: boolean;
 }
 
 interface Props {
@@ -51,10 +57,9 @@ export default function RelatedClaimsList({
       const { data, error } = await supabase
         .from("claims")
         .select(
-          `id, claim_no, claimed_on, claim_status_id, statuses(name), claim_units(unit_id), claim_defects(defect_id)`,
+          `id, claim_no, claimed_on, claim_status_id, pre_trial_claim, statuses(name), claim_units(unit_id), claim_defects(defect_id)`,
         )
-        .eq("project_id", projectId as number)
-        .eq("pre_trial_claim", true);
+        .eq("project_id", projectId as number);
       if (error) throw error;
       return (data ?? []).map((r: any) => ({
         id: r.id,
@@ -63,6 +68,7 @@ export default function RelatedClaimsList({
         statusName: r.statuses?.name ?? null,
         unit_ids: (r.claim_units ?? []).map((u: any) => u.unit_id),
         defect_ids: (r.claim_defects ?? []).map((d: any) => d.defect_id),
+        pre_trial_claim: r.pre_trial_claim ?? false,
       }));
     },
   });
@@ -137,11 +143,11 @@ export default function RelatedClaimsList({
               type="text"
               disabled={!unitIds.length}
               icon={
-                <LinkOutlined
-                  style={
-                    linked ? { color: "#52c41a", fontWeight: 700 } : undefined
-                  }
-                />
+                linked ? (
+                  <CheckOutlined style={{ color: "#52c41a" }} />
+                ) : (
+                  <LinkOutlined />
+                )
               }
               onClick={toggle}
             />
@@ -157,6 +163,13 @@ export default function RelatedClaimsList({
     },
   ];
 
+  const rowClassName = (row: ClaimRow) => {
+    const classes = [] as string[];
+    if (row.pre_trial_claim) classes.push('claim-pretrial-row');
+    if (value.includes(row.id)) classes.push('claim-linked-row');
+    return classes.join(' ');
+  };
+
   return (
     <>
       <Table<ClaimRow & { unitNames: string }>
@@ -166,6 +179,7 @@ export default function RelatedClaimsList({
         loading={isPending}
         pagination={false}
         size="small"
+        rowClassName={rowClassName}
         expandable={{
           columnWidth: 40,
           expandIcon: ({ expanded, onExpand, record }) => (

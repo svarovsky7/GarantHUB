@@ -26,6 +26,12 @@ import { signedUrl } from '@/entities/courtCase';
 import { useChangedFields } from '@/shared/hooks/useChangedFields';
 import CaseClaimsEditorTable from '@/widgets/CaseClaimsEditorTable';
 import CasePartiesEditorTable from '@/widgets/CasePartiesEditorTable';
+import RelatedClaimsList from './RelatedClaimsList';
+import {
+  useCaseClaimLinks,
+  useAddCaseClaimLinks,
+  useDeleteCaseClaimLink,
+} from '@/entities/courtCaseClaimLink';
 
 export interface CourtCaseFormAntdEditProps {
   caseId: string;
@@ -44,6 +50,7 @@ export default function CourtCaseFormAntdEdit({
   const { data: courtCase } = useCourtCase(caseId);
   const { data: projects = [] } = useVisibleProjects();
   const projectId = Form.useWatch('project_id', form);
+  const unitIdsWatch: number[] = Form.useWatch('unit_ids', form) || [];
   const { data: units = [] } = useUnitsByProject(projectId);
   const { data: users = [] } = useUsers();
   const { data: stages = [] } = useCourtCaseStatuses();
@@ -51,6 +58,34 @@ export default function CourtCaseFormAntdEdit({
   const update = useUpdateCourtCaseFull();
   const notify = useNotify();
   const attachments = useCaseAttachments({ courtCase });
+  const { data: links = [] } = useCaseClaimLinks(Number(caseId));
+  const addLinks = useAddCaseClaimLinks();
+  const deleteLink = useDeleteCaseClaimLink();
+  const [relatedIds, setRelatedIds] = React.useState<number[]>([]);
+
+  useEffect(() => {
+    setRelatedIds(links.map((l) => l.claim_id));
+  }, [links]);
+
+  const handleRelatedChange = React.useCallback(
+    (ids: number[]) => {
+      const toAdd = ids.filter((id) => !relatedIds.includes(id));
+      const toRemove = relatedIds.filter((id) => !ids.includes(id));
+      setRelatedIds(ids);
+      if (toAdd.length) {
+        addLinks.mutate(
+          toAdd.map((id) => ({ case_id: Number(caseId), claim_id: id })),
+        );
+      }
+      if (toRemove.length) {
+        toRemove.forEach((id) => {
+          const link = links.find((l) => l.claim_id === id);
+          if (link) deleteLink.mutate(link.id);
+        });
+      }
+    },
+    [relatedIds, addLinks, deleteLink, caseId, links],
+  );
   const { changedFields, handleValuesChange: handleChanged } = useChangedFields(
     form,
     [courtCase],
@@ -286,6 +321,16 @@ export default function CourtCaseFormAntdEdit({
       <div style={{ marginBottom: 16 }}>
         <CaseClaimsEditorTable caseId={Number(caseId)} />
       </div>
+      <Form.Item label="Связанные претензии">
+        <div style={{ maxWidth: 1040 }}>
+          <RelatedClaimsList
+            projectId={projectId ?? null}
+            unitIds={unitIdsWatch}
+            value={relatedIds}
+            onChange={handleRelatedChange}
+          />
+        </div>
+      </Form.Item>
       <Form.Item label="Файлы" style={attachments.attachmentsChanged ? { background: '#fffbe6', padding: 4, borderRadius: 2 } : {}}>
         <FileDropZone onFiles={handleFiles} />
         <Button
