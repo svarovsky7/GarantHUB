@@ -9,6 +9,7 @@ export interface DefectFilters {
   typeId?: number[];
   statusId?: number[];
   fixBy?: string[];
+  engineer?: string;
   /** Корпус */
   building?: string[];
   period?: [Dayjs, Dayjs];
