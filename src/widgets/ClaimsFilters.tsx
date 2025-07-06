@@ -1,14 +1,44 @@
-import React, { useEffect } from 'react';
-import { Form, DatePicker, Select, Input, Button, Switch } from 'antd';
+import React, { useEffect, useState } from 'react';
+import {
+  Form,
+  DatePicker,
+  Select,
+  Input,
+  Button,
+  Switch,
+  Card,
+  Row,
+  Col,
+  Collapse,
+  Badge,
+  Skeleton,
+} from 'antd';
 import type { ClaimFilters } from '@/shared/types/claimFilters';
 
 const { RangePicker } = DatePicker;
 
-export default function ClaimsFilters({ options, onChange, initialValues = {} }: { options: any; onChange: (v: ClaimFilters) => void; initialValues?: Partial<ClaimFilters>; }) {
+interface Props {
+  options: any;
+  loading?: boolean;
+  initialValues?: Partial<ClaimFilters>;
+  onSubmit: (v: ClaimFilters) => void;
+  onReset: () => void;
+}
+
+export default function ClaimsFilters({
+  options,
+  loading,
+  initialValues = {},
+  onSubmit,
+  onReset,
+}: Props) {
   const LS_HIDE_CLOSED = 'claimsHideClosed';
   const [form] = Form.useForm();
+  const [extraCount, setExtraCount] = useState(0);
+
   useEffect(() => {
     form.setFieldsValue(initialValues);
+    calcExtra();
   }, [initialValues, form]);
 
   useEffect(() => {
@@ -16,11 +46,38 @@ export default function ClaimsFilters({ options, onChange, initialValues = {} }:
       const hideClosed = JSON.parse(localStorage.getItem(LS_HIDE_CLOSED) || 'false');
       form.setFieldValue('hideClosed', hideClosed);
     } catch {}
-    onChange(form.getFieldsValue());
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [form]);
 
-  const handleValuesChange = (_: any, values: any) => {
-    onChange(values);
+  const extraKeys: (keyof ClaimFilters)[] = [
+    'id',
+    'claim_no',
+    'responsible',
+    'claimedPeriod',
+    'acceptedPeriod',
+    'resolvedPeriod',
+    'units',
+    'building',
+    'description',
+    'hideClosed',
+  ];
+
+  const calcExtra = () => {
+    const vals = form.getFieldsValue();
+    const count = extraKeys.reduce((acc, key) => {
+      const v = vals[key];
+      if (Array.isArray(v)) return acc + (v.length ? 1 : 0);
+      if (v === undefined || v === null || v === '' || v === false) return acc;
+      return acc + 1;
+    }, 0);
+    setExtraCount(count);
+  };
+
+  const handleValuesChange = () => {
+    calcExtra();
+  };
+
+  const handleFinish = (values: ClaimFilters) => {
+    onSubmit(values);
     if (Object.prototype.hasOwnProperty.call(values, 'hideClosed')) {
       try {
         localStorage.setItem(LS_HIDE_CLOSED, JSON.stringify(values.hideClosed));
@@ -28,72 +85,124 @@ export default function ClaimsFilters({ options, onChange, initialValues = {} }:
     }
   };
 
-  const reset = () => {
+  const handleReset = () => {
     form.resetFields();
-    onChange({});
+    setExtraCount(0);
+    try {
+      localStorage.setItem(LS_HIDE_CLOSED, 'false');
+    } catch {}
+    onReset();
   };
 
+  const badge = <Badge count={extraCount} size="small" />;
+
   return (
-    <Form form={form} layout="vertical" onValuesChange={handleValuesChange}>
-      <div className="claims-filter-grid">
-        <div className="claims-filter-col">
-          <Form.Item name="id" label="ID претензии">
-            <Select mode="multiple" allowClear options={options.ids} />
-          </Form.Item>
-          <Form.Item name="claim_no" label="№ претензии">
-            <Input />
-          </Form.Item>
-          <Form.Item name="status" label="Статус">
-            <Select allowClear options={options.statuses} />
-          </Form.Item>
-        </div>
-        <div className="claims-filter-col">
-          <Form.Item name="author" label="Автор">
-            <Select allowClear options={options.authors} />
-          </Form.Item>
-          <Form.Item name="responsible" label="Закрепленный инженер">
-            <Select allowClear options={options.responsibleEngineers} />
-          </Form.Item>
-          <Form.Item name="period" label="Дата регистрации претензии">
-            <RangePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
-          </Form.Item>
-        </div>
-        <div className="claims-filter-col">
-          <Form.Item name="claimedPeriod" label="Дата претензии">
-            <RangePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item name="acceptedPeriod" label="Дата получения Застройщиком">
-            <RangePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item name="resolvedPeriod" label="Дата устранения">
-            <RangePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
-          </Form.Item>
-        </div>
-        <div className="claims-filter-col">
-          <Form.Item name="project" label="Проект">
-            <Select allowClear options={options.projects} />
-          </Form.Item>
-          <Form.Item name="building" label="Корпус">
-            <Select allowClear options={options.buildings} />
-          </Form.Item>
-          <Form.Item name="units" label="Объекты">
-            <Select mode="multiple" allowClear options={options.units} />
-          </Form.Item>
-        </div>
-      </div>
-      <div className="claims-filter-footer">
-        <Form.Item name="description" label="Дополнительная информация">
-          <Input />
-        </Form.Item>
-        <Form.Item name="hideClosed" label="Скрыть закрытые" valuePropName="checked">
-          <Switch />
-        </Form.Item>
-        <Form.Item>
-          <Button onClick={reset} block>
-            Сброс
-          </Button>
-        </Form.Item>
-      </div>
-    </Form>
+    <Card bordered={false} size="small">
+      {loading ? (
+        <Skeleton active paragraph={{ rows: 4 }} />
+      ) : (
+        <Form
+          form={form}
+          layout="vertical"
+          onValuesChange={handleValuesChange}
+          onFinish={handleFinish}
+        >
+          <Row gutter={12}>
+            <Col span={6}>
+              <Form.Item name="author" label="Автор">
+                <Select allowClear options={options.authors} />
+              </Form.Item>
+            </Col>
+            <Col span={6}>
+              <Form.Item name="project" label="Проект">
+                <Select allowClear options={options.projects} />
+              </Form.Item>
+            </Col>
+            <Col span={6}>
+              <Form.Item name="period" label="Дата регистрации">
+                <RangePicker size="small" format="DD.MM.YYYY" style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+            <Col span={6}>
+              <Form.Item name="status" label="Статус">
+                <Select allowClear options={options.statuses} />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Collapse ghost style={{ marginBottom: 12 }}>
+            <Collapse.Panel header="Доп. фильтры" key="more" extra={badge}>
+              <Row gutter={12}>
+                <Col span={6}>
+                  <Form.Item name="id" label="ID претензии">
+                    <Select mode="multiple" allowClear options={options.ids} />
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item name="claim_no" label="№ претензии">
+                    <Input />
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item name="responsible" label="Закрепленный инженер">
+                    <Select allowClear options={options.responsibleEngineers} />
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item name="claimedPeriod" label="Дата претензии">
+                    <RangePicker size="small" format="DD.MM.YYYY" style={{ width: '100%' }} />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={12}>
+                <Col span={6}>
+                  <Form.Item name="acceptedPeriod" label="Дата получения Застройщиком">
+                    <RangePicker size="small" format="DD.MM.YYYY" style={{ width: '100%' }} />
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item name="resolvedPeriod" label="Дата устранения">
+                    <RangePicker size="small" format="DD.MM.YYYY" style={{ width: '100%' }} />
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item name="building" label="Корпус">
+                    <Select allowClear options={options.buildings} />
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item name="units" label="Объекты">
+                    <Select mode="multiple" allowClear options={options.units} />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={12}>
+                <Col span={12}>
+                  <Form.Item name="description" label="Дополнительная информация">
+                    <Input />
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item name="hideClosed" label="Скрыть закрытые" valuePropName="checked">
+                    <Switch />
+                  </Form.Item>
+                </Col>
+              </Row>
+            </Collapse.Panel>
+          </Collapse>
+
+          <Row justify="end" gutter={12}>
+            <Col>
+              <Button onClick={handleReset}>Сброс</Button>
+            </Col>
+            <Col>
+              <Button type="primary" htmlType="submit">
+                Найти
+              </Button>
+            </Col>
+          </Row>
+        </Form>
+      )}
+    </Card>
   );
 }
