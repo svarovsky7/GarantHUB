@@ -75,7 +75,7 @@ export default function AddCourtCaseFormAntd({
     if (initialValues.project_id) {
       form.setFieldValue("project_id", initialValues.project_id);
       prevProjectIdRef.current = initialValues.project_id;
-    } else if (globalProjectId) {
+    } else if (globalProjectId && prevProjectIdRef.current === null) {
       form.setFieldValue("project_id", Number(globalProjectId));
       prevProjectIdRef.current = Number(globalProjectId);
     }
@@ -96,7 +96,7 @@ export default function AddCourtCaseFormAntd({
     if (initialValues.case_uid) {
       form.setFieldValue("case_uid", initialValues.case_uid);
     }
-  }, [initialValues, globalProjectId, profileId, form]);
+  }, [initialValues, profileId, form, globalProjectId]);
 
   /**
    * Reset selected units when project changes to avoid inconsistent data
