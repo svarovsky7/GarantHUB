@@ -113,10 +113,41 @@ export default function UserStatsBlock() {
                   <span>{s.count}</span>
                 </div>
               ))}
+              <Statistic title="Замечаний за инженером" value={data.claimResponsibleCount} style={{ marginTop: 8 }} />
+              {data.claimResponsibleStatusCounts.map((s) => (
+                <div
+                  key={`cr-${s.statusId}`}
+                  style={{ display: 'flex', justifyContent: 'space-between' }}
+                >
+                  <span>{s.statusName ?? 'Без статуса'}</span>
+                  <span>{s.count}</span>
+                </div>
+              ))}
               <Statistic title="Создано дефектов" value={data.defectCount} style={{ marginTop: 8 }} />
               {data.defectStatusCounts.map((s) => (
                 <div
                   key={`d-${s.statusId}`}
+                  style={{ display: 'flex', justifyContent: 'space-between' }}
+                >
+                  <span>{s.statusName ?? 'Без статуса'}</span>
+                  <span>{s.count}</span>
+                </div>
+              ))}
+              <Statistic title="Дефектов за инженером" value={data.defectResponsibleCount} style={{ marginTop: 8 }} />
+              {data.defectResponsibleStatusCounts.map((s) => (
+                <div
+                  key={`dr-${s.statusId}`}
+                  style={{ display: 'flex', justifyContent: 'space-between' }}
+                >
+                  <span>{s.statusName ?? 'Без статуса'}</span>
+                  <span>{s.count}</span>
+                </div>
+              ))}
+              <Statistic title="Создано судебных дел" value={data.courtCaseCount} style={{ marginTop: 8 }} />
+              <Statistic title="Судебных дел за юристом" value={data.courtCaseResponsibleCount} style={{ marginTop: 8 }} />
+              {data.courtCaseStatusCounts.map((s) => (
+                <div
+                  key={`cc-${s.statusId}`}
                   style={{ display: 'flex', justifyContent: 'space-between' }}
                 >
                   <span>{s.statusName ?? 'Без статуса'}</span>
