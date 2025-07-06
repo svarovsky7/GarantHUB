@@ -138,7 +138,7 @@ export default function ClaimsFilters({
             <Col span={6}>
               <Form.Item
                 name="hideClosed"
-                label="Скрыть закрытые и не Гарантия"
+                label="СКРЫТЬ ЗАКРЫТЫЕ И НЕ ГАРАНТИЯ"
                 valuePropName="checked"
               >
                 <Switch size="small" />
