@@ -124,6 +124,26 @@ const ClaimFormAntdEdit = React.forwardRef<
     Array.isArray(unitIdsWatch) ? unitIdsWatch : [],
   );
   const { data: lockedUnitIds = [] } = useLockedUnitIds();
+  const prevUnitIds = React.useRef<number[]>([]);
+  const didMountUnits = React.useRef(false);
+
+  React.useEffect(() => {
+    if (!didMountUnits.current) {
+      prevUnitIds.current = Array.isArray(unitIdsWatch) ? unitIdsWatch : [];
+      didMountUnits.current = true;
+      return;
+    }
+    const added = (Array.isArray(unitIdsWatch) ? unitIdsWatch : []).filter(
+      (id) => !prevUnitIds.current.includes(id),
+    );
+    if (added.some((id) => lockedUnitIds.includes(id))) {
+      Modal.warning({
+        title: 'Объект заблокирован',
+        content: 'Работы по устранению замечаний запрещено выполнять.',
+      });
+    }
+    prevUnitIds.current = Array.isArray(unitIdsWatch) ? unitIdsWatch : [];
+  }, [unitIdsWatch, lockedUnitIds]);
   const buildingsText = React.useMemo(
     () =>
       Array.from(
