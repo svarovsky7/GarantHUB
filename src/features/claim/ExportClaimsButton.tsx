@@ -18,16 +18,21 @@ export default function ExportClaimsButton({ claims, filters }: ExportClaimsButt
     const rows = filterClaims(claims, filters).map((c) => ({
       ID: c.id,
       Проект: c.projectName,
+      Корпус: c.buildings ?? '',
       Объекты: c.unitNames,
+      Статус: c.statusName,
       '№ претензии': c.claim_no,
       'Дата претензии': c.claimedOn ? c.claimedOn.format('DD.MM.YYYY') : '',
       'Дата получения Застройщиком': c.acceptedOn
         ? c.acceptedOn.format('DD.MM.YYYY')
         : '',
-      'Дата регистрации претензии': c.registeredOn ? c.registeredOn.format('DD.MM.YYYY') : '',
-      'Дата устранения претензии': c.resolvedOn ? c.resolvedOn.format('DD.MM.YYYY') : '',
-      Статус: c.statusName,
-      'Ответственный инженер': c.responsibleEngineerName ?? '',
+      'Дата регистрации претензии': c.registeredOn
+        ? c.registeredOn.format('DD.MM.YYYY')
+        : '',
+      'Дата устранения': c.resolvedOn ? c.resolvedOn.format('DD.MM.YYYY') : '',
+      'Закрепленный инженер': c.responsibleEngineerName ?? '',
+      Добавлено: c.createdAt ? c.createdAt.format('DD.MM.YYYY HH:mm') : '',
+      Автор: c.createdByName ?? '',
     }));
     const wb = new ExcelJS.Workbook();
     const ws = wb.addWorksheet('Claims');
