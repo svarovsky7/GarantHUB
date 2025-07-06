@@ -48,17 +48,19 @@ export default function ExportDefectsButton({
       const rows = filtered.map((d) => ({
         'ID дефекта': d.id,
         'ID претензии': d.claimIds.join(', '),
+        'Прошло дней с даты получения': d.days ?? '',
         Проект: d.projectNames ?? '',
+        Корпус: d.buildingNames ?? '',
         Объекты: d.unitNames ?? '',
         Описание: d.description,
         Тип: d.defectTypeName ?? '',
         Статус: d.defectStatusName ?? '',
         'Кем устраняется': d.fixByName ?? '',
+        'Закрепленный инженер': d.engineerName ?? '',
         'Дата получения': d.received_at ? dayjs(d.received_at).format('DD.MM.YYYY') : '',
-        'Прошло дней с Даты получения': d.received_at
-          ? today.diff(dayjs(d.received_at), 'day') + 1
-          : '',
-        'Дата создания': d.created_at ? dayjs(d.created_at).format('DD.MM.YYYY') : '',
+        Добавлено: d.created_at ? dayjs(d.created_at).format('DD.MM.YYYY HH:mm') : '',
+        Автор: d.createdByName ?? '',
+        'Дата устранения': d.fixed_at ? dayjs(d.fixed_at).format('DD.MM.YYYY') : '',
         'Ссылки на файлы': (filesMap[d.id] ?? []).join('\n'),
       }));
       const wb = new ExcelJS.Workbook();
