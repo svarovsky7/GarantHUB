@@ -143,9 +143,6 @@ body {
   color: #aaa;
   background: inherit !important;
 }
-.locked-object-row {
-  background: #ffccc7 !important;
-}
 
 /* Подсветка новых элементов */
 .new-row {
