@@ -108,8 +108,7 @@ export default function UserStatsBlock({
           claimResp: stats?.claimResponsibleCount ?? 0,
           defect: stats?.defectCount ?? 0,
           defectResp: stats?.defectResponsibleCount ?? 0,
-          caseCount: stats?.courtCaseCount ?? 0,
-          caseResp: stats?.courtCaseResponsibleCount ?? 0,
+          defectStatusCounts: stats?.defectResponsibleStatusCounts ?? [],
         };
       }),
     [userIds, data, filteredUsers],
@@ -123,8 +122,6 @@ export default function UserStatsBlock({
           acc.claimResp += row.claimResp;
           acc.defect += row.defect;
           acc.defectResp += row.defectResp;
-          acc.caseCount += row.caseCount;
-          acc.caseResp += row.caseResp;
           return acc;
         },
         {
@@ -132,8 +129,6 @@ export default function UserStatsBlock({
           claimResp: 0,
           defect: 0,
           defectResp: 0,
-          caseCount: 0,
-          caseResp: 0,
         },
       ),
     [tableData],
@@ -198,30 +193,6 @@ export default function UserStatsBlock({
             }%)`
           : '—',
     },
-    {
-      title: 'Создано дел',
-      dataIndex: 'caseCount',
-      align: 'right',
-      sorter: (a, b) => a.caseCount - b.caseCount,
-      render: (v: number) =>
-        v
-          ? `${v} (${
-              totals.caseCount ? Math.round((v / totals.caseCount) * 100) : 0
-            }%)`
-          : '—',
-    },
-    {
-      title: 'Дел за ним',
-      dataIndex: 'caseResp',
-      align: 'right',
-      sorter: (a, b) => a.caseResp - b.caseResp,
-      render: (v: number) =>
-        v
-          ? `${v} (${
-              totals.caseResp ? Math.round((v / totals.caseResp) * 100) : 0
-            }%)`
-          : '—',
-    },
   ];
 
   return (
@@ -279,6 +250,22 @@ export default function UserStatsBlock({
               dataSource={tableData}
               pagination={false}
               size="small"
+              expandable={{
+                expandedRowRender: (record) => (
+                  <Table
+                    columns={[
+                      { title: 'Статус', dataIndex: 'statusName' },
+                      { title: 'Кол-во', dataIndex: 'count', align: 'right' },
+                    ]}
+                    dataSource={record.defectStatusCounts}
+                    pagination={false}
+                    size="small"
+                  />
+                ),
+                rowExpandable: (record) =>
+                  Array.isArray(record.defectStatusCounts) &&
+                  record.defectStatusCounts.length > 0,
+              }}
               summary={() => (
                 <Table.Summary.Row>
                   <Table.Summary.Cell index={0} />
@@ -294,12 +281,6 @@ export default function UserStatsBlock({
                   </Table.Summary.Cell>
                   <Table.Summary.Cell index={5} align="right">
                     {totals.defectResp || '—'}
-                  </Table.Summary.Cell>
-                  <Table.Summary.Cell index={6} align="right">
-                    {totals.caseCount || '—'}
-                  </Table.Summary.Cell>
-                  <Table.Summary.Cell index={7} align="right">
-                    {totals.caseResp || '—'}
                   </Table.Summary.Cell>
                 </Table.Summary.Row>
               )}

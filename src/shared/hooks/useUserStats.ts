@@ -15,9 +15,15 @@ export async function fetchUserStats(
   defectStatuses: ReturnType<typeof useDefectStatuses>['data'],
   caseStatuses: ReturnType<typeof useCourtCaseStatuses>['data'],
 ) {
-  const [claimRows, defectRows, claimRespRows, defectRespRows, caseRows, caseRespRows] =
-    await Promise.all([
-      fetchPaged<any>((f, t) =>
+  const [
+    claimRows,
+    claimRespRows,
+    defectRespRows,
+    defectRows,
+    caseRows,
+    caseRespRows,
+  ] = await Promise.all([
+    fetchPaged<any>((f, t) =>
         supabase
           .from('claims')
           .select('id, claim_status_id, created_at')
@@ -26,8 +32,8 @@ export async function fetchUserStats(
           .lte('created_at', to)
           .order('id')
           .range(f, t),
-      ),
-      fetchPaged<any>((f, t) =>
+    ),
+    fetchPaged<any>((f, t) =>
         supabase
           .from('claims')
           .select('id, claim_status_id, created_at')
@@ -36,8 +42,8 @@ export async function fetchUserStats(
           .lte('created_at', to)
           .order('id')
           .range(f, t),
-      ),
-      fetchPaged<any>((f, t) =>
+    ),
+    fetchPaged<any>((f, t) =>
         supabase
           .from('defects')
           .select('id, status_id, created_at')
@@ -46,38 +52,38 @@ export async function fetchUserStats(
           .lte('created_at', to)
           .order('id')
           .range(f, t),
-      ),
-      fetchPaged<any>((f, t) =>
-        supabase
-          .from('court_cases')
-          .select('id, status, created_at')
-          .eq('created_by', userId)
-          .gte('created_at', from)
-          .lte('created_at', to)
-          .order('id')
-          .range(f, t),
-      ),
-      fetchPaged<any>((f, t) =>
-        supabase
-          .from('court_cases')
-          .select('id, status, created_at')
-          .eq('responsible_lawyer_id', userId)
-          .gte('created_at', from)
-          .lte('created_at', to)
-          .order('id')
-          .range(f, t),
-      ),
-      fetchPaged<any>((f, t) =>
-        supabase
-          .from('defects')
-          .select('id, status_id, created_at')
-          .eq('created_by', userId)
-          .gte('created_at', from)
-          .lte('created_at', to)
-          .order('id')
-          .range(f, t),
-      ),
-    ]);
+    ),
+    fetchPaged<any>((f, t) =>
+      supabase
+        .from('defects')
+        .select('id, status_id, created_at')
+        .eq('created_by', userId)
+        .gte('created_at', from)
+        .lte('created_at', to)
+        .order('id')
+        .range(f, t),
+    ),
+    fetchPaged<any>((f, t) =>
+      supabase
+        .from('court_cases')
+        .select('id, status, created_at')
+        .eq('created_by', userId)
+        .gte('created_at', from)
+        .lte('created_at', to)
+        .order('id')
+        .range(f, t),
+    ),
+    fetchPaged<any>((f, t) =>
+      supabase
+        .from('court_cases')
+        .select('id, status, created_at')
+        .eq('responsible_lawyer_id', userId)
+        .gte('created_at', from)
+        .lte('created_at', to)
+        .order('id')
+        .range(f, t),
+    ),
+  ]);
 
   const claimMap: Record<string, number> = {};
   const claimRespMap: Record<string, number> = {};
