@@ -45,24 +45,6 @@ body {
   width: 100%;
 }
 
-.claims-filter-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-}
-.claims-filter-col {
-  display: grid;
-  gap: 16px;
-}
-.claims-filter-footer {
-  margin-top: 16px;
-}
-.claims-filter-grid .ant-input,
-.claims-filter-grid .ant-select,
-.claims-filter-grid .ant-picker,
-.claims-filter-grid button {
-  width: 100%;
-}
 
 /* === ТАБЛИЦА ================================================================= */
 .MuiTable-root {
