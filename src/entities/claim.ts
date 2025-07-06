@@ -444,6 +444,17 @@ export function useCreateClaim() {
     ) => {
       const { unit_ids = [], defect_ids = [], attachments = [], ...rest } = payload as any;
 
+      if (unit_ids.length) {
+        const { data: locked } = await supabase
+          .from('units')
+          .select('id')
+          .in('id', unit_ids)
+          .eq('locked', true);
+        if (locked && locked.length) {
+          throw new Error('Объект заблокирован. Обратитесь в юридический отдел');
+        }
+      }
+
       const insertData: any = {
         ...rest,
         project_id: rest.project_id ?? projectId,

@@ -40,7 +40,7 @@ export default function useUnitsMatrix(projectId: number | null, building?: stri
 
       let query = supabase
         .from('units')
-        .select('id, name, building, floor, project_id')
+        .select('id, name, building, floor, project_id, locked')
         .eq('project_id', projectId);
       if (building) query = query.eq('building', building);
       const { data: unitsData } = await query;
