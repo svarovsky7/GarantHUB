@@ -69,22 +69,9 @@ export default function CourtCaseFormAntdEdit({
 
   const handleRelatedChange = React.useCallback(
     (ids: number[]) => {
-      const toAdd = ids.filter((id) => !relatedIds.includes(id));
-      const toRemove = relatedIds.filter((id) => !ids.includes(id));
       setRelatedIds(ids);
-      if (toAdd.length) {
-        addLinks.mutate(
-          toAdd.map((id) => ({ case_id: Number(caseId), claim_id: id })),
-        );
-      }
-      if (toRemove.length) {
-        toRemove.forEach((id) => {
-          const link = links.find((l) => l.claim_id === id);
-          if (link) deleteLink.mutate(link.id);
-        });
-      }
     },
-    [relatedIds, addLinks, deleteLink, caseId, links],
+    [],
   );
   const { changedFields, handleValuesChange: handleChanged } = useChangedFields(
     form,
@@ -170,6 +157,20 @@ export default function CourtCaseFormAntdEdit({
         );
       }
       attachments.markPersisted();
+      const toAdd = relatedIds.filter(
+        (id) => !links.some((l) => l.claim_id === id),
+      );
+      const toRemove = links.filter((l) => !relatedIds.includes(l.claim_id));
+      if (toAdd.length) {
+        await addLinks.mutateAsync(
+          toAdd.map((id) => ({ case_id: Number(caseId), claim_id: id })),
+        );
+      }
+      if (toRemove.length) {
+        await Promise.all(
+          toRemove.map((l) => deleteLink.mutateAsync(l.id)),
+        );
+      }
       notify.success('Дело обновлено');
       onSaved?.();
     } catch (e: any) {
