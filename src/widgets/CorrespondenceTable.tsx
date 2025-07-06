@@ -22,6 +22,7 @@ interface CorrespondenceTableProps {
   projects: Option[];
   units: Option[];
   statuses: Option[];
+  lockedUnitIds?: number[];
 }
 
 /** Ключ в localStorage для хранения раскрывшихся строк */
@@ -40,6 +41,7 @@ export default function CorrespondenceTable({
                                               projects,
                                               units,
                                               statuses,
+                                              lockedUnitIds = [],
                                             }: CorrespondenceTableProps) {
   const maps = useMemo(() => {
     const m = {
@@ -301,8 +303,9 @@ export default function CorrespondenceTable({
   const resizableColumns = columnsProp ?? defaultColumns;
 
   const rowClassName = (record: any) => {
-    if (!record.parent_id) return 'main-letter-row';
-    return 'child-letter-row';
+    const base = record.parent_id ? 'child-letter-row' : 'main-letter-row';
+    const locked = record.unit_ids?.some((id: number) => lockedUnitIds.includes(id));
+    return locked ? `${base} locked-object-row` : base;
   };
 
   return (

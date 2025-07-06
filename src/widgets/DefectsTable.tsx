@@ -29,6 +29,7 @@ interface Props {
   /** Колонки таблицы. Если не переданы, используется набор по умолчанию */
   columns?: ColumnsType<DefectWithInfo>;
   onView?: (id: number) => void;
+  lockedUnitIds?: number[];
 }
 
 /**
@@ -41,6 +42,7 @@ export default function DefectsTable({
   loading,
   columns: columnsProp,
   onView,
+  lockedUnitIds = [],
 }: Props) {
   const { mutateAsync: remove, isPending } = useDeleteDefect();
   const filtered = useMemo(
@@ -218,9 +220,11 @@ export default function DefectsTable({
     const checking = row.defectStatusName?.toLowerCase().includes("провер");
     const closed = row.defectStatusName?.toLowerCase().includes("закры");
     const preTrial = row.hasPretrialClaim;
+    const locked = row.unit_id != null && lockedUnitIds.includes(row.unit_id);
     if (checking) classes.push("defect-confirmed-row");
     if (preTrial) classes.push("defect-pretrial-row");
     if (closed) classes.push("defect-closed-row");
+    if (locked) classes.push("locked-object-row");
     return classes.join(" ");
   };
 

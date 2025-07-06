@@ -1,5 +1,6 @@
 import React from "react";
 import { Paper, Box, Tooltip, IconButton, Typography } from "@mui/material";
+import LockOutlined from '@mui/icons-material/LockOutlined';
 import MailIcon from "@mui/icons-material/Mail";
 import type { UnitClaimInfo } from "@/shared/types/unitClaimInfo";
 import EditOutlined from "@mui/icons-material/EditOutlined";
@@ -47,6 +48,7 @@ export default function UnitCell({
   const hasCases = Array.isArray(cases) && cases.length > 0;
   const claimColor = claimInfo?.color ?? null;
   const hasPretrial = claimInfo?.hasPretrialClaim ?? false;
+  const isLocked = Boolean(unit?.locked);
 
   return (
     <Paper
@@ -58,12 +60,12 @@ export default function UnitCell({
         flexDirection: "column",
         alignItems: "stretch",
         justifyContent: "flex-start",
-        border: `${hasCases ? 2 : 1.5}px solid ${
-          hasCases || hasPretrial ? "#e53935" : "#dde2ee"
+        border: `${hasCases || isLocked ? 2 : 1.5}px solid ${
+          hasCases || hasPretrial || isLocked ? '#e53935' : '#dde2ee'
         }`,
-        background: bgColor,
+        background: isLocked ? '#fff6f6' : bgColor,
         borderRadius: "12px",
-        boxShadow: hasCases ? "0 0 0 2px rgba(229,57,53,0.25)" : "0 1px 6px 0 #E3ECFB",
+        boxShadow: hasCases || isLocked ? '0 0 0 2px rgba(229,57,53,0.25)' : '0 1px 6px 0 #E3ECFB',
         px: 0,
         py: 0,
         overflow: "hidden",
@@ -90,6 +92,12 @@ export default function UnitCell({
       }}
       data-oid="21x1tb3"
     >
+      {isLocked && (
+        <LockOutlined
+          fontSize="small"
+          sx={{ position: 'absolute', top: 2, left: 2, color: '#e53935' }}
+        />
+      )}
       {claimColor && (
         <Box
           sx={{

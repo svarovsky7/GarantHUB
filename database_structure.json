@@ -1197,6 +1197,13 @@
     "column_default": "false"
   },
   {
+    "table_name": "role_permissions",
+    "column_name": "can_lock_units",
+    "data_type": "boolean",
+    "is_nullable": "NO",
+    "column_default": "false"
+  },
+  {
     "table_name": "roles",
     "column_name": "id",
     "data_type": "integer",
@@ -1328,5 +1335,12 @@
     "data_type": "uuid",
     "is_nullable": "YES",
     "column_default": null
+  },
+  {
+    "table_name": "units",
+    "column_name": "locked",
+    "data_type": "boolean",
+    "is_nullable": "NO",
+    "column_default": "false"
   }
 ]
