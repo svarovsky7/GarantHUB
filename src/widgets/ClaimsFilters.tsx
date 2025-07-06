@@ -73,8 +73,14 @@ export default function ClaimsFilters({
     setExtraCount(count);
   };
 
-  const handleValuesChange = () => {
+  const handleValuesChange = (
+    changed: Partial<ClaimFilters>,
+    all: ClaimFilters,
+  ) => {
     calcExtra();
+    if (Object.prototype.hasOwnProperty.call(changed, "hideClosed")) {
+      handleFinish(all);
+    }
   };
 
   const handleFinish = (values: ClaimFilters) => {
