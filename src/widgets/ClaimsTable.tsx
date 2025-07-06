@@ -98,7 +98,9 @@ export default function ClaimsTable({
             statusId={row.claim_status_id}
             statusColor={row.statusColor}
             statusName={row.statusName}
-            locked={row.unit_ids?.some((id: number) => lockedUnitIds.includes(id))}
+            locked={row.unit_ids?.some((id: number) =>
+              lockedUnitIds.includes(id),
+            )}
           />
         ),
       },
@@ -258,7 +260,8 @@ export default function ClaimsTable({
       const matchesResponsible =
         !filters.responsible ||
         c.responsibleEngineerName === filters.responsible;
-      const matchesAuthor = !filters.author || c.createdByName === filters.author;
+      const matchesAuthor =
+        !filters.author || c.createdByName === filters.author;
       const matchesNumber =
         !filters.claim_no || c.claim_no.includes(filters.claim_no);
       const matchesIds = !filters.id || filters.id.includes(c.id);
@@ -266,7 +269,7 @@ export default function ClaimsTable({
         !filters.description ||
         (c.description ?? "").includes(filters.description);
       const matchesHideClosed = !(
-        filters.hideClosed && /закры/i.test(c.statusName)
+        filters.hideClosed && /(закры|не\s*гаран)/i.test(c.statusName)
       );
       const matchesPeriod =
         !filters.period ||
