@@ -130,6 +130,7 @@ export default function DefectsTable({
           statusId={row.status_id}
           statusName={row.defectStatusName}
           statusColor={row.defectStatusColor}
+          locked={row.unit_id != null && lockedUnitIds.includes(row.unit_id)}
         />
       ),
     },
