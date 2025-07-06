@@ -1,5 +1,5 @@
 import React from 'react';
-import { Select, Tag } from 'antd';
+import { Select, Tag, Modal } from 'antd';
 import { useClaimStatuses } from '@/entities/claimStatus';
 import { useUpdateClaim } from '@/entities/claim';
 
@@ -8,6 +8,8 @@ interface ClaimStatusSelectProps {
   statusId: number | null;
   statusColor?: string | null;
   statusName?: string | null;
+  /** Признак, что претензия содержит заблокированные объекты */
+  locked?: boolean;
 }
 
 export default function ClaimStatusSelect({
@@ -15,6 +17,7 @@ export default function ClaimStatusSelect({
   statusId,
   statusColor,
   statusName,
+  locked,
 }: ClaimStatusSelectProps) {
   const { data: statuses = [], isLoading } = useClaimStatuses();
   const update = useUpdateClaim();
@@ -33,13 +36,34 @@ export default function ClaimStatusSelect({
   );
 
   const handleChange = (value: number) => {
+    if (locked) {
+      Modal.warning({
+        title: 'Объект заблокирован',
+        content: 'Работы по устранению замечаний запрещено выполнять.',
+      });
+      setEditing(false);
+      return;
+    }
     update.mutate({ id: claimId, updates: { claim_status_id: value } });
     setEditing(false);
   };
 
   if (!editing) {
     return (
-      <Tag color={current?.color} onClick={() => setEditing(true)} style={{ cursor: 'pointer' }}>
+      <Tag
+        color={current?.color}
+        onClick={() => {
+          if (locked) {
+            Modal.warning({
+              title: 'Объект заблокирован',
+              content: 'Работы по устранению замечаний запрещено выполнять.',
+            });
+          } else {
+            setEditing(true);
+          }
+        }}
+        style={{ cursor: 'pointer' }}
+      >
         {current?.name ?? '—'}
       </Tag>
     );

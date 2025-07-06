@@ -93,6 +93,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
     buildingDebounced ?? undefined,
   );
   const { data: lockedUnitIds = [] } = useLockedUnitIds();
+  const unitIdsWatch = Form.useWatch('unit_ids', form) ?? [];
   const { data: users = [] } = useUsers();
   const { data: statuses = [] } = useClaimStatuses();
   const create = useCreateClaim();
@@ -105,6 +106,27 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
   const acceptedOnWatch = Form.useWatch('accepted_on', form) ?? null;
   const { data: caseUids = [] } = useCaseUids();
   const preTrialWatch = Form.useWatch('pre_trial_claim', form);
+
+  const prevUnitIds = React.useRef<number[]>([]);
+  const didMountUnits = React.useRef(false);
+
+  React.useEffect(() => {
+    if (!didMountUnits.current) {
+      prevUnitIds.current = Array.isArray(unitIdsWatch) ? unitIdsWatch : [];
+      didMountUnits.current = true;
+      return;
+    }
+    const added = (Array.isArray(unitIdsWatch) ? unitIdsWatch : []).filter(
+      (id) => !prevUnitIds.current.includes(id),
+    );
+    if (added.some((id) => lockedUnitIds.includes(id))) {
+      Modal.warning({
+        title: 'Объект заблокирован',
+        content: 'Работы по устранению замечаний запрещено выполнять.',
+      });
+    }
+    prevUnitIds.current = Array.isArray(unitIdsWatch) ? unitIdsWatch : [];
+  }, [unitIdsWatch, lockedUnitIds]);
 
   const handleDropFiles = (dropped: File[]) => {
     setFiles((p) => [...p, ...dropped.map((file) => ({ file, description: '' }))]);

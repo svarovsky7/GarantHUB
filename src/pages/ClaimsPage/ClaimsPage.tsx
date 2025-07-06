@@ -277,7 +277,21 @@ export default function ClaimsPage() {
       projectName: { title: 'Проект', dataIndex: 'projectName', width: 180, sorter: (a: any, b: any) => a.projectName.localeCompare(b.projectName) },
       buildings: { title: 'Корпус', dataIndex: 'buildings', width: 120, sorter: (a: any, b: any) => (a.buildings || '').localeCompare(b.buildings || '') },
       unitNames: { title: 'Объекты', dataIndex: 'unitNames', width: 160, sorter: (a: any, b: any) => a.unitNames.localeCompare(b.unitNames) },
-      statusId: { title: 'Статус', dataIndex: 'claim_status_id', width: 160, sorter: (a: any, b: any) => a.statusName.localeCompare(b.statusName), render: (_: any, row: any) => <ClaimStatusSelect claimId={row.id} statusId={row.claim_status_id} statusColor={row.statusColor} statusName={row.statusName} /> },
+      statusId: {
+        title: 'Статус',
+        dataIndex: 'claim_status_id',
+        width: 160,
+        sorter: (a: any, b: any) => a.statusName.localeCompare(b.statusName),
+        render: (_: any, row: any) => (
+          <ClaimStatusSelect
+            claimId={row.id}
+            statusId={row.claim_status_id}
+            statusColor={row.statusColor}
+            statusName={row.statusName}
+            locked={row.unit_ids?.some((id: number) => lockedUnitIds.includes(id))}
+          />
+        ),
+      },
       claim_no: { title: '№ претензии', dataIndex: 'claim_no', width: 160, sorter: (a: any, b: any) => a.claim_no.localeCompare(b.claim_no) },
       claimedOn: { title: 'Дата претензии', dataIndex: 'claimedOn', width: 120, sorter: (a: any, b: any) => (a.claimedOn ? a.claimedOn.valueOf() : 0) - (b.claimedOn ? b.claimedOn.valueOf() : 0), render: (v: any) => fmt(v) },
       acceptedOn: { title: 'Дата получения Застройщиком', dataIndex: 'acceptedOn', width: 120, sorter: (a: any, b: any) => (a.acceptedOn ? a.acceptedOn.valueOf() : 0) - (b.acceptedOn ? b.acceptedOn.valueOf() : 0), render: (v: any) => fmt(v) },

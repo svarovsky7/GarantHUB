@@ -98,6 +98,7 @@ export default function ClaimsTable({
             statusId={row.claim_status_id}
             statusColor={row.statusColor}
             statusName={row.statusName}
+            locked={row.unit_ids?.some((id: number) => lockedUnitIds.includes(id))}
           />
         ),
       },
