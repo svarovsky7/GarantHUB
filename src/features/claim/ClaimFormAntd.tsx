@@ -220,7 +220,6 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
       fixed_at: d.fixed_at ? d.fixed_at.format('YYYY-MM-DD') : null,
       fixed_by: null,
       case_uid_id: values.case_uid_id ?? null,
-      engineer_id: values.engineer_id ?? null,
     }));
     const defectIds = await createDefects.mutateAsync(newDefs);
     if (defectIds.length !== newDefs.length) {

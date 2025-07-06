@@ -218,7 +218,6 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
         ...d,
         unit_id: unitId,
         created_by: userId,
-        engineer_id: null,
         tmpId: tmpIdRef.current--,
       })),
     ]);

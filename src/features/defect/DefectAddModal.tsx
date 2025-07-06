@@ -36,7 +36,6 @@ export default function DefectAddModal({ open, projectId, defaultReceivedAt, onC
       received_at: d.received_at ? dayjs(d.received_at).format('YYYY-MM-DD') : null,
       fixed_at: d.fixed_at ? dayjs(d.fixed_at).format('YYYY-MM-DD') : null,
       fixed_by: null,
-      engineer_id: null,
     }));
     onSubmit(defs);
     form.resetFields();
