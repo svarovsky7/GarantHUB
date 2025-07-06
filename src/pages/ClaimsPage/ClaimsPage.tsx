@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ConfigProvider, Alert, Card, Button, Tooltip, Popconfirm, message, Space, Typography } from 'antd';
+import { ConfigProvider, Alert, Button, Tooltip, Popconfirm, message, Space, Typography } from 'antd';
 import ruRU from 'antd/locale/ru_RU';
 import {
   SettingOutlined,
@@ -64,13 +64,14 @@ export default function ClaimsPage() {
   const isLoading = perm?.only_assigned_project ? loadingAssigned : loadingAll;
   const error = errorAssigned || errorAll;
   const deleteClaimMutation = useDeleteClaim();
-  const { data: users = [] } = useUsers();
+  const { data: users = [], isPending: usersLoading } = useUsers();
   const unitIds = useMemo(
     () => Array.from(new Set(claims.flatMap((t) => t.unit_ids))),
     [claims],
   );
-  const { data: units = [] } = useUnitsByIds(unitIds);
+  const { data: units = [], isPending: unitsLoading } = useUnitsByIds(unitIds);
   const { data: lockedUnitIds = [] } = useLockedUnitIds();
+  const filtersLoading = usersLoading || unitsLoading;
   const checkingDefectMap = useMemo(() => new Map<number, boolean>(), []);
   const [searchParams] = useSearchParams();
   const initialValues = {
@@ -86,24 +87,11 @@ export default function ClaimsPage() {
   const [showAddForm, setShowAddForm] = useState(
     searchParams.get('open_form') === '1',
   );
-  const LS_SHOW_FILTERS = 'claims:showFilters';
-  const [showFilters, setShowFilters] = useState<boolean>(() => {
-    try {
-      return JSON.parse(localStorage.getItem(LS_SHOW_FILTERS) || 'true');
-    } catch {
-      return true;
-    }
-  });
   React.useEffect(() => {
     if (searchParams.get('open_form') === '1') {
       setShowAddForm(true);
     }
   }, [searchParams]);
-  React.useEffect(() => {
-    try {
-      localStorage.setItem(LS_SHOW_FILTERS, JSON.stringify(showFilters));
-    } catch {}
-  }, [showFilters]);
   const [viewId, setViewId] = useState<number | null>(null);
   const [linkFor, setLinkFor] = useState<ClaimWithNames | null>(null);
   const linkClaims = useLinkClaims();
@@ -371,14 +359,22 @@ export default function ClaimsPage() {
     [claimsWithNames, filters],
   );
 
+  const applyFilters = (vals: ClaimFilters) => {
+    setFilters(vals);
+    const count = filterClaims(claimsWithNames, vals).length;
+    message.success(`Фильтры применены (${count} результатов)`);
+  };
+
+  const resetFilters = () => {
+    setFilters({});
+    message.info('Фильтры сброшены');
+  };
+
   return (
     <ConfigProvider locale={ruRU}>
       <>
         <Button type="primary" onClick={() => setShowAddForm((p) => !p)} style={{ marginRight: 8 }}>
           {showAddForm ? 'Скрыть форму' : 'Добавить претензию'}
-        </Button>
-        <Button onClick={() => setShowFilters((p) => !p)}>
-          {showFilters ? 'Скрыть фильтры' : 'Показать фильтры'}
         </Button>
         <Button icon={<SettingOutlined />} style={{ marginLeft: 8 }} onClick={() => setShowColumnsDrawer(true)} />
         <span style={{ marginLeft: 8, display: 'inline-block' }}>
@@ -427,11 +423,14 @@ export default function ClaimsPage() {
           />
         </React.Suspense>
         <div style={{ marginTop: 24 }}>
-          {showFilters && (
-            <Card style={{ marginBottom: 24 }}>
-              <ClaimsFilters options={options} onChange={setFilters} />
-            </Card>
-          )}
+          <div style={{ marginBottom: 24 }}>
+            <ClaimsFilters
+              options={options}
+              loading={filtersLoading}
+              onSubmit={applyFilters}
+              onReset={resetFilters}
+            />
+          </div>
           {error ? (
             <Alert type="error" message={error.message} />
           ) : (
