@@ -161,6 +161,7 @@ export default function DefectsPage() {
         ),
         hasPretrialClaim: hasPretrial,
         createdByName: userMap.get(d.created_by as string) ?? null,
+        engineerName: userMap.get(d.engineer_id as string) ?? null,
         unitIds,
         unitNames,
         unitNamesList,
@@ -237,8 +238,9 @@ export default function DefectsPage() {
       statuses: uniqPairs(
         filtered('statusId').map((d) => [d.status_id, d.defectStatusName]),
       ),
-        fixBy: mapStrOptions(filtered('fixBy').map((d) => d.fixByName)),
-      };
+      fixBy: mapStrOptions(filtered('fixBy').map((d) => d.fixByName)),
+      engineers: mapStrOptions(filtered('engineer').map((d) => d.engineerName)),
+    };
   }, [filteredData, filters, units, projects]);
   const [viewId, setViewId] = useState<number | null>(null);
   const [fixId, setFixId] = useState<number | null>(null);
@@ -362,6 +364,13 @@ const LS_COLUMN_WIDTHS_KEY = "defectsColumnWidths";
         width: 180,
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           (a.fixByName || "").localeCompare(b.fixByName || ""),
+      },
+      engineer: {
+        title: "Закрепленный инженер",
+        dataIndex: "engineerName",
+        width: 180,
+        sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
+          (a.engineerName || "").localeCompare(b.engineerName || ""),
       },
       received: {
         title: "Дата получения",
@@ -487,6 +496,7 @@ const LS_COLUMN_WIDTHS_KEY = "defectsColumnWidths";
     "received",
     "createdAt",
     "createdByName",
+    "engineer",
     "created",
     "actions",
   ] as const;
