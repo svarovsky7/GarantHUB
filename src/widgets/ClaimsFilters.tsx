@@ -34,42 +34,66 @@ export default function ClaimsFilters({ options, onChange, initialValues = {} }:
   };
 
   return (
-    <Form form={form} layout="vertical" onValuesChange={handleValuesChange} className="filter-grid" style={{ marginBottom: 20 }}>
-      <Form.Item name="period" label="Период регистрации претензий">
-        <RangePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
-      </Form.Item>
-      <Form.Item name="project" label="Проект">
-        <Select allowClear options={options.projects} />
-      </Form.Item>
-      <Form.Item name="building" label="Корпус">
-        <Select allowClear options={options.buildings} />
-      </Form.Item>
-      <Form.Item name="units" label="Объекты">
-        <Select mode="multiple" allowClear options={options.units} />
-      </Form.Item>
-      <Form.Item name="id" label="ID">
-        <Select mode="multiple" allowClear options={options.ids} />
-      </Form.Item>
-      <Form.Item name="status" label="Статусы">
-        <Select allowClear options={options.statuses} />
-      </Form.Item>
-      <Form.Item name="claim_no" label="№ претензии">
-        <Input />
-      </Form.Item>
-      <Form.Item name="responsible" label="Закрепленный инженер">
-        <Select allowClear options={options.responsibleEngineers} />
-      </Form.Item>
-      <Form.Item name="description" label="Дополнительная информация">
-        <Input />
-      </Form.Item>
-      <Form.Item name="hideClosed" label="Скрыть закрытые" valuePropName="checked">
-        <Switch />
-      </Form.Item>
-      <Form.Item>
-        <Button onClick={reset} block>
-          Сброс
-        </Button>
-      </Form.Item>
+    <Form form={form} layout="vertical" onValuesChange={handleValuesChange}>
+      <div className="claims-filter-grid">
+        <div className="claims-filter-col">
+          <Form.Item name="id" label="ID претензии">
+            <Select mode="multiple" allowClear options={options.ids} />
+          </Form.Item>
+          <Form.Item name="claim_no" label="№ претензии">
+            <Input />
+          </Form.Item>
+          <Form.Item name="status" label="Статус">
+            <Select allowClear options={options.statuses} />
+          </Form.Item>
+        </div>
+        <div className="claims-filter-col">
+          <Form.Item name="author" label="Автор">
+            <Select allowClear options={options.authors} />
+          </Form.Item>
+          <Form.Item name="responsible" label="Закрепленный инженер">
+            <Select allowClear options={options.responsibleEngineers} />
+          </Form.Item>
+          <Form.Item name="period" label="Дата регистрации претензии">
+            <RangePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
+          </Form.Item>
+        </div>
+        <div className="claims-filter-col">
+          <Form.Item name="claimedPeriod" label="Дата претензии">
+            <RangePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item name="acceptedPeriod" label="Дата получения Застройщиком">
+            <RangePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item name="resolvedPeriod" label="Дата устранения">
+            <RangePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
+          </Form.Item>
+        </div>
+        <div className="claims-filter-col">
+          <Form.Item name="project" label="Проект">
+            <Select allowClear options={options.projects} />
+          </Form.Item>
+          <Form.Item name="building" label="Корпус">
+            <Select allowClear options={options.buildings} />
+          </Form.Item>
+          <Form.Item name="units" label="Объекты">
+            <Select mode="multiple" allowClear options={options.units} />
+          </Form.Item>
+        </div>
+      </div>
+      <div className="claims-filter-footer">
+        <Form.Item name="description" label="Дополнительная информация">
+          <Input />
+        </Form.Item>
+        <Form.Item name="hideClosed" label="Скрыть закрытые" valuePropName="checked">
+          <Switch />
+        </Form.Item>
+        <Form.Item>
+          <Button onClick={reset} block>
+            Сброс
+          </Button>
+        </Form.Item>
+      </div>
     </Form>
   );
 }

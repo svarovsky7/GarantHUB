@@ -258,6 +258,7 @@ export default function ClaimsTable({
       const matchesResponsible =
         !filters.responsible ||
         c.responsibleEngineerName === filters.responsible;
+      const matchesAuthor = !filters.author || c.createdByName === filters.author;
       const matchesNumber =
         !filters.claim_no || c.claim_no.includes(filters.claim_no);
       const matchesIds = !filters.id || filters.id.includes(c.id);
@@ -272,17 +273,36 @@ export default function ClaimsTable({
         (c.registeredOn &&
           c.registeredOn.isSameOrAfter(filters.period[0], "day") &&
           c.registeredOn.isSameOrBefore(filters.period[1], "day"));
+      const matchesClaimedPeriod =
+        !filters.claimedPeriod ||
+        (c.claimedOn &&
+          c.claimedOn.isSameOrAfter(filters.claimedPeriod[0], "day") &&
+          c.claimedOn.isSameOrBefore(filters.claimedPeriod[1], "day"));
+      const matchesAcceptedPeriod =
+        !filters.acceptedPeriod ||
+        (c.acceptedOn &&
+          c.acceptedOn.isSameOrAfter(filters.acceptedPeriod[0], "day") &&
+          c.acceptedOn.isSameOrBefore(filters.acceptedPeriod[1], "day"));
+      const matchesResolvedPeriod =
+        !filters.resolvedPeriod ||
+        (c.resolvedOn &&
+          c.resolvedOn.isSameOrAfter(filters.resolvedPeriod[0], "day") &&
+          c.resolvedOn.isSameOrBefore(filters.resolvedPeriod[1], "day"));
       return (
         matchesProject &&
         matchesUnits &&
         matchesBuilding &&
         matchesStatus &&
         matchesResponsible &&
+        matchesAuthor &&
         matchesNumber &&
         matchesIds &&
         matchesDescription &&
         matchesHideClosed &&
-        matchesPeriod
+        matchesPeriod &&
+        matchesClaimedPeriod &&
+        matchesAcceptedPeriod &&
+        matchesResolvedPeriod
       );
     });
   }, [claims, filters]);

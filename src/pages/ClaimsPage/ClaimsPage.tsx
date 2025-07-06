@@ -249,6 +249,7 @@ export default function ClaimsPage() {
         filtered('responsible').map((c) => c.responsibleEngineerName),
       ),
       ids: mapOptions(filtered('id').map((c) => c.id)),
+      authors: mapOptions(filtered('author').map((c) => c.createdByName)),
     };
   }, [claimsWithNames, filters]);
 
