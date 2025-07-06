@@ -15,7 +15,6 @@ export function filterDefects<T extends {
   status_id: number | null;
   defectStatusName?: string;
   fixByName?: string;
-  engineerName?: string | null;
   buildingNamesList?: string[];
 }>(rows: T[], f: DefectFilters): T[] {
   return rows.filter((d) => {
@@ -62,9 +61,6 @@ export function filterDefects<T extends {
       f.fixBy.length > 0 &&
       (!d.fixByName || !f.fixBy.includes(d.fixByName))
     ) {
-      return false;
-    }
-    if (f.engineer && d.engineerName !== f.engineer) {
       return false;
     }
     if (f.period && f.period.length === 2) {

@@ -819,13 +819,6 @@
     "column_default": null
   },
   {
-    "table_name": "defects",
-    "column_name": "engineer_id",
-    "data_type": "uuid",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
     "table_name": "lawsuit_claim_types",
     "column_name": "id",
     "data_type": "bigint",

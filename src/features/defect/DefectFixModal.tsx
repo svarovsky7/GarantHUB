@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
 import dayjs from "dayjs";
-import { Modal, Form, DatePicker, Button, Select } from "antd";
+import { Modal, Form, DatePicker, Button } from "antd";
 import FileDropZone from "@/shared/ui/FileDropZone";
 import AttachmentEditorTable from "@/shared/ui/AttachmentEditorTable";
 import { useBrigades } from "@/entities/brigade";
 import { useContractors } from "@/entities/contractor";
 import { useFixDefect, useDefect, signedUrl } from "@/entities/defect";
-import { useUsers } from "@/entities/user";
 import { useNotify } from "@/shared/hooks/useNotify";
 import type {
   NewDefectFile,
@@ -24,7 +23,6 @@ interface Props {
 export default function DefectFixModal({ defectId, open, onClose }: Props) {
   const { data: brigades = [] } = useBrigades();
   const { data: contractors = [] } = useContractors();
-  const { data: users = [] } = useUsers();
   const { data: defect } = useDefect(defectId ?? undefined);
   const fix = useFixDefect();
   const notify = useNotify();
@@ -37,7 +35,6 @@ export default function DefectFixModal({ defectId, open, onClose }: Props) {
   const [files, setFiles] = useState<NewDefectFile[]>([]);
   const [remoteFiles, setRemoteFiles] = useState<RemoteDefectFile[]>([]);
   const [removedIds, setRemovedIds] = useState<string[]>([]);
-  const [engineer, setEngineer] = useState<string | null>(null);
 
   useEffect(() => {
     if (defect && open) {
@@ -45,7 +42,6 @@ export default function DefectFixModal({ defectId, open, onClose }: Props) {
         brigade_id: defect.brigade_id,
         contractor_id: defect.contractor_id,
       });
-      setEngineer(defect.engineer_id ?? null);
       const baseDate = defect.fixed_at ? dayjs(defect.fixed_at) : dayjs();
       setFixedAt(baseDate.isBefore(dayjs(), "day") ? dayjs() : baseDate);
       const atts =
@@ -102,7 +98,6 @@ export default function DefectFixModal({ defectId, open, onClose }: Props) {
       brigade_id: fixBy.brigade_id,
       contractor_id: fixBy.contractor_id,
       fixed_at: fixedAt ? fixedAt.format("YYYY-MM-DD") : null,
-      engineer_id: engineer,
       attachments: files.map((f) => ({ file: f.file, type_id: null })),
       removedAttachmentIds: removedIds.map(Number),
       updatedAttachments: updated,
@@ -110,7 +105,6 @@ export default function DefectFixModal({ defectId, open, onClose }: Props) {
     setFiles([]);
     setFixBy({ brigade_id: null, contractor_id: null });
     setFixedAt(null);
-    setEngineer(null);
     onClose();
   };
 
@@ -147,14 +141,6 @@ export default function DefectFixModal({ defectId, open, onClose }: Props) {
             onChange={setFixBy}
             brigades={brigades}
             contractors={contractors}
-          />
-        </Form.Item>
-        <Form.Item label="Инженер, устранивший замечание">
-          <Select
-            allowClear
-            options={users.map((u) => ({ value: u.id, label: u.name }))}
-            value={engineer ?? undefined}
-            onChange={(v) => setEngineer(v ?? null)}
           />
         </Form.Item>
         <Form.Item label="Дата устранения">

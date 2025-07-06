@@ -9,10 +9,8 @@ export interface DefectWithNames {
   received_at: string | null;
   fixed_at: string | null;
   fixed_by: string | null;
-  engineer_id: string | null;
   defectTypeName: string | null;
   defectStatusName: string | null;
   defectStatusColor: string | null;
   fixedByUserName?: string | null;
-  engineerName?: string | null;
 }
