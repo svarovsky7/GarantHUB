@@ -2,10 +2,12 @@ import React from 'react';
 import dayjs from 'dayjs';
 import { Table, Typography, Button } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { DownOutlined, EyeOutlined } from '@ant-design/icons';
+import { DownOutlined, EyeOutlined, LinkOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/shared/api/supabaseClient';
 import { useDefectsWithNames } from '@/entities/defect';
+import { useUnitsByIds } from '@/entities/unit';
+import formatUnitShortName from '@/shared/utils/formatUnitShortName';
 import ClaimViewModal from '@/features/claim/ClaimViewModal';
 import DefectsCompactTable from '@/widgets/DefectsCompactTable';
 
@@ -67,10 +69,62 @@ export default function RelatedClaimsList({
 
   const [viewId, setViewId] = React.useState<number | null>(null);
 
+  const unitIdList = React.useMemo(
+    () => Array.from(new Set(claims.flatMap((c) => c.unit_ids))),
+    [claims],
+  );
+  const { data: units = [] } = useUnitsByIds(unitIdList);
+  const unitMap = React.useMemo(() => {
+    const map: Record<number, string> = {};
+    units.forEach((u) => {
+      map[u.id] = formatUnitShortName(u);
+    });
+    return map;
+  }, [units]);
+
   const filtered = React.useMemo(() => claims, [claims]);
 
-  const columns: ColumnsType<ClaimRow> = [
+  const dataWithUnits = React.useMemo(
+    () =>
+      filtered.map((c) => ({
+        ...c,
+        unitNames: c.unit_ids
+          .map((id) => unitMap[id])
+          .filter(Boolean)
+          .join(', '),
+      })),
+    [filtered, unitMap],
+  );
+
+  const columns: ColumnsType<(ClaimRow & { unitNames: string })> = [
+    {
+      title: '',
+      dataIndex: 'link',
+      width: 40,
+      render: (_: unknown, row) => {
+        const linked = value.includes(row.id);
+        const toggle = () => {
+          const ids = linked
+            ? value.filter((id) => id !== row.id)
+            : [...value, row.id];
+          onChange(ids);
+        };
+        return (
+          <Button
+            size="small"
+            type="text"
+            icon={
+              <LinkOutlined
+                style={linked ? { color: '#52c41a', fontWeight: 700 } : undefined}
+              />
+            }
+            onClick={toggle}
+          />
+        );
+      },
+    },
     { title: '№ претензии', dataIndex: 'claim_no', width: 120 },
+    { title: 'Объект', dataIndex: 'unitNames', width: 160 },
     {
       title: 'Дата претензии',
       dataIndex: 'claimed_on',
@@ -87,7 +141,7 @@ export default function RelatedClaimsList({
       title: '',
       dataIndex: 'actions',
       width: 60,
-      render: (_: any, row) => (
+      render: (_: unknown, row) => (
         <Button
           size="small"
           type="text"
@@ -100,17 +154,14 @@ export default function RelatedClaimsList({
 
   return (
     <>
-      <Table<ClaimRow>
+      <Table<(ClaimRow & { unitNames: string })>
         rowKey="id"
         columns={columns}
-        dataSource={filtered}
+        dataSource={dataWithUnits}
         loading={isPending}
         pagination={false}
         size="small"
-        rowSelection={{
-          selectedRowKeys: value,
-          onChange: (keys) => onChange(keys as number[]),
-        }}
+        
         expandable={{
           columnWidth: 40,
           expandIcon: ({ expanded, onExpand, record }) => (
