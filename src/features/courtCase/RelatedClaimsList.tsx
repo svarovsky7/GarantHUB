@@ -31,6 +31,7 @@ interface Props {
   unitIds: number[];
   value: number[];
   onChange: (ids: number[]) => void;
+  preTrialOnly?: boolean;
 }
 
 function ClaimDefects({ ids }: { ids: number[] }) {
@@ -49,6 +50,7 @@ export default function RelatedClaimsList({
   unitIds,
   value,
   onChange,
+  preTrialOnly = true,
 }: Props) {
   const { data: claims = [], isPending } = useQuery<ClaimRow[]>({
     queryKey: ["claims-for-case-list", projectId],
@@ -57,7 +59,7 @@ export default function RelatedClaimsList({
       const { data, error } = await supabase
         .from("claims")
         .select(
-          `id, claim_no, claimed_on, claim_status_id, pre_trial_claim, statuses(name), claim_units(unit_id), claim_defects(defect_id)`,
+          `id, claim_no, claimed_on, claim_status_id, statuses(name), claim_units(unit_id), claim_defects(defect_id, pre_trial_claim)`,
         )
         .eq("project_id", projectId as number);
       if (error) throw error;
@@ -68,7 +70,9 @@ export default function RelatedClaimsList({
         statusName: r.statuses?.name ?? null,
         unit_ids: (r.claim_units ?? []).map((u: any) => u.unit_id),
         defect_ids: (r.claim_defects ?? []).map((d: any) => d.defect_id),
-        pre_trial_claim: r.pre_trial_claim ?? false,
+        pre_trial_claim: (r.claim_defects ?? []).some(
+          (d: any) => d.pre_trial_claim,
+        ),
       }));
     },
   });
@@ -92,9 +96,10 @@ export default function RelatedClaimsList({
     () =>
       claims.filter(
         (c) =>
-          unitIds.length === 0 || c.unit_ids.some((id) => unitIds.includes(id)),
+          (unitIds.length === 0 || c.unit_ids.some((id) => unitIds.includes(id))) &&
+          (!preTrialOnly || c.pre_trial_claim),
       ),
-    [claims, unitIds],
+    [claims, unitIds, preTrialOnly],
   );
 
   const dataWithUnits = React.useMemo(
