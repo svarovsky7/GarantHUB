@@ -11,6 +11,7 @@ import AdminDataGrid from '@/shared/ui/AdminDataGrid';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DefectTypeForm from '@/features/defectType/DefectTypeForm';
+import { useNotify } from '@/shared/hooks/useNotify';
 
 interface DefectTypesAdminProps {
     pageSize?: number;
@@ -24,6 +25,7 @@ export default function DefectTypesAdmin({
     const addMutation = useAddDefectType();
     const updateMutation = useUpdateDefectType();
     const deleteMutation = useDeleteDefectType();
+    const notify = useNotify();
 
     const [open, setOpen] = React.useState(false);
     const [editRow, setEditRow] = React.useState(null);
@@ -45,12 +47,23 @@ export default function DefectTypesAdmin({
     };
 
     const handleSubmit = async (values) => {
-        if (editRow) {
-            await (updateMutation.mutateAsync as any)({ id: editRow.id, name: values.name });
-        } else {
-            await (addMutation.mutateAsync as any)(values.name);
+        const name = values.name.trim();
+
+        if (!editRow && data.some((d) => d.name.toLowerCase() === name.toLowerCase())) {
+            notify.error('Такой тип дефекта уже существует');
+            return;
         }
-        setOpen(false);
+
+        try {
+            if (editRow) {
+                await (updateMutation.mutateAsync as any)({ id: editRow.id, name });
+            } else {
+                await (addMutation.mutateAsync as any)(name);
+            }
+            setOpen(false);
+        } catch (e: any) {
+            notify.error(e.message);
+        }
     };
 
     const columns = [
