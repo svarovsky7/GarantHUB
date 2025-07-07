@@ -19,22 +19,10 @@ export const useDefectTypes = () => {
 };
 
 // ---------------- insert ----------------
-/**
- * Creates a new defect type.
- * Throws an error if a type with the same name exists.
- */
 export const useAddDefectType = () => {
     const qc = useQueryClient();
     return useMutation({
         mutationFn: async (name) => {
-            const { data: exists, error: selectErr } = await supabase
-                .from('defect_types')
-                .select('id')
-                .eq('name', name)
-                .maybeSingle();
-            if (selectErr) throw selectErr;
-            if (exists) throw new Error('Такой тип дефекта уже существует');
-
             const { data, error } = await supabase
                 .from('defect_types')
                 .insert({ name })
