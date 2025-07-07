@@ -11,6 +11,7 @@ import AdminDataGrid from '@/shared/ui/AdminDataGrid';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DefectTypeForm from '@/features/defectType/DefectTypeForm';
+import { useNotify } from '@/shared/hooks/useNotify';
 
 interface DefectTypesAdminProps {
     pageSize?: number;
@@ -21,6 +22,7 @@ export default function DefectTypesAdmin({
     rowsPerPageOptions = [10, 25, 50, 100],
 }: DefectTypesAdminProps) {
     const { data = [], isLoading } = useDefectTypes();
+    const notify = useNotify();
     const addMutation = useAddDefectType();
     const updateMutation = useUpdateDefectType();
     const deleteMutation = useDeleteDefectType();
@@ -45,12 +47,16 @@ export default function DefectTypesAdmin({
     };
 
     const handleSubmit = async (values) => {
-        if (editRow) {
-            await (updateMutation.mutateAsync as any)({ id: editRow.id, name: values.name });
-        } else {
-            await (addMutation.mutateAsync as any)(values.name);
+        try {
+            if (editRow) {
+                await (updateMutation.mutateAsync as any)({ id: editRow.id, name: values.name });
+            } else {
+                await (addMutation.mutateAsync as any)(values.name);
+            }
+            setOpen(false);
+        } catch (e) {
+            notify.error(e.message);
         }
-        setOpen(false);
     };
 
     const columns = [
