@@ -53,12 +53,13 @@ export default function ClaimsFilters({
   const extraKeys: (keyof ClaimFilters)[] = [
     "id",
     "claim_no",
-    "responsible",
+    "author",
+    "project",
+    "period",
     "claimedPeriod",
     "acceptedPeriod",
     "resolvedPeriod",
-    "units",
-    "building",
+    "hideClosed",
     "description",
   ];
 
@@ -116,21 +117,27 @@ export default function ClaimsFilters({
         >
           <Row gutter={12}>
             <Col span={6}>
-              <Form.Item name="author" label="Автор">
-                <Select allowClear options={options.authors} />
+              <Form.Item
+                name="responsible"
+                label="Закрепленный инженер"
+              >
+                <Select
+                  allowClear
+                  options={options.responsibleEngineers}
+                />
               </Form.Item>
             </Col>
             <Col span={6}>
-              <Form.Item name="project" label="Проект">
-                <Select allowClear options={options.projects} />
+              <Form.Item name="building" label="Корпус">
+                <Select allowClear options={options.buildings} />
               </Form.Item>
             </Col>
             <Col span={6}>
-              <Form.Item name="period" label="Дата регистрации">
-                <RangePicker
-                  size="small"
-                  format="DD.MM.YYYY"
-                  style={{ width: "100%" }}
+              <Form.Item name="units" label="Объекты">
+                <Select
+                  mode="multiple"
+                  allowClear
+                  options={options.units}
                 />
               </Form.Item>
             </Col>
@@ -140,16 +147,7 @@ export default function ClaimsFilters({
               </Form.Item>
             </Col>
           </Row>
-          <Row gutter={12} align="middle">
-            <Col span={6}>
-              <Form.Item
-                name="hideClosed"
-                label="СКРЫТЬ ЗАКРЫТЫЕ И НЕ ГАРАНТИЯ"
-                valuePropName="checked"
-              >
-                <Switch size="small" />
-              </Form.Item>
-            </Col>
+          <Row gutter={12}>
             <Col flex="auto">
               <Collapse ghost>
                 <Collapse.Panel header="Доп. фильтры" key="more" extra={badge}>
@@ -169,13 +167,23 @@ export default function ClaimsFilters({
                       </Form.Item>
                     </Col>
                     <Col span={6}>
-                      <Form.Item
-                        name="responsible"
-                        label="Закрепленный инженер"
-                      >
-                        <Select
-                          allowClear
-                          options={options.responsibleEngineers}
+                      <Form.Item name="author" label="Автор">
+                        <Select allowClear options={options.authors} />
+                      </Form.Item>
+                    </Col>
+                    <Col span={6}>
+                      <Form.Item name="project" label="Проект">
+                        <Select allowClear options={options.projects} />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+                  <Row gutter={12}>
+                    <Col span={6}>
+                      <Form.Item name="period" label="Дата регистрации">
+                        <RangePicker
+                          size="small"
+                          format="DD.MM.YYYY"
+                          style={{ width: "100%" }}
                         />
                       </Form.Item>
                     </Col>
@@ -188,8 +196,6 @@ export default function ClaimsFilters({
                         />
                       </Form.Item>
                     </Col>
-                  </Row>
-                  <Row gutter={12}>
                     <Col span={6}>
                       <Form.Item
                         name="acceptedPeriod"
@@ -211,22 +217,17 @@ export default function ClaimsFilters({
                         />
                       </Form.Item>
                     </Col>
-                    <Col span={6}>
-                      <Form.Item name="building" label="Корпус">
-                        <Select allowClear options={options.buildings} />
-                      </Form.Item>
-                    </Col>
-                    <Col span={6}>
-                      <Form.Item name="units" label="Объекты">
-                        <Select
-                          mode="multiple"
-                          allowClear
-                          options={options.units}
-                        />
-                      </Form.Item>
-                    </Col>
                   </Row>
-                  <Row gutter={12}>
+                  <Row gutter={12} align="middle">
+                    <Col span={6}>
+                      <Form.Item
+                        name="hideClosed"
+                        label="СКРЫТЬ ЗАКРЫТЫЕ И НЕ ГАРАНТИЯ"
+                        valuePropName="checked"
+                      >
+                        <Switch size="small" />
+                      </Form.Item>
+                    </Col>
                     <Col span={12}>
                       <Form.Item
                         name="description"
