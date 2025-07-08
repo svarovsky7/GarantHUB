@@ -2,9 +2,11 @@
   "name": "garantie-hub",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "clean-cache": "rimraf ./node_modules/.cache && npm cache clean --force",
     "lint": "eslint src --max-warnings=0",
+    "typecheck": "tsc --noEmit",
     "analyze": "source-map-explorer 'build/static/js/*.js'",
     "audit:fix": "npm audit fix && npm audit fix --force",
     "dev": "vite",

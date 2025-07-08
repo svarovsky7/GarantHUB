@@ -4,7 +4,7 @@ import { useProjectFilter } from '@/shared/hooks/useProjectFilter';
 import { useAuthStore } from '@/shared/store/authStore';
 import type { CourtCase, Defect } from '@/shared/types/courtCase';
 import type { NewCaseFile } from '@/shared/types/caseFile';
-import { addCaseAttachments, getAttachmentsByIds, ATTACH_BUCKET } from '../attachment';
+import { addCaseAttachments, getAttachmentsByIds, ATTACH_BUCKET } from '@/entities/attachment';
 
 const CASES_TABLE = 'court_cases';
 const DEFECTS_TABLE = 'defects';

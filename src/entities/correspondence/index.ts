@@ -6,7 +6,7 @@ import {
   LetterLink,
 } from '@/shared/types/correspondence';
 import type { NewLetterFile } from '@/shared/types/letterFile';
-import { addLetterAttachments, getAttachmentsByIds, ATTACH_BUCKET } from '../attachment';
+import { addLetterAttachments, getAttachmentsByIds, ATTACH_BUCKET } from '@/entities/attachment';
 import { supabase } from '@/shared/api/supabaseClient';
 import { useNotify } from '@/shared/hooks/useNotify';
 

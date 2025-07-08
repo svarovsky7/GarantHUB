@@ -3,9 +3,13 @@ export interface Attachment {
   /** Путь к файлу в Storage */
   storage_path: string;
   /** Путь для скачивания */
-  path: string;
+  path?: string;
+  /** URL для скачивания */
+  file_url?: string;
   /** MIME‑тип файла */
-  mime_type: string;
+  mime_type?: string;
+  /** Тип файла */
+  file_type?: string;
   /** Исходное имя файла */
   original_name: string | null;
   /** Описание файла */
@@ -15,7 +19,7 @@ export interface Attachment {
   /** Когда добавлен */
   created_at: string | null;
   /** Кто загрузил файл */
-  uploaded_by: string | null;
+  uploaded_by?: string | null;
   /** Когда обновлён */
-  updated_at: string | null;
+  updated_at?: string | null;
 }

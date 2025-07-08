@@ -15,7 +15,7 @@ import { useNotify } from '@/shared/hooks/useNotify';
 
 interface ModalState {
   mode: 'add' | 'edit';
-  data?: (CourtCaseParty & { type: 'person' | 'contractor'; name: string });
+  data?: (CourtCaseParty & { type: 'person' | 'contractor'; name: string; entityId: number });
 }
 
 interface Props {
@@ -40,7 +40,7 @@ export default function CasePartiesEditorTable({ caseId, projectId }: Props) {
 
   const tableData = parties.map((p) => ({
     ...p,
-    type: p.person_id ? 'person' : 'contractor',
+    type: (p.person_id ? 'person' : 'contractor') as 'person' | 'contractor',
     name: p.persons?.full_name ?? p.contractors?.name ?? '',
   }));
 
@@ -88,7 +88,10 @@ export default function CasePartiesEditorTable({ caseId, projectId }: Props) {
               size="small"
               type="text"
               icon={<EditOutlined />}
-              onClick={() => setModal({ mode: 'edit', data: row })}
+              onClick={() => setModal({ mode: 'edit', data: {
+                ...row,
+                entityId: row.person_id ?? row.contractor_id ?? 0
+              } })}
             />
           </Tooltip>
           <Popconfirm

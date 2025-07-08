@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__ide__getDiagnostics",
+      "Bash(find:*)",
+      "Bash(npm run:*)",
+      "Bash(true)",
+      "Bash(npx tsc:*)",
+      "Bash(grep:*)",
+      "Bash(npm audit:*)",
+      "Bash(tree:*)",
+      "Bash(ls:*)",
+      "Bash(rm:*)",
+      "Bash(mkdir:*)",
+      "Bash(mv:*)",
+      "Bash(npm install)",
+      "Bash(npx vite:*)",
+      "Bash(rg:*)"
+    ],
+    "deny": []
+  }
+}

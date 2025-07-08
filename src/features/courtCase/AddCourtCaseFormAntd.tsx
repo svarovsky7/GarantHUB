@@ -460,7 +460,7 @@ export default function AddCourtCaseFormAntd({
                   />
                 </Col>
                 <Col>
-                  <Button type="text" danger onClick={() => removeCaseFile(i)}>
+                  <Button type="text" danger onClick={() => removeFile(i)}>
                     Удалить
                   </Button>
                 </Col>

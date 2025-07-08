@@ -159,7 +159,6 @@ export default function CaseClaimsEditorTable({ caseId }: Props) {
         size="small"
         pagination={false}
         rowKey="id"
-        scrollToFirstRowOnChange={false}
         columns={columns}
         dataSource={claims}
         summary={() => (

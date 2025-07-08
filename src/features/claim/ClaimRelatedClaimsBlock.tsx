@@ -23,9 +23,9 @@ export default function ClaimRelatedClaimsBlock({ claimId }: Props) {
   const { data: links = [] } = useClaimLinks();
   const relatedIds = React.useMemo(() => {
     const child = links
-      .filter((l) => l.parent_id === claimId)
+      .filter((l) => l.parent_id === String(claimId))
       .map((l) => l.child_id);
-    const parent = links.find((l) => l.child_id === claimId)?.parent_id;
+    const parent = links.find((l) => l.child_id === String(claimId))?.parent_id;
     return Array.from(new Set([...(parent ? [parent] : []), ...child]));
   }, [links, claimId]);
 
@@ -36,7 +36,7 @@ export default function ClaimRelatedClaimsBlock({ claimId }: Props) {
       const { data, error } = await supabase
         .from("claims")
         .select("id, claim_no")
-        .in("id", relatedIds);
+        .in("id", relatedIds.map(Number));
       if (error) throw error;
       return (data ?? []) as Row[];
     },
