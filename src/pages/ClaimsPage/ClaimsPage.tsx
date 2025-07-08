@@ -34,16 +34,16 @@ import { useRolePermission } from "@/entities/rolePermission";
 import { useAuthStore } from "@/shared/store/authStore";
 import type { RoleName } from "@/shared/types/rolePermission";
 import formatUnitShortName from "@/shared/utils/formatUnitShortName";
-import ClaimsTable from "@/widgets/ClaimsTable";
-import ClaimsFilters from "@/widgets/ClaimsFilters";
-import ClaimFormAntd from "@/features/claim/ClaimFormAntd";
-import ClaimViewModal from "@/features/claim/ClaimViewModal";
-import ClaimStatusSelect from "@/features/claim/ClaimStatusSelect";
-import dayjs from "dayjs";
-import LinkClaimsDialog from "@/features/claim/LinkClaimsDialog";
+const ClaimsTable = React.lazy(() => import("@/widgets/ClaimsTable"));
+const ClaimsFilters = React.lazy(() => import("@/widgets/ClaimsFilters"));
+const ClaimFormAntd = React.lazy(() => import("@/features/claim/ClaimFormAntd"));
+const ClaimViewModal = React.lazy(() => import("@/features/claim/ClaimViewModal"));
+const LinkClaimsDialog = React.lazy(() => import("@/features/claim/LinkClaimsDialog"));
 const TableColumnsDrawer = React.lazy(
   () => import("@/widgets/TableColumnsDrawer"),
 );
+import ClaimStatusSelect from "@/features/claim/ClaimStatusSelect";
+import dayjs from "dayjs";
 import type { TableColumnSetting } from "@/shared/types/tableColumnSetting";
 import type { ColumnsType } from "antd/es/table";
 import { useSearchParams } from "react-router-dom";
@@ -65,10 +65,12 @@ export default function ClaimsPage() {
     error: errorAssigned,
   } = useClaims();
   const {
-    data: claimsAll = [],
+    data: claimsAllResult = [],
     isLoading: loadingAll,
     error: errorAll,
   } = useClaimsAll();
+  
+  const claimsAll = Array.isArray(claimsAllResult) ? claimsAllResult : claimsAllResult?.data || [];
   const claims = perm?.only_assigned_project ? claimsAssigned : claimsAll;
   const isLoading = perm?.only_assigned_project ? loadingAssigned : loadingAll;
   const error = errorAssigned || errorAll;
@@ -530,31 +532,35 @@ export default function ClaimsPage() {
         </span>
         {showAddForm && (
           <div style={{ marginTop: 16 }}>
-            <ClaimFormAntd
-              onCreated={() => setShowAddForm(false)}
-              initialValues={initialValues}
-            />
+            <React.Suspense fallback={<div>Загрузка формы...</div>}>
+              <ClaimFormAntd
+                onCreated={() => setShowAddForm(false)}
+                initialValues={initialValues}
+              />
+            </React.Suspense>
           </div>
         )}
-        <LinkClaimsDialog
-          open={!!linkFor}
-          parent={linkFor}
-          claims={claimsWithNames}
-          loading={linkClaims.isPending}
-          onClose={() => setLinkFor(null)}
-          onSubmit={(ids) =>
-            linkClaims.mutate(
-              { parentId: String(linkFor!.id), childIds: ids },
-              {
-                onSuccess: () => {
-                  message.success("Претензии связаны");
-                  setLinkFor(null);
+        <React.Suspense fallback={null}>
+          <LinkClaimsDialog
+            open={!!linkFor}
+            parent={linkFor}
+            claims={claimsWithNames}
+            loading={linkClaims.isPending}
+            onClose={() => setLinkFor(null)}
+            onSubmit={(ids) =>
+              linkClaims.mutate(
+                { parentId: String(linkFor!.id), childIds: ids },
+                {
+                  onSuccess: () => {
+                    message.success("Претензии связаны");
+                    setLinkFor(null);
+                  },
+                  onError: (e) => message.error(e.message),
                 },
-                onError: (e) => message.error(e.message),
-              },
-            )
-          }
-        />
+              )
+            }
+          />
+        </React.Suspense>
         <React.Suspense fallback={null}>
           <TableColumnsDrawer
             open={showColumnsDrawer}
@@ -575,27 +581,31 @@ export default function ClaimsPage() {
         </React.Suspense>
         <div style={{ marginTop: 24 }}>
           <div style={{ marginBottom: 24, maxWidth: 1040 }}>
-            <ClaimsFilters
-              options={options}
-              loading={filtersLoading}
-              initialValues={filters}
-              onSubmit={applyFilters}
-              onReset={resetFilters}
-            />
+            <React.Suspense fallback={<div>Загрузка фильтров...</div>}>
+              <ClaimsFilters
+                options={options}
+                loading={filtersLoading}
+                initialValues={filters}
+                onSubmit={applyFilters}
+                onReset={resetFilters}
+              />
+            </React.Suspense>
           </div>
           {error ? (
             <Alert type="error" message={error.message} />
           ) : (
-            <ClaimsTable
-              claims={claimsWithNames}
-              filters={filters}
-              loading={isLoading}
-              columns={columns}
-              lockedUnitIds={lockedUnitIds}
-              onView={(id) => setViewId(id)}
-              onAddChild={setLinkFor}
-              onUnlink={(id) => unlinkClaim.mutate(id)}
-            />
+            <React.Suspense fallback={<div>Загрузка таблицы...</div>}>
+              <ClaimsTable
+                claims={claimsWithNames}
+                filters={filters}
+                loading={isLoading}
+                columns={columns}
+                lockedUnitIds={lockedUnitIds}
+                onView={(id) => setViewId(id)}
+                onAddChild={setLinkFor}
+                onUnlink={(id) => unlinkClaim.mutate(id)}
+              />
+            </React.Suspense>
           )}
         </div>
         <Typography.Text style={{ display: "block", marginTop: 8 }}>
@@ -605,11 +615,13 @@ export default function ClaimsPage() {
         <Typography.Text style={{ display: "block", marginTop: 4 }}>
           Готовых претензий к выгрузке: {readyToExport}
         </Typography.Text>
-        <ClaimViewModal
-          open={viewId !== null}
-          claimId={viewId}
-          onClose={() => setViewId(null)}
-        />
+        <React.Suspense fallback={null}>
+          <ClaimViewModal
+            open={viewId !== null}
+            claimId={viewId}
+            onClose={() => setViewId(null)}
+          />
+        </React.Suspense>
       </>
     </ConfigProvider>
   );

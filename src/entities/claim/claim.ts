@@ -268,11 +268,67 @@ export function useClaimAll(id?: number | string) {
 }
 
 /**
- * Получить список претензий по всем проектам.
+ * Получить список претензий по всем проектам с пагинацией.
  */
-export function useClaimsAll() {
+export function useClaimsAll(page = 0, pageSize = 50) {
   return useQuery({
-    queryKey: ['claims-all'],
+    queryKey: ['claims-all', page, pageSize],
+    queryFn: async () => {
+      const from = page * pageSize;
+      const to = from + pageSize - 1;
+      
+      const { data: rows, error, count } = await supabase
+        .from(TABLE)
+        .select(
+          `id, project_id, claim_status_id, claim_no, claimed_on,
+          accepted_on, registered_on, resolved_on,
+          engineer_id, owner, case_uid_id, pre_trial_claim, description, created_at, created_by,
+          projects (id, name),
+          statuses (id, name, color),
+          claim_units(unit_id),
+          claim_defects(defect_id)`,
+          { count: 'exact' }
+        )
+        .order('created_at', { ascending: false })
+        .range(from, to);
+        
+      if (error) throw error;
+      
+      const ids = (rows ?? []).map((r: any) => r.id);
+      const { data: links } = ids.length
+        ? await supabase
+            .from(LINK_TABLE)
+            .select('parent_id, child_id')
+            .in('child_id', ids)
+        : { data: [] };
+      
+      const linkMap = new Map<number, number>();
+      (links ?? []).forEach((l: any) => linkMap.set(l.child_id, l.parent_id));
+      
+      return {
+        data: (rows ?? []).map((r: any) =>
+          mapClaim({
+            ...r,
+            parent_id: linkMap.get(r.id) ?? null,
+            unit_ids: (r.claim_units ?? []).map((u: any) => u.unit_id),
+            defect_ids: (r.claim_defects ?? []).map((d: any) => d.defect_id),
+            attachments: [], // Загружаем вложения отдельно по требованию
+          }),
+        ),
+        count: count ?? 0,
+        hasMore: (count ?? 0) > to + 1,
+      };
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
+/**
+ * Получить все претензии без пагинации (для обратной совместимости).
+ */
+export function useClaimsAllLegacy() {
+  return useQuery({
+    queryKey: ['claims-all-legacy'],
     queryFn: async () => {
       const rows = await fetchPaged<any>((from, to) =>
         supabase
