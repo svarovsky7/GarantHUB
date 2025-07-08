@@ -23,7 +23,7 @@ import ExportClaimsButton from "@/features/claim/ExportClaimsButton";
 import { useSnackbar } from "notistack";
 import {
   useClaims,
-  useClaimsAll,
+  useClaimsAllLegacy,
   useDeleteClaim,
   useLinkClaims,
   useUnlinkClaim,
@@ -68,7 +68,7 @@ export default function ClaimsPage() {
     data: claimsAllResult = [],
     isLoading: loadingAll,
     error: errorAll,
-  } = useClaimsAll();
+  } = useClaimsAllLegacy();
   
   const claimsAll = Array.isArray(claimsAllResult) ? claimsAllResult : claimsAllResult?.data || [];
   const claims = perm?.only_assigned_project ? claimsAssigned : claimsAll;

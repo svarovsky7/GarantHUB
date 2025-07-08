@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
+import { useDebounce } from "@/shared/hooks/useDebounce";
 import {
   Form,
   DatePicker,
@@ -113,28 +114,28 @@ export default function OptimizedClaimsFilters({
   }, [form, extraKeys]);
 
   // Дебаунсим изменения формы для снижения количества обновлений
-  const [debouncedValues, setDebouncedValues] = useState<ClaimFilters>({});
+  const [formValues, setFormValues] = useState<ClaimFilters>({});
+  const debouncedFormValues = useDebounce(formValues, 500);
   
+  // Автоматически применяем фильтры после дебаунса
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const values = form.getFieldsValue();
-      setDebouncedValues(values);
-    }, 300);
-    
-    return () => clearTimeout(timer);
-  }, [form]);
+    if (Object.keys(debouncedFormValues).length > 0) {
+      onSubmit(debouncedFormValues);
+    }
+  }, [debouncedFormValues, onSubmit]);
 
   const handleValuesChange = useCallback((
     changed: Partial<ClaimFilters>,
     all: ClaimFilters,
   ) => {
     calcExtra();
+    setFormValues(all);
     
     // Мгновенно применяем изменение hideClosed
     if (Object.prototype.hasOwnProperty.call(changed, "hideClosed")) {
       handleFinish(all);
     }
-  }, [calcExtra]);
+  }, [calcExtra, handleFinish]);
 
   const handleFinish = useCallback((values: ClaimFilters) => {
     onSubmit(values);

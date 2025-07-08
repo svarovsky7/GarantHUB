@@ -8,7 +8,7 @@ import { Backdrop, CircularProgress } from "@mui/material";
 
 import { useAuthStore } from "@/shared/store/authStore";
 import DashboardPage from "@/pages/DashboardPage/DashboardPage";
-import ClaimsPage from "@/pages/ClaimsPage/ClaimsPage";
+import ClaimsPage from "@/pages/ClaimsPage/OptimizedClaimsPage";
 import CourtCasesPage from "@/pages/CourtCasesPage/CourtCasesPage";
 import CorrespondencePage from "@/pages/CorrespondencePage/CorrespondencePage";
 import DefectsPage from "@/pages/DefectsPage/DefectsPage";

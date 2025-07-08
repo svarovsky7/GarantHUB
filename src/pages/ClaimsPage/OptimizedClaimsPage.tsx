@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, memo } from "react";
 import {
   ConfigProvider,
   Alert,
@@ -41,6 +41,7 @@ import type { ClaimWithNames } from "@/shared/types/claimWithNames";
 import { filterClaims } from "@/shared/utils/claimFilter";
 import { naturalCompare } from "@/shared/utils/naturalSort";
 import type { ClaimFilters } from "@/shared/types/claimFilters";
+import "./optimized-claims.css";
 
 // Lazy loading для тяжелых компонентов
 const TableColumnsDrawer = React.lazy(
@@ -50,7 +51,7 @@ const TableColumnsDrawer = React.lazy(
 const LS_HIDE_CLOSED = "claimsHideClosed";
 const LS_USE_VIRTUAL_TABLE = "claimsUseVirtualTable";
 
-export default function OptimizedClaimsPage() {
+const OptimizedClaimsPage = memo(function OptimizedClaimsPage() {
   const { enqueueSnackbar } = useSnackbar();
   const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
   const { data: perm } = useRolePermission(role);
@@ -169,7 +170,7 @@ export default function OptimizedClaimsPage() {
     [claims, unitMap, unitNumberMap, buildingMap, userMap],
   );
 
-  // Мемоизированные опции для фильтров
+  // Мемоизированные опции для фильтров с дебаунсом
   const filterOptions = useMemo(() => {
     const without = <K extends keyof ClaimFilters>(key: K) => {
       const { [key]: _omit, ...rest } = filters;
@@ -206,20 +207,18 @@ export default function OptimizedClaimsPage() {
     };
   }, [claimsWithNames, filters]);
 
-  // Статистика
-  const total = claimsWithNames.length;
-  const closedCount = useMemo(
-    () =>
-      claimsWithNames.filter((c) => /закры/i.test(c.statusName ?? "")).length,
-    [claimsWithNames],
-  );
-  const openCount = total - closedCount;
-  const readyToExport = useMemo(
-    () => filterClaims(claimsWithNames, filters).length,
-    [claimsWithNames, filters],
-  );
+  // Мемоизированная статистика
+  const statistics = useMemo(() => {
+    const total = claimsWithNames.length;
+    const closedCount = claimsWithNames.filter((c) => /закры/i.test(c.statusName ?? "")).length;
+    const openCount = total - closedCount;
+    const readyToExport = filterClaims(claimsWithNames, filters).length;
+    return { total, closedCount, openCount, readyToExport };
+  }, [claimsWithNames, filters]);
 
-  // Обработчики
+  const { total, closedCount, openCount, readyToExport } = statistics;
+
+  // Мемоизированные обработчики для лучшей производительности
   const applyFilters = useCallback((vals: ClaimFilters) => {
     setFilters(vals);
     if (Object.prototype.hasOwnProperty.call(vals, "hideClosed")) {
@@ -246,6 +245,16 @@ export default function OptimizedClaimsPage() {
     } catch {}
   }, []);
 
+  const handleView = useCallback((id: number) => setViewId(id), []);
+  const handleAddChild = useCallback((parent: ClaimWithNames) => setLinkFor(parent), []);
+  const handleUnlink = useCallback((id: number) => unlinkClaim.mutate(id), [unlinkClaim]);
+  const handleShowAddForm = useCallback(() => setShowAddForm(p => !p), []);
+  const handleShowColumnsDrawer = useCallback(() => setShowColumnsDrawer(true), []);
+  const handleCloseColumnsDrawer = useCallback(() => setShowColumnsDrawer(false), []);
+  const handleCloseAddForm = useCallback(() => setShowAddForm(false), []);
+  const handleCloseViewModal = useCallback(() => setViewId(null), []);
+  const handleCloseLinkDialog = useCallback(() => setLinkFor(null), []);
+
   const initialValues = useMemo(() => ({
     project_id: searchParams.get("project_id")
       ? Number(searchParams.get("project_id")!)
@@ -268,14 +277,14 @@ export default function OptimizedClaimsPage() {
         <div style={{ marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
           <Button
             type="primary"
-            onClick={() => setShowAddForm((p) => !p)}
+            onClick={handleShowAddForm}
           >
             {showAddForm ? "Скрыть форму" : "Добавить претензию"}
           </Button>
           
           <Button
             icon={<SettingOutlined />}
-            onClick={() => setShowColumnsDrawer(true)}
+            onClick={handleShowColumnsDrawer}
           />
           
           <ExportClaimsButton claims={claimsWithNames} filters={filters} />
@@ -294,7 +303,7 @@ export default function OptimizedClaimsPage() {
         {showAddForm && (
           <div style={{ marginBottom: 24 }}>
             <ClaimFormAntd
-              onCreated={() => setShowAddForm(false)}
+              onCreated={handleCloseAddForm}
               initialValues={initialValues}
             />
           </div>
@@ -327,12 +336,12 @@ export default function OptimizedClaimsPage() {
             widths={{}}
             onWidthsChange={() => {}}
             onChange={() => {}}
-            onClose={() => setShowColumnsDrawer(false)}
+            onClose={handleCloseColumnsDrawer}
             onReset={() => {}}
           />
         </React.Suspense>
 
-        <div style={{ marginBottom: 24 }}>
+        <div className="claims-filters" style={{ marginBottom: 24 }}>
           <OptimizedClaimsFilters
             options={filterOptions}
             loading={filtersLoading}
@@ -345,24 +354,26 @@ export default function OptimizedClaimsPage() {
         {error ? (
           <Alert type="error" message={error.message} />
         ) : useVirtualTable ? (
-          <VirtualizedClaimsTable
-            claims={claimsWithNames}
-            filters={filters}
-            loading={isLoading}
-            onView={(id) => setViewId(id)}
-            onAddChild={setLinkFor}
-            onUnlink={(id) => unlinkClaim.mutate(id)}
-            lockedUnitIds={lockedUnitIds}
-            height={600}
-          />
+          <div className="virtual-table-container">
+            <VirtualizedClaimsTable
+              claims={claimsWithNames}
+              filters={filters}
+              loading={isLoading}
+              onView={handleView}
+              onAddChild={handleAddChild}
+              onUnlink={handleUnlink}
+              lockedUnitIds={lockedUnitIds}
+              height={600}
+            />
+          </div>
         ) : (
           <ClaimsTable
             claims={claimsWithNames}
             filters={filters}
             loading={isLoading}
-            onView={(id) => setViewId(id)}
-            onAddChild={setLinkFor}
-            onUnlink={(id) => unlinkClaim.mutate(id)}
+            onView={handleView}
+            onAddChild={handleAddChild}
+            onUnlink={handleUnlink}
             lockedUnitIds={lockedUnitIds}
           />
         )}
@@ -380,9 +391,11 @@ export default function OptimizedClaimsPage() {
         <ClaimViewModal
           open={viewId !== null}
           claimId={viewId}
-          onClose={() => setViewId(null)}
+          onClose={handleCloseViewModal}
         />
       </>
     </ConfigProvider>
   );
-}
+});
+
+export default OptimizedClaimsPage;
