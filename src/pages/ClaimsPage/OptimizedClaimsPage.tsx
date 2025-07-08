@@ -7,14 +7,11 @@ import {
   message,
   Space,
   Typography,
-  Switch,
 } from "antd";
 import ruRU from "antd/locale/ru_RU";
 import {
   SettingOutlined,
   PlusOutlined,
-  TableOutlined,
-  AppstoreOutlined,
 } from "@ant-design/icons";
 import { useSnackbar } from "notistack";
 import {
@@ -30,7 +27,6 @@ import { useAuthStore } from "@/shared/store/authStore";
 import type { RoleName } from "@/shared/types/rolePermission";
 import formatUnitShortName from "@/shared/utils/formatUnitShortName";
 import ClaimsTable from "@/widgets/ClaimsTable";
-import VirtualizedClaimsTable from "@/widgets/VirtualizedClaimsTable";
 import OptimizedClaimsFilters from "@/widgets/OptimizedClaimsFilters";
 import ClaimFormAntd from "@/features/claim/ClaimFormAntd";
 import ClaimViewModal from "@/features/claim/ClaimViewModal";
@@ -49,7 +45,6 @@ const TableColumnsDrawer = React.lazy(
 );
 
 const LS_HIDE_CLOSED = "claimsHideClosed";
-const LS_USE_VIRTUAL_TABLE = "claimsUseVirtualTable";
 
 const OptimizedClaimsPage = memo(function OptimizedClaimsPage() {
   const { enqueueSnackbar } = useSnackbar();
@@ -86,13 +81,6 @@ const OptimizedClaimsPage = memo(function OptimizedClaimsPage() {
 
   // Состояние компонента
   const [searchParams] = useSearchParams();
-  const [useVirtualTable, setUseVirtualTable] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem(LS_USE_VIRTUAL_TABLE) || "true");
-    } catch {
-      return true;
-    }
-  });
   
   const [filters, setFilters] = useState<ClaimFilters>(() => {
     try {
@@ -238,12 +226,6 @@ const OptimizedClaimsPage = memo(function OptimizedClaimsPage() {
     message.info("Фильтры сброшены");
   }, []);
 
-  const handleToggleTableMode = useCallback((checked: boolean) => {
-    setUseVirtualTable(checked);
-    try {
-      localStorage.setItem(LS_USE_VIRTUAL_TABLE, JSON.stringify(checked));
-    } catch {}
-  }, []);
 
   const handleView = useCallback((id: number) => setViewId(id), []);
   const handleAddChild = useCallback((parent: ClaimWithNames) => setLinkFor(parent), []);
@@ -289,15 +271,6 @@ const OptimizedClaimsPage = memo(function OptimizedClaimsPage() {
           
           <ExportClaimsButton claims={claimsWithNames} filters={filters} />
           
-          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
-            <Typography.Text>Виртуализация:</Typography.Text>
-            <Switch
-              checked={useVirtualTable}
-              onChange={handleToggleTableMode}
-              checkedChildren={<AppstoreOutlined />}
-              unCheckedChildren={<TableOutlined />}
-            />
-          </div>
         </div>
 
         {showAddForm && (
@@ -353,19 +326,6 @@ const OptimizedClaimsPage = memo(function OptimizedClaimsPage() {
 
         {error ? (
           <Alert type="error" message={error.message} />
-        ) : useVirtualTable ? (
-          <div className="virtual-table-container">
-            <VirtualizedClaimsTable
-              claims={claimsWithNames}
-              filters={filters}
-              loading={isLoading}
-              onView={handleView}
-              onAddChild={handleAddChild}
-              onUnlink={handleUnlink}
-              lockedUnitIds={lockedUnitIds}
-              height={600}
-            />
-          </div>
         ) : (
           <ClaimsTable
             claims={claimsWithNames}

@@ -124,6 +124,15 @@ export default function OptimizedClaimsFilters({
     }
   }, [debouncedFormValues, onSubmit]);
 
+  const handleFinish = useCallback((values: ClaimFilters) => {
+    onSubmit(values);
+    if (Object.prototype.hasOwnProperty.call(values, "hideClosed")) {
+      try {
+        localStorage.setItem(LS_HIDE_CLOSED, JSON.stringify(values.hideClosed));
+      } catch {}
+    }
+  }, [onSubmit]);
+
   const handleValuesChange = useCallback((
     changed: Partial<ClaimFilters>,
     all: ClaimFilters,
@@ -136,15 +145,6 @@ export default function OptimizedClaimsFilters({
       handleFinish(all);
     }
   }, [calcExtra, handleFinish]);
-
-  const handleFinish = useCallback((values: ClaimFilters) => {
-    onSubmit(values);
-    if (Object.prototype.hasOwnProperty.call(values, "hideClosed")) {
-      try {
-        localStorage.setItem(LS_HIDE_CLOSED, JSON.stringify(values.hideClosed));
-      } catch {}
-    }
-  }, [onSubmit]);
 
   const handleReset = useCallback(() => {
     form.resetFields();
