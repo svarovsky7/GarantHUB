@@ -1,0 +1,160 @@
+/* Оптимизация производительности для страницы дефектов */
+
+.defects-page {
+  contain: layout style paint;
+}
+
+.defects-table {
+  contain: layout style paint;
+}
+
+.defects-table .ant-table-tbody > tr {
+  contain: layout style paint;
+}
+
+.defects-table .ant-table-tbody > tr > td {
+  contain: layout style paint;
+}
+
+.defects-filters {
+  contain: layout style paint;
+}
+
+.defects-filters .ant-form-item {
+  contain: layout style paint;
+}
+
+/* Оптимизация для статусов дефектов */
+.defect-status-select {
+  contain: layout style paint;
+}
+
+/* Оптимизация для действий */
+.defect-actions {
+  contain: layout style paint;
+}
+
+.defect-actions .ant-btn {
+  contain: layout style paint;
+}
+
+/* Оптимизация скроллинга */
+.ant-table-body {
+  contain: strict;
+  will-change: scroll-position;
+}
+
+/* GPU ускорение для элементов */
+.ant-btn,
+.ant-select-selector,
+.ant-input,
+.ant-table-thead > tr > th,
+.ant-table-tbody > tr > td,
+.ant-popconfirm,
+.ant-tooltip {
+  transform: translateZ(0);
+}
+
+/* Оптимизация для выпадающих списков */
+.ant-select-dropdown,
+.ant-table-filter-dropdown {
+  contain: layout style paint;
+}
+
+/* Цвета для строк дефектов */
+.defect-row-fixed {
+  background-color: #f6ffed;
+}
+
+.defect-row-pending {
+  background-color: #fff7e6;
+}
+
+.defect-row-critical {
+  background-color: #fff2f0;
+}
+
+.defect-row-locked {
+  background-color: #fff2e8;
+}
+
+/* Оптимизация для модальных окон */
+.ant-modal {
+  contain: layout style paint;
+}
+
+.ant-modal-content {
+  contain: layout style paint;
+}
+
+/* Оптимизация для экспорта */
+.export-button {
+  contain: layout style paint;
+}
+
+/* Анимации с аппаратным ускорением */
+.ant-btn-loading-icon {
+  transform: translateZ(0);
+}
+
+.ant-spin-dot {
+  transform: translateZ(0);
+}
+
+/* Оптимизация для переключателей */
+.ant-switch {
+  contain: layout style paint;
+  transform: translateZ(0);
+}
+
+/* Оптимизация для чекбоксов */
+.ant-checkbox-wrapper {
+  contain: layout style paint;
+}
+
+.ant-checkbox {
+  transform: translateZ(0);
+}
+
+/* Оптимизация для радиокнопок */
+.ant-radio-wrapper {
+  contain: layout style paint;
+}
+
+.ant-radio {
+  transform: translateZ(0);
+}
+
+/* Оптимизация для дат */
+.ant-picker {
+  contain: layout style paint;
+  transform: translateZ(0);
+}
+
+.ant-picker-dropdown {
+  contain: layout style paint;
+}
+
+/* Оптимизация для пагинации */
+.ant-pagination {
+  contain: layout style paint;
+}
+
+.ant-pagination-item {
+  contain: layout style paint;
+  transform: translateZ(0);
+}
+
+/* Оптимизация для тултипов */
+.ant-tooltip-inner {
+  contain: layout style paint;
+}
+
+/* Оптимизация для уведомлений */
+.ant-message {
+  contain: layout style paint;
+}
+
+.ant-message-notice {
+  transform: translateZ(0);
+}

@@ -159,14 +159,14 @@ export default function OptimizedClaimsFilters({
 
   if (loading) {
     return (
-      <Card bordered={false} size="small" style={{ maxWidth: 1040 }}>
+      <Card variant="borderless" size="small" style={{ maxWidth: 1040 }}>
         <Skeleton active paragraph={{ rows: 4 }} />
       </Card>
     );
   }
 
   return (
-    <Card bordered={false} size="small" style={{ maxWidth: 1040 }}>
+    <Card variant="borderless" size="small" style={{ maxWidth: 1040 }}>
       <Form
         form={form}
         layout="vertical"
@@ -210,102 +210,109 @@ export default function OptimizedClaimsFilters({
         
         <Row gutter={12}>
           <Col flex="auto">
-            <Collapse ghost>
-              <Collapse.Panel header="Доп. фильтры" key="more" extra={badge}>
-                <Row gutter={12}>
-                  <Col span={6}>
-                    <Form.Item name="id" label="ID претензии">
-                      <MemoizedMultiSelect
-                        options={memoizedOptions.ids}
-                      />
-                    </Form.Item>
-                  </Col>
-                  <Col span={6}>
-                    <Form.Item name="claim_no" label="№ претензии">
-                      <Input placeholder="Поиск по номеру..." />
-                    </Form.Item>
-                  </Col>
-                  <Col span={6}>
-                    <Form.Item name="author" label="Автор">
-                      <MemoizedSelect 
-                        options={memoizedOptions.authors}
-                      />
-                    </Form.Item>
-                  </Col>
-                  <Col span={6}>
-                    <Form.Item name="project" label="Проект">
-                      <MemoizedSelect 
-                        options={memoizedOptions.projects}
-                      />
-                    </Form.Item>
-                  </Col>
-                </Row>
-                <Row gutter={12}>
-                  <Col span={6}>
-                    <Form.Item name="period" label="Дата регистрации">
-                      <RangePicker
-                        size="small"
-                        format="DD.MM.YYYY"
-                        style={{ width: "100%" }}
-                        placeholder={["От", "До"]}
-                      />
-                    </Form.Item>
-                  </Col>
-                  <Col span={6}>
-                    <Form.Item name="claimedPeriod" label="Дата претензии">
-                      <RangePicker
-                        size="small"
-                        format="DD.MM.YYYY"
-                        style={{ width: "100%" }}
-                        placeholder={["От", "До"]}
-                      />
-                    </Form.Item>
-                  </Col>
-                  <Col span={6}>
-                    <Form.Item
-                      name="acceptedPeriod"
-                      label="Дата получения Застройщиком"
-                    >
-                      <RangePicker
-                        size="small"
-                        format="DD.MM.YYYY"
-                        style={{ width: "100%" }}
-                        placeholder={["От", "До"]}
-                      />
-                    </Form.Item>
-                  </Col>
-                  <Col span={6}>
-                    <Form.Item name="resolvedPeriod" label="Дата устранения">
-                      <RangePicker
-                        size="small"
-                        format="DD.MM.YYYY"
-                        style={{ width: "100%" }}
-                        placeholder={["От", "До"]}
-                      />
-                    </Form.Item>
-                  </Col>
-                </Row>
-                <Row gutter={12} align="middle">
-                  <Col span={6}>
-                    <Form.Item
-                      name="hideClosed"
-                      label="СКРЫТЬ ЗАКРЫТЫЕ И НЕ ГАРАНТИЯ"
-                      valuePropName="checked"
-                    >
-                      <Switch size="small" />
-                    </Form.Item>
-                  </Col>
-                  <Col span={12}>
-                    <Form.Item
-                      name="description"
-                      label="Дополнительная информация"
-                    >
-                      <Input placeholder="Поиск в описании..." />
-                    </Form.Item>
-                  </Col>
-                </Row>
-              </Collapse.Panel>
-            </Collapse>
+            <Collapse ghost items={[
+              {
+                key: "more",
+                label: "Доп. фильтры",
+                extra: badge,
+                children: (
+                <>
+                  <Row gutter={12}>
+                    <Col span={6}>
+                      <Form.Item name="id" label="ID претензии">
+                        <MemoizedMultiSelect
+                          options={memoizedOptions.ids}
+                        />
+                      </Form.Item>
+                    </Col>
+                    <Col span={6}>
+                      <Form.Item name="claim_no" label="№ претензии">
+                        <Input placeholder="Поиск по номеру..." />
+                      </Form.Item>
+                    </Col>
+                    <Col span={6}>
+                      <Form.Item name="author" label="Автор">
+                        <MemoizedSelect 
+                          options={memoizedOptions.authors}
+                        />
+                      </Form.Item>
+                    </Col>
+                    <Col span={6}>
+                      <Form.Item name="project" label="Проект">
+                        <MemoizedSelect 
+                          options={memoizedOptions.projects}
+                        />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+                  <Row gutter={12}>
+                    <Col span={6}>
+                      <Form.Item name="period" label="Дата регистрации">
+                        <RangePicker
+                          size="small"
+                          format="DD.MM.YYYY"
+                          style={{ width: "100%" }}
+                          placeholder={["От", "До"]}
+                        />
+                      </Form.Item>
+                    </Col>
+                    <Col span={6}>
+                      <Form.Item name="claimedPeriod" label="Дата претензии">
+                        <RangePicker
+                          size="small"
+                          format="DD.MM.YYYY"
+                          style={{ width: "100%" }}
+                          placeholder={["От", "До"]}
+                        />
+                      </Form.Item>
+                    </Col>
+                    <Col span={6}>
+                      <Form.Item
+                        name="acceptedPeriod"
+                        label="Дата получения Застройщиком"
+                      >
+                        <RangePicker
+                          size="small"
+                          format="DD.MM.YYYY"
+                          style={{ width: "100%" }}
+                          placeholder={["От", "До"]}
+                        />
+                      </Form.Item>
+                    </Col>
+                    <Col span={6}>
+                      <Form.Item name="resolvedPeriod" label="Дата устранения">
+                        <RangePicker
+                          size="small"
+                          format="DD.MM.YYYY"
+                          style={{ width: "100%" }}
+                          placeholder={["От", "До"]}
+                        />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+                  <Row gutter={12} align="middle">
+                    <Col span={6}>
+                      <Form.Item
+                        name="hideClosed"
+                        label="СКРЫТЬ ЗАКРЫТЫЕ И НЕ ГАРАНТИЯ"
+                        valuePropName="checked"
+                      >
+                        <Switch size="small" />
+                      </Form.Item>
+                    </Col>
+                    <Col span={12}>
+                      <Form.Item
+                        name="description"
+                        label="Дополнительная информация"
+                      >
+                        <Input placeholder="Поиск в описании..." />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+                </>
+                )
+              }
+            ]} />
           </Col>
         </Row>
 

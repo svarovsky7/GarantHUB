@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import dayjs from "dayjs";
 import {
   ConfigProvider,
@@ -55,7 +55,7 @@ const fmt = (v: string | null) => (v ? dayjs(v).format("DD.MM.YYYY") : "—");
 const fmtDateTime = (v: string | null) =>
   v ? dayjs(v).format("DD.MM.YYYY HH:mm") : "—";
 
-export default function DefectsPage() {
+const DefectsPage = React.memo(function DefectsPage() {
   const { data: defects = [], isPending } = useDefects();
   const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
   const { data: perm } = useRolePermission(role);
@@ -250,6 +250,12 @@ export default function DefectsPage() {
   const [fixId, setFixId] = useState<number | null>(null);
   const { mutateAsync: removeDefect, isPending: removing } = useDeleteDefect();
   const cancelFix = useCancelDefectFix();
+  
+  // Мемоизированные обработчики
+  const handleView = useCallback((id: number) => setViewId(id), []);
+  const handleFix = useCallback((id: number) => setFixId(id), []);
+  const handleCloseView = useCallback(() => setViewId(null), []);
+  const handleCloseFix = useCallback(() => setFixId(null), []);
 
 const LS_FILTERS_VISIBLE_KEY = "defectsFiltersVisible";
 const LS_COLUMNS_KEY = "defectsColumns";
@@ -422,7 +428,7 @@ const LS_COLUMN_WIDTHS_KEY = "defectsColumnWidths";
                 size="small"
                 type="text"
                 icon={<EyeOutlined />}
-                onClick={() => setViewId(row.id)}
+                onClick={() => handleView(row.id)}
               />
             </Tooltip>
             {row.defectStatusName?.toLowerCase().includes("провер") ? (
@@ -465,7 +471,7 @@ const LS_COLUMN_WIDTHS_KEY = "defectsColumnWidths";
                       });
                       return;
                     }
-                    setFixId(row.id);
+                    handleFix(row.id);
                   }}
                 />
               </Tooltip>
@@ -658,14 +664,16 @@ const LS_COLUMN_WIDTHS_KEY = "defectsColumnWidths";
         <DefectViewModal
           open={viewId !== null}
           defectId={viewId}
-          onClose={() => setViewId(null)}
+          onClose={handleCloseView}
         />
         <DefectFixModal
           open={fixId !== null}
           defectId={fixId}
-          onClose={() => setFixId(null)}
+          onClose={handleCloseFix}
         />
       </>
     </ConfigProvider>
   );
-}
+});
+
+export default DefectsPage;
