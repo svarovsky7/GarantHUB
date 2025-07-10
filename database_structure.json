@@ -1308,6 +1308,7 @@
     "is_nullable": "YES",
     "column_default": null
   },
+
   {
     "table_name": "units",
     "column_name": "locked",
