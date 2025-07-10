@@ -22,6 +22,8 @@ import { formatRub } from "@/shared/utils/formatCurrency";
 import type { CourtCase } from "@/shared/types/courtCase";
 import { useUsers } from "@/entities/user";
 import { useCourtCaseStatuses } from "@/entities/courtCaseStatus";
+import { useVisibleProjects } from "@/entities/project";
+import { useUnitsByIds } from "@/entities/unit";
 import { useRolePermission } from "@/entities/rolePermission";
 import { useAuthStore } from "@/shared/store/authStore";
 import { useProjectId } from "@/shared/hooks/useProjectId";
@@ -149,10 +151,12 @@ export default function OptimizedCourtCasesPage() {
       ...c,
       unitNames: c.unit_names || "",
       buildingNames: c.building_names || "",
+      buildingNamesList: c.building_names ? c.building_names.split(', ') : [],
       projectName: c.project_name || "",
       statusName: c.status_name || stageMap.get(c.status)?.name || "",
       statusColor: c.status_color || stageMap.get(c.status)?.color || null,
-      responsibleLawyerName: c.responsible_lawyer_name || userMap.get(c.responsible_lawyer_id) || null,
+      responsibleLawyerName:
+        c.responsible_lawyer_name || userMap.get(c.responsible_lawyer_id) || null,
       createdByName: c.created_by_name || userMap.get(c.created_by) || null,
       plaintiffNames: c.plaintiff_names || "",
       defendantNames: c.defendant_names || "",
@@ -161,9 +165,9 @@ export default function OptimizedCourtCasesPage() {
 
   // Фильтрация данных по проектам пользователя
   const userProjectIds = useAuthStore((s) => s.profile?.project_ids) ?? [];
-  const filteredCases = useMemo(() => {
+  const casesByPerm = useMemo(() => {
     if (perm?.only_assigned_project) {
-      return casesWithNames.filter((c) => 
+      return casesWithNames.filter((c) =>
         userProjectIds.includes(c.project_id)
       );
     }
@@ -171,7 +175,62 @@ export default function OptimizedCourtCasesPage() {
   }, [casesWithNames, perm?.only_assigned_project, userProjectIds]);
 
   // Получаем опции для фильтров
-  const { data: filterOptions } = useCourtCasesFilterOptions();
+  const unitIds = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          casesByPerm
+            .flatMap((c) => c.unit_ids ?? [])
+            .filter((id): id is number => Boolean(id)),
+        ),
+      ),
+    [casesByPerm],
+  );
+
+  const { data: caseUnits = [] } = useUnitsByIds(unitIds);
+  const { data: projects = [] } = useVisibleProjects();
+
+  const closedStageId = useMemo(
+    () => stages.find((s) => s.name.toLowerCase().includes("закры"))?.id,
+    [stages],
+  );
+
+  const {
+    filteredCases,
+    projectOptions,
+    buildingOptions,
+    unitOptions,
+    statusOptions,
+    userOptions,
+    idOptions,
+  } = useCourtCasesFilterOptions(
+    casesByPerm,
+    projects,
+    caseUnits,
+    stages,
+    users,
+    filters,
+    closedStageId,
+  );
+
+  const filterOptions = useMemo(
+    () => ({
+      projects: projectOptions,
+      buildings: buildingOptions,
+      units: unitOptions,
+      statuses: statusOptions,
+      users: userOptions,
+      ids: idOptions,
+    }),
+    [
+      projectOptions,
+      buildingOptions,
+      unitOptions,
+      statusOptions,
+      userOptions,
+      idOptions,
+    ],
+  );
 
   // Обработчики
   const handleDeleteCase = useCallback(async (caseId: number, projectId: number) => {
