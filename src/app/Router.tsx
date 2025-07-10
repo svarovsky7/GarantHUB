@@ -9,9 +9,9 @@ import { Backdrop, CircularProgress } from "@mui/material";
 import { useAuthStore } from "@/shared/store/authStore";
 import DashboardPage from "@/pages/DashboardPage/DashboardPage";
 import ClaimsPage from "@/pages/ClaimsPage/OptimizedClaimsPage";
-import CourtCasesPage from "@/pages/CourtCasesPage/CourtCasesPage";
-import CorrespondencePage from "@/pages/CorrespondencePage/CorrespondencePage";
-import DefectsPage from "@/pages/DefectsPage/DefectsPage";
+import CourtCasesPage from "@/pages/CourtCasesPage/OptimizedCourtCasesPage";
+import CorrespondencePage from "@/pages/CorrespondencePage/OptimizedCorrespondencePage";
+import DefectsPage from "@/pages/DefectsPage/OptimizedDefectsPage";
 import LoginPage from "@/pages/UnitsPage/LoginPage"; // ← CHANGE
 import RegisterPage from "@/pages/UnitsPage/RegisterPage"; // ← CHANGE
 import AdminPage from "@/pages/UnitsPage/AdminPage";

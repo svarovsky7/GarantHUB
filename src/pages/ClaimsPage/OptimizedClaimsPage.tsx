@@ -15,15 +15,15 @@ import {
 } from "@ant-design/icons";
 import { useSnackbar } from "notistack";
 import {
-  useClaims,
-  useClaimsAllLegacy as useClaimsAll,
   useLinkClaims,
   useUnlinkClaim,
 } from "@/entities/claim";
 import { useUsers } from "@/entities/user";
-import { useUnitsByIds, useLockedUnitIds } from "@/entities/unit";
+import { useLockedUnitIds } from "@/entities/unit";
+import { useOptimizedClaims, useClaimRelatedData } from "@/shared/hooks/useOptimizedQueries";
 import { useRolePermission } from "@/entities/rolePermission";
 import { useAuthStore } from "@/shared/store/authStore";
+import { useProjectId } from "@/shared/hooks/useProjectId";
 import type { RoleName } from "@/shared/types/rolePermission";
 import formatUnitShortName from "@/shared/utils/formatUnitShortName";
 import ClaimsTable from "@/widgets/ClaimsTable";
@@ -50,38 +50,9 @@ const OptimizedClaimsPage = memo(function OptimizedClaimsPage() {
   const { enqueueSnackbar } = useSnackbar();
   const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
   const { data: perm } = useRolePermission(role);
+  const projectId = useProjectId();
   
-  // Оптимизированная загрузка данных
-  const {
-    data: claimsAssigned = [],
-    isLoading: loadingAssigned,
-    error: errorAssigned,
-  } = useClaims();
-  const {
-    data: claimsAll = [],
-    isLoading: loadingAll,
-    error: errorAll,
-  } = useClaimsAll();
-  
-  const claims = perm?.only_assigned_project ? claimsAssigned : claimsAll;
-  const isLoading = perm?.only_assigned_project ? loadingAssigned : loadingAll;
-  const error = errorAssigned || errorAll;
-
-  // Ленивая загрузка пользователей и юнитов
-  const { data: users = [], isPending: usersLoading } = useUsers();
-  const { data: lockedUnitIds = [] } = useLockedUnitIds();
-  
-  // Получаем только нужные unit IDs
-  const unitIds = useMemo(
-    () => Array.from(new Set(claims.flatMap((t) => t.unit_ids))),
-    [claims],
-  );
-  const { data: units = [], isPending: unitsLoading } = useUnitsByIds(unitIds);
-  const filtersLoading = usersLoading || unitsLoading;
-
-  // Состояние компонента
-  const [searchParams] = useSearchParams();
-  
+  // Состояние фильтров (нужно объявить до использования в хуках)
   const [filters, setFilters] = useState<ClaimFilters>(() => {
     try {
       const saved = localStorage.getItem(LS_HIDE_CLOSED);
@@ -91,6 +62,34 @@ const OptimizedClaimsPage = memo(function OptimizedClaimsPage() {
       return {} as ClaimFilters;
     }
   });
+  
+  // Оптимизированная загрузка данных
+  const {
+    data: claimsData = [],
+    isLoading,
+    error,
+  } = useOptimizedClaims(projectId || 1, filters);
+  
+  const claims = claimsData;
+
+  // Ленивая загрузка пользователей и связанных данных
+  const { data: users = [], isPending: usersLoading } = useUsers();
+  const { data: lockedUnitIds = [] } = useLockedUnitIds();
+  
+  // Получаем связанные данные для претензий
+  const claimIds = useMemo(() => claims.map(c => c.id), [claims]);
+  const { data: relatedData } = useClaimRelatedData(claimIds);
+  
+  // Создаем карты для быстрого доступа
+  const units = useMemo(() => {
+    if (!relatedData?.units) return [];
+    return relatedData.units.map(item => item.units).filter(Boolean);
+  }, [relatedData?.units]);
+  
+  const filtersLoading = usersLoading;
+
+  // Состояние компонента
+  const [searchParams] = useSearchParams();
   
   const [showAddForm, setShowAddForm] = useState(
     searchParams.get("open_form") === "1",
@@ -136,26 +135,46 @@ const OptimizedClaimsPage = memo(function OptimizedClaimsPage() {
     return map;
   }, [units]);
 
-  // Мемоизированные претензии с именами
+  // Создаем карту claim_id -> unit_ids из relatedData
+  const claimUnitIdsMap = useMemo(() => {
+    const map = {} as Record<number, number[]>;
+    if (relatedData?.units) {
+      relatedData.units.forEach((item) => {
+        if (!map[item.claim_id]) {
+          map[item.claim_id] = [];
+        }
+        map[item.claim_id].push(item.unit_id);
+      });
+    }
+    return map;
+  }, [relatedData?.units]);
+
+  // Мемоизированные претензии с именами (теперь используем данные из views)
   const claimsWithNames: ClaimWithNames[] = useMemo(
     () =>
-      claims.map((c) => ({
-        ...c,
-        unitNames: c.unit_ids
-          .map((id) => unitMap[id])
-          .filter(Boolean)
-          .join(", "),
-        unitNumbers: c.unit_ids
-          .map((id) => unitNumberMap[id])
-          .filter(Boolean)
-          .join(", "),
-        buildings: Array.from(
-          new Set(c.unit_ids.map((id) => buildingMap[id]).filter(Boolean)),
-        ).join(", "),
-        responsibleEngineerName: userMap[c.engineer_id] ?? null,
-        createdByName: userMap[c.created_by as string] ?? null,
-      })),
-    [claims, unitMap, unitNumberMap, buildingMap, userMap],
+      claims.map((c) => {
+        const unitIds = claimUnitIdsMap[c.id] || [];
+        return {
+          ...c,
+          unit_ids: unitIds,
+          unitNames: unitIds
+            .map((id) => unitMap[id])
+            .filter(Boolean)
+            .join(", "),
+          unitNumbers: unitIds
+            .map((id) => unitNumberMap[id])
+            .filter(Boolean)
+            .join(", "),
+          buildings: Array.from(
+            new Set(unitIds.map((id) => buildingMap[id]).filter(Boolean)),
+          ).join(", "),
+          responsibleEngineerName: c.engineer_name ?? userMap[c.engineer_id] ?? null,
+          createdByName: userMap[c.created_by as string] ?? null,
+          projectName: c.project_name,
+          statusName: c.status_name,
+        };
+      }),
+    [claims, unitMap, unitNumberMap, buildingMap, userMap, claimUnitIdsMap],
   );
 
   // Мемоизированные опции для фильтров с дебаунсом

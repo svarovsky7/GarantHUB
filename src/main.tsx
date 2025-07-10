@@ -8,10 +8,13 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { queryClient } from "@/shared/config/queryClient";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { initializeSentry } from "@/shared/config/sentry";
 import dayjs from "dayjs";
 import "dayjs/locale/ru";
 
 dayjs.locale("ru");
+
+initializeSentry();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

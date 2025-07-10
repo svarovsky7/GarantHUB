@@ -6,6 +6,8 @@ import { useLocation } from "react-router-dom";
 import { supabase } from "@shared/api/supabaseClient";
 import { useAuthStore } from "@shared/store/authStore";
 import { useRealtimeUpdates } from "@/shared/hooks/useRealtimeUpdates";
+import { ErrorBoundary } from "@/shared/components/ErrorBoundary";
+import { setUserContext } from "@/shared/utils/sentry";
 
 import NavBar from "@/widgets/NavBar";
 import AppRouter from "./Router";
@@ -25,21 +27,26 @@ export default function App() {
         .eq("id", user.id)
         .single();
 
-      setProfile(
-        data
-          ? {
-              ...data,
-              project_ids: data.profiles_projects?.map((p: any) => p.project_id) ?? [],
-            }
-          : {
-              id: user.id,
-              email: user.email,
-              name: user.user_metadata?.name ?? null,
-              role: "USER",
-              project_ids: [],
-              created_at: null,
-            },
-      );
+      const profile = data
+        ? {
+            ...data,
+            project_ids: data.profiles_projects?.map((p: any) => p.project_id) ?? [],
+          }
+        : {
+            id: user.id,
+            email: user.email,
+            name: user.user_metadata?.name ?? null,
+            role: "USER",
+            project_ids: [],
+            created_at: null,
+          };
+      
+      setProfile(profile);
+      setUserContext({
+        id: profile.id,
+        email: profile.email,
+        name: profile.name,
+      });
     },
     [setProfile],
   );
@@ -71,18 +78,20 @@ export default function App() {
   const hideNavBar = ["/login", "/register"].includes(location.pathname);
 
   return (
-    <Box
-      sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
-      data-oid=":l5ev61"
-    >
-      {!hideNavBar && <NavBar data-oid="fyv_m5h" />}
-      <Container
-        maxWidth={false}
-        sx={{ flexGrow: 1, py: 2 }}
-        data-oid=".x4sl-p"
+    <ErrorBoundary>
+      <Box
+        sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
+        data-oid=":l5ev61"
       >
-        <AppRouter data-oid="ozp552w" />
-      </Container>
-    </Box>
+        {!hideNavBar && <NavBar data-oid="fyv_m5h" />}
+        <Container
+          maxWidth={false}
+          sx={{ flexGrow: 1, py: 2 }}
+          data-oid=".x4sl-p"
+        >
+          <AppRouter data-oid="ozp552w" />
+        </Container>
+      </Box>
+    </ErrorBoundary>
   );
 }

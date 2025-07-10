@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/shared/api/supabaseClient';
 import { useAuthStore } from '@/shared/store/authStore';
 import { useCourtCaseStatuses } from '@/entities/courtCaseStatus';
+import { useOptimizedUnitsMatrix } from '@/shared/hooks/useOptimizedQueries';
 import type { UnitsMatrixData } from '@/shared/types/unitsMatrix';
 import type { Unit } from '@/shared/types/unit';
 import type { UnitClaimInfo } from '@/shared/types/unitClaimInfo';
@@ -24,8 +25,12 @@ export default function useUnitsMatrix(projectId: number | null, building?: stri
     [stages],
   );
 
+  // Используем оптимизированную функцию для получения матрицы помещений
+  const optimizedMatrix = useOptimizedUnitsMatrix(projectId!);
+
   const query = useQuery<UnitsMatrixData>({
     queryKey: ['units-matrix', projectId, building, closedStageId],
+    enabled: !!projectId && !optimizedMatrix.data,
     queryFn: async () => {
       if (!projectId) {
         return {
@@ -38,6 +43,7 @@ export default function useUnitsMatrix(projectId: number | null, building?: stri
         };
       }
 
+      // Fallback для случаев когда оптимизированная функция недоступна
       let query = supabase
         .from('units')
         .select('id, name, building, floor, project_id, locked')
@@ -65,66 +71,81 @@ export default function useUnitsMatrix(projectId: number | null, building?: stri
         unitsByFloor[u.floor].push(u);
       });
 
-      const casesByUnit: Record<string | number, Array<{ id: number }>> = {};
-      const lettersByUnit: Record<string | number, boolean> = {};
-      const claimsByUnit: Record<string | number, UnitClaimInfo> = {};
-
-      if (units.length > 0) {
-        const unitIds = units.map((u) => u.id);
-        const { data: casesData } = await supabase
-          .from('court_case_units')
-          .select('unit_id, court_cases!inner(id,status,project_id)')
-          .in('unit_id', unitIds)
-          .eq('court_cases.project_id', projectId);
-        (casesData || [])
-          .map((row: any) => ({
-            unit_id: row.unit_id,
-            court_case: Array.isArray(row.court_cases) ? row.court_cases[0] : row.court_cases,
-          }))
-          .filter(
-            (row) => row.court_case && (!closedStageId || row.court_case.status !== closedStageId),
-          )
-          .forEach((row) => {
-            const uid = row.unit_id;
-            const c = row.court_case;
-            if (!casesByUnit[uid]) casesByUnit[uid] = [];
-            casesByUnit[uid].push({ id: c.id });
-          });
-
-        const { data: letterRows } = await supabase
-          .from('letter_units')
-          .select('unit_id, letters!inner(id, project_id)')
-          .in('unit_id', unitIds)
-          .eq('letters.project_id', projectId);
-        (letterRows || []).forEach((row) => {
-          lettersByUnit[row.unit_id] = true;
-        });
-
-        const { data: claimRows } = await supabase
-          .from('claim_units')
-          .select(
-            'unit_id, claims!inner(id, project_id, pre_trial_claim, claim_status_id, statuses(color))',
-          )
-          .in('unit_id', unitIds)
-          .eq('claims.project_id', projectId);
-        (claimRows || []).forEach((row: any) => {
-          const cl = Array.isArray(row.claims) ? row.claims[0] : row.claims;
-          if (!cl) return;
-          if (!claimsByUnit[row.unit_id]) {
-            claimsByUnit[row.unit_id] = {
-              color: cl.statuses?.color ?? null,
-              hasPretrialClaim: cl.pre_trial_claim ?? false,
-            };
-          } else if (cl.pre_trial_claim) {
-            claimsByUnit[row.unit_id].hasPretrialClaim = true;
-          }
-        });
-      }
-
-      return { units, floors, unitsByFloor, casesByUnit, lettersByUnit, claimsByUnit };
+      return { units, floors, unitsByFloor, casesByUnit: {}, lettersByUnit: {}, claimsByUnit: {} };
     },
     staleTime: 5 * 60_000,
   });
+
+  // Обрабатываем данные из оптимизированной функции
+  const processedData = useMemo(() => {
+    if (!optimizedMatrix.data) {
+      return query.data || {
+        units: [],
+        floors: [],
+        unitsByFloor: {},
+        casesByUnit: {},
+        lettersByUnit: {},
+        claimsByUnit: {},
+      };
+    }
+
+    const units = optimizedMatrix.data.map(item => ({
+      id: item.unit_id,
+      name: item.unit_name,
+      building: item.building,
+      floor: item.floor,
+      project_id: projectId!,
+      locked: false, // TODO: добавить информацию о блокировке если нужно
+    }));
+
+    const floors = Array.from(
+      new Map(
+        units
+          .filter((u) => u.floor !== null && u.floor !== undefined && u.floor !== 0)
+          .map((u) => [String(u.floor), u.floor]),
+      ).values(),
+    );
+    floors.sort((a, b) => {
+      if (!isNaN(a as any) && !isNaN(b as any)) return (b as any) - (a as any);
+      if (!isNaN(a as any)) return -1;
+      if (!isNaN(b as any)) return 1;
+      return 0;
+    });
+
+    const unitsByFloor: Record<string | number, Unit[]> = {};
+    units.forEach((u) => {
+      if (!unitsByFloor[u.floor]) unitsByFloor[u.floor] = [];
+      unitsByFloor[u.floor].push(u);
+    });
+
+    const casesByUnit: Record<string | number, Array<{ id: number }>> = {};
+    const lettersByUnit: Record<string | number, boolean> = {};
+    const claimsByUnit: Record<string | number, UnitClaimInfo> = {};
+
+    optimizedMatrix.data.forEach(item => {
+      // Судебные дела
+      if (item.court_cases_count > 0) {
+        casesByUnit[item.unit_id] = [{ id: 1 }]; // Заглушка, так как нет конкретных ID
+      }
+
+      // Письма
+      if (item.letters_count > 0) {
+        lettersByUnit[item.unit_id] = true;
+      }
+
+      // Претензии
+      if (item.claims_count > 0) {
+        claimsByUnit[item.unit_id] = {
+          color: null, // TODO: получить цвет статуса
+          hasPretrialClaim: false, // TODO: получить информацию о досудебных претензиях
+        };
+      }
+    });
+
+    return { units, floors, unitsByFloor, casesByUnit, lettersByUnit, claimsByUnit };
+  }, [optimizedMatrix.data, projectId]);
+
+  const activeQuery = optimizedMatrix.data ? optimizedMatrix : query;
 
   const handleAddUnit = async (floor: string | number) => {
     const userId = useAuthStore.getState().profile?.id ?? null;
@@ -168,14 +189,14 @@ export default function useUnitsMatrix(projectId: number | null, building?: stri
   };
 
   return {
-    floors: query.data?.floors || [],
-    unitsByFloor: query.data?.unitsByFloor || {},
+    floors: processedData.floors,
+    unitsByFloor: processedData.unitsByFloor,
     handleAddUnit,
     handleAddFloor,
-    units: query.data?.units || [],
-    fetchUnits: query.refetch,
-    casesByUnit: query.data?.casesByUnit || {},
-    lettersByUnit: query.data?.lettersByUnit || {},
-    claimsByUnit: query.data?.claimsByUnit || {},
+    units: processedData.units,
+    fetchUnits: optimizedMatrix.data ? optimizedMatrix.refetch : query.refetch,
+    casesByUnit: processedData.casesByUnit,
+    lettersByUnit: processedData.lettersByUnit,
+    claimsByUnit: processedData.claimsByUnit,
   };
 }

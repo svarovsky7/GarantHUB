@@ -76,18 +76,26 @@ export default function OptimizedClaimsFilters({
   }), [options]);
 
   useEffect(() => {
-    form.setFieldsValue(initialValues);
-    calcExtra();
-  }, [initialValues, form]);
+    // Используем setTimeout чтобы убедиться что форма уже примонтирована
+    const timer = setTimeout(() => {
+      form.setFieldsValue(initialValues);
+      calcExtra();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [initialValues, form, calcExtra]);
 
   useEffect(() => {
-    try {
-      const hideClosed = JSON.parse(
-        localStorage.getItem(LS_HIDE_CLOSED) || "false",
-      );
-      form.setFieldValue("hideClosed", hideClosed);
-    } catch {}
-  }, [form]);
+    // Используем setTimeout чтобы убедиться что форма уже примонтирована
+    const timer = setTimeout(() => {
+      try {
+        const hideClosed = JSON.parse(
+          localStorage.getItem(LS_HIDE_CLOSED) || "false",
+        );
+        form.setFieldValue("hideClosed", hideClosed);
+      } catch {}
+    }, 0);
+    return () => clearTimeout(timer);
+  }, []);
 
   const extraKeys: (keyof ClaimFilters)[] = useMemo(() => [
     "id",

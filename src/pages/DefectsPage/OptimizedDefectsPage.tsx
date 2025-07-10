@@ -19,18 +19,12 @@ import {
 } from "@ant-design/icons";
 
 import ruRU from "antd/locale/ru_RU";
-import { useDefects, useDeleteDefect } from "@/entities/defect";
-import { useUnitsByIds, useLockedUnitIds } from "@/entities/unit";
-import { useVisibleProjects } from "@/entities/project";
-import { useBrigades } from "@/entities/brigade";
-import { useContractors } from "@/entities/contractor";
+import { useDeleteDefect } from "@/entities/defect";
+import { useLockedUnitIds } from "@/entities/unit";
+import { useOptimizedDefects, useDefectAttachments } from "@/shared/hooks/useOptimizedQueries";
 import { useRolePermission } from "@/entities/rolePermission";
-import {
-  useClaimsSimple,
-  useClaimsSimpleAll,
-  useClaimIdsByDefectIds,
-} from "@/entities/claim";
 import { useAuthStore } from "@/shared/store/authStore";
+import { useProjectId } from "@/shared/hooks/useProjectId";
 import type { RoleName } from "@/shared/types/rolePermission";
 import DefectsTable from "@/widgets/DefectsTable";
 import DefectsFilters from "@/widgets/DefectsFilters";
@@ -62,40 +56,25 @@ const LS_COLUMNS_KEY = "defectsColumns";
 const LS_COLUMN_WIDTHS_KEY = "defectsColumnWidths";
 
 const OptimizedDefectsPage = memo(function OptimizedDefectsPage() {
-  const { data: defects = [], isPending } = useDefects();
   const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
   const { data: perm } = useRolePermission(role);
-  const { data: claimsAll = [] } = useClaimsSimpleAll();
-  const { data: claimsAssigned = [] } = useClaimsSimple();
-  const claims = perm?.only_assigned_project ? claimsAssigned : claimsAll;
+  const projectId = useProjectId();
+  const [filters, setFilters] = useState<DefectFilters>({});
+  
+  // Используем оптимизированные запросы
+  const { 
+    data: defects = [], 
+    isPending, 
+    error 
+  } = useOptimizedDefects(projectId || 1, filters);
   
   // Мемоизированные IDs для оптимизации
-  const defectUnitIds = useMemo(
-    () => defects.map((d) => d.unit_id).filter(Boolean) as number[],
-    [defects],
-  );
-  
-  const unitIds = useMemo(
-    () =>
-      Array.from(
-        new Set([
-          ...claims.flatMap((t) => t.unit_ids || []),
-          ...defectUnitIds,
-        ]),
-      ),
-    [claims, defectUnitIds],
-  );
-  
   const defectIds = useMemo(() => defects.map((d) => d.id), [defects]);
   
   // Ленивая загрузка данных только при необходимости
-  const { data: units = [] } = useUnitsByIds(unitIds);
   const { data: lockedUnitIds = [] } = useLockedUnitIds();
-  const { data: projects = [] } = useVisibleProjects();
-  const { data: brigades = [] } = useBrigades();
-  const { data: contractors = [] } = useContractors();
   const { data: users = [] } = useUsers();
-  const { data: claimIdMap = {} } = useClaimIdsByDefectIds(defectIds);
+  const { data: defectAttachments } = useDefectAttachments(defectIds);
 
   const userProjectIds = useAuthStore((s) => s.profile?.project_ids) ?? [];
   
@@ -108,99 +87,39 @@ const OptimizedDefectsPage = memo(function OptimizedDefectsPage() {
     return map;
   }, [users]);
 
-  const unitMap = useMemo(() => new Map(units.map((u) => [u.id, formatUnitName(u, false)])), [units]);
-  const buildingMap = useMemo(() => new Map(units.map((u) => [u.id, u.building || ""])), [units]);
-  const projectMap = useMemo(() => new Map(projects.map((p) => [p.id, p.name])), [projects]);
-  const brigadeMap = useMemo(() => new Map(brigades.map((b) => [b.id, b.name])), [brigades]);
-  const contractorMap = useMemo(() => new Map(contractors.map((c) => [c.id, c.name])), [contractors]);
-
-  // Основные данные с мемоизацией
+  // Основные данные с мемоизацией - теперь используем оптимизированные данные из view
   const data: DefectWithInfo[] = useMemo(() => {
-    const claimsMap = new Map<
-      number,
-      { id: number; unit_ids: number[]; project_id: number; pre_trial_claim: boolean }[]
-    >();
-    
-    claims.forEach((c: any) => {
-      (c.claim_defects || []).forEach((cd: any) => {
-        const arr = claimsMap.get(cd.defect_id) || [];
-        arr.push({
-          id: c.id,
-          unit_ids: c.unit_ids || [],
-          project_id: c.project_id,
-          pre_trial_claim: cd.pre_trial_claim ?? false,
-        });
-        claimsMap.set(cd.defect_id, arr);
-      });
-    });
-    
     return defects.map((d: any) => {
-      const claimLinked = claimsMap.get(d.id) || [];
-      const hasPretrial = claimLinked.some((l) => l.pre_trial_claim);
-      const unitIdsFromClaims = Array.from(new Set(claimLinked.flatMap((l) => l.unit_ids)));
-      const unitIds = unitIdsFromClaims.length
-        ? unitIdsFromClaims
-        : d.unit_id != null
-        ? [d.unit_id]
-        : [];
-      
-      const unitNamesList = unitIds
-        .map((id) => unitMap.get(id))
-        .filter(Boolean);
-      const unitNames = unitNamesList.join(", ");
-      
-      const buildingNamesList = Array.from(
-        new Set(unitIds.map((id) => buildingMap.get(id)).filter(Boolean)),
-      );
-      const buildingNames = buildingNamesList.join(", ");
-      
-      const projectIdsFromClaims = Array.from(new Set(claimLinked.map((l) => l.project_id)));
-      const projectIds = projectIdsFromClaims.length
-        ? projectIdsFromClaims
-        : d.project_id != null
-        ? [d.project_id]
-        : [];
-      
-      const projectNames = projectIds
-        .map((id) => projectMap.get(id))
-        .filter(Boolean)
-        .join(", ");
-      
-      let fixByName = "—";
-      if (d.brigade_id) {
-        fixByName = brigadeMap.get(d.brigade_id) || "Бригада";
-      } else if (d.contractor_id) {
-        fixByName = contractorMap.get(d.contractor_id) || "Подрядчик";
-      }
+      // Данные уже приходят из defects_with_details view с объединенными данными
+      const unitIds = d.unit_ids || (d.unit_id ? [d.unit_id] : []);
+      const unitNames = d.unit_names || "";
+      const buildingNames = d.building_names || "";
+      const projectNames = d.project_name || "";
+      const fixByName = d.fix_by_name || "—";
       
       return {
         ...d,
-        claimIds: Array.from(
-          new Set([
-            ...claimLinked.map((l) => l.id),
-            ...(claimIdMap[d.id] ?? []),
-          ]),
-        ),
-        hasPretrialClaim: hasPretrial,
-        createdByName: userMap.get(d.created_by as string) ?? null,
-        engineerName: userMap.get(d.engineer_id as string) ?? null,
+        claimIds: d.claim_ids || [],
+        hasPretrialClaim: d.has_pretrial_claim || false,
+        createdByName: d.created_by_name || userMap.get(d.created_by as string) || null,
+        engineerName: d.engineer_name || userMap.get(d.engineer_id as string) || null,
         unitIds,
         unitNames,
-        unitNamesList,
-        buildingNamesList,
+        unitNamesList: unitNames ? unitNames.split(", ") : [],
+        buildingNamesList: buildingNames ? buildingNames.split(", ") : [],
         buildingNames,
-        projectIds,
+        projectIds: d.project_ids || (d.project_id ? [d.project_id] : []),
         projectNames,
         fixByName,
         days: d.received_at
           ? dayjs().diff(dayjs(d.received_at), "day") + 1
           : null,
-        defectTypeName: d.defect_type?.name ?? "",
-        defectStatusName: d.defect_status?.name ?? "",
-        defectStatusColor: d.defect_status?.color ?? null,
+        defectTypeName: d.defect_type_name || "",
+        defectStatusName: d.defect_status_name || "",
+        defectStatusColor: d.defect_status_color || null,
       } as DefectWithInfo;
     });
-  }, [defects, claims, unitMap, buildingMap, projectMap, brigadeMap, contractorMap, userMap, claimIdMap]);
+  }, [defects, userMap]);
 
   const filteredData = useMemo(() => {
     if (perm?.only_assigned_project) {
@@ -210,8 +129,6 @@ const OptimizedDefectsPage = memo(function OptimizedDefectsPage() {
     }
     return data;
   }, [data, perm?.only_assigned_project, userProjectIds]);
-
-  const [filters, setFilters] = useState<DefectFilters>({});
 
   // Мемоизированные опции для фильтров
   const options = useMemo(() => {
@@ -245,16 +162,14 @@ const OptimizedDefectsPage = memo(function OptimizedDefectsPage() {
       units: Array.from(
         new Set(filtered('units').flatMap((d) => d.unitIds)),
       )
-        .map((id) => ({ label: unitMap.get(id) ?? String(id), value: id }))
+        .map((id) => ({ label: String(id), value: id }))
         .sort((a, b) => naturalCompare(a.label, b.label)),
       buildings: mapStrOptions(
         filtered('building').flatMap((d) => d.buildingNamesList || []),
       ),
-      projects: Array.from(
-        new Set(filtered('projectId').flatMap((d) => d.projectIds || [])),
-      )
-        .map((id) => ({ label: projectMap.get(id) ?? String(id), value: id }))
-        .sort((a, b) => naturalCompare(a.label, b.label)),
+      projects: mapStrOptions(
+        filtered('projectId').map((d) => d.projectNames),
+      ),
       types: uniqPairs(filtered('typeId').map((d) => [d.type_id, d.defectTypeName])),
       statuses: uniqPairs(
         filtered('statusId').map((d) => [d.status_id, d.defectStatusName]),
@@ -263,7 +178,7 @@ const OptimizedDefectsPage = memo(function OptimizedDefectsPage() {
       engineers: mapStrOptions(filtered('engineer').map((d) => d.engineerName)),
       authors: mapStrOptions(filtered('author').map((d) => d.createdByName)),
     };
-  }, [filteredData, filters, unitMap, projectMap]);
+  }, [filteredData, filters]);
 
   // Состояние компонента
   const [viewId, setViewId] = useState<number | null>(null);
@@ -526,16 +441,22 @@ const OptimizedDefectsPage = memo(function OptimizedDefectsPage() {
           </div>
         )}
 
-        <div className="defects-table">
-          <DefectsTable
-            defects={filteredData}
-            filters={filters}
-            loading={isPending}
-            columns={Object.values(baseColumns)}
-            onView={handleView}
-            lockedUnitIds={lockedUnitIds}
-          />
-        </div>
+        {error ? (
+          <div style={{ color: 'red', marginBottom: 16 }}>
+            Ошибка загрузки данных: {error.message}
+          </div>
+        ) : (
+          <div className="defects-table">
+            <DefectsTable
+              defects={filteredData}
+              filters={filters}
+              loading={isPending}
+              columns={Object.values(baseColumns)}
+              onView={handleView}
+              lockedUnitIds={lockedUnitIds}
+            />
+          </div>
+        )}
 
         <div style={{ marginTop: 16 }}>
           <Typography.Text style={{ display: "block" }}>
