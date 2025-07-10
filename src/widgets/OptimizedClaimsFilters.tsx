@@ -40,9 +40,9 @@ const MemoizedSelect = React.memo<{ options: any; [key: string]: any }>(({ optio
 ));
 
 const MemoizedMultiSelect = React.memo<{ options: any; [key: string]: any }>(({ options, ...props }) => (
-  <Select 
-    mode="multiple" 
-    allowClear 
+  <Select
+    mode="multiple"
+    allowClear
     showSearch 
     maxTagCount="responsive" 
     filterOption={(input, option) =>
@@ -53,6 +53,10 @@ const MemoizedMultiSelect = React.memo<{ options: any; [key: string]: any }>(({ 
   />
 ));
 
+/**
+ * Форма фильтров претензий с оптимизированными селектами и подсчётом
+ * количества выбранных дополнительных критериев.
+ */
 export default function OptimizedClaimsFilters({
   options,
   loading,
@@ -74,6 +78,33 @@ export default function OptimizedClaimsFilters({
     authors: options.authors || [],
     projects: options.projects || [],
   }), [options]);
+
+  const extraKeys: (keyof ClaimFilters)[] = useMemo(
+    () => [
+      "id",
+      "claim_no",
+      "author",
+      "project",
+      "period",
+      "claimedPeriod",
+      "acceptedPeriod",
+      "resolvedPeriod",
+      "hideClosed",
+      "description",
+    ],
+    [],
+  );
+
+  const calcExtra = useCallback(() => {
+    const vals = form.getFieldsValue();
+    const count = extraKeys.reduce((acc, key) => {
+      const v = vals[key];
+      if (Array.isArray(v)) return acc + (v.length ? 1 : 0);
+      if (v === undefined || v === null || v === "" || v === false) return acc;
+      return acc + 1;
+    }, 0);
+    setExtraCount(count);
+  }, [form, extraKeys]);
 
   useEffect(() => {
     // Используем setTimeout чтобы убедиться что форма уже примонтирована
@@ -97,29 +128,6 @@ export default function OptimizedClaimsFilters({
     return () => clearTimeout(timer);
   }, []);
 
-  const extraKeys: (keyof ClaimFilters)[] = useMemo(() => [
-    "id",
-    "claim_no", 
-    "author",
-    "project",
-    "period",
-    "claimedPeriod",
-    "acceptedPeriod",
-    "resolvedPeriod",
-    "hideClosed",
-    "description",
-  ], []);
-
-  const calcExtra = useCallback(() => {
-    const vals = form.getFieldsValue();
-    const count = extraKeys.reduce((acc, key) => {
-      const v = vals[key];
-      if (Array.isArray(v)) return acc + (v.length ? 1 : 0);
-      if (v === undefined || v === null || v === "" || v === false) return acc;
-      return acc + 1;
-    }, 0);
-    setExtraCount(count);
-  }, [form, extraKeys]);
 
   // Дебаунсим изменения формы для снижения количества обновлений
   const [formValues, setFormValues] = useState<ClaimFilters>({});
