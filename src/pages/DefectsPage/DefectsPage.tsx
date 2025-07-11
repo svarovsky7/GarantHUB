@@ -632,9 +632,9 @@ const LS_COLUMN_WIDTHS_KEY = "defectsColumnWidths";
           <ExportDefectsButton defects={filteredData} filters={filters} />
         </span>
         {showFilters && (
-          <Card style={{ marginTop: 16, marginBottom: 24 }}>
+          <div style={{ marginTop: 16, marginBottom: 24, maxWidth: 1040 }}>
             <DefectsFilters options={options} onChange={setFilters} />
-          </Card>
+          </div>
         )}
         <DefectsTable
           defects={filteredData}

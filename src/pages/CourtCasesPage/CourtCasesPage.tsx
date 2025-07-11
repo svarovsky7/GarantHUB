@@ -672,7 +672,7 @@ export default function CourtCasesPage() {
           }}
         >
           {showFilters && (
-            <Card style={{ marginBottom: 24 }}>
+            <div style={{ marginBottom: 24, maxWidth: 1040 }}>
               <CourtCasesFilters
                 values={filters}
                 onChange={handleFiltersChange}
@@ -683,7 +683,7 @@ export default function CourtCasesPage() {
                 users={userOptions}
                 idOptions={idOptions}
               />
-            </Card>
+            </div>
           )}
 
           <Table

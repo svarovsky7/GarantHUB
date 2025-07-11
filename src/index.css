@@ -26,24 +26,6 @@ body {
   width: 100%;
 }
 
-.defects-filter-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 16px;
-}
-.defects-filter-col {
-  display: grid;
-  gap: 16px;
-}
-.defects-filter-footer {
-  margin-top: 16px;
-}
-.defects-filter-grid .ant-input,
-.defects-filter-grid .ant-select,
-.defects-filter-grid .ant-picker,
-.defects-filter-grid button {
-  width: 100%;
-}
 
 
 /* === ТАБЛИЦА ================================================================= */

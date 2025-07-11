@@ -129,7 +129,19 @@ export default function ClaimsFilters({
             </Col>
             <Col span={5}>
               <Form.Item name="project" label="Проект">
-                <Select allowClear options={options.projects} />
+                <Select 
+                  allowClear 
+                  options={options.projects}
+                  onChange={(value) => {
+                    // При изменении проекта очищаем зависимые поля
+                    if (!value) {
+                      form.setFieldsValue({ 
+                        units: undefined,
+                        building: undefined 
+                      });
+                    }
+                  }}
+                />
               </Form.Item>
             </Col>
             <Col span={5}>
@@ -138,6 +150,8 @@ export default function ClaimsFilters({
                   mode="multiple"
                   allowClear
                   options={options.units}
+                  disabled={!form.getFieldValue('project')}
+                  placeholder={form.getFieldValue('project') ? "Выберите объекты" : "Сначала выберите проект"}
                 />
               </Form.Item>
             </Col>
@@ -182,7 +196,12 @@ export default function ClaimsFilters({
                     </Col>
                     <Col span={6}>
                       <Form.Item name="building" label="Корпус">
-                        <Select allowClear options={options.buildings} />
+                        <Select 
+                          allowClear 
+                          options={options.buildings} 
+                          disabled={!form.getFieldValue('project')}
+                          placeholder={form.getFieldValue('project') ? "Выберите корпус" : "Сначала выберите проект"}
+                        />
                       </Form.Item>
                     </Col>
                   </Row>
