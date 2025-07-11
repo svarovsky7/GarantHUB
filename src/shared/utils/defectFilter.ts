@@ -20,6 +20,7 @@ export function filterDefects<T extends {
   buildingNamesList?: string[];
   claimIds: number[];
   createdByName?: string | null;
+  filesCount?: number;
 }>(rows: T[], f: DefectFilters): T[] {
   return rows.filter((d) => {
     if (Array.isArray(f.id) && f.id.length > 0 && !f.id.includes(d.id)) {
@@ -102,6 +103,12 @@ export function filterDefects<T extends {
       }
     }
     if (f.hideClosed && d.defectStatusName?.toLowerCase().includes('закры')) {
+      return false;
+    }
+    if (f.hasFiles === 'with' && (!d.filesCount || d.filesCount === 0)) {
+      return false;
+    }
+    if (f.hasFiles === 'without' && d.filesCount && d.filesCount > 0) {
       return false;
     }
     return true;

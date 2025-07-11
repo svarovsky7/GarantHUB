@@ -19,7 +19,7 @@ import {
 } from "@ant-design/icons";
 
 import ruRU from "antd/locale/ru_RU";
-import { useDefects, useDeleteDefect } from "@/entities/defect";
+import { useDefects, useDeleteDefect, useDefectFileCounts } from "@/entities/defect";
 import { useUnitsByIds, useLockedUnitIds } from "@/entities/unit";
 import { useVisibleProjects } from "@/entities/project";
 import { useBrigades } from "@/entities/brigade";
@@ -84,6 +84,7 @@ export default function DefectsPage() {
   const { data: users = [] } = useUsers();
   const defectIds = useMemo(() => defects.map((d) => d.id), [defects]);
   const { data: claimIdMap = {} } = useClaimIdsByDefectIds(defectIds);
+  const { data: fileCountsMap = {} } = useDefectFileCounts(defectIds);
 
   const userProjectIds = useAuthStore((s) => s.profile?.project_ids) ?? [];
   const userMap = useMemo(() => {
@@ -178,9 +179,10 @@ export default function DefectsPage() {
         defectTypeName: d.defect_type?.name ?? "",
         defectStatusName: d.defect_status?.name ?? "",
         defectStatusColor: d.defect_status?.color ?? null,
+        filesCount: fileCountsMap[d.id] ?? 0,
       } as DefectWithInfo;
     });
-  }, [defects, claims, units, projects, userMap, claimIdMap]);
+  }, [defects, claims, units, projects, userMap, claimIdMap, fileCountsMap]);
 
   const filteredData = useMemo(() => {
     if (perm?.only_assigned_project) {
@@ -411,6 +413,14 @@ const LS_COLUMN_WIDTHS_KEY = "defectsColumnWidths";
           (b.fixed_at ? dayjs(b.fixed_at).valueOf() : 0),
         render: fmt,
       },
+      files: {
+        title: "Файлы",
+        dataIndex: "filesCount",
+        width: 80,
+        sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
+          (a.filesCount ?? 0) - (b.filesCount ?? 0),
+        render: (count: number) => count > 0 ? count : "—",
+      },
       actions: {
         title: "Действия",
         key: "actions",
@@ -516,6 +526,7 @@ const LS_COLUMN_WIDTHS_KEY = "defectsColumnWidths";
     "createdByName",
     "engineer",
     "created",
+    "files",
     "actions",
   ] as const;
 

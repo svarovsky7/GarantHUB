@@ -23,4 +23,6 @@ export interface DefectFilters {
   /** Период устранения */
   fixedPeriod?: [Dayjs, Dayjs];
   hideClosed?: boolean;
+  /** Фильтр по наличию файлов */
+  hasFiles?: 'with' | 'without';
 }

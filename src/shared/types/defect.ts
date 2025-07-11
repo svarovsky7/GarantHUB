@@ -74,4 +74,6 @@ export interface DefectWithInfo extends DefectRecord {
   hasPretrialClaim?: boolean;
   /** Имя автора создания дефекта */
   createdByName?: string | null;
+  /** Количество прикрепленных файлов */
+  filesCount?: number;
 }

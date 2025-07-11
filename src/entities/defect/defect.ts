@@ -96,6 +96,36 @@ export function useDefect(id?: number) {
  * Получить статусы дефектов по их идентификаторам.
  * Возвращает `id` и название статуса.
  */
+/**
+ * Получить количество файлов для каждого дефекта
+ */
+export function useDefectFileCounts(defectIds: number[]) {
+  return useQuery<Record<number, number>>({
+    queryKey: ['defect-file-counts', defectIds],
+    enabled: defectIds.length > 0,
+    queryFn: async () => {
+      if (defectIds.length === 0) return {};
+      
+      const { data, error } = await supabase
+        .from('defect_attachments')
+        .select('defect_id')
+        .in('defect_id', defectIds);
+        
+      if (error) throw error;
+      
+      const counts: Record<number, number> = {};
+      defectIds.forEach(id => counts[id] = 0);
+      
+      (data ?? []).forEach((row: any) => {
+        counts[row.defect_id] = (counts[row.defect_id] || 0) + 1;
+      });
+      
+      return counts;
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
 export function useDefectsByIds(ids?: number[]) {
   return useQuery<{ id: number; statusName: string | null }[]>({
     queryKey: ['defects-by-ids', (ids ?? []).join(',')],

@@ -534,7 +534,10 @@ export default function ClaimsPage() {
           <div style={{ marginTop: 16 }}>
             <React.Suspense fallback={<div>Загрузка формы...</div>}>
               <ClaimFormAntd
-                onCreated={() => setShowAddForm(false)}
+                onCreated={() => {
+                  setShowAddForm(false);
+                  message.success("Претензия успешно создана");
+                }}
                 initialValues={initialValues}
               />
             </React.Suspense>

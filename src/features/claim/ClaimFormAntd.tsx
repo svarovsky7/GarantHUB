@@ -303,6 +303,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
     form.resetFields();
     setFiles([]);
     setDefectFiles({});
+    notify.success('Претензия успешно создана');
     onCreated?.();
   };
 

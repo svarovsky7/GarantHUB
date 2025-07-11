@@ -600,12 +600,13 @@ export function useUpdateClaim() {
 
       return data as Claim;
     },
-    onSuccess: (_, { id }) => {
-      qc.invalidateQueries({ queryKey: [TABLE] });
-      qc.invalidateQueries({ queryKey: [TABLE, id] });
-      qc.invalidateQueries({ queryKey: ['claims-simple'] });
+    onSuccess: (_, vars) => {
+      // Инвалидируем все возможные варианты queryKey для претензий
+      qc.invalidateQueries({ queryKey: [TABLE], exact: false });
+      qc.invalidateQueries({ queryKey: ['claims-simple'], exact: false });
       qc.invalidateQueries({ queryKey: ['claims-simple-all'] });
-      qc.invalidateQueries({ queryKey: ['claims-all'] });
+      qc.invalidateQueries({ queryKey: ['claims-all'], exact: false });
+      qc.invalidateQueries({ queryKey: ['claims-all-legacy'] });
       qc.invalidateQueries({ queryKey: ['defects'] });
     },
   });

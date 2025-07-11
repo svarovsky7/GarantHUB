@@ -93,12 +93,12 @@ export default function OptimizedClaimsFilters({
     "id",
     "claim_no", 
     "author",
-    "project",
+    "building",
+    "units",
     "period",
     "claimedPeriod",
     "acceptedPeriod",
     "resolvedPeriod",
-    "hideClosed",
     "description",
   ], []);
 
@@ -159,14 +159,14 @@ export default function OptimizedClaimsFilters({
 
   if (loading) {
     return (
-      <Card bordered={false} size="small" style={{ maxWidth: 1040 }}>
+      <Card variant="outlined" size="small" style={{ maxWidth: 1040, border: 'none' }}>
         <Skeleton active paragraph={{ rows: 4 }} />
       </Card>
     );
   }
 
   return (
-    <Card bordered={false} size="small" style={{ maxWidth: 1040 }}>
+    <Card variant="outlined" size="small" style={{ maxWidth: 1040, border: 'none' }}>
       <Form
         form={form}
         layout="vertical"
@@ -175,7 +175,7 @@ export default function OptimizedClaimsFilters({
         preserve={false}
       >
         <Row gutter={12}>
-          <Col span={6}>
+          <Col span={5}>
             <Form.Item
               name="responsible"
               label="Закрепленный инженер"
@@ -185,25 +185,34 @@ export default function OptimizedClaimsFilters({
               />
             </Form.Item>
           </Col>
-          <Col span={6}>
-            <Form.Item name="building" label="Корпус">
+          <Col span={5}>
+            <Form.Item name="project" label="Проект">
               <MemoizedSelect 
-                options={memoizedOptions.buildings}
+                options={memoizedOptions.projects}
               />
             </Form.Item>
           </Col>
-          <Col span={6}>
+          <Col span={5}>
             <Form.Item name="units" label="Объекты">
               <MemoizedMultiSelect
                 options={memoizedOptions.units}
               />
             </Form.Item>
           </Col>
-          <Col span={6}>
+          <Col span={5}>
             <Form.Item name="status" label="Статус">
               <MemoizedSelect 
                 options={memoizedOptions.statuses}
               />
+            </Form.Item>
+          </Col>
+          <Col span={4}>
+            <Form.Item
+              name="hideClosed"
+              label="СКРЫТЬ ЗАКРЫТЫЕ И НЕ ГАРАНТИЯ"
+              valuePropName="checked"
+            >
+              <Switch size="small" />
             </Form.Item>
           </Col>
         </Row>
@@ -233,9 +242,9 @@ export default function OptimizedClaimsFilters({
                     </Form.Item>
                   </Col>
                   <Col span={6}>
-                    <Form.Item name="project" label="Проект">
+                    <Form.Item name="building" label="Корпус">
                       <MemoizedSelect 
-                        options={memoizedOptions.projects}
+                        options={memoizedOptions.buildings}
                       />
                     </Form.Item>
                   </Col>
@@ -286,15 +295,6 @@ export default function OptimizedClaimsFilters({
                   </Col>
                 </Row>
                 <Row gutter={12} align="middle">
-                  <Col span={6}>
-                    <Form.Item
-                      name="hideClosed"
-                      label="СКРЫТЬ ЗАКРЫТЫЕ И НЕ ГАРАНТИЯ"
-                      valuePropName="checked"
-                    >
-                      <Switch size="small" />
-                    </Form.Item>
-                  </Col>
                   <Col span={12}>
                     <Form.Item
                       name="description"
@@ -312,11 +312,6 @@ export default function OptimizedClaimsFilters({
         <Row justify="end" gutter={12}>
           <Col>
             <Button onClick={handleReset}>Сброс</Button>
-          </Col>
-          <Col>
-            <Button type="primary" htmlType="submit">
-              Найти
-            </Button>
           </Col>
         </Row>
       </Form>

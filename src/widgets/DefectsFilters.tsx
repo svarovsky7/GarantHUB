@@ -133,6 +133,12 @@ export default function DefectsFilters({
           <Form.Item name="hideClosed" label="Скрыть закрытые" valuePropName="checked">
             <Switch />
           </Form.Item>
+          <Form.Item name="hasFiles" label="Наличие файлов">
+            <Select allowClear placeholder="Все">
+              <Select.Option value="with">С файлами</Select.Option>
+              <Select.Option value="without">Без файлов</Select.Option>
+            </Select>
+          </Form.Item>
         </div>
       </div>
       <div className="defects-filter-footer">
