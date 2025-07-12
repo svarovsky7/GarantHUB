@@ -496,7 +496,12 @@ const OptimizedClaimsPage = memo(function OptimizedClaimsPage() {
     try {
       const saved = localStorage.getItem(LS_COLUMNS_KEY);
       if (saved) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved) as TableColumnSetting[];
+        // Фильтруем только валидные колонки
+        const validColumns = parsed.filter(col => columnOrder.includes(col.key));
+        if (validColumns.length > 0) {
+          return validColumns;
+        }
       }
     } catch {}
     
@@ -534,7 +539,9 @@ const OptimizedClaimsPage = memo(function OptimizedClaimsPage() {
 
   // Финальные колонки для таблицы
   const columns = useMemo(() => {
-    return columnsState.filter((c) => c.visible).map((c) => baseColumns[c.key]);
+    return columnsState
+      .filter((c) => c.visible && baseColumns[c.key])
+      .map((c) => baseColumns[c.key]);
   }, [columnsState, baseColumns]);
 
 
