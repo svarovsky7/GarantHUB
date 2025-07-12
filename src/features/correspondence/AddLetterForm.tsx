@@ -18,7 +18,7 @@ import dayjs, { Dayjs } from 'dayjs';
 import { useUsers } from '@/entities/user';
 import { useLetterTypes } from '@/entities/letterType';
 import { useVisibleProjects } from '@/entities/project';
-import { useUnitsByProject } from '@/entities/unit';
+import { useUnitsByProject, useUnitsByIds } from '@/entities/unit';
 import { useContractors, useDeleteContractor } from '@/entities/contractor';
 import { usePersons, useDeletePerson } from '@/entities/person';
 import PersonModal from '@/features/person/PersonModal';
@@ -26,6 +26,7 @@ import ContractorModal from '@/features/contractor/ContractorModal';
 import { useLetterStatuses } from '@/entities/letterStatus';
 import { useAuthStore } from '@/shared/store/authStore';
 import { useLetterFiles } from './model/useLetterFiles';
+import { naturalCompare } from '@/shared/utils/naturalSort';
 
 export interface AddLetterFormData {
   type: 'incoming' | 'outgoing';
@@ -38,6 +39,7 @@ export interface AddLetterFormData {
   responsible_user_id: string | null;
   letter_type_id: number | null;
   project_id: number | null;
+  building: string | null;
   unit_ids: number[];
   /** Статус письма */
   status_id: number | null;
@@ -56,6 +58,7 @@ interface AddLetterFormProps {
 export default function AddLetterForm({ onSubmit, parentId = null, initialValues: defaults = {} }: AddLetterFormProps) {
   const [form] = Form.useForm<Omit<AddLetterFormData, 'attachments'>>();
   const projectId = Form.useWatch('project_id', form);
+  const building = Form.useWatch('building', form);
   const senderValue = Form.useWatch('sender', form);
   const receiverValue = Form.useWatch('receiver', form);
 
@@ -69,6 +72,26 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
   const { data: letterTypes = [], isLoading: loadingTypes } = useLetterTypes();
   const { data: projects = [], isLoading: loadingProjects } = useVisibleProjects();
   const { data: units = [], isLoading: loadingUnits } = useUnitsByProject(projectId);
+  
+  // Building options based on project units only
+  const buildingOptions = React.useMemo(() => {
+    const buildings = new Set<string>();
+    units.forEach(unit => {
+      if (unit.building && unit.building.trim()) {
+        buildings.add(unit.building.trim());
+      }
+    });
+    return Array.from(buildings).sort(naturalCompare).map(building => ({
+      value: building,
+      label: building
+    }));
+  }, [units]);
+  
+  // Filter units by both project and building
+  const filteredUnits = React.useMemo(() => {
+    if (!building) return units;
+    return units.filter(unit => unit.building === building);
+  }, [units, building]);
   const { data: contractors = [], isLoading: loadingContractors } = useContractors();
   const { data: persons = [], isLoading: loadingPersons } = usePersons();
   const { data: statuses = [] } = useLetterStatuses();
@@ -100,12 +123,18 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
       prevProjectId.current = projectId ?? null;
       return;
     }
-    // Если проект изменился после инициализации — сбрасываем выбранные объекты
+    // Если проект изменился после инициализации — сбрасываем выбранные объекты и корпус
     if (prevProjectId.current !== projectId) {
       form.setFieldValue('unit_ids', []);
+      form.setFieldValue('building', null);
       prevProjectId.current = projectId ?? null;
     }
   }, [projectId, form]);
+
+  // Clear unit_ids when building changes
+  useEffect(() => {
+    form.setFieldValue('unit_ids', []);
+  }, [building, form]);
 
   // Подставляем текущего пользователя, если ответственный не выбран
   useEffect(() => {
@@ -332,17 +361,26 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
             </Form.Item>
           </Col>
           <Col span={8}>
+            <Form.Item name="building" label="Корпус">
+              <Select
+                  options={buildingOptions}
+                  allowClear
+                  placeholder="Выберите корпус"
+                  disabled={!projectId}
+              />
+            </Form.Item>
+          </Col>
+          <Col span={8}>
             <Form.Item name="unit_ids" label="Объекты">
               <Select
                   mode="multiple"
                   loading={loadingUnits}
-                  options={units.map((u) => ({ value: u.id, label: u.name }))}
+                  options={filteredUnits.map((u) => ({ value: u.id, label: u.name }))}
                   placeholder="Выберите объекты"
                   disabled={!projectId}
               />
             </Form.Item>
           </Col>
-          <Col span={8} />
         </Row>
         <Form.Item name="subject" label="Тема письма">
           <Input placeholder="Введите тему письма" autoComplete="off" />

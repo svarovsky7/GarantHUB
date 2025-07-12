@@ -18,7 +18,7 @@ import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useUsers } from '@/entities/user';
 import { useLetterTypes } from '@/entities/letterType';
 import { useVisibleProjects } from '@/entities/project';
-import { useUnitsByProject } from '@/entities/unit';
+import { useUnitsByProject, useUnitsByIds } from '@/entities/unit';
 import { useContractors, useDeleteContractor } from '@/entities/contractor';
 import { usePersons, useDeletePerson } from '@/entities/person';
 import { useLetter, useUpdateLetter, signedUrl } from '@/entities/correspondence';
@@ -30,6 +30,7 @@ import { downloadZip } from '@/shared/utils/downloadZip';
 import PersonModal from '@/features/person/PersonModal';
 import ContractorModal from '@/features/contractor/ContractorModal';
 import { useChangedFields } from '@/shared/hooks/useChangedFields';
+import { naturalCompare } from '@/shared/utils/naturalSort';
 
 export interface LetterFormAntdEditProps {
   letterId: string;
@@ -45,7 +46,31 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
   const { data: letterTypes = [] } = useLetterTypes();
   const { data: projects = [] } = useVisibleProjects();
   const projectId = Form.useWatch('project_id', form);
-  const { data: units = [] } = useUnitsByProject(projectId); 
+  const building = Form.useWatch('building', form);
+  const { data: units = [] } = useUnitsByProject(projectId);
+  
+  // Building options based on project units only
+  const buildingOptions = React.useMemo(() => {
+    const buildings = new Set<string>();
+    units.forEach(unit => {
+      if (unit.building && unit.building.trim()) {
+        buildings.add(unit.building.trim());
+      }
+    });
+    return Array.from(buildings).sort(naturalCompare).map(building => ({
+      value: building,
+      label: building
+    }));
+  }, [units]);
+  
+  // Filter units by both project and building
+  const filteredUnits = React.useMemo(() => {
+    if (!building) return units;
+    return units.filter(unit => unit.building === building);
+  }, [units, building]);
+  
+  // Get all units to extract building from letter data
+  const { data: allUnits = [] } = useUnitsByIds(letter?.unit_ids || []); 
   const { data: contractors = [] } = useContractors();
   const { data: persons = [] } = usePersons();
   const deletePerson = useDeletePerson();
@@ -95,8 +120,14 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
 
   useEffect(() => {
     if (!letter) return;
+    
+    // Extract building from letter's units
+    const letterBuildings = allUnits.map(unit => unit.building).filter(Boolean);
+    const building = letterBuildings.length > 0 ? letterBuildings[0] : undefined;
+    
     form.setFieldsValue({
       project_id: letter.project_id,
+      building: building,
       unit_ids: letter.unit_ids,
       type: letter.type,
       number: letter.number,
@@ -108,7 +139,16 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
       subject: letter.subject,
       content: letter.content,
     });
-  }, [letter, form]);
+    setIsInitialized(true);
+  }, [letter, form, allUnits]);
+
+  // Clear unit_ids when building changes (but not on initial load)
+  const [isInitialized, setIsInitialized] = React.useState(false);
+  React.useEffect(() => {
+    if (isInitialized && building !== undefined) {
+      form.setFieldValue('unit_ids', []);
+    }
+  }, [building, form, isInitialized]);
 
   const handleFiles = (files: File[]) => attachments.addFiles(files);
 
@@ -202,15 +242,28 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
           </Form.Item>
         </Col>
         <Col span={8}>
+          <Form.Item name="building" label="Корпус" style={highlight('building')}>
+            <Select 
+              options={buildingOptions}
+              allowClear
+              placeholder="Выберите корпус"
+              disabled={!projectId}
+            />
+          </Form.Item>
+        </Col>
+        <Col span={8}>
           <Form.Item name="unit_ids" label="Объекты" style={highlight('unit_ids')}>
             <Select mode="multiple" options={units.map((u) => ({ value: u.id, label: u.name }))} disabled={!projectId} />
           </Form.Item>
         </Col>
+      </Row>
+      <Row gutter={16}>
         <Col span={8}>
           <Form.Item name="responsible_user_id" label="Ответственный" style={highlight('responsible_user_id')}>
             <Select allowClear options={users.map((u) => ({ value: u.id, label: u.name }))} />
           </Form.Item>
         </Col>
+        <Col span={16} />
       </Row>
       <Row gutter={16}>
         <Col span={8}>

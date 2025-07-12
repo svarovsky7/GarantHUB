@@ -65,6 +65,7 @@ interface Filters {
   id?: number[];
   category?: number | '';
   project?: number | '';
+  building?: string | '';
   unit?: number | '';
   sender?: string;
   receiver?: string;
@@ -101,6 +102,7 @@ export default function CorrespondencePage() {
       id: [],
       category: '',
       project: prj ? Number(prj) : '',
+      building: '',
       unit: unit ? Number(unit) : '',
       sender: '',
       receiver: '',
@@ -217,6 +219,19 @@ export default function CorrespondencePage() {
     [letters],
   );
 
+  const buildingOptions = React.useMemo(() => {
+    const buildings = new Set<string>();
+    allUnits.forEach(unit => {
+      if (unit.building && unit.building.trim()) {
+        buildings.add(unit.building.trim());
+      }
+    });
+    return Array.from(buildings).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })).map(building => ({
+      value: building,
+      label: building
+    }));
+  }, [allUnits]);
+
   const handleFiltersChange = (_: any, values: any) => {
     setFilters({
       period: values.period ?? null,
@@ -224,6 +239,7 @@ export default function CorrespondencePage() {
       id: values.id ?? [],
       category: values.category ?? '',
       project: values.project ?? '',
+      building: values.building ?? '',
       unit: values.unit ?? '',
       sender: values.sender ?? '',
       receiver: values.receiver ?? '',
@@ -248,6 +264,7 @@ export default function CorrespondencePage() {
       id: [],
       category: '',
       project: '',
+      building: '',
       unit: '',
       sender: '',
       receiver: '',
@@ -381,6 +398,21 @@ export default function CorrespondencePage() {
         dataIndex: 'projectName',
         width: 180,
         sorter: (a: any, b: any) => (a.projectName || '').localeCompare(b.projectName || ''),
+      },
+      building: {
+        title: 'Корпус',
+        dataIndex: 'building',
+        width: 120,
+        sorter: (a: any, b: any) => (a.building || '').localeCompare(b.building || ''),
+        render: (building: string, record: any) => {
+          if (!building) {
+            // Extract building from unit names if not directly available
+            const letterUnits = allUnits.filter(unit => record.unit_ids.includes(unit.id));
+            const buildings = Array.from(new Set(letterUnits.map(unit => unit.building).filter(Boolean)));
+            return buildings.join(', ') || '—';
+          }
+          return building;
+        },
       },
       unitNames: {
         title: 'Объекты',
@@ -547,6 +579,11 @@ export default function CorrespondencePage() {
     if (filters.type && l.type !== filters.type) return false;
     if (filters.category && l.letter_type_id !== Number(filters.category)) return false;
     if (filters.project && l.project_id !== Number(filters.project)) return false;
+    if (filters.building) {
+      const letterUnits = allUnits.filter(unit => l.unit_ids.includes(unit.id));
+      const hasBuilding = letterUnits.some(unit => unit.building === filters.building);
+      if (!hasBuilding) return false;
+    }
     if (filters.unit && !l.unit_ids.includes(Number(filters.unit))) return false;
     if (filters.id && filters.id.length) {
       const ids = filters.id.map(String);
@@ -596,18 +633,23 @@ export default function CorrespondencePage() {
   return (
     <ConfigProvider locale={ruRU}>
       <>
-        <Button type="primary" onClick={() => setShowAddForm((p) => !p)} style={{ marginRight: 8 }}>
-          {showAddForm ? 'Скрыть форму' : 'Добавить письмо'}
-        </Button>
-        <Button onClick={() => setShowFilters((p) => !p)}>
-          {showFilters ? 'Скрыть фильтры' : 'Показать фильтры'}
-        </Button>
-        <Button
-          icon={<SettingOutlined />}
-          style={{ marginLeft: 8 }}
-          onClick={() => setShowColumnsDrawer(true)}
-        />
-        <span style={{ marginLeft: 8, display: 'inline-block' }}>
+        <div style={{ marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
+          <Button
+            type="primary"
+            onClick={() => setShowAddForm((p) => !p)}
+          >
+            {showAddForm ? 'Скрыть форму' : 'Добавить письмо'}
+          </Button>
+          
+          <Button onClick={() => setShowFilters((p) => !p)}>
+            {showFilters ? 'Скрыть фильтры' : 'Показать фильтры'}
+          </Button>
+          
+          <Button
+            icon={<SettingOutlined />}
+            onClick={() => setShowColumnsDrawer(true)}
+          />
+          
           <ExportLettersButton
             letters={filtered}
             users={users}
@@ -616,9 +658,9 @@ export default function CorrespondencePage() {
             units={allUnits}
             statuses={statuses}
           />
-        </span>
+        </div>
         {showAddForm && (
-          <div style={{ marginTop: 16 }}>
+          <div style={{ marginBottom: 24 }}>
             <AddLetterForm onSubmit={handleAdd} initialValues={initialValues} />
           </div>
         )}
@@ -664,7 +706,7 @@ export default function CorrespondencePage() {
           }}
         >
           {showFilters && (
-            <Card style={{ marginBottom: 24 }}>
+            <div style={{ marginBottom: 24 }}>
               <CorrespondenceFilters
                 form={form}
                 filters={filters}
@@ -673,12 +715,13 @@ export default function CorrespondencePage() {
                 letterTypes={letterTypes.map((t) => ({ value: t.id, label: t.name }))}
                 projects={projects.map((p) => ({ value: p.id, label: p.name }))}
                 projectUnits={projectUnits.map((u) => ({ value: u.id, label: u.name }))}
+                buildingOptions={buildingOptions}
                 contactOptions={contactOptions}
                 statuses={statuses.map((s) => ({ value: s.id, label: s.name }))}
                 idOptions={idOptions}
                 onReset={resetFilters}
               />
-            </Card>
+            </div>
           )}
           <CorrespondenceTable
             letters={filtered}
