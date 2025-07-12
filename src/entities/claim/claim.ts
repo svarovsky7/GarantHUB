@@ -171,12 +171,10 @@ export function useClaims() {
       (claimUnits ?? []).forEach((u: any) => claimUnitsMap.set(u.claim_id, true));
       
       const claimsWithoutUnits = ids.filter(id => !claimUnitsMap.has(id));
-      const { data: directUnits } = claimsWithoutUnits.length
-        ? await supabase
-            .from('claims')
-            .select('id, unit_ids')
-            .in('id', claimsWithoutUnits)
-        : { data: [] };
+      // В актуальной схеме таблицы claims отсутствует колонка `unit_ids`,
+      // поэтому для претензий без связей в `claim_units` просто возвращаем
+      // пустые массивы без дополнительного запроса.
+      const directUnits: { id: number; unit_ids: number[] }[] = [];
       
       // Получаем defect_ids для всех претензий одним запросом
       const { data: claimDefects } = ids.length
@@ -418,12 +416,9 @@ export function useClaimsAllLegacy() {
       (unitsResult.data ?? []).forEach((u: any) => claimUnitsMap.set(u.claim_id, true));
       
       const claimsWithoutUnits = ids.filter(id => !claimUnitsMap.has(id));
-      const { data: directUnits } = claimsWithoutUnits.length
-        ? await supabase
-            .from('claims')
-            .select('id, unit_ids')
-            .in('id', claimsWithoutUnits)
-        : { data: [] };
+      // Колонки `unit_ids` в таблице claims нет, поэтому
+      // просто возвращаем пустой список без дополнительных запросов.
+      const directUnits: { id: number; unit_ids: number[] }[] = [];
       
       // Создаем мапы для быстрого доступа
       const unitMap = new Map<number, number[]>();
