@@ -167,24 +167,55 @@ const OptimizedClaimsPage = memo(function OptimizedClaimsPage() {
 
   // Мемоизированные претензии с именами
   const claimsWithNames: ClaimWithNames[] = useMemo(
-    () =>
-      claims.map((c) => ({
-        ...c,
-        unitNames: c.unit_ids
+    () => {
+      console.log('DEBUG OptimizedClaimsPage:', {
+        claimsCount: claims.length,
+        unitsCount: units.length,
+        unitIdsTotal: unitIds.length,
+        buildingMapKeys: Object.keys(buildingMap).length,
+        unitMapKeys: Object.keys(unitMap).length,
+        unitsLoading
+      });
+      
+      // Детальная отладка для первых 5 претензий
+      const processedClaims = claims.map((c, index) => {
+        const unitNames = c.unit_ids
           .map((id) => unitMap[id])
           .filter(Boolean)
-          .join(", "),
-        unitNumbers: c.unit_ids
+          .join(", ");
+        const unitNumbers = c.unit_ids
           .map((id) => unitNumberMap[id])
           .filter(Boolean)
-          .join(", "),
-        buildings: Array.from(
+          .join(", ");
+        const buildings = Array.from(
           new Set(c.unit_ids.map((id) => buildingMap[id]).filter(Boolean)),
-        ).join(", "),
-        responsibleEngineerName: userMap[c.engineer_id] ?? null,
-        createdByName: userMap[c.created_by as string] ?? null,
-      })),
-    [claims, unitMap, unitNumberMap, buildingMap, userMap],
+        ).join(", ");
+
+        // Отладка для первых 5 претензий
+        if (index < 5) {
+          console.log(`DEBUG OptimizedClaim ${c.id}:`, {
+            unit_ids: c.unit_ids,
+            unitNames,
+            unitNumbers, 
+            buildings,
+            missingUnits: c.unit_ids.filter(id => !units.find(u => u.id === id)),
+            unitsData: c.unit_ids.map(id => units.find(u => u.id === id))
+          });
+        }
+
+        return {
+          ...c,
+          unitNames,
+          unitNumbers,
+          buildings,
+          responsibleEngineerName: userMap[c.engineer_id] ?? null,
+          createdByName: userMap[c.created_by as string] ?? null,
+        };
+      });
+
+      return processedClaims;
+    },
+    [claims, unitMap, unitNumberMap, buildingMap, userMap, units, unitIds, unitsLoading],
   );
 
   // Мемоизированные опции для фильтров с дебаунсом
@@ -642,7 +673,7 @@ const OptimizedClaimsPage = memo(function OptimizedClaimsPage() {
           <ClaimsTable
             claims={claimsWithNames}
             filters={filters}
-            loading={isLoading}
+            loading={isLoading || (unitIds.length > 0 && unitsLoading)}
             onView={handleView}
             onAddChild={handleAddChild}
             onUnlink={handleUnlink}
