@@ -166,6 +166,18 @@ export function useClaims() {
             .in('claim_id', ids)
         : { data: [] };
       
+      // Получаем unit_ids из основной таблицы для претензий без связей в claim_units
+      const claimUnitsMap = new Map<number, boolean>();
+      (claimUnits ?? []).forEach((u: any) => claimUnitsMap.set(u.claim_id, true));
+      
+      const claimsWithoutUnits = ids.filter(id => !claimUnitsMap.has(id));
+      const { data: directUnits } = claimsWithoutUnits.length
+        ? await supabase
+            .from('claims')
+            .select('id, unit_ids')
+            .in('id', claimsWithoutUnits)
+        : { data: [] };
+      
       // Получаем defect_ids для всех претензий одним запросом
       const { data: claimDefects } = ids.length
         ? await supabase
@@ -181,12 +193,19 @@ export function useClaims() {
             .select('parent_id, child_id')
             .in('child_id', ids)
         : { data: [] };
-
+      
       // Создаем мапы для быстрого доступа
       const unitMap = new Map<number, number[]>();
       (claimUnits ?? []).forEach((u: any) => {
         if (!unitMap.has(u.claim_id)) unitMap.set(u.claim_id, []);
         unitMap.get(u.claim_id)!.push(u.unit_id);
+      });
+      
+      // Добавляем данные из основной таблицы для претензий без связей
+      (directUnits ?? []).forEach((claim: any) => {
+        if (claim.unit_ids && Array.isArray(claim.unit_ids) && claim.unit_ids.length > 0) {
+          unitMap.set(claim.id, claim.unit_ids);
+        }
       });
       
       const defectMap = new Map<number, number[]>();
@@ -394,11 +413,30 @@ export function useClaimsAllLegacy() {
         ids.length ? supabase.from(LINK_TABLE).select('parent_id, child_id').in('child_id', ids) : { data: [] }
       ]);
       
+      // Получаем unit_ids из основной таблицы для претензий без связей в claim_units
+      const claimUnitsMap = new Map<number, boolean>();
+      (unitsResult.data ?? []).forEach((u: any) => claimUnitsMap.set(u.claim_id, true));
+      
+      const claimsWithoutUnits = ids.filter(id => !claimUnitsMap.has(id));
+      const { data: directUnits } = claimsWithoutUnits.length
+        ? await supabase
+            .from('claims')
+            .select('id, unit_ids')
+            .in('id', claimsWithoutUnits)
+        : { data: [] };
+      
       // Создаем мапы для быстрого доступа
       const unitMap = new Map<number, number[]>();
       (unitsResult.data ?? []).forEach((u: any) => {
         if (!unitMap.has(u.claim_id)) unitMap.set(u.claim_id, []);
         unitMap.get(u.claim_id)!.push(u.unit_id);
+      });
+      
+      // Добавляем данные из основной таблицы для претензий без связей
+      (directUnits ?? []).forEach((claim: any) => {
+        if (claim.unit_ids && Array.isArray(claim.unit_ids) && claim.unit_ids.length > 0) {
+          unitMap.set(claim.id, claim.unit_ids);
+        }
       });
       
       const defectMap = new Map<number, number[]>();
