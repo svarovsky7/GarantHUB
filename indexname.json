@@ -1,0 +1,596 @@
+[
+  {
+    "schemaname": "public",
+    "tablename": "attachments",
+    "indexname": "attachments_pkey",
+    "indexdef": "CREATE UNIQUE INDEX attachments_pkey ON public.attachments USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "attachments",
+    "indexname": "idx_attachments_created_at",
+    "indexdef": "CREATE INDEX idx_attachments_created_at ON public.attachments USING btree (created_at DESC)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "attachments",
+    "indexname": "idx_attachments_uploaded_by",
+    "indexdef": "CREATE INDEX idx_attachments_uploaded_by ON public.attachments USING btree (uploaded_by) WHERE (uploaded_by IS NOT NULL)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "brigades",
+    "indexname": "brigades_pkey",
+    "indexdef": "CREATE UNIQUE INDEX brigades_pkey ON public.brigades USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "claim_attachments",
+    "indexname": "claim_attachments_pkey",
+    "indexdef": "CREATE UNIQUE INDEX claim_attachments_pkey ON public.claim_attachments USING btree (claim_id, attachment_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "claim_attachments",
+    "indexname": "idx_claim_attachments_attachment",
+    "indexdef": "CREATE INDEX idx_claim_attachments_attachment ON public.claim_attachments USING btree (attachment_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "claim_defects",
+    "indexname": "claim_defects_defect_idx",
+    "indexdef": "CREATE INDEX claim_defects_defect_idx ON public.claim_defects USING btree (defect_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "claim_defects",
+    "indexname": "claim_defects_pkey",
+    "indexdef": "CREATE UNIQUE INDEX claim_defects_pkey ON public.claim_defects USING btree (claim_id, defect_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "claim_defects",
+    "indexname": "idx_claim_defects_claim",
+    "indexdef": "CREATE INDEX idx_claim_defects_claim ON public.claim_defects USING btree (claim_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "claim_links",
+    "indexname": "claim_links_pkey",
+    "indexdef": "CREATE UNIQUE INDEX claim_links_pkey ON public.claim_links USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "claim_links",
+    "indexname": "idx_claim_links_child",
+    "indexdef": "CREATE INDEX idx_claim_links_child ON public.claim_links USING btree (child_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "claim_links",
+    "indexname": "idx_claim_links_parent",
+    "indexdef": "CREATE INDEX idx_claim_links_parent ON public.claim_links USING btree (parent_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "claim_units",
+    "indexname": "claim_units_pkey",
+    "indexdef": "CREATE UNIQUE INDEX claim_units_pkey ON public.claim_units USING btree (claim_id, unit_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "claim_units",
+    "indexname": "idx_claim_units_claim",
+    "indexdef": "CREATE INDEX idx_claim_units_claim ON public.claim_units USING btree (claim_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "claim_units",
+    "indexname": "idx_claim_units_unit",
+    "indexdef": "CREATE INDEX idx_claim_units_unit ON public.claim_units USING btree (unit_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "claims",
+    "indexname": "claims_pkey",
+    "indexdef": "CREATE UNIQUE INDEX claims_pkey ON public.claims USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "claims",
+    "indexname": "idx_claims_engineer_project",
+    "indexdef": "CREATE INDEX idx_claims_engineer_project ON public.claims USING btree (engineer_id, project_id) WHERE (engineer_id IS NOT NULL)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "claims",
+    "indexname": "idx_claims_project",
+    "indexdef": "CREATE INDEX idx_claims_project ON public.claims USING btree (project_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "claims",
+    "indexname": "idx_claims_project_created",
+    "indexdef": "CREATE INDEX idx_claims_project_created ON public.claims USING btree (project_id, created_at DESC)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "claims",
+    "indexname": "idx_claims_project_status_date",
+    "indexdef": "CREATE INDEX idx_claims_project_status_date ON public.claims USING btree (project_id, claim_status_id, created_at DESC)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "claims",
+    "indexname": "idx_claims_status",
+    "indexdef": "CREATE INDEX idx_claims_status ON public.claims USING btree (claim_status_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "claims",
+    "indexname": "idx_claims_status_date",
+    "indexdef": "CREATE INDEX idx_claims_status_date ON public.claims USING btree (claim_status_id, created_at DESC) WHERE (claim_status_id IS NOT NULL)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "contractors",
+    "indexname": "contractors_pkey",
+    "indexdef": "CREATE UNIQUE INDEX contractors_pkey ON public.contractors USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "court_case_attachments",
+    "indexname": "court_case_attachments_pkey",
+    "indexdef": "CREATE UNIQUE INDEX court_case_attachments_pkey ON public.court_case_attachments USING btree (court_case_id, attachment_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "court_case_claim_links",
+    "indexname": "court_case_claim_links_pkey",
+    "indexdef": "CREATE UNIQUE INDEX court_case_claim_links_pkey ON public.court_case_claim_links USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "court_case_claim_links",
+    "indexname": "idx_court_case_claim_links_case",
+    "indexdef": "CREATE INDEX idx_court_case_claim_links_case ON public.court_case_claim_links USING btree (case_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "court_case_claim_links",
+    "indexname": "idx_court_case_claim_links_claim",
+    "indexdef": "CREATE INDEX idx_court_case_claim_links_claim ON public.court_case_claim_links USING btree (claim_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "court_case_claims",
+    "indexname": "court_case_claims_pkey",
+    "indexdef": "CREATE UNIQUE INDEX court_case_claims_pkey ON public.court_case_claims USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "court_case_claims",
+    "indexname": "idx_court_case_claims_case",
+    "indexdef": "CREATE INDEX idx_court_case_claims_case ON public.court_case_claims USING btree (case_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "court_case_defects",
+    "indexname": "court_case_defects_pkey",
+    "indexdef": "CREATE UNIQUE INDEX court_case_defects_pkey ON public.court_case_defects USING btree (case_id, defect_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "court_case_defects",
+    "indexname": "idx_court_case_defects_case",
+    "indexdef": "CREATE INDEX idx_court_case_defects_case ON public.court_case_defects USING btree (case_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "court_case_defects",
+    "indexname": "idx_court_case_defects_defect",
+    "indexdef": "CREATE INDEX idx_court_case_defects_defect ON public.court_case_defects USING btree (defect_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "court_case_links",
+    "indexname": "court_case_links_child_id_key",
+    "indexdef": "CREATE UNIQUE INDEX court_case_links_child_id_key ON public.court_case_links USING btree (child_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "court_case_links",
+    "indexname": "court_case_links_pkey",
+    "indexdef": "CREATE UNIQUE INDEX court_case_links_pkey ON public.court_case_links USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "court_case_parties",
+    "indexname": "court_case_parties_pkey",
+    "indexdef": "CREATE UNIQUE INDEX court_case_parties_pkey ON public.court_case_parties USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "court_case_parties",
+    "indexname": "idx_court_case_parties_case",
+    "indexdef": "CREATE INDEX idx_court_case_parties_case ON public.court_case_parties USING btree (case_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "court_case_units",
+    "indexname": "court_case_units_pkey",
+    "indexdef": "CREATE UNIQUE INDEX court_case_units_pkey ON public.court_case_units USING btree (court_case_id, unit_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "court_case_units",
+    "indexname": "idx_court_case_units_case",
+    "indexdef": "CREATE INDEX idx_court_case_units_case ON public.court_case_units USING btree (court_case_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "court_case_units",
+    "indexname": "idx_court_case_units_unit",
+    "indexdef": "CREATE INDEX idx_court_case_units_unit ON public.court_case_units USING btree (unit_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "court_cases",
+    "indexname": "court_cases_pkey",
+    "indexdef": "CREATE UNIQUE INDEX court_cases_pkey ON public.court_cases USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "court_cases",
+    "indexname": "idx_court_cases_lawyer_project",
+    "indexdef": "CREATE INDEX idx_court_cases_lawyer_project ON public.court_cases USING btree (responsible_lawyer_id, project_id) WHERE (responsible_lawyer_id IS NOT NULL)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "court_cases",
+    "indexname": "idx_court_cases_project",
+    "indexdef": "CREATE INDEX idx_court_cases_project ON public.court_cases USING btree (project_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "court_cases",
+    "indexname": "idx_court_cases_project_date",
+    "indexdef": "CREATE INDEX idx_court_cases_project_date ON public.court_cases USING btree (project_id, created_at DESC)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "court_cases",
+    "indexname": "idx_court_cases_project_status",
+    "indexdef": "CREATE INDEX idx_court_cases_project_status ON public.court_cases USING btree (project_id, status)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "court_cases",
+    "indexname": "idx_court_cases_status",
+    "indexdef": "CREATE INDEX idx_court_cases_status ON public.court_cases USING btree (status)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "court_cases_uids",
+    "indexname": "court_cases_uids_pkey",
+    "indexdef": "CREATE UNIQUE INDEX court_cases_uids_pkey ON public.court_cases_uids USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "court_cases_uids",
+    "indexname": "court_cases_uids_uid_key",
+    "indexdef": "CREATE UNIQUE INDEX court_cases_uids_uid_key ON public.court_cases_uids USING btree (uid)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "defect_attachments",
+    "indexname": "defect_attachments_pkey",
+    "indexdef": "CREATE UNIQUE INDEX defect_attachments_pkey ON public.defect_attachments USING btree (defect_id, attachment_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "defect_attachments",
+    "indexname": "idx_defect_attachments_file",
+    "indexdef": "CREATE INDEX idx_defect_attachments_file ON public.defect_attachments USING btree (attachment_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "defect_types",
+    "indexname": "ticket_types_pkey",
+    "indexdef": "CREATE UNIQUE INDEX ticket_types_pkey ON public.defect_types USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "defects",
+    "indexname": "defects_pkey",
+    "indexdef": "CREATE UNIQUE INDEX defects_pkey ON public.defects USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "defects",
+    "indexname": "idx_defects_brigade_date",
+    "indexdef": "CREATE INDEX idx_defects_brigade_date ON public.defects USING btree (brigade_id, created_at DESC) WHERE (brigade_id IS NOT NULL)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "defects",
+    "indexname": "idx_defects_engineer",
+    "indexdef": "CREATE INDEX idx_defects_engineer ON public.defects USING btree (engineer_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "defects",
+    "indexname": "idx_defects_project",
+    "indexdef": "CREATE INDEX idx_defects_project ON public.defects USING btree (project_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "defects",
+    "indexname": "idx_defects_project_status_date",
+    "indexdef": "CREATE INDEX idx_defects_project_status_date ON public.defects USING btree (project_id, status_id, created_at DESC)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "defects",
+    "indexname": "idx_defects_project_type",
+    "indexdef": "CREATE INDEX idx_defects_project_type ON public.defects USING btree (project_id, type_id) WHERE (type_id IS NOT NULL)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "defects",
+    "indexname": "idx_defects_status",
+    "indexdef": "CREATE INDEX idx_defects_status ON public.defects USING btree (status_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "defects",
+    "indexname": "idx_defects_unit",
+    "indexdef": "CREATE INDEX idx_defects_unit ON public.defects USING btree (unit_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "defects",
+    "indexname": "idx_defects_unit_status",
+    "indexdef": "CREATE INDEX idx_defects_unit_status ON public.defects USING btree (unit_id, status_id) WHERE (unit_id IS NOT NULL)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "lawsuit_claim_types",
+    "indexname": "lawsuit_claim_types_pkey",
+    "indexdef": "CREATE UNIQUE INDEX lawsuit_claim_types_pkey ON public.lawsuit_claim_types USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "letter_attachments",
+    "indexname": "idx_letter_attachments_attachment",
+    "indexdef": "CREATE INDEX idx_letter_attachments_attachment ON public.letter_attachments USING btree (attachment_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "letter_attachments",
+    "indexname": "idx_letter_attachments_letter",
+    "indexdef": "CREATE INDEX idx_letter_attachments_letter ON public.letter_attachments USING btree (letter_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "letter_attachments",
+    "indexname": "letter_attachments_pkey",
+    "indexdef": "CREATE UNIQUE INDEX letter_attachments_pkey ON public.letter_attachments USING btree (letter_id, attachment_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "letter_links",
+    "indexname": "idx_letter_links_parent",
+    "indexdef": "CREATE INDEX idx_letter_links_parent ON public.letter_links USING btree (parent_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "letter_links",
+    "indexname": "letter_links_id_key",
+    "indexdef": "CREATE UNIQUE INDEX letter_links_id_key ON public.letter_links USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "letter_links",
+    "indexname": "letter_links_pkey",
+    "indexdef": "CREATE UNIQUE INDEX letter_links_pkey ON public.letter_links USING btree (parent_id, child_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "letter_types",
+    "indexname": "letter_types_name_key",
+    "indexdef": "CREATE UNIQUE INDEX letter_types_name_key ON public.letter_types USING btree (name)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "letter_types",
+    "indexname": "letter_types_pkey",
+    "indexdef": "CREATE UNIQUE INDEX letter_types_pkey ON public.letter_types USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "letter_units",
+    "indexname": "idx_letter_units_letter",
+    "indexdef": "CREATE INDEX idx_letter_units_letter ON public.letter_units USING btree (letter_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "letter_units",
+    "indexname": "idx_letter_units_unit",
+    "indexdef": "CREATE INDEX idx_letter_units_unit ON public.letter_units USING btree (unit_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "letter_units",
+    "indexname": "letter_units_pkey",
+    "indexdef": "CREATE UNIQUE INDEX letter_units_pkey ON public.letter_units USING btree (letter_id, unit_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "letters",
+    "indexname": "idx_letters_project",
+    "indexdef": "CREATE INDEX idx_letters_project ON public.letters USING btree (project_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "letters",
+    "indexname": "idx_letters_project_date",
+    "indexdef": "CREATE INDEX idx_letters_project_date ON public.letters USING btree (project_id, letter_date DESC)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "letters",
+    "indexname": "idx_letters_project_status",
+    "indexdef": "CREATE INDEX idx_letters_project_status ON public.letters USING btree (project_id, status_id) WHERE (status_id IS NOT NULL)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "letters",
+    "indexname": "idx_letters_project_type",
+    "indexdef": "CREATE INDEX idx_letters_project_type ON public.letters USING btree (project_id, letter_type_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "letters",
+    "indexname": "idx_letters_responsible_project",
+    "indexdef": "CREATE INDEX idx_letters_responsible_project ON public.letters USING btree (responsible_user_id, project_id) WHERE (responsible_user_id IS NOT NULL)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "letters",
+    "indexname": "idx_letters_status",
+    "indexdef": "CREATE INDEX idx_letters_status ON public.letters USING btree (status_id) WHERE (status_id IS NOT NULL)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "letters",
+    "indexname": "idx_letters_type",
+    "indexdef": "CREATE INDEX idx_letters_type ON public.letters USING btree (letter_type_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "letters",
+    "indexname": "letters_pkey",
+    "indexdef": "CREATE UNIQUE INDEX letters_pkey ON public.letters USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "persons",
+    "indexname": "persons_passport_unique",
+    "indexdef": "CREATE UNIQUE INDEX persons_passport_unique ON public.persons USING btree (passport_series, passport_number) WHERE ((passport_series IS NOT NULL) AND (passport_number IS NOT NULL))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "persons",
+    "indexname": "persons_pkey",
+    "indexdef": "CREATE UNIQUE INDEX persons_pkey ON public.persons USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profiles",
+    "indexname": "idx_profiles_id_name",
+    "indexdef": "CREATE INDEX idx_profiles_id_name ON public.profiles USING btree (id, name)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profiles",
+    "indexname": "profiles_pkey",
+    "indexdef": "CREATE UNIQUE INDEX profiles_pkey ON public.profiles USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profiles_projects",
+    "indexname": "profiles_projects_pkey",
+    "indexdef": "CREATE UNIQUE INDEX profiles_projects_pkey ON public.profiles_projects USING btree (profile_id, project_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "projects",
+    "indexname": "projects_pkey",
+    "indexdef": "CREATE UNIQUE INDEX projects_pkey ON public.projects USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "role_permissions",
+    "indexname": "role_permissions_pkey",
+    "indexdef": "CREATE UNIQUE INDEX role_permissions_pkey ON public.role_permissions USING btree (role_name)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "roles",
+    "indexname": "roles_name_key",
+    "indexdef": "CREATE UNIQUE INDEX roles_name_key ON public.roles USING btree (name)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "roles",
+    "indexname": "roles_pkey",
+    "indexdef": "CREATE UNIQUE INDEX roles_pkey ON public.roles USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "statuses",
+    "indexname": "idx_statuses_entity_id",
+    "indexdef": "CREATE INDEX idx_statuses_entity_id ON public.statuses USING btree (entity, id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "statuses",
+    "indexname": "statuses_pkey",
+    "indexdef": "CREATE UNIQUE INDEX statuses_pkey ON public.statuses USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "unit_attachments",
+    "indexname": "idx_unit_attachments_file",
+    "indexdef": "CREATE INDEX idx_unit_attachments_file ON public.unit_attachments USING btree (attachment_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "unit_attachments",
+    "indexname": "unit_attachments_pkey",
+    "indexdef": "CREATE UNIQUE INDEX unit_attachments_pkey ON public.unit_attachments USING btree (unit_id, attachment_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "unit_sort_orders",
+    "indexname": "unit_sort_orders_pkey",
+    "indexdef": "CREATE UNIQUE INDEX unit_sort_orders_pkey ON public.unit_sort_orders USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "unit_sort_orders",
+    "indexname": "unit_sort_orders_project_id_building_floor_key",
+    "indexdef": "CREATE UNIQUE INDEX unit_sort_orders_project_id_building_floor_key ON public.unit_sort_orders USING btree (project_id, building, floor)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "units",
+    "indexname": "idx_units_project",
+    "indexdef": "CREATE INDEX idx_units_project ON public.units USING btree (project_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "units",
+    "indexname": "idx_units_project_building",
+    "indexdef": "CREATE INDEX idx_units_project_building ON public.units USING btree (project_id, building)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "units",
+    "indexname": "idx_units_project_building_floor",
+    "indexdef": "CREATE INDEX idx_units_project_building_floor ON public.units USING btree (project_id, building, floor) WHERE ((building IS NOT NULL) AND (floor IS NOT NULL))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "units",
+    "indexname": "idx_units_project_floor",
+    "indexdef": "CREATE INDEX idx_units_project_floor ON public.units USING btree (project_id, floor) WHERE (floor IS NOT NULL)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "units",
+    "indexname": "units_pkey",
+    "indexdef": "CREATE UNIQUE INDEX units_pkey ON public.units USING btree (id)"
+  }
+]

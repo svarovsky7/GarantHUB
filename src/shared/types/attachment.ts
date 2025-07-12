@@ -18,8 +18,8 @@ export interface Attachment {
   created_by: string | null;
   /** Когда добавлен */
   created_at: string | null;
-  /** Кто загрузил файл */
-  uploaded_by?: string | null;
+  /** УДАЛЕНО: Кто загрузил файл - поле удалено из БД для оптимизации */
+  // uploaded_by?: string | null;
   /** Когда обновлён */
   updated_at?: string | null;
 }

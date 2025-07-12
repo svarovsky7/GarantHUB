@@ -15,62 +15,67 @@ const CASE_UNITS_TABLE = 'court_case_units';
 /** Связующая таблица "дело - вложение" */
 const CASE_ATTACH_TABLE = 'court_case_attachments';
 
+/**
+ * Получить все судебные дела с оптимизацией N+1 запросов.
+ * Использует представление court_cases_summary для предварительно рассчитанных данных.
+ */
 export function useCourtCases() {
   const { projectId, projectIds, onlyAssigned } = useProjectFilter();
   return useQuery({
     queryKey: [CASES_TABLE, projectId, projectIds.join(',')],
     queryFn: async () => {
+      // Используем оптимизированное представление для всех данных
       let query = supabase
-        .from(CASES_TABLE)
-        .select('*, court_cases_uids(id, uid)');
+        .from('court_cases_summary')
+        .select(
+          `id, project_id, status, responsible_lawyer_id, fix_start_date, fix_end_date,
+           created_at, updated_at, date, number, description, case_uid_id, created_by,
+           total_claim_amount, project_name, status_name, status_color, lawyer_name,
+           lawyer_email, case_uid, attachments_count, units_count, parties_count, claims_count`
+        );
+      
       if (onlyAssigned) {
         query = query.in('project_id', projectIds.length ? projectIds : [-1]);
       }
-      // Sort cases by ID in descending order for consistent latest-first view
+      
       query = query.order('id', { ascending: false });
       const { data, error } = await query;
       if (error) throw error;
 
       const ids = (data ?? []).map((r: any) => r.id);
-      const { data: unitRows } = ids.length
-        ? await supabase
-            .from(CASE_UNITS_TABLE)
-            .select('court_case_id, unit_id')
-            .in('court_case_id', ids)
-        : { data: [] };
+      
+      if (!ids.length) {
+        return [];
+      }
+
+      // Получаем только unit_ids и parent связи (остальные данные уже в представлении)
+      const [unitsResult, linksResult] = await Promise.all([
+        supabase
+          .from(CASE_UNITS_TABLE)
+          .select('court_case_id, unit_id')
+          .in('court_case_id', ids),
+        supabase
+          .from(CASE_LINKS_TABLE)
+          .select('parent_id, child_id')
+          .in('child_id', ids)
+      ]);
+
+      // Создаем карты для быстрого доступа
       const unitMap = new Map<number, number[]>();
-      (unitRows ?? []).forEach((r: any) => {
-        const arr = unitMap.get(r.court_case_id) || [];
-        arr.push(r.unit_id);
-        unitMap.set(r.court_case_id, arr);
+      (unitsResult.data ?? []).forEach((r: any) => {
+        if (!unitMap.has(r.court_case_id)) unitMap.set(r.court_case_id, []);
+        unitMap.get(r.court_case_id)!.push(r.unit_id);
       });
 
-
-      const { data: links, error: linkErr } = await supabase
-        .from(CASE_LINKS_TABLE)
-        .select('parent_id, child_id');
-      if (linkErr) throw linkErr;
       const linkMap = new Map<number, number>();
-      (links ?? []).forEach((l) => linkMap.set(l.child_id, l.parent_id));
-
-      const { data: claimRows } = ids.length
-        ? await supabase
-            .from('court_case_claims')
-            .select('case_id, claimed_amount')
-            .in('case_id', ids)
-        : { data: [] };
-      const claimMap = new Map<number, number>();
-      (claimRows ?? []).forEach((r: any) => {
-        const sum = claimMap.get(r.case_id) || 0;
-        claimMap.set(r.case_id, sum + Number(r.claimed_amount) || 0);
-      });
+      (linksResult.data ?? []).forEach((l: any) => linkMap.set(l.child_id, l.parent_id));
 
       return (data ?? []).map((row: any) => ({
         ...row,
         unit_ids: unitMap.get(row.id) || [],
         parent_id: linkMap.get(row.id) ?? null,
-        total_claim_amount: claimMap.get(row.id) ?? null,
-        caseUid: row.court_cases_uids?.uid ?? null,
+        caseUid: row.case_uid ?? null,
+        court_cases_uids: row.case_uid ? { uid: row.case_uid } : null,
       })) as CourtCase[];
     },
     staleTime: 5 * 60_000,
@@ -403,36 +408,48 @@ export function useCourtCase(caseId: number | string | undefined) {
     queryKey: ['court_case', id],
     enabled: !!id,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from(CASES_TABLE)
-        .select('*, court_cases_uids(id, uid)')
-        .eq('id', id)
-        .single();
-      if (error) throw error;
-
-      const { data: unitRows } = await supabase
-        .from(CASE_UNITS_TABLE)
-        .select('unit_id')
-        .eq('court_case_id', id);
-      const unitIds = (unitRows ?? []).map((r: any) => r.unit_id);
-
-
-      const { data: attachRows } = await supabase
-        .from(CASE_ATTACH_TABLE)
-        .select('attachment_id')
-        .eq('court_case_id', id);
-      const attIds = (attachRows ?? []).map((r: any) => r.attachment_id);
+      // Получаем все необходимые данные параллельно
+      const [caseResult, unitsResult, attachmentsResult] = await Promise.all([
+        supabase
+          .from('court_cases_summary')
+          .select(
+            `id, project_id, status, responsible_lawyer_id, fix_start_date, fix_end_date,
+             created_at, updated_at, date, number, description, case_uid_id, created_by,
+             total_claim_amount, project_name, status_name, status_color, lawyer_name,
+             lawyer_email, case_uid, attachments_count, units_count, parties_count, claims_count`
+          )
+          .eq('id', id)
+          .single(),
+        supabase
+          .from(CASE_UNITS_TABLE)
+          .select('unit_id')
+          .eq('court_case_id', id),
+        supabase
+          .from(CASE_ATTACH_TABLE)
+          .select('attachment_id')
+          .eq('court_case_id', id)
+      ]);
+      
+      if (caseResult.error) throw caseResult.error;
+      
+      const data = caseResult.data;
+      const unitIds = (unitsResult.data ?? []).map((r: any) => r.unit_id);
+      const attIds = (attachmentsResult.data ?? []).map((r: any) => r.attachment_id);
+      
+      // Загружаем вложения только если они есть
       let attachments: any[] = [];
       if (attIds.length) {
         const files = await getAttachmentsByIds(attIds);
         attachments = files;
       }
+      
       const result = {
-        ...(data as any),
+        ...data,
         unit_ids: unitIds,
         attachment_ids: attIds,
         attachments,
-        caseUid: (data as any).court_cases_uids?.uid ?? null,
+        caseUid: data.case_uid ?? null,
+        court_cases_uids: data.case_uid ? { uid: data.case_uid } : null,
       } as CourtCase & { attachments: any[] };
       return result;
     },

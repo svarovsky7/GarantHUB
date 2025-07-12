@@ -131,46 +131,84 @@ async function markClaimDefectsPreTrial(claimId: number) {
 
 /**
  * Хук получения списка претензий с учётом фильтров проекта.
+ * Оптимизирован для устранения N+1 запросов.
  */
 export function useClaims() {
   const { projectId, projectIds, onlyAssigned } = useProjectFilter();
   return useQuery({
     queryKey: [TABLE, projectId, projectIds.join(',')],
     queryFn: async () => {
+      // Используем оптимизированное представление
       const rows = await fetchPaged<any>((from, to) => {
         let q: any = supabase
-          .from(TABLE)
+          .from('claims_summary')
           .select(
             `id, project_id, claim_status_id, claim_no, claimed_on,
-          accepted_on, registered_on, resolved_on,
-          engineer_id, owner, case_uid_id, pre_trial_claim, description, created_at, created_by,
-          projects (id, name),
-          court_cases_uids(id, uid),
-          statuses (id, name, color),
-          claim_units(unit_id),
-          claim_defects(defect_id),
-          claim_attachments(attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description, created_at, created_by))`,
+            accepted_on, registered_on, resolved_on, engineer_id, owner, 
+            case_uid_id, pre_trial_claim, description, created_at, created_by,
+            updated_at, updated_by, project_name, status_name, status_color,
+            engineer_name, engineer_email, created_by_name, case_uid,
+            attachments_count, units_count, defects_count, has_children, has_parent`
           );
         q = filterByProjects(q, projectId, projectIds, onlyAssigned);
         q = q.order('created_at', { ascending: false }).range(from, to);
         return q as unknown as PromiseLike<PostgrestSingleResponse<any[]>>;
       });
+      
+      // Получаем связанные данные одним запросом
       const ids = rows.map((r: any) => r.id);
+      
+      // Получаем unit_ids для всех претензий одним запросом
+      const { data: claimUnits } = ids.length
+        ? await supabase
+            .from('claim_units')
+            .select('claim_id, unit_id')
+            .in('claim_id', ids)
+        : { data: [] };
+      
+      // Получаем defect_ids для всех претензий одним запросом
+      const { data: claimDefects } = ids.length
+        ? await supabase
+            .from('claim_defects')
+            .select('claim_id, defect_id')
+            .in('claim_id', ids)
+        : { data: [] };
+      
+      // Получаем parent_id для всех претензий одним запросом
       const { data: links } = ids.length
         ? await supabase
             .from(LINK_TABLE)
             .select('parent_id, child_id')
             .in('child_id', ids)
         : { data: [] };
+      
+      // Создаем мапы для быстрого доступа
+      const unitMap = new Map<number, number[]>();
+      (claimUnits ?? []).forEach((u: any) => {
+        if (!unitMap.has(u.claim_id)) unitMap.set(u.claim_id, []);
+        unitMap.get(u.claim_id)!.push(u.unit_id);
+      });
+      
+      const defectMap = new Map<number, number[]>();
+      (claimDefects ?? []).forEach((d: any) => {
+        if (!defectMap.has(d.claim_id)) defectMap.set(d.claim_id, []);
+        defectMap.get(d.claim_id)!.push(d.defect_id);
+      });
+      
       const linkMap = new Map<number, number>();
       (links ?? []).forEach((l: any) => linkMap.set(l.child_id, l.parent_id));
+      
       return (rows ?? []).map((r: any) =>
         mapClaim({
           ...r,
           parent_id: linkMap.get(r.id) ?? null,
-          unit_ids: (r.claim_units ?? []).map((u: any) => u.unit_id),
-          defect_ids: (r.claim_defects ?? []).map((d: any) => d.defect_id),
-          attachments: (r.claim_attachments ?? []).map((a: any) => a.attachments),
+          unit_ids: unitMap.get(r.id) ?? [],
+          defect_ids: defectMap.get(r.id) ?? [],
+          attachments: [], // Вложения загружаем по требованию
+          // Используем данные из представления
+          projects: { name: r.project_name },
+          statuses: { name: r.status_name, color: r.status_color },
+          court_cases_uids: r.case_uid ? { uid: r.case_uid } : null,
         }),
       );
     },
@@ -325,43 +363,64 @@ export function useClaimsAll(page = 0, pageSize = 50) {
 
 /**
  * Получить все претензии без пагинации (для обратной совместимости).
+ * Оптимизированная версия с использованием представления.
  */
 export function useClaimsAllLegacy() {
   return useQuery({
     queryKey: ['claims-all-legacy'],
     queryFn: async () => {
+      // Используем оптимизированное представление
       const rows = await fetchPaged<any>((from, to) =>
         supabase
-          .from(TABLE)
+          .from('claims_summary')
           .select(
             `id, project_id, claim_status_id, claim_no, claimed_on,
-          accepted_on, registered_on, resolved_on,
-          engineer_id, owner, case_uid_id, pre_trial_claim, description, created_at, created_by,
-          projects (id, name),
-          statuses (id, name, color),
-          claim_units(unit_id),
-          claim_defects(defect_id),
-          claim_attachments(attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description, created_at, created_by))`,
+            accepted_on, registered_on, resolved_on, engineer_id, owner, 
+            case_uid_id, pre_trial_claim, description, created_at, created_by,
+            updated_at, updated_by, project_name, status_name, status_color,
+            engineer_name, engineer_email, created_by_name, case_uid,
+            attachments_count, units_count, defects_count, has_children, has_parent`
           )
           .order('created_at', { ascending: false })
           .range(from, to) as unknown as PromiseLike<PostgrestSingleResponse<any[]>>,
       );
+      
       const ids = rows.map((r: any) => r.id);
-      const { data: links } = ids.length
-        ? await supabase
-            .from(LINK_TABLE)
-            .select('parent_id, child_id')
-            .in('child_id', ids)
-        : { data: [] };
+      
+      // Получаем все связанные данные одними запросами
+      const [unitsResult, defectsResult, linksResult] = await Promise.all([
+        ids.length ? supabase.from('claim_units').select('claim_id, unit_id').in('claim_id', ids) : { data: [] },
+        ids.length ? supabase.from('claim_defects').select('claim_id, defect_id').in('claim_id', ids) : { data: [] },
+        ids.length ? supabase.from(LINK_TABLE).select('parent_id, child_id').in('child_id', ids) : { data: [] }
+      ]);
+      
+      // Создаем мапы для быстрого доступа
+      const unitMap = new Map<number, number[]>();
+      (unitsResult.data ?? []).forEach((u: any) => {
+        if (!unitMap.has(u.claim_id)) unitMap.set(u.claim_id, []);
+        unitMap.get(u.claim_id)!.push(u.unit_id);
+      });
+      
+      const defectMap = new Map<number, number[]>();
+      (defectsResult.data ?? []).forEach((d: any) => {
+        if (!defectMap.has(d.claim_id)) defectMap.set(d.claim_id, []);
+        defectMap.get(d.claim_id)!.push(d.defect_id);
+      });
+      
       const linkMap = new Map<number, number>();
-      (links ?? []).forEach((l: any) => linkMap.set(l.child_id, l.parent_id));
+      (linksResult.data ?? []).forEach((l: any) => linkMap.set(l.child_id, l.parent_id));
+      
       return (rows ?? []).map((r: any) =>
         mapClaim({
           ...r,
           parent_id: linkMap.get(r.id) ?? null,
-          unit_ids: (r.claim_units ?? []).map((u: any) => u.unit_id),
-          defect_ids: (r.claim_defects ?? []).map((d: any) => d.defect_id),
-          attachments: (r.claim_attachments ?? []).map((a: any) => a.attachments),
+          unit_ids: unitMap.get(r.id) ?? [],
+          defect_ids: defectMap.get(r.id) ?? [],
+          attachments: [], // Вложения загружаем по требованию
+          // Используем данные из представления
+          projects: { name: r.project_name },
+          statuses: { name: r.status_name, color: r.status_color },
+          court_cases_uids: r.case_uid ? { uid: r.case_uid } : null,
         }),
       );
     },
@@ -371,6 +430,7 @@ export function useClaimsAllLegacy() {
 
 /**
  * Получить список претензий по всем проектам (минимальный набор полей).
+ * Оптимизированная версия без N+1 запросов.
  */
 export function useClaimsSimpleAll() {
   return useQuery<ClaimSimple[]>({
@@ -381,45 +441,44 @@ export function useClaimsSimpleAll() {
       );
       const ids = data.map((r) => r.id);
 
-      const unitRows = ids.length
-        ? await fetchByChunks(ids, (chunk) =>
-            supabase.from('claim_units').select('claim_id, unit_id').in('claim_id', chunk),
-          )
-        : [];
-      const unitMap: Record<number, number[]> = {};
-      (unitRows ?? []).forEach((u: any) => {
-        if (!unitMap[u.claim_id]) unitMap[u.claim_id] = [];
-        unitMap[u.claim_id].push(u.unit_id);
+      if (!ids.length) {
+        return [];
+      }
+
+      // Получаем все связанные данные двумя запросами вместо chunked запросов
+      const [unitsResult, defectsResult] = await Promise.all([
+        supabase.from('claim_units').select('claim_id, unit_id').in('claim_id', ids),
+        supabase.from('claim_defects').select('claim_id, defect_id, pre_trial_claim').in('claim_id', ids)
+      ]);
+
+      // Создаем мапы более эффективно
+      const unitMap = new Map<number, number[]>();
+      const defectMap = new Map<number, number[]>();
+      const claimDefectMap = new Map<number, ClaimDefect[]>();
+
+      (unitsResult.data ?? []).forEach((u: any) => {
+        if (!unitMap.has(u.claim_id)) unitMap.set(u.claim_id, []);
+        unitMap.get(u.claim_id)!.push(u.unit_id);
       });
 
-      const defectRows = ids.length
-        ? await fetchByChunks(ids, (chunk) =>
-            supabase
-              .from('claim_defects')
-              .select('claim_id, defect_id, pre_trial_claim')
-              .in('claim_id', chunk),
-          )
-        : [];
-      const defectMap: Record<number, number[]> = {};
-      const claimDefectMap: Record<number, ClaimDefect[]> = {};
-      (defectRows ?? []).forEach((d: any) => {
-        if (!defectMap[d.claim_id]) defectMap[d.claim_id] = [];
-        defectMap[d.claim_id].push(d.defect_id);
-        if (!claimDefectMap[d.claim_id]) claimDefectMap[d.claim_id] = [];
-        claimDefectMap[d.claim_id].push({
+      (defectsResult.data ?? []).forEach((d: any) => {
+        if (!defectMap.has(d.claim_id)) defectMap.set(d.claim_id, []);
+        defectMap.get(d.claim_id)!.push(d.defect_id);
+        
+        if (!claimDefectMap.has(d.claim_id)) claimDefectMap.set(d.claim_id, []);
+        claimDefectMap.get(d.claim_id)!.push({
           claim_id: d.claim_id,
           defect_id: d.defect_id,
           pre_trial_claim: d.pre_trial_claim ?? false,
         });
       });
 
-
       return data.map((r: any) => ({
         id: r.id,
         project_id: r.project_id,
-        unit_ids: unitMap[r.id] ?? [],
-        defect_ids: defectMap[r.id] ?? [],
-        claim_defects: claimDefectMap[r.id] ?? [],
+        unit_ids: unitMap.get(r.id) ?? [],
+        defect_ids: defectMap.get(r.id) ?? [],
+        claim_defects: claimDefectMap.get(r.id) ?? [],
       })) as ClaimSimple[];
     },
     staleTime: 5 * 60_000,
@@ -428,6 +487,7 @@ export function useClaimsSimpleAll() {
 
 /**
  * Получить список претензий текущего проекта (минимальный набор полей).
+ * Оптимизированная версия без N+1 запросов.
  */
 export function useClaimsSimple() {
   const { projectId, projectIds, onlyAssigned, enabled } = useProjectFilter();
@@ -442,43 +502,44 @@ export function useClaimsSimple() {
       });
       const ids = rows.map((r) => r.id);
 
-      const unitRows = ids.length
-        ? await fetchByChunks(ids, (chunk) =>
-            supabase.from('claim_units').select('claim_id, unit_id').in('claim_id', chunk),
-          )
-        : [];
-      const unitMap: Record<number, number[]> = {};
-      (unitRows ?? []).forEach((u: any) => {
-        if (!unitMap[u.claim_id]) unitMap[u.claim_id] = [];
-        unitMap[u.claim_id].push(u.unit_id);
+      if (!ids.length) {
+        return [];
+      }
+
+      // Получаем все связанные данные двумя запросами вместо chunked запросов
+      const [unitsResult, defectsResult] = await Promise.all([
+        supabase.from('claim_units').select('claim_id, unit_id').in('claim_id', ids),
+        supabase.from('claim_defects').select('claim_id, defect_id, pre_trial_claim').in('claim_id', ids)
+      ]);
+
+      // Создаем мапы более эффективно
+      const unitMap = new Map<number, number[]>();
+      const defectMap = new Map<number, number[]>();
+      const claimDefectMap = new Map<number, ClaimDefect[]>();
+
+      (unitsResult.data ?? []).forEach((u: any) => {
+        if (!unitMap.has(u.claim_id)) unitMap.set(u.claim_id, []);
+        unitMap.get(u.claim_id)!.push(u.unit_id);
       });
 
-      const defectRows = ids.length
-        ? await fetchByChunks(ids, (chunk) =>
-            supabase
-              .from('claim_defects')
-              .select('claim_id, defect_id, pre_trial_claim')
-              .in('claim_id', chunk),
-          )
-        : [];
-      const defectMap: Record<number, number[]> = {};
-      const claimDefectMap: Record<number, ClaimDefect[]> = {};
-      (defectRows ?? []).forEach((d: any) => {
-        if (!defectMap[d.claim_id]) defectMap[d.claim_id] = [];
-        defectMap[d.claim_id].push(d.defect_id);
-        if (!claimDefectMap[d.claim_id]) claimDefectMap[d.claim_id] = [];
-        claimDefectMap[d.claim_id].push({
+      (defectsResult.data ?? []).forEach((d: any) => {
+        if (!defectMap.has(d.claim_id)) defectMap.set(d.claim_id, []);
+        defectMap.get(d.claim_id)!.push(d.defect_id);
+        
+        if (!claimDefectMap.has(d.claim_id)) claimDefectMap.set(d.claim_id, []);
+        claimDefectMap.get(d.claim_id)!.push({
           claim_id: d.claim_id,
           defect_id: d.defect_id,
           pre_trial_claim: d.pre_trial_claim ?? false,
         });
       });
+      
       return rows.map((r: any) => ({
         id: r.id,
         project_id: r.project_id,
-        unit_ids: unitMap[r.id] ?? [],
-        defect_ids: defectMap[r.id] ?? [],
-        claim_defects: claimDefectMap[r.id] ?? [],
+        unit_ids: unitMap.get(r.id) ?? [],
+        defect_ids: defectMap.get(r.id) ?? [],
+        claim_defects: claimDefectMap.get(r.id) ?? [],
       })) as ClaimSimple[];
     },
     staleTime: 5 * 60_000,

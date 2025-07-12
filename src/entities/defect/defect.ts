@@ -33,7 +33,7 @@ const TABLE = 'defects';
 
 /**
  * Получить все дефекты проекта без вложений.
- * Вложения загружаются отдельно при запросе конкретного дефекта.
+ * Использует оптимизированное представление defects_summary.
  */
 export function useDefects() {
   return useQuery<DefectRecord[]>({
@@ -41,10 +41,9 @@ export function useDefects() {
     queryFn: async () => {
       const rows = await fetchPaged<DefectRecord>((from, to) =>
         supabase
-          .from(TABLE)
+          .from('defects_summary')
         .select(
-          'id, description, type_id, status_id, project_id, unit_id, created_by, updated_by, updated_at, brigade_id, contractor_id, is_warranty, received_at, fixed_at, fixed_by, engineer_id, created_at,' +
-            ' defect_type:defect_types!fk_defects_type(id,name), defect_status:statuses!fk_defects_status(id,name,color), fixed_by_user:profiles!fk_defects_fixed_by(id,name)'
+          'id, description, type_id, status_id, project_id, unit_id, created_by, updated_by, updated_at, brigade_id, contractor_id, is_warranty, received_at, fixed_at, fixed_by, engineer_id, created_at, project_name, unit_name, unit_building, unit_floor, type_name, status_name, status_color, brigade_name, contractor_name, engineer_name, fixed_by_name, attachments_count'
         )
           .order('id', { ascending: false })
           .range(from, to) as unknown as PromiseLike<PostgrestSingleResponse<DefectRecord[]>>,
@@ -59,7 +58,7 @@ export function useDefects() {
 
 /**
  * Получить один дефект с вложениями и связными названиями
- * типа и статуса.
+ * типа и статуса. Использует оптимизированное представление defects_summary.
  */
 export function useDefect(id?: number) {
   return useQuery<DefectWithFiles | null>({
@@ -67,10 +66,9 @@ export function useDefect(id?: number) {
     enabled: !!id,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from(TABLE)
+        .from('defects_summary')
         .select(
-          'id, description, type_id, status_id, project_id, unit_id, created_by, updated_by, updated_at, brigade_id, contractor_id, is_warranty, received_at, fixed_at, fixed_by, engineer_id, created_at,' +
-          ' defect_type:defect_types!fk_defects_type(id,name), defect_status:statuses!fk_defects_status(id,name,color), fixed_by_user:profiles!fk_defects_fixed_by(id,name)'
+          'id, description, type_id, status_id, project_id, unit_id, created_by, updated_by, updated_at, brigade_id, contractor_id, is_warranty, received_at, fixed_at, fixed_by, engineer_id, created_at, project_name, unit_name, unit_building, unit_floor, type_name, status_name, status_color, brigade_name, contractor_name, engineer_name, fixed_by_name, attachments_count'
         )
         .eq('id', id as number)
         .single();
@@ -147,7 +145,7 @@ export function useDefectsByIds(ids?: number[]) {
 
 /**
  * Получить дефекты по их идентификаторам со связанными названиями
- * типа и статуса.
+ * типа и статуса. Временно возвращено к оригинальной версии.
  */
 export function useDefectsWithNames(ids?: number[]) {
   return useQuery<DefectWithNames[]>({
