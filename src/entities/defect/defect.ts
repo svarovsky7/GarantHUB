@@ -8,6 +8,8 @@ import { useAuthStore } from '@/shared/store/authStore';
 import type { DefectRecord } from '@/shared/types/defect';
 import type { DefectWithNames } from '@/shared/types/defectWithNames';
 import type { DefectWithFiles } from '@/shared/types/defectWithFiles';
+import type { DefectSummary, DefectSummaryWithDayjs } from '@/shared/types/defectSummary';
+import dayjs from 'dayjs';
 
 export interface NewDefect {
   description: string;
@@ -24,16 +26,74 @@ export interface NewDefect {
   received_at: string | null;
   fixed_at: string | null;
   fixed_by: string | null;
-  /** Уникальный идентификатор судебного дела */
-  case_uid_id?: number | null;
   engineer_id: string | null;
 }
 
 const TABLE = 'defects';
+const SUMMARY_TABLE = 'defects_summary';
+
+/**
+ * Преобразует запись из defects_summary в объект дефекта с удобными полями.
+ */
+function mapDefectSummary(r: DefectSummary): DefectSummaryWithDayjs {
+  const toDayjs = (d: any) => (d ? (dayjs(d).isValid() ? dayjs(d) : null) : null);
+  
+  return {
+    ...r,
+    // Преобразуем строковые даты в объекты Dayjs
+    receivedAt: toDayjs(r.received_at),
+    fixedAt: toDayjs(r.fixed_at),
+    createdAt: toDayjs(r.created_at),
+    updatedAt: toDayjs(r.updated_at),
+    
+    // Алиасы для совместимости
+    projectName: r.project_name ?? '—',
+    unitName: r.unit_name,
+    unitBuilding: r.unit_building,
+    unitFloor: r.unit_floor,
+    typeName: r.type_name,
+    statusName: r.status_name ?? '—',
+    statusColor: r.status_color,
+    brigadeName: r.brigade_name,
+    contractorName: r.contractor_name,
+    engineerName: r.engineer_name,
+    fixedByName: r.fixed_by_name,
+    
+    // Дополнительные алиасы
+    defectTypeName: r.type_name,
+    defectStatusName: r.status_name,
+    defectStatusColor: r.status_color,
+    
+    // UI поля
+    attachments: [],
+  } as DefectSummaryWithDayjs;
+}
+
+/**
+ * Хук получения списка дефектов с использованием представления defects_summary (оптимизированный).
+ */
+export function useDefectsSummary() {
+  return useQuery<DefectSummaryWithDayjs[]>({
+    queryKey: [SUMMARY_TABLE],
+    queryFn: async () => {
+      const rows = await fetchPaged<DefectSummary>((from, to) =>
+        supabase
+          .from(SUMMARY_TABLE)
+          .select('*')
+          .order('id', { ascending: false })
+          .range(from, to),
+      );
+      
+      return (rows ?? []).map((r: DefectSummary) => mapDefectSummary(r));
+    },
+    staleTime: 5 * 60_000,
+  });
+}
 
 /**
  * Получить все дефекты проекта без вложений.
  * Вложения загружаются отдельно при запросе конкретного дефекта.
+ * @deprecated Используйте useDefectsSummary для более быстрой работы
  */
 export function useDefects() {
   return useQuery<DefectRecord[]>({
@@ -78,7 +138,7 @@ export function useDefect(id?: number) {
       const { data: attachRows, error: attachErr } = await supabase
         .from('defect_attachments')
         .select(
-          'attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description, created_at, created_by)'
+          'attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description, created_at, created_by, uploaded_by)'
         )
         .eq('defect_id', id as number);
       if (attachErr) throw attachErr;
@@ -211,7 +271,10 @@ export function useCreateDefects() {
       if (error) throw error;
       return (data as { id: string | number }[]).map((d) => Number(d.id));
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: [TABLE] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [TABLE] });
+      qc.invalidateQueries({ queryKey: [SUMMARY_TABLE] });
+    },
     onError: (e) => notify.error(e.message),
   });
 }
@@ -231,6 +294,7 @@ export function useDeleteDefect() {
     },
     onSuccess: (id) => {
       qc.invalidateQueries({ queryKey: [TABLE] });
+      qc.invalidateQueries({ queryKey: [SUMMARY_TABLE] });
       qc.invalidateQueries({ queryKey: ['defect', id] });
       qc.invalidateQueries({ queryKey: ['defects-with-names'] });
       qc.invalidateQueries({ queryKey: ['defects-by-ids'] });
@@ -274,7 +338,10 @@ export function useUpdateDefect() {
       if (error) throw error;
       return { id, ...updates };
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: [TABLE] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [TABLE] });
+      qc.invalidateQueries({ queryKey: [SUMMARY_TABLE] });
+    },
     onError: (e: any) => notify.error(`Ошибка обновления дефекта: ${e.message}`),
   });
 }
@@ -295,7 +362,10 @@ export function useUpdateDefectStatus() {
       if (error) throw error;
       return data as { id: number; status_id: number | null };
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: [TABLE] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [TABLE] });
+      qc.invalidateQueries({ queryKey: [SUMMARY_TABLE] });
+    },
     onError: (e) => notify.error(`Ошибка обновления статуса: ${e.message}`),
   });
 }
@@ -442,6 +512,7 @@ export function useFixDefect() {
     },
     onSuccess: (_res, vars) => {
       qc.invalidateQueries({ queryKey: [TABLE] });
+      qc.invalidateQueries({ queryKey: [SUMMARY_TABLE] });
       qc.invalidateQueries({ queryKey: ['defect', vars.id] });
       qc.invalidateQueries({ queryKey: ['defects-by-ids'] });
       qc.invalidateQueries({ queryKey: ['claims'] });
@@ -534,6 +605,7 @@ export function useCancelDefectFix() {
     },
     onSuccess: (_id) => {
       qc.invalidateQueries({ queryKey: [TABLE] });
+      qc.invalidateQueries({ queryKey: [SUMMARY_TABLE] });
       qc.invalidateQueries({ queryKey: ['defect', _id] });
       qc.invalidateQueries({ queryKey: ['defects-by-ids'] });
       qc.invalidateQueries({ queryKey: ['claims'] });
@@ -574,6 +646,7 @@ export function useAddDefectAttachments() {
     onSuccess: (_res, vars) => {
       qc.invalidateQueries({ queryKey: ['defect', vars.defectId] });
       qc.invalidateQueries({ queryKey: [TABLE] });
+      qc.invalidateQueries({ queryKey: [SUMMARY_TABLE] });
       notify.success('Файлы загружены');
     },
     onError: (e: any) => notify.error(`Ошибка загрузки файлов: ${e.message}`),
@@ -608,6 +681,7 @@ export function useRemoveDefectAttachment() {
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ['defect', vars.defectId] });
       qc.invalidateQueries({ queryKey: [TABLE] });
+      qc.invalidateQueries({ queryKey: [SUMMARY_TABLE] });
       notify.success('Файл удалён');
     },
     onError: (e) => notify.error(`Ошибка удаления файла: ${e.message}`),

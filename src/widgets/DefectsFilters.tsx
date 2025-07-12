@@ -111,7 +111,7 @@ export default function DefectsFilters({
   const badge = <Badge count={extraCount} size="small" />;
 
   return (
-    <Card bordered={false} size="small" style={{ maxWidth: 1040 }}>
+    <Card variant="outlined" size="small" style={{ maxWidth: 1040, border: 'none' }}>
       <Form form={form} layout="vertical" onValuesChange={handleValuesChange}>
         <Row gutter={12}>
           <Col span={5}>

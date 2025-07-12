@@ -4,9 +4,13 @@ import { useProjectFilter } from '@/shared/hooks/useProjectFilter';
 import { useAuthStore } from '@/shared/store/authStore';
 import type { CourtCase, Defect } from '@/shared/types/courtCase';
 import type { NewCaseFile } from '@/shared/types/caseFile';
+import type { CourtCaseSummary, CourtCaseSummaryWithDayjs } from '@/shared/types/courtCaseSummary';
 import { addCaseAttachments, getAttachmentsByIds, ATTACH_BUCKET } from '@/entities/attachment';
+import { fetchPaged, fetchByChunks } from '@/shared/api/fetchAll';
+import dayjs from 'dayjs';
 
 const CASES_TABLE = 'court_cases';
+const CASES_SUMMARY_TABLE = 'court_cases_summary';
 const DEFECTS_TABLE = 'defects';
 const CASE_DEFECTS_TABLE = 'court_case_defects';
 const CASE_LINKS_TABLE = 'court_case_links';
@@ -15,6 +19,97 @@ const CASE_UNITS_TABLE = 'court_case_units';
 /** Связующая таблица "дело - вложение" */
 const CASE_ATTACH_TABLE = 'court_case_attachments';
 
+/**
+ * Преобразует запись из court_cases_summary в объект судебного дела с удобными полями.
+ */
+function mapCourtCaseSummary(r: CourtCaseSummary): CourtCaseSummaryWithDayjs {
+  const toDayjs = (d: any) => (d ? (dayjs(d).isValid() ? dayjs(d) : null) : null);
+  
+  return {
+    ...r,
+    // Преобразуем строковые даты в объекты Dayjs
+    fixStartDate: toDayjs(r.fix_start_date),
+    fixEndDate: toDayjs(r.fix_end_date),
+    createdAt: toDayjs(r.created_at),
+    updatedAt: toDayjs(r.updated_at),
+    caseDate: toDayjs(r.date),
+    
+    // Алиасы для совместимости
+    projectName: r.project_name ?? '—',
+    statusName: r.status_name ?? '—',
+    statusColor: r.status_color,
+    responsibleLawyerName: r.lawyer_name,
+    caseUid: r.case_uid,
+    
+    // Инициализируем пустые массивы (заполняются отдельно при необходимости)
+    unit_ids: [],
+    defect_ids: [],
+    party_ids: [],
+    claim_ids: [],
+    
+    // UI поля
+    unitNames: '',
+    unitNumbers: '',
+    buildings: '',
+    attachments: [],
+  } as CourtCaseSummaryWithDayjs;
+}
+
+/**
+ * Хук получения списка судебных дел с использованием представления court_cases_summary (оптимизированный).
+ */
+export function useCourtCasesSummary() {
+  const { projectId, projectIds, onlyAssigned } = useProjectFilter();
+  return useQuery({
+    queryKey: [CASES_SUMMARY_TABLE, projectId, projectIds.join(',')],
+    queryFn: async () => {
+      const rows = await fetchPaged<CourtCaseSummary>((from, to) => {
+        let q: any = supabase
+          .from(CASES_SUMMARY_TABLE)
+          .select('*');
+        if (onlyAssigned) {
+          q = q.in('project_id', projectIds.length ? projectIds : [-1]);
+        }
+        q = q.order('id', { ascending: false }).range(from, to);
+        return q;
+      });
+      
+      const ids = rows.map((r: CourtCaseSummary) => r.id);
+      
+      // Получаем unit_ids для дел
+      const unitRows = ids.length
+        ? await fetchByChunks(ids, (chunk) =>
+            supabase.from(CASE_UNITS_TABLE).select('court_case_id, unit_id').in('court_case_id', chunk),
+          )
+        : [];
+      const unitMap: Record<number, number[]> = {};
+      (unitRows ?? []).forEach((u: any) => {
+        if (!unitMap[u.court_case_id]) unitMap[u.court_case_id] = [];
+        unitMap[u.court_case_id].push(u.unit_id);
+      });
+      
+      // Получаем связи дел
+      const { data: links } = await supabase
+        .from(CASE_LINKS_TABLE)
+        .select('parent_id, child_id');
+      const linkMap = new Map<number, number>();
+      (links ?? []).forEach((l: any) => linkMap.set(l.child_id, l.parent_id));
+      
+      return (rows ?? []).map((r: CourtCaseSummary) => {
+        const mapped = mapCourtCaseSummary(r);
+        mapped.unit_ids = unitMap[r.id] ?? [];
+        // Добавляем parent_id для совместимости с существующим типом CourtCase
+        (mapped as any).parent_id = linkMap.get(r.id) ?? null;
+        return mapped;
+      });
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
+/**
+ * @deprecated Используйте useCourtCasesSummary для более быстрой работы
+ */
 export function useCourtCases() {
   const { projectId, projectIds, onlyAssigned } = useProjectFilter();
   return useQuery({
@@ -130,7 +225,10 @@ export function useAddCourtCase() {
 
       return { ...inserted, unit_ids, attachment_ids } as CourtCase;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: [CASES_TABLE] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [CASES_TABLE] });
+      qc.invalidateQueries({ queryKey: [CASES_SUMMARY_TABLE] });
+    },
   });
 }
 
@@ -189,7 +287,10 @@ export function useUpdateCourtCase() {
         .single();
       return data as CourtCase;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: [CASES_TABLE] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [CASES_TABLE] });
+      qc.invalidateQueries({ queryKey: [CASES_SUMMARY_TABLE] });
+    },
   });
 }
 
@@ -230,7 +331,10 @@ export function useDeleteCourtCase() {
       if (error) throw error;
       return id;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: [CASES_TABLE] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [CASES_TABLE] });
+      qc.invalidateQueries({ queryKey: [CASES_SUMMARY_TABLE] });
+    },
   });
 }
 
@@ -380,6 +484,7 @@ export function useLinkCases() {
       await supabase.from(CASE_LINKS_TABLE).insert(rows);
       qc.invalidateQueries({ queryKey: [CASE_LINKS_TABLE] });
       qc.invalidateQueries({ queryKey: [CASES_TABLE] });
+      qc.invalidateQueries({ queryKey: [CASES_SUMMARY_TABLE] });
     },
   });
 }
@@ -392,6 +497,7 @@ export function useUnlinkCase() {
       await supabase.from(CASE_LINKS_TABLE).delete().eq('child_id', childId);
       qc.invalidateQueries({ queryKey: [CASE_LINKS_TABLE] });
       qc.invalidateQueries({ queryKey: [CASES_TABLE] });
+      qc.invalidateQueries({ queryKey: [CASES_SUMMARY_TABLE] });
     },
   });
 }
@@ -529,6 +635,7 @@ export function useUpdateCourtCaseFull() {
     },
     onSuccess: (_res, vars) => {
       qc.invalidateQueries({ queryKey: [CASES_TABLE] });
+      qc.invalidateQueries({ queryKey: [CASES_SUMMARY_TABLE] });
       qc.invalidateQueries({ queryKey: ['court_case', vars.id] });
     },
   });

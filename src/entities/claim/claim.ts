@@ -13,6 +13,7 @@ import type { ClaimDeleteParams } from '@/shared/types/claimDelete';
 import type { ClaimDefect } from '@/shared/types/claimDefect';
 import type { ClaimSimple } from '@/shared/types/claimSimple';
 import type { ClaimIdsMap } from '@/shared/types/claimIdsMap';
+import type { ClaimSummary, ClaimSummaryWithDayjs } from '@/shared/types/claimSummary';
 import {
   addClaimAttachments,
   getAttachmentsByIds,
@@ -21,10 +22,49 @@ import {
 import dayjs from 'dayjs';
 
 const TABLE = 'claims';
+const SUMMARY_TABLE = 'claims_summary';
 const LINK_TABLE = 'claim_links';
 
 /**
+ * Преобразует запись из claims_summary в объект претензии с удобными полями.
+ */
+function mapClaimSummary(r: ClaimSummary): ClaimSummaryWithDayjs {
+  const toDayjs = (d: any) => (d ? (dayjs(d).isValid() ? dayjs(d) : null) : null);
+  
+  return {
+    ...r,
+    // Преобразуем строковые даты в объекты Dayjs
+    claimedOn: toDayjs(r.claimed_on),
+    acceptedOn: toDayjs(r.accepted_on),
+    registeredOn: toDayjs(r.registered_on),
+    resolvedOn: toDayjs(r.resolved_on),
+    createdAt: toDayjs(r.created_at),
+    
+    // Алиасы для совместимости
+    projectName: r.project_name ?? '—',
+    statusName: r.status_name ?? '—',
+    statusColor: r.status_color,
+    responsibleEngineerName: r.engineer_name,
+    caseUid: r.case_uid,
+    createdByName: r.created_by_name,
+    
+    // Инициализируем пустые массивы (заполняются отдельно при необходимости)
+    unit_ids: [],
+    defect_ids: [],
+    parent_id: r.has_parent ? null : null, // Заполняется из отдельного запроса
+    
+    // UI поля
+    unitNames: '',
+    unitNumbers: '',
+    buildings: '',
+    attachments: [],
+    hasCheckingDefect: false,
+  } as ClaimSummaryWithDayjs;
+}
+
+/**
  * Преобразует запись Supabase в объект претензии с удобными полями.
+ * @deprecated Используйте mapClaimSummary для более быстрой работы
  */
 function mapClaim(r: any): ClaimWithNames {
   const toDayjs = (d: any) => (d ? (dayjs(d).isValid() ? dayjs(d) : null) : null);
@@ -130,7 +170,73 @@ async function markClaimDefectsPreTrial(claimId: number) {
 }
 
 /**
+ * Хук получения списка претензий с использованием представления claims_summary (оптимизированный).
+ */
+export function useClaimsSummary() {
+  const { projectId, projectIds, onlyAssigned } = useProjectFilter();
+  return useQuery({
+    queryKey: [SUMMARY_TABLE, projectId, projectIds.join(',')],
+    queryFn: async () => {
+      const rows = await fetchPaged<ClaimSummary>((from, to) => {
+        let q: any = supabase
+          .from(SUMMARY_TABLE)
+          .select('*');
+        q = filterByProjects(q, projectId, projectIds, onlyAssigned);
+        q = q.order('created_at', { ascending: false }).range(from, to);
+        return q as unknown as PromiseLike<PostgrestSingleResponse<ClaimSummary[]>>;
+      });
+      
+      const ids = rows.map((r: ClaimSummary) => r.id);
+      
+      // Получаем связи претензий
+      const { data: links } = ids.length
+        ? await supabase
+            .from(LINK_TABLE)
+            .select('parent_id, child_id')
+            .in('child_id', ids)
+        : { data: [] };
+      const linkMap = new Map<number, number>();
+      (links ?? []).forEach((l: any) => linkMap.set(l.child_id, l.parent_id));
+      
+      // Получаем unit_ids для претензий
+      const unitRows = ids.length
+        ? await fetchByChunks(ids, (chunk) =>
+            supabase.from('claim_units').select('claim_id, unit_id').in('claim_id', chunk),
+          )
+        : [];
+      const unitMap: Record<number, number[]> = {};
+      (unitRows ?? []).forEach((u: any) => {
+        if (!unitMap[u.claim_id]) unitMap[u.claim_id] = [];
+        unitMap[u.claim_id].push(u.unit_id);
+      });
+      
+      // Получаем defect_ids для претензий
+      const defectRows = ids.length
+        ? await fetchByChunks(ids, (chunk) =>
+            supabase.from('claim_defects').select('claim_id, defect_id').in('claim_id', chunk),
+          )
+        : [];
+      const defectMap: Record<number, number[]> = {};
+      (defectRows ?? []).forEach((d: any) => {
+        if (!defectMap[d.claim_id]) defectMap[d.claim_id] = [];
+        defectMap[d.claim_id].push(d.defect_id);
+      });
+      
+      return (rows ?? []).map((r: ClaimSummary) => {
+        const mapped = mapClaimSummary(r);
+        mapped.parent_id = linkMap.get(r.id) ?? null;
+        mapped.unit_ids = unitMap[r.id] ?? [];
+        mapped.defect_ids = defectMap[r.id] ?? [];
+        return mapped;
+      });
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
+/**
  * Хук получения списка претензий с учётом фильтров проекта.
+ * @deprecated Используйте useClaimsSummary для более быстрой работы
  */
 export function useClaims() {
   const { projectId, projectIds, onlyAssigned } = useProjectFilter();
@@ -149,7 +255,7 @@ export function useClaims() {
           statuses (id, name, color),
           claim_units(unit_id),
           claim_defects(defect_id),
-          claim_attachments(attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description, created_at, created_by))`,
+          claim_attachments(attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description, created_at, created_by, uploaded_by))`,
           );
         q = filterByProjects(q, projectId, projectIds, onlyAssigned);
         q = q.order('created_at', { ascending: false }).range(from, to);
@@ -199,7 +305,7 @@ export function useClaim(id?: number | string) {
           statuses (id, name, color),
           claim_units(unit_id),
           claim_defects(defect_id),
-          claim_attachments(attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description, created_at, created_by))`,
+          claim_attachments(attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description, created_at, created_by, uploaded_by))`,
         )
         .eq('id', claimId);
       q = filterByProjects(q, projectId, projectIds, onlyAssigned);
@@ -244,7 +350,7 @@ export function useClaimAll(id?: number | string) {
           statuses (id, name, color),
           claim_units(unit_id),
           claim_defects(defect_id),
-          claim_attachments(attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description, created_at, created_by))`,
+          claim_attachments(attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description, created_at, created_by, uploaded_by))`,
         )
         .eq('id', claimId)
         .maybeSingle();
@@ -268,7 +374,78 @@ export function useClaimAll(id?: number | string) {
 }
 
 /**
+ * Получить список претензий по всем проектам с пагинацией (оптимизированный).
+ */
+export function useClaimsAllSummary(page = 0, pageSize = 50) {
+  return useQuery({
+    queryKey: [SUMMARY_TABLE + '-all', page, pageSize],
+    queryFn: async () => {
+      const from = page * pageSize;
+      const to = from + pageSize - 1;
+      
+      const { data: rows, error, count } = await supabase
+        .from(SUMMARY_TABLE)
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(from, to);
+        
+      if (error) throw error;
+      
+      const ids = (rows ?? []).map((r: ClaimSummary) => r.id);
+      
+      // Получаем связи претензий
+      const { data: links } = ids.length
+        ? await supabase
+            .from(LINK_TABLE)
+            .select('parent_id, child_id')
+            .in('child_id', ids)
+        : { data: [] };
+      const linkMap = new Map<number, number>();
+      (links ?? []).forEach((l: any) => linkMap.set(l.child_id, l.parent_id));
+      
+      // Получаем unit_ids
+      const unitRows = ids.length
+        ? await fetchByChunks(ids, (chunk) =>
+            supabase.from('claim_units').select('claim_id, unit_id').in('claim_id', chunk),
+          )
+        : [];
+      const unitMap: Record<number, number[]> = {};
+      (unitRows ?? []).forEach((u: any) => {
+        if (!unitMap[u.claim_id]) unitMap[u.claim_id] = [];
+        unitMap[u.claim_id].push(u.unit_id);
+      });
+      
+      // Получаем defect_ids
+      const defectRows = ids.length
+        ? await fetchByChunks(ids, (chunk) =>
+            supabase.from('claim_defects').select('claim_id, defect_id').in('claim_id', chunk),
+          )
+        : [];
+      const defectMap: Record<number, number[]> = {};
+      (defectRows ?? []).forEach((d: any) => {
+        if (!defectMap[d.claim_id]) defectMap[d.claim_id] = [];
+        defectMap[d.claim_id].push(d.defect_id);
+      });
+      
+      return {
+        data: (rows ?? []).map((r: ClaimSummary) => {
+          const mapped = mapClaimSummary(r);
+          mapped.parent_id = linkMap.get(r.id) ?? null;
+          mapped.unit_ids = unitMap[r.id] ?? [];
+          mapped.defect_ids = defectMap[r.id] ?? [];
+          return mapped;
+        }),
+        count: count ?? 0,
+        hasMore: (count ?? 0) > to + 1,
+      };
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
+/**
  * Получить список претензий по всем проектам с пагинацией.
+ * @deprecated Используйте useClaimsAllSummary для более быстрой работы
  */
 export function useClaimsAll(page = 0, pageSize = 50) {
   return useQuery({
@@ -341,7 +518,7 @@ export function useClaimsAllLegacy() {
           statuses (id, name, color),
           claim_units(unit_id),
           claim_defects(defect_id),
-          claim_attachments(attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description, created_at, created_by))`,
+          claim_attachments(attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description, created_at, created_by, uploaded_by))`,
           )
           .order('created_at', { ascending: false })
           .range(from, to) as unknown as PromiseLike<PostgrestSingleResponse<any[]>>,
@@ -563,6 +740,7 @@ export function useCreateClaim() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [TABLE] });
+      qc.invalidateQueries({ queryKey: [SUMMARY_TABLE] });
       qc.invalidateQueries({ queryKey: ['defects'] });
       qc.invalidateQueries({ queryKey: ['claims-simple'] });
       qc.invalidateQueries({ queryKey: ['claims-simple-all'] });
@@ -603,6 +781,7 @@ export function useUpdateClaim() {
     onSuccess: (_, vars) => {
       // Инвалидируем все возможные варианты queryKey для претензий
       qc.invalidateQueries({ queryKey: [TABLE], exact: false });
+      qc.invalidateQueries({ queryKey: [SUMMARY_TABLE], exact: false });
       qc.invalidateQueries({ queryKey: ['claims-simple'], exact: false });
       qc.invalidateQueries({ queryKey: ['claims-simple-all'] });
       qc.invalidateQueries({ queryKey: ['claims-all'], exact: false });
@@ -692,6 +871,7 @@ export function useDeleteClaim() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [TABLE] });
+      qc.invalidateQueries({ queryKey: [SUMMARY_TABLE] });
       qc.invalidateQueries({ queryKey: ['defects'] });
       qc.invalidateQueries({ queryKey: ['claims-simple'] });
       qc.invalidateQueries({ queryKey: ['claims-simple-all'] });
@@ -708,7 +888,7 @@ export function useClaimAttachments(id?: number) {
     queryFn: async () => {
       const { data } = await supabase
         .from('claim_attachments')
-        .select('attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description, created_at, created_by)')
+        .select('attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description, created_at, created_by, uploaded_by)')
         .eq('claim_id', id as number);
       return (data ?? []).map((r: any) => r.attachments);
     },
@@ -740,6 +920,7 @@ export function useRemoveClaimAttachment() {
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: [TABLE, vars.claimId] });
       qc.invalidateQueries({ queryKey: [TABLE] });
+      qc.invalidateQueries({ queryKey: [SUMMARY_TABLE] });
     },
   });
 }
@@ -789,6 +970,7 @@ export function useAddClaimAttachments() {
     onSuccess: (_res, vars) => {
       qc.invalidateQueries({ queryKey: [TABLE, vars.claimId] });
       qc.invalidateQueries({ queryKey: [TABLE] });
+      qc.invalidateQueries({ queryKey: [SUMMARY_TABLE] });
       notify.success('Файлы загружены');
     },
     onError: (e) => notify.error(`Ошибка загрузки файлов: ${e.message}`),
@@ -828,6 +1010,7 @@ export function useLinkClaims() {
       await supabase.from(LINK_TABLE).insert(rows);
       qc.invalidateQueries({ queryKey: [LINK_TABLE] });
       qc.invalidateQueries({ queryKey: [TABLE] });
+      qc.invalidateQueries({ queryKey: [SUMMARY_TABLE] });
     },
   });
 }
@@ -840,6 +1023,7 @@ export function useUnlinkClaim() {
       await supabase.from(LINK_TABLE).delete().eq('child_id', childId);
       qc.invalidateQueries({ queryKey: [LINK_TABLE] });
       qc.invalidateQueries({ queryKey: [TABLE] });
+      qc.invalidateQueries({ queryKey: [SUMMARY_TABLE] });
     },
   });
 }

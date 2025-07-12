@@ -81,7 +81,7 @@ export default function CourtCasesFilters({
   const badge = <Badge count={extraCount} size="small" />;
 
   return (
-    <Card bordered={false} size="small" style={{ maxWidth: 1040 }}>
+    <Card variant="borderless" size="small" style={{ maxWidth: 1040 }}>
       <Form layout="vertical">
         <Row gutter={12}>
           <Col span={5}>
@@ -145,100 +145,110 @@ export default function CourtCasesFilters({
 
         <Row gutter={12}>
           <Col flex="auto">
-            <Collapse ghost>
-              <Collapse.Panel header="Доп. фильтры" key="more" extra={badge}>
-                <Row gutter={12}>
-                  <Col span={6}>
-                    <Form.Item label="ID">
-                      <Select
-                        mode="multiple"
-                        allowClear
-                        placeholder="ID"
-                        options={idOptions}
-                        value={values.ids}
-                        onChange={(v) => onChange({ ...values, ids: v })}
-                      />
-                    </Form.Item>
-                  </Col>
-                  <Col span={6}>
-                    <Form.Item label="Номер дела">
-                      <Input
-                        placeholder="Номер"
-                        value={values.number}
-                        onChange={(e) => onChange({ ...values, number: e.target.value })}
-                      />
-                    </Form.Item>
-                  </Col>
-                  <Col span={6}>
-                    <Form.Item label="UID">
-                      <Input
-                        placeholder="UID"
-                        value={values.uid}
-                        onChange={(e) => onChange({ ...values, uid: e.target.value })}
-                      />
-                    </Form.Item>
-                  </Col>
-                  <Col span={6}>
-                    <Form.Item label="Юрист">
-                      <Select
-                        allowClear
-                        showSearch
-                        placeholder="Юрист"
-                        options={users.map((u) => ({ value: u.id, label: u.name }))}
-                        value={values.lawyerId}
-                        onChange={(v) => onChange({ ...values, lawyerId: v })}
-                      />
-                    </Form.Item>
-                  </Col>
-                </Row>
-                <Row gutter={12}>
-                  <Col span={6}>
-                    <Form.Item label="Стороны">
-                      <Input
-                        placeholder="Истец/Ответчик"
-                        value={values.parties}
-                        onChange={(e) => onChange({ ...values, parties: e.target.value })}
-                      />
-                    </Form.Item>
-                  </Col>
-                  <Col span={6}>
-                    <Form.Item label="Описание">
-                      <Input
-                        placeholder="Описание"
-                        value={values.description}
-                        onChange={(e) => onChange({ ...values, description: e.target.value })}
-                      />
-                    </Form.Item>
-                  </Col>
-                </Row>
-                <Row gutter={12}>
-                  <Col span={6}>
-                    <Form.Item label="Дата дела">
-                      <DatePicker.RangePicker
-                        allowClear
-                        size="small"
-                        style={{ width: '100%' }}
-                        format="DD.MM.YYYY"
-                        value={values.dateRange as any}
-                        onChange={(v) => onChange({ ...values, dateRange: v as any })}
-                      />
-                    </Form.Item>
-                  </Col>
-                  <Col span={6}>
-                    <Form.Item label="Период начала устранения">
-                      <DatePicker.RangePicker
-                        allowClear
-                        size="small"
-                        style={{ width: '100%' }}
-                        format="DD.MM.YYYY"
-                        value={values.fixStartRange as any}
-                        onChange={(v) => onChange({ ...values, fixStartRange: v as any })}
-                      />
-                    </Form.Item>
-                  </Col>
-                </Row>
-              </Collapse.Panel>
-            </Collapse>
+            <Collapse 
+              ghost
+              items={[
+                {
+                  key: 'more',
+                  label: 'Доп. фильтры',
+                  extra: badge,
+                  children: (
+                    <>
+                      <Row gutter={12}>
+                        <Col span={6}>
+                          <Form.Item label="ID">
+                            <Select
+                              mode="multiple"
+                              allowClear
+                              placeholder="ID"
+                              options={idOptions}
+                              value={values.ids}
+                              onChange={(v) => onChange({ ...values, ids: v })}
+                            />
+                          </Form.Item>
+                        </Col>
+                        <Col span={6}>
+                          <Form.Item label="Номер дела">
+                            <Input
+                              placeholder="Номер"
+                              value={values.number}
+                              onChange={(e) => onChange({ ...values, number: e.target.value })}
+                            />
+                          </Form.Item>
+                        </Col>
+                        <Col span={6}>
+                          <Form.Item label="UID">
+                            <Input
+                              placeholder="UID"
+                              value={values.uid}
+                              onChange={(e) => onChange({ ...values, uid: e.target.value })}
+                            />
+                          </Form.Item>
+                        </Col>
+                        <Col span={6}>
+                          <Form.Item label="Юрист">
+                            <Select
+                              allowClear
+                              showSearch
+                              placeholder="Юрист"
+                              options={users.map((u) => ({ value: u.id, label: u.name }))}
+                              value={values.lawyerId}
+                              onChange={(v) => onChange({ ...values, lawyerId: v })}
+                            />
+                          </Form.Item>
+                        </Col>
+                      </Row>
+                      <Row gutter={12}>
+                        <Col span={6}>
+                          <Form.Item label="Стороны">
+                            <Input
+                              placeholder="Истец/Ответчик"
+                              value={values.parties}
+                              onChange={(e) => onChange({ ...values, parties: e.target.value })}
+                            />
+                          </Form.Item>
+                        </Col>
+                        <Col span={6}>
+                          <Form.Item label="Описание">
+                            <Input
+                              placeholder="Описание"
+                              value={values.description}
+                              onChange={(e) => onChange({ ...values, description: e.target.value })}
+                            />
+                          </Form.Item>
+                        </Col>
+                      </Row>
+                      <Row gutter={12}>
+                        <Col span={6}>
+                          <Form.Item label="Дата дела">
+                            <DatePicker.RangePicker
+                              allowClear
+                              size="small"
+                              style={{ width: '100%' }}
+                              format="DD.MM.YYYY"
+                              value={values.dateRange as any}
+                              onChange={(v) => onChange({ ...values, dateRange: v as any })}
+                            />
+                          </Form.Item>
+                        </Col>
+                        <Col span={6}>
+                          <Form.Item label="Период начала устранения">
+                            <DatePicker.RangePicker
+                              allowClear
+                              size="small"
+                              style={{ width: '100%' }}
+                              format="DD.MM.YYYY"
+                              value={values.fixStartRange as any}
+                              onChange={(v) => onChange({ ...values, fixStartRange: v as any })}
+                            />
+                          </Form.Item>
+                        </Col>
+                      </Row>
+                    </>
+                  )
+                }
+              ]}
+            />
           </Col>
         </Row>
 

@@ -1,10 +1,9 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback, memo } from "react";
 import {
   ConfigProvider,
   Alert,
   Button,
   Tooltip,
-  Popconfirm,
   message,
   Space,
   Typography,
@@ -12,19 +11,17 @@ import {
 import ruRU from "antd/locale/ru_RU";
 import {
   SettingOutlined,
+  PlusOutlined,
   EyeOutlined,
   DeleteOutlined,
-  PlusOutlined,
-  LinkOutlined,
-  FileTextOutlined,
   BranchesOutlined,
+  FileTextOutlined,
+  LinkOutlined,
 } from "@ant-design/icons";
-import ExportClaimsButton from "@/features/claim/ExportClaimsButton";
 import { useSnackbar } from "notistack";
 import {
   useClaims,
-  useClaimsAllLegacy,
-  useDeleteClaim,
+  useClaimsAllLegacy as useClaimsAll,
   useLinkClaims,
   useUnlinkClaim,
 } from "@/entities/claim";
@@ -34,24 +31,30 @@ import { useRolePermission } from "@/entities/rolePermission";
 import { useAuthStore } from "@/shared/store/authStore";
 import type { RoleName } from "@/shared/types/rolePermission";
 import formatUnitShortName from "@/shared/utils/formatUnitShortName";
-const ClaimsTable = React.lazy(() => import("@/widgets/ClaimsTable"));
-const ClaimsFilters = React.lazy(() => import("@/widgets/ClaimsFilters"));
-const ClaimFormAntd = React.lazy(() => import("@/features/claim/ClaimFormAntd"));
-const ClaimViewModal = React.lazy(() => import("@/features/claim/ClaimViewModal"));
-const LinkClaimsDialog = React.lazy(() => import("@/features/claim/LinkClaimsDialog"));
-const TableColumnsDrawer = React.lazy(
-  () => import("@/widgets/TableColumnsDrawer"),
-);
-import ClaimStatusSelect from "@/features/claim/ClaimStatusSelect";
-import dayjs from "dayjs";
-import type { TableColumnSetting } from "@/shared/types/tableColumnSetting";
-import type { ColumnsType } from "antd/es/table";
+import ClaimsTable from "@/widgets/ClaimsTable";
+import OptimizedClaimsFilters from "@/widgets/OptimizedClaimsFilters";
+import ClaimFormAntd from "@/features/claim/ClaimFormAntd";
+import ClaimViewModal from "@/features/claim/ClaimViewModal";
+import LinkClaimsDialog from "@/features/claim/LinkClaimsDialog";
+import ExportClaimsButton from "@/features/claim/ExportClaimsButton";
 import { useSearchParams } from "react-router-dom";
 import type { ClaimWithNames } from "@/shared/types/claimWithNames";
 import { filterClaims } from "@/shared/utils/claimFilter";
 import { naturalCompare } from "@/shared/utils/naturalSort";
 import type { ClaimFilters } from "@/shared/types/claimFilters";
+import type { TableColumnSetting } from "@/shared/types/tableColumnSetting";
+import type { ColumnsType } from "antd/es/table";
+import dayjs from "dayjs";
+import ClaimStatusSelect from "@/features/claim/ClaimStatusSelect";
+import { useDeleteClaim } from "@/entities/claim";
+import { Popconfirm } from "antd";
 
+// Lazy loading для тяжелых компонентов
+const TableColumnsDrawer = React.lazy(
+  () => import("@/widgets/TableColumnsDrawer"),
+);
+
+const LS_HIDE_CLOSED = "claimsHideClosed";
 const LS_COLUMNS_KEY = "claimsColumns";
 const LS_COLUMN_WIDTHS_KEY = "claimsColumnWidths";
 
@@ -59,42 +62,38 @@ export default function ClaimsPage() {
   const { enqueueSnackbar } = useSnackbar();
   const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
   const { data: perm } = useRolePermission(role);
+  
+  // Оптимизированная загрузка данных
   const {
     data: claimsAssigned = [],
     isLoading: loadingAssigned,
     error: errorAssigned,
   } = useClaims();
   const {
-    data: claimsAllResult = [],
+    data: claimsAll = [],
     isLoading: loadingAll,
     error: errorAll,
-  } = useClaimsAllLegacy();
+  } = useClaimsAll();
   
-  const claimsAll = Array.isArray(claimsAllResult) ? claimsAllResult : claimsAllResult?.data || [];
   const claims = perm?.only_assigned_project ? claimsAssigned : claimsAll;
   const isLoading = perm?.only_assigned_project ? loadingAssigned : loadingAll;
   const error = errorAssigned || errorAll;
-  const deleteClaimMutation = useDeleteClaim();
+
+  // Ленивая загрузка пользователей и юнитов
   const { data: users = [], isPending: usersLoading } = useUsers();
+  const { data: lockedUnitIds = [] } = useLockedUnitIds();
+  
+  // Получаем только нужные unit IDs
   const unitIds = useMemo(
     () => Array.from(new Set(claims.flatMap((t) => t.unit_ids))),
     [claims],
   );
   const { data: units = [], isPending: unitsLoading } = useUnitsByIds(unitIds);
-  const { data: lockedUnitIds = [] } = useLockedUnitIds();
   const filtersLoading = usersLoading || unitsLoading;
-  const checkingDefectMap = useMemo(() => new Map<number, boolean>(), []);
+
+  // Состояние компонента
   const [searchParams] = useSearchParams();
-  const initialValues = {
-    project_id: searchParams.get("project_id")
-      ? Number(searchParams.get("project_id")!)
-      : undefined,
-    unit_ids: searchParams.get("unit_id")
-      ? [Number(searchParams.get("unit_id")!)]
-      : [],
-    engineer_id: searchParams.get("engineer_id") || undefined,
-  };
-  const LS_HIDE_CLOSED = "claimsHideClosed";
+  
   const [filters, setFilters] = useState<ClaimFilters>(() => {
     try {
       const saved = localStorage.getItem(LS_HIDE_CLOSED);
@@ -104,89 +103,38 @@ export default function ClaimsPage() {
       return {} as ClaimFilters;
     }
   });
+  
   const [showAddForm, setShowAddForm] = useState(
     searchParams.get("open_form") === "1",
   );
-  React.useEffect(() => {
-    if (searchParams.get("open_form") === "1") {
-      setShowAddForm(true);
-    }
-  }, [searchParams]);
   const [viewId, setViewId] = useState<number | null>(null);
   const [linkFor, setLinkFor] = useState<ClaimWithNames | null>(null);
-  const linkClaims = useLinkClaims();
-  const unlinkClaim = useUnlinkClaim();
   const [showColumnsDrawer, setShowColumnsDrawer] = useState(false);
-  const [columnsState, setColumnsState] = useState<TableColumnSetting[]>(() => {
-    const base = getBaseColumns();
-    const defaults = Object.keys(base).map((key) => ({
-      key,
-      title: base[key].title as string,
-      visible: !["createdAt", "createdByName"].includes(key),
-    }));
+
+  // Состояние колонок таблицы
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>(() => {
     try {
-      const saved = localStorage.getItem(LS_COLUMNS_KEY);
-      if (saved) {
-        let parsed = JSON.parse(saved) as TableColumnSetting[];
-        parsed = parsed.map((c) => {
-          if (typeof c.title !== "string") {
-            const def = defaults.find((d) => d.key === c.key);
-            return { ...c, title: def?.title ?? "" };
-          }
-          return c;
-        });
-        const filtered = parsed.filter((c) => base[c.key]);
-        const missing = defaults.filter(
-          (d) => !filtered.some((f) => f.key === d.key),
-        );
-        return [...filtered, ...missing];
-      }
-    } catch {}
-    return defaults;
+      return JSON.parse(localStorage.getItem(LS_COLUMN_WIDTHS_KEY) || "{}");
+    } catch {
+      return {};
+    }
   });
 
-  const [columnWidths, setColumnWidths] = useState<Record<string, number>>(
-    () => {
-      try {
-        return JSON.parse(localStorage.getItem(LS_COLUMN_WIDTHS_KEY) || "{}");
-      } catch {
-        return {};
-      }
-    },
-  );
+  // Mutations
+  const linkClaims = useLinkClaims();
+  const unlinkClaim = useUnlinkClaim();
+  const { mutateAsync: remove, isPending: removing } = useDeleteClaim();
 
-  /**
-   * Сброс колонок к начальному состоянию
-   */
-  const handleResetColumns = () => {
-    const base = getBaseColumns();
-    const defaults = Object.keys(base).map((key) => ({
-      key,
-      title: base[key].title as string,
-      visible: !["createdAt", "createdByName"].includes(key),
-    }));
-    try {
-      localStorage.removeItem(LS_COLUMN_WIDTHS_KEY);
-    } catch {}
-    setColumnWidths({});
-    setColumnsState(defaults);
-  };
+  // Хелперы для форматирования
+  const fmt = (d: any) =>
+    d && dayjs.isDayjs(d) && d.isValid() ? d.format("DD.MM.YYYY") : "—";
+  const fmtDateTime = (d: any) =>
+    d && dayjs.isDayjs(d) && d.isValid() ? d.format("DD.MM.YYYY HH:mm") : "—";
 
-  React.useEffect(() => {
-    try {
-      localStorage.setItem(LS_COLUMNS_KEY, JSON.stringify(columnsState));
-    } catch {}
-  }, [columnsState]);
-
-  React.useEffect(() => {
-    try {
-      localStorage.setItem(LS_COLUMN_WIDTHS_KEY, JSON.stringify(columnWidths));
-    } catch {}
-  }, [columnWidths]);
-
+  // Мемоизированные мапы для производительности
   const userMap = useMemo(() => {
     const map = {} as Record<string, string>;
-    (users ?? []).forEach((u) => {
+    users.forEach((u) => {
       map[u.id] = u.name;
     });
     return map;
@@ -194,7 +142,7 @@ export default function ClaimsPage() {
 
   const unitMap = useMemo(() => {
     const map = {} as Record<number, string>;
-    (units ?? []).forEach((u) => {
+    units.forEach((u) => {
       map[u.id] = formatUnitShortName(u);
     });
     return map;
@@ -202,7 +150,7 @@ export default function ClaimsPage() {
 
   const unitNumberMap = useMemo(() => {
     const map = {} as Record<number, string>;
-    (units ?? []).forEach((u) => {
+    units.forEach((u) => {
       map[u.id] = u.name;
     });
     return map;
@@ -210,12 +158,13 @@ export default function ClaimsPage() {
 
   const buildingMap = useMemo(() => {
     const map = {} as Record<number, string>;
-    (units ?? []).forEach((u) => {
+    units.forEach((u) => {
       if (u.building) map[u.id] = u.building;
     });
     return map;
   }, [units]);
 
+  // Мемоизированные претензии с именами
   const claimsWithNames: ClaimWithNames[] = useMemo(
     () =>
       claims.map((c) => ({
@@ -234,10 +183,11 @@ export default function ClaimsPage() {
         responsibleEngineerName: userMap[c.engineer_id] ?? null,
         createdByName: userMap[c.created_by as string] ?? null,
       })),
-    [claims, unitMap, unitNumberMap, buildingMap, userMap, checkingDefectMap],
+    [claims, unitMap, unitNumberMap, buildingMap, userMap],
   );
 
-  const options = useMemo(() => {
+  // Мемоизированные опции для фильтров с дебаунсом
+  const filterOptions = useMemo(() => {
     const without = <K extends keyof ClaimFilters>(key: K) => {
       const { [key]: _omit, ...rest } = filters;
       return rest as ClaimFilters;
@@ -273,8 +223,50 @@ export default function ClaimsPage() {
     };
   }, [claimsWithNames, filters]);
 
-  function getBaseColumns() {
-    return {
+  // Мемоизированная статистика
+  const statistics = useMemo(() => {
+    const total = claimsWithNames.length;
+    const closedCount = claimsWithNames.filter((c) => /закры/i.test(c.statusName ?? "")).length;
+    const openCount = total - closedCount;
+    const readyToExport = filterClaims(claimsWithNames, filters).length;
+    return { total, closedCount, openCount, readyToExport };
+  }, [claimsWithNames, filters]);
+
+  const { total, closedCount, openCount, readyToExport } = statistics;
+
+  // Мемоизированные обработчики для лучшей производительности
+  const applyFilters = useCallback((vals: ClaimFilters) => {
+    setFilters(vals);
+    if (Object.prototype.hasOwnProperty.call(vals, "hideClosed")) {
+      try {
+        localStorage.setItem(LS_HIDE_CLOSED, JSON.stringify(vals.hideClosed));
+      } catch {}
+    }
+    const count = filterClaims(claimsWithNames, vals).length;
+    message.success(`Фильтры применены (${count} результатов)`);
+  }, [claimsWithNames]);
+
+  const resetFilters = useCallback(() => {
+    setFilters({});
+    try {
+      localStorage.setItem(LS_HIDE_CLOSED, "false");
+    } catch {}
+    message.info("Фильтры сброшены");
+  }, []);
+
+  const handleView = useCallback((id: number) => setViewId(id), []);
+  const handleAddChild = useCallback((parent: ClaimWithNames) => setLinkFor(parent), []);
+  const handleUnlink = useCallback((id: number) => unlinkClaim.mutate(id), [unlinkClaim]);
+  const handleShowAddForm = useCallback(() => setShowAddForm(p => !p), []);
+  const handleShowColumnsDrawer = useCallback(() => setShowColumnsDrawer(true), []);
+  const handleCloseColumnsDrawer = useCallback(() => setShowColumnsDrawer(false), []);
+  const handleCloseAddForm = useCallback(() => setShowAddForm(false), []);
+  const handleCloseViewModal = useCallback(() => setViewId(null), []);
+  const handleCloseLinkDialog = useCallback(() => setLinkFor(null), []);
+
+  // Базовые колонки таблицы
+  const baseColumns = useMemo(() => {
+    const cols = {
       treeIcon: {
         title: "",
         dataIndex: "treeIcon",
@@ -310,8 +302,7 @@ export default function ClaimsPage() {
         title: "Корпус",
         dataIndex: "buildings",
         width: 120,
-        sorter: (a: any, b: any) =>
-          (a.buildings || "").localeCompare(b.buildings || ""),
+        sorter: (a: any, b: any) => (a.buildings || "").localeCompare(b.buildings || ""),
       },
       unitNames: {
         title: "Объекты",
@@ -319,7 +310,7 @@ export default function ClaimsPage() {
         width: 160,
         sorter: (a: any, b: any) => a.unitNames.localeCompare(b.unitNames),
       },
-      statusId: {
+      claim_status_id: {
         title: "Статус",
         dataIndex: "claim_status_id",
         width: 160,
@@ -407,21 +398,21 @@ export default function ClaimsPage() {
         title: "Действия",
         key: "actions",
         width: 140,
-        render: (_: any, record: ClaimWithNames) => (
+        render: (_: any, record: any) => (
           <Space size="middle">
             <Tooltip title="Просмотр">
               <Button
                 size="small"
                 type="text"
                 icon={<EyeOutlined />}
-                onClick={() => setViewId(record.id)}
+                onClick={() => handleView(record.id)}
               />
             </Tooltip>
             <Button
               size="small"
               type="text"
               icon={<PlusOutlined />}
-              onClick={() => setLinkFor(record)}
+              onClick={() => handleAddChild(record)}
             />
             {record.parent_id && (
               <Tooltip title="Исключить из связи">
@@ -437,7 +428,7 @@ export default function ClaimsPage() {
                       }}
                     />
                   }
-                  onClick={() => unlinkClaim.mutate(record.id)}
+                  onClick={() => handleUnlink(record.id)}
                 />
               </Tooltip>
             )}
@@ -446,196 +437,228 @@ export default function ClaimsPage() {
               okText="Да"
               cancelText="Нет"
               onConfirm={async () => {
-                await deleteClaimMutation.mutateAsync({ id: record.id });
+                await remove({ id: record.id });
                 message.success("Удалено");
               }}
-              disabled={deleteClaimMutation.isPending}
+              disabled={removing}
             >
               <Button
                 size="small"
                 type="text"
                 danger
                 icon={<DeleteOutlined />}
-                loading={deleteClaimMutation.isPending}
+                loading={removing}
               />
             </Popconfirm>
           </Space>
         ),
       },
-    } as Record<string, ColumnsType<any>[number]>;
-  }
-
-  const baseColumns = useMemo(() => {
-    const cols = getBaseColumns();
-    Object.keys(cols).forEach((key) => {
-      cols[key] = { ...cols[key], width: columnWidths[key] ?? cols[key].width };
+    } as Record<string, ColumnsType<ClaimWithNames>[number]>;
+    
+    // Применяем сохраненные ширины колонок
+    Object.keys(cols).forEach((k) => {
+      cols[k] = { ...cols[k], width: columnWidths[k] ?? cols[k].width };
     });
+    
     return cols;
-  }, [columnWidths, deleteClaimMutation.isPending]);
-  const columns: ColumnsType<any> = useMemo(
-    () => columnsState.filter((c) => c.visible).map((c) => baseColumns[c.key]),
-    [columnsState, baseColumns],
-  );
+  }, [columnWidths, lockedUnitIds, handleView, handleAddChild, handleUnlink, remove, removing, fmt, fmtDateTime]);
 
-  /** Общее количество претензий после учёта прав доступа */
-  const total = claimsWithNames.length;
-  /** Количество претензий со статусом, содержащим "закры" */
-  const closedCount = useMemo(
-    () =>
-      claimsWithNames.filter((c) => /закры/i.test(c.statusName ?? "")).length,
-    [claimsWithNames],
-  );
-  /** Количество открытых претензий */
-  const openCount = total - closedCount;
-  /** Сколько претензий пройдёт в выгрузку с учётом фильтров */
-  const readyToExport = useMemo(
-    () => filterClaims(claimsWithNames, filters).length,
-    [claimsWithNames, filters],
-  );
+  // Порядок колонок
+  const columnOrder = [
+    "treeIcon",
+    "id",
+    "projectName",
+    "buildings",
+    "unitNames",
+    "claim_status_id",
+    "claim_no",
+    "claimedOn",
+    "acceptedOn",
+    "registeredOn",
+    "resolvedOn",
+    "responsibleEngineerName",
+    "createdAt",
+    "createdByName",
+    "actions",
+  ];
 
-  const applyFilters = (vals: ClaimFilters) => {
-    setFilters(vals);
-    if (Object.prototype.hasOwnProperty.call(vals, "hideClosed")) {
-      try {
-        localStorage.setItem(LS_HIDE_CLOSED, JSON.stringify(vals.hideClosed));
-      } catch {}
+  // Получение текста заголовка для колонок
+  const getTitleText = (title: React.ReactNode): string => {
+    if (React.isValidElement(title)) {
+      return getTitleText(title.props.children);
     }
-    const count = filterClaims(claimsWithNames, vals).length;
-    message.success(`Фильтры применены (${count} результатов)`);
+    return String(title);
   };
 
-  const resetFilters = () => {
-    setFilters({});
+  // Состояние видимости и порядка колонок
+  const [columnsState, setColumnsState] = useState<TableColumnSetting[]>(() => {
     try {
-      localStorage.setItem(LS_HIDE_CLOSED, "false");
+      const saved = localStorage.getItem(LS_COLUMNS_KEY);
+      if (saved) {
+        return JSON.parse(saved);
+      }
     } catch {}
-    message.info("Фильтры сброшены");
+    
+    // Настройки по умолчанию
+    return columnOrder.map((key) => ({
+      key,
+      title: getTitleText(baseColumns[key].title as React.ReactNode),
+      visible: !["createdAt", "createdByName"].includes(key),
+    }));
+  });
+
+  // Функция сброса колонок
+  const handleResetColumns = () => {
+    const defaults = columnOrder.map((key) => ({
+      key,
+      title: getTitleText(baseColumns[key].title as React.ReactNode),
+      visible: !["createdAt", "createdByName"].includes(key),
+    }));
+    setColumnsState(defaults);
+    setColumnWidths({});
   };
+
+  // Эффекты для сохранения состояния
+  React.useEffect(() => {
+    try {
+      localStorage.setItem(LS_COLUMNS_KEY, JSON.stringify(columnsState));
+    } catch {}
+  }, [columnsState]);
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem(LS_COLUMN_WIDTHS_KEY, JSON.stringify(columnWidths));
+    } catch {}
+  }, [columnWidths]);
+
+  // Финальные колонки для таблицы
+  const columns = useMemo(() => {
+    return columnsState.filter((c) => c.visible).map((c) => baseColumns[c.key]);
+  }, [columnsState, baseColumns]);
+
+
+  const initialValues = useMemo(() => ({
+    project_id: searchParams.get("project_id")
+      ? Number(searchParams.get("project_id")!)
+      : undefined,
+    unit_ids: searchParams.get("unit_id")
+      ? [Number(searchParams.get("unit_id")!)]
+      : [],
+    engineer_id: searchParams.get("engineer_id") || undefined,
+  }), [searchParams]);
+
+  React.useEffect(() => {
+    if (searchParams.get("open_form") === "1") {
+      setShowAddForm(true);
+    }
+  }, [searchParams]);
 
   return (
     <ConfigProvider locale={ruRU}>
       <>
-        <Button
-          type="primary"
-          onClick={() => setShowAddForm((p) => !p)}
-          style={{ marginRight: 8 }}
-        >
-          {showAddForm ? "Скрыть форму" : "Добавить претензию"}
-        </Button>
-        <Button
-          icon={<SettingOutlined />}
-          style={{ marginLeft: 8 }}
-          onClick={() => setShowColumnsDrawer(true)}
-        />
-        <span style={{ marginLeft: 8, display: "inline-block" }}>
+        <div style={{ marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
+          <Button
+            type="primary"
+            onClick={handleShowAddForm}
+          >
+            {showAddForm ? "Скрыть форму" : "Добавить претензию"}
+          </Button>
+          
+          <Button
+            icon={<SettingOutlined />}
+            onClick={handleShowColumnsDrawer}
+          />
+          
           <ExportClaimsButton claims={claimsWithNames} filters={filters} />
-        </span>
+          
+        </div>
+
         {showAddForm && (
-          <div style={{ marginTop: 16 }}>
-            <React.Suspense fallback={<div>Загрузка формы...</div>}>
-              <ClaimFormAntd
-                onCreated={() => {
-                  setShowAddForm(false);
-                  message.success("Претензия успешно создана");
-                }}
-                initialValues={initialValues}
-              />
-            </React.Suspense>
+          <div style={{ marginBottom: 24 }}>
+            <ClaimFormAntd
+              onCreated={handleCloseAddForm}
+              initialValues={initialValues}
+            />
           </div>
         )}
-        <React.Suspense fallback={null}>
-          <LinkClaimsDialog
-            open={!!linkFor}
-            parent={linkFor}
-            claims={claimsWithNames}
-            loading={linkClaims.isPending}
-            onClose={() => setLinkFor(null)}
-            onSubmit={(ids) =>
-              linkClaims.mutate(
-                { parentId: String(linkFor!.id), childIds: ids },
-                {
-                  onSuccess: () => {
-                    message.success("Претензии связаны");
-                    setLinkFor(null);
-                  },
-                  onError: (e) => message.error(e.message),
+
+        <LinkClaimsDialog
+          open={!!linkFor}
+          parent={linkFor}
+          claims={claimsWithNames}
+          loading={linkClaims.isPending}
+          onClose={() => setLinkFor(null)}
+          onSubmit={(ids) =>
+            linkClaims.mutate(
+              { parentId: String(linkFor!.id), childIds: ids },
+              {
+                onSuccess: () => {
+                  message.success("Претензии связаны");
+                  setLinkFor(null);
                 },
-              )
-            }
-          />
-        </React.Suspense>
+                onError: (e) => message.error(e.message),
+              },
+            )
+          }
+        />
+
         <React.Suspense fallback={null}>
           <TableColumnsDrawer
             open={showColumnsDrawer}
             columns={columnsState}
             widths={
               Object.fromEntries(
-                Object.keys(baseColumns).map((k) => [
-                  k,
-                  columnWidths[k] ?? baseColumns[k].width,
-                ]),
+                Object.keys(baseColumns).map((k) => [k, columnWidths[k] ?? baseColumns[k].width])
               ) as Record<string, number>
             }
             onWidthsChange={setColumnWidths}
             onChange={setColumnsState}
-            onClose={() => setShowColumnsDrawer(false)}
+            onClose={handleCloseColumnsDrawer}
             onReset={handleResetColumns}
           />
         </React.Suspense>
-        <div style={{ marginTop: 24 }}>
-          <div style={{ marginBottom: 24, maxWidth: 1040 }}>
-            <React.Suspense fallback={<div>Загрузка фильтров...</div>}>
-              <ClaimsFilters
-                options={options}
-                loading={filtersLoading}
-                initialValues={filters}
-                onSubmit={applyFilters}
-                onReset={resetFilters}
-              />
-            </React.Suspense>
-          </div>
-          {error ? (
-            <Alert type="error" message={error.message} />
-          ) : (
-            <React.Suspense fallback={<div>Загрузка таблицы...</div>}>
-              <ClaimsTable
-                claims={claimsWithNames}
-                filters={filters}
-                loading={isLoading}
-                columns={columns}
-                lockedUnitIds={lockedUnitIds}
-                onView={(id) => setViewId(id)}
-                onAddChild={setLinkFor}
-                onUnlink={(id) => unlinkClaim.mutate(id)}
-              />
-            </React.Suspense>
-          )}
-        </div>
-        <Typography.Text style={{ display: "block", marginTop: 8 }}>
-          Всего претензий: {total}, из них закрытых: {closedCount} и не
-          закрытых: {openCount}
-        </Typography.Text>
-        <Typography.Text style={{ display: "block", marginTop: 4 }}>
-          Готовых претензий к выгрузке: {readyToExport}
-        </Typography.Text>
-        <React.Suspense fallback={null}>
-          <ClaimViewModal
-            open={viewId !== null}
-            claimId={viewId}
-            onClose={() => setViewId(null)}
+
+        <div className="claims-filters" style={{ marginBottom: 24 }}>
+          <OptimizedClaimsFilters
+            options={filterOptions}
+            loading={filtersLoading}
+            initialValues={filters}
+            onSubmit={applyFilters}
+            onReset={resetFilters}
           />
-        </React.Suspense>
+        </div>
+
+        {error ? (
+          <Alert type="error" message={error.message} />
+        ) : (
+          <ClaimsTable
+            claims={claimsWithNames}
+            filters={filters}
+            loading={isLoading}
+            onView={handleView}
+            onAddChild={handleAddChild}
+            onUnlink={handleUnlink}
+            lockedUnitIds={lockedUnitIds}
+            columns={columns}
+          />
+        )}
+
+        <div style={{ marginTop: 16 }}>
+          <Typography.Text style={{ display: "block" }}>
+            Всего претензий: {total}, из них закрытых: {closedCount} и не
+            закрытых: {openCount}
+          </Typography.Text>
+          <Typography.Text style={{ display: "block", marginTop: 4 }}>
+            Готовых претензий к выгрузке: {readyToExport}
+          </Typography.Text>
+        </div>
+
+        <ClaimViewModal
+          open={viewId !== null}
+          claimId={viewId}
+          onClose={handleCloseViewModal}
+        />
       </>
     </ConfigProvider>
   );
-}
-
-function fmt(d: any) {
-  return d && dayjs.isDayjs(d) && d.isValid() ? d.format("DD.MM.YYYY") : "—";
-}
-
-function fmtDateTime(d: any) {
-  return d && dayjs.isDayjs(d) && d.isValid()
-    ? d.format("DD.MM.YYYY HH:mm")
-    : "—";
 }
