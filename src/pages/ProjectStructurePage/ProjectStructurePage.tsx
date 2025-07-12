@@ -190,11 +190,13 @@ export default function ProjectStructurePage() {
                                     fontWeight: 600,
                                 }}
                             >
-                                {projects.map((prj) => (
-                                    <MenuItem key={prj.id} value={prj.id}>
-                                        {prj.name}
-                                    </MenuItem>
-                                ))}
+                                {projects
+                                    .sort((a, b) => a.name.localeCompare(b.name))
+                                    .map((prj) => (
+                                        <MenuItem key={prj.id} value={prj.id}>
+                                            {prj.name}
+                                        </MenuItem>
+                                    ))}
                             </Select>
                         </FormControl>
                         {projectId && (

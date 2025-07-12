@@ -105,7 +105,7 @@ export default function ClaimsFilters({
   const badge = <Badge count={extraCount} size="small" />;
 
   return (
-    <Card bordered={false} size="small" style={{ maxWidth: 1040 }}>
+    <Card variant="borderless" size="small" style={{ maxWidth: 1040 }}>
       {loading ? (
         <Skeleton active paragraph={{ rows: 4 }} />
       ) : (
@@ -172,9 +172,15 @@ export default function ClaimsFilters({
           </Row>
           <Row gutter={12}>
             <Col flex="auto">
-              <Collapse ghost>
-                <Collapse.Panel header="Доп. фильтры" key="more" extra={badge}>
-                  <Row gutter={12}>
+              <Collapse 
+                ghost
+                items={[{
+                  key: 'more',
+                  label: 'Доп. фильтры',
+                  extra: badge,
+                  children: (
+                    <>
+                      <Row gutter={12}>
                     <Col span={6}>
                       <Form.Item name="id" label="ID претензии">
                         <Select
@@ -255,9 +261,11 @@ export default function ClaimsFilters({
                         <Input />
                       </Form.Item>
                     </Col>
-                  </Row>
-                </Collapse.Panel>
-              </Collapse>
+                      </Row>
+                    </>
+                  )
+                }]}
+              />
             </Col>
           </Row>
 

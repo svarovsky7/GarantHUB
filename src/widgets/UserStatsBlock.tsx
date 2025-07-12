@@ -108,7 +108,10 @@ export default function UserStatsBlock({
           claimResp: stats?.claimResponsibleCount ?? 0,
           defect: stats?.defectCount ?? 0,
           defectResp: stats?.defectResponsibleCount ?? 0,
-          defectStatusCounts: stats?.defectResponsibleStatusCounts ?? [],
+          claimStatusCounts: stats?.claimStatusCounts ?? [],
+          claimResponsibleStatusCounts: stats?.claimResponsibleStatusCounts ?? [],
+          defectStatusCounts: stats?.defectStatusCounts ?? [],
+          defectResponsibleStatusCounts: stats?.defectResponsibleStatusCounts ?? [],
         };
       }),
     [userIds, data, filteredUsers],
@@ -152,46 +155,100 @@ export default function UserStatsBlock({
       dataIndex: 'claim',
       align: 'right',
       sorter: (a, b) => a.claim - b.claim,
-      render: (v: number) =>
-        v
-          ? `${v} (${totals.claim ? Math.round((v / totals.claim) * 100) : 0}%)`
-          : '—',
+      render: (v: number, record) => {
+        const hasStatusData = record.claimStatusCounts && record.claimStatusCounts.length > 0;
+        return (
+          <div>
+            <div>
+              {v ? `${v} (${totals.claim ? Math.round((v / totals.claim) * 100) : 0}%)` : '—'}
+            </div>
+            {hasStatusData && (
+              <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                {record.claimStatusCounts.map((status: any, idx: number) => (
+                  <div key={idx}>
+                    {status.statusName || 'Без статуса'}: {status.count} ({v ? Math.round((status.count / v) * 100) : 0}%)
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      },
     },
     {
       title: 'Претензий за ним',
       dataIndex: 'claimResp',
       align: 'right',
       sorter: (a, b) => a.claimResp - b.claimResp,
-      render: (v: number) =>
-        v
-          ? `${v} (${
-              totals.claimResp ? Math.round((v / totals.claimResp) * 100) : 0
-            }%)`
-          : '—',
+      render: (v: number, record) => {
+        const hasStatusData = record.claimResponsibleStatusCounts && record.claimResponsibleStatusCounts.length > 0;
+        return (
+          <div>
+            <div>
+              {v ? `${v} (${totals.claimResp ? Math.round((v / totals.claimResp) * 100) : 0}%)` : '—'}
+            </div>
+            {hasStatusData && (
+              <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                {record.claimResponsibleStatusCounts.map((status: any, idx: number) => (
+                  <div key={idx}>
+                    {status.statusName || 'Без статуса'}: {status.count} ({v ? Math.round((status.count / v) * 100) : 0}%)
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      },
     },
     {
       title: 'Создано дефектов',
       dataIndex: 'defect',
       align: 'right',
       sorter: (a, b) => a.defect - b.defect,
-      render: (v: number) =>
-        v
-          ? `${v} (${
-              totals.defect ? Math.round((v / totals.defect) * 100) : 0
-            }%)`
-          : '—',
+      render: (v: number, record) => {
+        const hasStatusData = record.defectStatusCounts && record.defectStatusCounts.length > 0;
+        return (
+          <div>
+            <div>
+              {v ? `${v} (${totals.defect ? Math.round((v / totals.defect) * 100) : 0}%)` : '—'}
+            </div>
+            {hasStatusData && (
+              <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                {record.defectStatusCounts.map((status: any, idx: number) => (
+                  <div key={idx}>
+                    {status.statusName || 'Без статуса'}: {status.count} ({v ? Math.round((status.count / v) * 100) : 0}%)
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      },
     },
     {
       title: 'Дефектов за ним',
       dataIndex: 'defectResp',
       align: 'right',
       sorter: (a, b) => a.defectResp - b.defectResp,
-      render: (v: number) =>
-        v
-          ? `${v} (${
-              totals.defectResp ? Math.round((v / totals.defectResp) * 100) : 0
-            }%)`
-          : '—',
+      render: (v: number, record) => {
+        const hasStatusData = record.defectResponsibleStatusCounts && record.defectResponsibleStatusCounts.length > 0;
+        return (
+          <div>
+            <div>
+              {v ? `${v} (${totals.defectResp ? Math.round((v / totals.defectResp) * 100) : 0}%)` : '—'}
+            </div>
+            {hasStatusData && (
+              <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                {record.defectResponsibleStatusCounts.map((status: any, idx: number) => (
+                  <div key={idx}>
+                    {status.statusName || 'Без статуса'}: {status.count} ({v ? Math.round((status.count / v) * 100) : 0}%)
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      },
     },
   ];
 
@@ -250,22 +307,6 @@ export default function UserStatsBlock({
               dataSource={tableData}
               pagination={false}
               size="small"
-              expandable={{
-                expandedRowRender: (record) => (
-                  <Table
-                    columns={[
-                      { title: 'Статус', dataIndex: 'statusName' },
-                      { title: 'Кол-во', dataIndex: 'count', align: 'right' },
-                    ]}
-                    dataSource={record.defectStatusCounts}
-                    pagination={false}
-                    size="small"
-                  />
-                ),
-                rowExpandable: (record) =>
-                  Array.isArray(record.defectStatusCounts) &&
-                  record.defectStatusCounts.length > 0,
-              }}
               summary={() => (
                 <Table.Summary.Row>
                   <Table.Summary.Cell index={0} />

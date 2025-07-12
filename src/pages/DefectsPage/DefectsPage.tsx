@@ -38,7 +38,7 @@ const TableColumnsDrawer = React.lazy(
   () => import("@/widgets/TableColumnsDrawer"),
 );
 import type { TableColumnSetting } from "@/shared/types/tableColumnSetting";
-import DefectViewModal from "@/features/defect/DefectViewModal";
+import DefectViewEditModal from "@/features/defect/DefectViewEditModal";
 import DefectStatusSelect from "@/features/defect/DefectStatusSelect";
 import ExportDefectsButton from "@/features/defect/ExportDefectsButton";
 import DefectFixModal from "@/features/defect/DefectFixModal";
@@ -666,7 +666,7 @@ const LS_COLUMN_WIDTHS_KEY = "defectsColumnWidths";
         <Typography.Text style={{ display: "block", marginTop: 4 }}>
           Готовых дефектов к выгрузке: {readyToExport}
         </Typography.Text>
-        <DefectViewModal
+        <DefectViewEditModal
           open={viewId !== null}
           defectId={viewId}
           onClose={() => setViewId(null)}

@@ -664,7 +664,7 @@ export default function CorrespondencePage() {
           }}
         >
           {showFilters && (
-            <Card style={{ marginBottom: 24 }}>
+            <div style={{ marginBottom: 24 }}>
               <CorrespondenceFilters
                 form={form}
                 filters={filters}
@@ -678,7 +678,7 @@ export default function CorrespondencePage() {
                 idOptions={idOptions}
                 onReset={resetFilters}
               />
-            </Card>
+            </div>
           )}
           <CorrespondenceTable
             letters={filtered}

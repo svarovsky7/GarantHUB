@@ -78,15 +78,20 @@ export default function OptimizedClaimsFilters({
   useEffect(() => {
     form.setFieldsValue(initialValues);
     calcExtra();
-  }, [initialValues, form]);
+  }, [initialValues]);
 
   useEffect(() => {
-    try {
-      const hideClosed = JSON.parse(
-        localStorage.getItem(LS_HIDE_CLOSED) || "false",
-      );
-      form.setFieldValue("hideClosed", hideClosed);
-    } catch {}
+    // Небольшая задержка для инициализации формы
+    const timer = setTimeout(() => {
+      try {
+        const hideClosed = JSON.parse(
+          localStorage.getItem(LS_HIDE_CLOSED) || "false",
+        );
+        form.setFieldValue("hideClosed", hideClosed);
+      } catch {}
+    }, 0);
+    
+    return () => clearTimeout(timer);
   }, [form]);
 
   const extraKeys: (keyof ClaimFilters)[] = useMemo(() => [
@@ -159,14 +164,14 @@ export default function OptimizedClaimsFilters({
 
   if (loading) {
     return (
-      <Card variant="outlined" size="small" style={{ maxWidth: 1040, border: 'none' }}>
+      <Card variant="borderless" size="small" style={{ maxWidth: 1040 }}>
         <Skeleton active paragraph={{ rows: 4 }} />
       </Card>
     );
   }
 
   return (
-    <Card variant="outlined" size="small" style={{ maxWidth: 1040, border: 'none' }}>
+    <Card variant="borderless" size="small" style={{ maxWidth: 1040 }}>
       <Form
         form={form}
         layout="vertical"
@@ -219,9 +224,15 @@ export default function OptimizedClaimsFilters({
         
         <Row gutter={12}>
           <Col flex="auto">
-            <Collapse ghost>
-              <Collapse.Panel header="Доп. фильтры" key="more" extra={badge}>
-                <Row gutter={12}>
+            <Collapse 
+              ghost
+              items={[{
+                key: 'more',
+                label: 'Доп. фильтры',
+                extra: badge,
+                children: (
+                  <>
+                    <Row gutter={12}>
                   <Col span={6}>
                     <Form.Item name="id" label="ID претензии">
                       <MemoizedMultiSelect
@@ -303,9 +314,11 @@ export default function OptimizedClaimsFilters({
                       <Input placeholder="Поиск в описании..." />
                     </Form.Item>
                   </Col>
-                </Row>
-              </Collapse.Panel>
-            </Collapse>
+                    </Row>
+                  </>
+                )
+              }]}
+            />
           </Col>
         </Row>
 

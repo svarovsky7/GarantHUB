@@ -10,7 +10,7 @@ import ClaimFormAntdEdit from "./ClaimFormAntdEdit";
 import ClaimAttachmentsBlock from "./ClaimAttachmentsBlock";
 import TicketDefectsEditorTable from "@/widgets/TicketDefectsEditorTable";
 import DefectAddModal from "@/features/defect/DefectAddModal";
-import DefectViewModal from "@/features/defect/DefectViewModal";
+import DefectViewEditModal from "@/features/defect/DefectViewEditModal";
 import ClaimRelatedClaimsBlock from "./ClaimRelatedClaimsBlock";
 import dayjs from "dayjs";
 import {
@@ -521,7 +521,7 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
           onSubmit={handleAddDefs}
         />
       </Modal>
-      <DefectViewModal
+      <DefectViewEditModal
         open={viewDefId !== null}
         defectId={viewDefId}
         onClose={() => setViewDefId(null)}
