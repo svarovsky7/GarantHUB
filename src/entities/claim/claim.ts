@@ -745,6 +745,7 @@ export function useCreateClaim() {
       qc.invalidateQueries({ queryKey: ['claims-simple'] });
       qc.invalidateQueries({ queryKey: ['claims-simple-all'] });
       qc.invalidateQueries({ queryKey: ['claims-all'] });
+      qc.invalidateQueries({ queryKey: ['claims-all-legacy'] });
     },
   });
 }
@@ -876,6 +877,7 @@ export function useDeleteClaim() {
       qc.invalidateQueries({ queryKey: ['claims-simple'] });
       qc.invalidateQueries({ queryKey: ['claims-simple-all'] });
       qc.invalidateQueries({ queryKey: ['claims-all'] });
+      qc.invalidateQueries({ queryKey: ['claims-all-legacy'] });
     },
   });
 }

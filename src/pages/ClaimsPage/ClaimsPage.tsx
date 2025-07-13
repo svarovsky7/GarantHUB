@@ -223,14 +223,19 @@ export default function ClaimsPage() {
     };
   }, [claimsWithNames, filters]);
 
+  // Мемоизированные отфильтрованные претензии
+  const filteredClaims = useMemo(() => {
+    return filterClaims(claimsWithNames, filters);
+  }, [claimsWithNames, filters]);
+
   // Мемоизированная статистика
   const statistics = useMemo(() => {
     const total = claimsWithNames.length;
     const closedCount = claimsWithNames.filter((c) => /закры/i.test(c.statusName ?? "")).length;
     const openCount = total - closedCount;
-    const readyToExport = filterClaims(claimsWithNames, filters).length;
+    const readyToExport = filteredClaims.length;
     return { total, closedCount, openCount, readyToExport };
-  }, [claimsWithNames, filters]);
+  }, [claimsWithNames, filteredClaims]);
 
   const { total, closedCount, openCount, readyToExport } = statistics;
 
@@ -457,7 +462,9 @@ export default function ClaimsPage() {
     
     // Применяем сохраненные ширины колонок
     Object.keys(cols).forEach((k) => {
-      cols[k] = { ...cols[k], width: columnWidths[k] ?? cols[k].width };
+      if (cols[k]) {
+        cols[k] = { ...cols[k], width: columnWidths[k] ?? cols[k].width };
+      }
     });
     
     return cols;
@@ -533,7 +540,9 @@ export default function ClaimsPage() {
 
   // Финальные колонки для таблицы
   const columns = useMemo(() => {
-    return columnsState.filter((c) => c.visible).map((c) => baseColumns[c.key]);
+    return columnsState
+      .filter((c) => c.visible && baseColumns[c.key])
+      .map((c) => baseColumns[c.key]);
   }, [columnsState, baseColumns]);
 
 
