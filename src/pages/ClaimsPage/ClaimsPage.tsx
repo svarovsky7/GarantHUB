@@ -57,6 +57,7 @@ const TableColumnsDrawer = React.lazy(
 const LS_HIDE_CLOSED = "claimsHideClosed";
 const LS_COLUMNS_KEY = "claimsColumns";
 const LS_COLUMN_WIDTHS_KEY = "claimsColumnWidths";
+const LS_FILTERS_VISIBLE_KEY = "claimsFiltersVisible";
 
 export default function ClaimsPage() {
   const { enqueueSnackbar } = useSnackbar();
@@ -110,6 +111,14 @@ export default function ClaimsPage() {
   const [viewId, setViewId] = useState<number | null>(null);
   const [linkFor, setLinkFor] = useState<ClaimWithNames | null>(null);
   const [showColumnsDrawer, setShowColumnsDrawer] = useState(false);
+  const [showFilters, setShowFilters] = useState(() => {
+    try {
+      const saved = localStorage.getItem(LS_FILTERS_VISIBLE_KEY);
+      return saved ? JSON.parse(saved) : true;
+    } catch {
+      return true;
+    }
+  });
 
   // Состояние колонок таблицы
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>(() => {
@@ -268,6 +277,7 @@ export default function ClaimsPage() {
   const handleCloseAddForm = useCallback(() => setShowAddForm(false), []);
   const handleCloseViewModal = useCallback(() => setViewId(null), []);
   const handleCloseLinkDialog = useCallback(() => setLinkFor(null), []);
+  const handleToggleFilters = useCallback(() => setShowFilters(p => !p), []);
 
   // Базовые колонки таблицы
   const baseColumns = useMemo(() => {
@@ -538,6 +548,25 @@ export default function ClaimsPage() {
     } catch {}
   }, [columnWidths]);
 
+  React.useEffect(() => {
+    try {
+      localStorage.setItem(LS_FILTERS_VISIBLE_KEY, JSON.stringify(showFilters));
+    } catch {}
+  }, [showFilters]);
+
+  // Слушаем изменения в других вкладках
+  React.useEffect(() => {
+    const handler = (e: StorageEvent) => {
+      if (e.key === LS_FILTERS_VISIBLE_KEY) {
+        try {
+          setShowFilters(JSON.parse(e.newValue || "true"));
+        } catch {}
+      }
+    };
+    window.addEventListener("storage", handler);
+    return () => window.removeEventListener("storage", handler);
+  }, []);
+
   // Финальные колонки для таблицы
   const columns = useMemo(() => {
     return columnsState
@@ -571,6 +600,10 @@ export default function ClaimsPage() {
             onClick={handleShowAddForm}
           >
             {showAddForm ? "Скрыть форму" : "Добавить претензию"}
+          </Button>
+          
+          <Button onClick={handleToggleFilters}>
+            {showFilters ? "Скрыть фильтры" : "Показать фильтры"}
           </Button>
           
           <Button
@@ -627,15 +660,17 @@ export default function ClaimsPage() {
           />
         </React.Suspense>
 
-        <div className="claims-filters" style={{ marginBottom: 24 }}>
-          <OptimizedClaimsFilters
-            options={filterOptions}
-            loading={filtersLoading}
-            initialValues={filters}
-            onSubmit={applyFilters}
-            onReset={resetFilters}
-          />
-        </div>
+        {showFilters && (
+          <div className="claims-filters" style={{ marginBottom: 24 }}>
+            <OptimizedClaimsFilters
+              options={filterOptions}
+              loading={filtersLoading}
+              initialValues={filters}
+              onSubmit={applyFilters}
+              onReset={resetFilters}
+            />
+          </div>
+        )}
 
         {error ? (
           <Alert type="error" message={error.message} />

@@ -118,6 +118,9 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
     }
   }, [letter, persons, contractors]);
 
+  const [isInitialized, setIsInitialized] = React.useState(false);
+  const [previousBuilding, setPreviousBuilding] = React.useState<string | undefined>();
+
   useEffect(() => {
     if (!letter) return;
     
@@ -139,16 +142,17 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
       subject: letter.subject,
       content: letter.content,
     });
+    setPreviousBuilding(building);
     setIsInitialized(true);
   }, [letter, form, allUnits]);
 
   // Clear unit_ids when building changes (but not on initial load)
-  const [isInitialized, setIsInitialized] = React.useState(false);
   React.useEffect(() => {
-    if (isInitialized && building !== undefined) {
+    if (isInitialized && building !== previousBuilding) {
       form.setFieldValue('unit_ids', []);
+      setPreviousBuilding(building);
     }
-  }, [building, form, isInitialized]);
+  }, [building, form, isInitialized, previousBuilding]);
 
   const handleFiles = (files: File[]) => attachments.addFiles(files);
 
@@ -253,7 +257,7 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
         </Col>
         <Col span={8}>
           <Form.Item name="unit_ids" label="Объекты" style={highlight('unit_ids')}>
-            <Select mode="multiple" options={units.map((u) => ({ value: u.id, label: u.name }))} disabled={!projectId} />
+            <Select mode="multiple" options={filteredUnits.map((u) => ({ value: u.id, label: u.name }))} disabled={!projectId} />
           </Form.Item>
         </Col>
       </Row>

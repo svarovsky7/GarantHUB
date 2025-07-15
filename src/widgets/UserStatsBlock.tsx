@@ -108,7 +108,10 @@ export default function UserStatsBlock({
           claimResp: stats?.claimResponsibleCount ?? 0,
           defect: stats?.defectCount ?? 0,
           defectResp: stats?.defectResponsibleCount ?? 0,
-          defectStatusCounts: stats?.defectResponsibleStatusCounts ?? [],
+          claimStatusCounts: stats?.claimStatusCounts ?? [],
+          claimResponsibleStatusCounts: stats?.claimResponsibleStatusCounts ?? [],
+          defectStatusCounts: stats?.defectStatusCounts ?? [],
+          defectResponsibleStatusCounts: stats?.defectResponsibleStatusCounts ?? [],
         };
       }),
     [userIds, data, filteredUsers],
@@ -251,20 +254,142 @@ export default function UserStatsBlock({
               pagination={false}
               size="small"
               expandable={{
-                expandedRowRender: (record) => (
-                  <Table
-                    columns={[
-                      { title: 'Статус', dataIndex: 'statusName' },
-                      { title: 'Кол-во', dataIndex: 'count', align: 'right' },
-                    ]}
-                    dataSource={record.defectStatusCounts}
-                    pagination={false}
-                    size="small"
-                  />
-                ),
+                expandedRowRender: (record) => {
+                  // Создаем карту статусов для объединения данных
+                  const statusMap = new Map<string, {
+                    statusName: string;
+                    claimCreated: number;
+                    claimResp: number;
+                    defectCreated: number;
+                    defectResp: number;
+                  }>();
+
+                  // Добавляем данные по созданным претензиям
+                  record.claimStatusCounts.forEach(item => {
+                    const key = item.statusName || 'Без статуса';
+                    if (!statusMap.has(key)) {
+                      statusMap.set(key, {
+                        statusName: key,
+                        claimCreated: 0,
+                        claimResp: 0,
+                        defectCreated: 0,
+                        defectResp: 0,
+                      });
+                    }
+                    statusMap.get(key)!.claimCreated = item.count;
+                  });
+
+                  // Добавляем данные по претензиям за пользователем
+                  record.claimResponsibleStatusCounts.forEach(item => {
+                    const key = item.statusName || 'Без статуса';
+                    if (!statusMap.has(key)) {
+                      statusMap.set(key, {
+                        statusName: key,
+                        claimCreated: 0,
+                        claimResp: 0,
+                        defectCreated: 0,
+                        defectResp: 0,
+                      });
+                    }
+                    statusMap.get(key)!.claimResp = item.count;
+                  });
+
+                  // Добавляем данные по созданным дефектам
+                  record.defectStatusCounts.forEach(item => {
+                    const key = item.statusName || 'Без статуса';
+                    if (!statusMap.has(key)) {
+                      statusMap.set(key, {
+                        statusName: key,
+                        claimCreated: 0,
+                        claimResp: 0,
+                        defectCreated: 0,
+                        defectResp: 0,
+                      });
+                    }
+                    statusMap.get(key)!.defectCreated = item.count;
+                  });
+
+                  // Добавляем данные по дефектам за пользователем
+                  record.defectResponsibleStatusCounts.forEach(item => {
+                    const key = item.statusName || 'Без статуса';
+                    if (!statusMap.has(key)) {
+                      statusMap.set(key, {
+                        statusName: key,
+                        claimCreated: 0,
+                        claimResp: 0,
+                        defectCreated: 0,
+                        defectResp: 0,
+                      });
+                    }
+                    statusMap.get(key)!.defectResp = item.count;
+                  });
+
+                  const statusData = Array.from(statusMap.values()).sort((a, b) => 
+                    a.statusName.localeCompare(b.statusName)
+                  );
+
+                  const subColumns: ColumnsType<typeof statusData[0]> = [
+                    {
+                      title: '',
+                      dataIndex: 'index',
+                      width: 60,
+                      align: 'right',
+                    },
+                    {
+                      title: 'Статус',
+                      dataIndex: 'statusName',
+                      render: (v) => <span style={{ paddingLeft: 40 }}>{v}</span>,
+                    },
+                    {
+                      title: 'Создано претензий',
+                      dataIndex: 'claimCreated',
+                      align: 'right',
+                      render: (v: number) => v > 0 
+                        ? `${v} (${record.claim ? Math.round((v / record.claim) * 100) : 0}%)`
+                        : '—',
+                    },
+                    {
+                      title: 'Претензий за ним',
+                      dataIndex: 'claimResp',
+                      align: 'right',
+                      render: (v: number) => v > 0
+                        ? `${v} (${record.claimResp ? Math.round((v / record.claimResp) * 100) : 0}%)`
+                        : '—',
+                    },
+                    {
+                      title: 'Создано дефектов',
+                      dataIndex: 'defectCreated',
+                      align: 'right',
+                      render: (v: number) => v > 0
+                        ? `${v} (${record.defect ? Math.round((v / record.defect) * 100) : 0}%)`
+                        : '—',
+                    },
+                    {
+                      title: 'Дефектов за ним',
+                      dataIndex: 'defectResp',
+                      align: 'right',
+                      render: (v: number) => v > 0
+                        ? `${v} (${record.defectResp ? Math.round((v / record.defectResp) * 100) : 0}%)`
+                        : '—',
+                    },
+                  ];
+
+                  return (
+                    <Table
+                      columns={subColumns}
+                      dataSource={statusData.map((item, idx) => ({ ...item, key: `${record.key}-${idx}` }))}
+                      pagination={false}
+                      size="small"
+                      showHeader={false}
+                      style={{ marginLeft: -16, marginRight: -16 }}
+                    />
+                  );
+                },
                 rowExpandable: (record) =>
-                  Array.isArray(record.defectStatusCounts) &&
-                  record.defectStatusCounts.length > 0,
+                  record.claimStatusCounts.length > 0 ||
+                  record.claimResponsibleStatusCounts.length > 0 ||
+                  record.defectStatusCounts.length > 0 ||
+                  record.defectResponsibleStatusCounts.length > 0,
               }}
               summary={() => (
                 <Table.Summary.Row>
