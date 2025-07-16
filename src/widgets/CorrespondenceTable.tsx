@@ -64,6 +64,11 @@ export default function CorrespondenceTable({
     const roots: any[] = [];
 
     letters.forEach((l) => {
+      // Extract building from units
+      const letterUnits = units.filter(unit => l.unit_ids.includes(unit.id as number));
+      const buildings = Array.from(new Set(letterUnits.map(unit => (unit as any).building).filter(Boolean)));
+      const building = buildings.join(', ') || '';
+      
       const row = {
         ...l,
         key: l.id,
@@ -72,6 +77,7 @@ export default function CorrespondenceTable({
             .map((id) => maps.unit[id])
             .filter(Boolean)
             .join(', '),
+        building,
         letterTypeName: l.letter_type_id ? maps.type[l.letter_type_id] : null,
         responsibleName: l.responsible_user_id
             ? maps.user[l.responsible_user_id]
@@ -206,6 +212,13 @@ export default function CorrespondenceTable({
       dataIndex: 'projectName',
       width: 180,
       sorter: (a, b) => (a.projectName || '').localeCompare(b.projectName || ''),
+    },
+    {
+      title: 'Корпус',
+      dataIndex: 'building',
+      width: 120,
+      sorter: (a, b) => (a.building || '').localeCompare(b.building || ''),
+      render: (building: string) => building || '—',
     },
     {
       title: 'Объекты',

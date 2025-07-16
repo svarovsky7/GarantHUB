@@ -15,7 +15,8 @@
       "Bash(mv:*)",
       "Bash(npm install)",
       "Bash(npx vite:*)",
-      "Bash(rg:*)"
+      "Bash(rg:*)",
+      "Bash(timeout 10s npm run dev)"
     ],
     "deny": []
   }

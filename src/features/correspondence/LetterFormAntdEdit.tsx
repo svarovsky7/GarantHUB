@@ -46,7 +46,7 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
   const { data: letterTypes = [] } = useLetterTypes();
   const { data: projects = [] } = useVisibleProjects();
   const projectId = Form.useWatch('project_id', form);
-  const building = Form.useWatch('building', form);
+  const buildings = Form.useWatch('buildings', form);
   const { data: units = [] } = useUnitsByProject(projectId);
   
   // Building options based on project units only
@@ -63,11 +63,11 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
     }));
   }, [units]);
   
-  // Filter units by both project and building
+  // Filter units by both project and selected buildings
   const filteredUnits = React.useMemo(() => {
-    if (!building) return units;
-    return units.filter(unit => unit.building === building);
-  }, [units, building]);
+    if (!buildings || buildings.length === 0) return units;
+    return units.filter(unit => unit.building && buildings.includes(unit.building));
+  }, [units, buildings]);
   
   // Get all units to extract building from letter data
   const { data: allUnits = [] } = useUnitsByIds(letter?.unit_ids || []); 
@@ -119,18 +119,17 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
   }, [letter, persons, contractors]);
 
   const [isInitialized, setIsInitialized] = React.useState(false);
-  const [previousBuilding, setPreviousBuilding] = React.useState<string | undefined>();
+  const [previousBuildings, setPreviousBuildings] = React.useState<string[]>([]);
 
   useEffect(() => {
     if (!letter) return;
     
-    // Extract building from letter's units
-    const letterBuildings = allUnits.map(unit => unit.building).filter(Boolean);
-    const building = letterBuildings.length > 0 ? letterBuildings[0] : undefined;
+    // Extract buildings from letter's units
+    const letterBuildings = Array.from(new Set(allUnits.map(unit => unit.building).filter(Boolean)));
     
     form.setFieldsValue({
       project_id: letter.project_id,
-      building: building,
+      buildings: letterBuildings,
       unit_ids: letter.unit_ids,
       type: letter.type,
       number: letter.number,
@@ -142,17 +141,17 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
       subject: letter.subject,
       content: letter.content,
     });
-    setPreviousBuilding(building);
+    setPreviousBuildings(letterBuildings);
     setIsInitialized(true);
   }, [letter, form, allUnits]);
 
-  // Clear unit_ids when building changes (but not on initial load)
+  // Clear unit_ids when buildings change (but not on initial load)
   React.useEffect(() => {
-    if (isInitialized && building !== previousBuilding) {
+    if (isInitialized && JSON.stringify(buildings) !== JSON.stringify(previousBuildings)) {
       form.setFieldValue('unit_ids', []);
-      setPreviousBuilding(building);
+      setPreviousBuildings(buildings || []);
     }
-  }, [building, form, isInitialized, previousBuilding]);
+  }, [buildings, form, isInitialized, previousBuildings]);
 
   const handleFiles = (files: File[]) => attachments.addFiles(files);
 
@@ -246,11 +245,12 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
           </Form.Item>
         </Col>
         <Col span={8}>
-          <Form.Item name="building" label="Корпус" style={highlight('building')}>
+          <Form.Item name="buildings" label="Корпуса" style={highlight('buildings')}>
             <Select 
+              mode="multiple"
               options={buildingOptions}
               allowClear
-              placeholder="Выберите корпус"
+              placeholder="Выберите корпуса"
               disabled={!projectId}
             />
           </Form.Item>

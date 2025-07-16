@@ -2,23 +2,26 @@
 // -----------------------------------------------------------------------------
 // CHANGE: скорректированы пути к страницам Login и Register
 // -----------------------------------------------------------------------------
-import React from "react";
+import React, { Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Backdrop, CircularProgress } from "@mui/material";
 
 import { useAuthStore } from "@/shared/store/authStore";
-import DashboardPage from "@/pages/DashboardPage/DashboardPage";
-import ClaimsPage from "@/pages/ClaimsPage/ClaimsPage";
-import CourtCasesPage from "@/pages/CourtCasesPage/CourtCasesPage";
-import CorrespondencePage from "@/pages/CorrespondencePage/CorrespondencePage";
-import DefectsPage from "@/pages/DefectsPage/DefectsPage";
-import LoginPage from "@/pages/UnitsPage/LoginPage"; // ← CHANGE
-import RegisterPage from "@/pages/UnitsPage/RegisterPage"; // ← CHANGE
-import AdminPage from "@/pages/UnitsPage/AdminPage";
-import ProjectStructurePage from "@/pages/ProjectStructurePage/ProjectStructurePage";
-import ObjectArchivePage from "@/pages/ObjectArchivePage/ObjectArchivePage";
-import ProfilePage from "@/pages/ProfilePage/ProfilePage";
 import RequirePermission from "@/shared/components/RequirePermission";
+import PageLoader from "@/shared/components/PageLoader";
+
+// Lazy loading для всех страниц
+const DashboardPage = React.lazy(() => import("@/pages/DashboardPage/DashboardPage"));
+const ClaimsPagePaginated = React.lazy(() => import("@/pages/ClaimsPage/ClaimsPagePaginated"));
+const CourtCasesPage = React.lazy(() => import("@/pages/CourtCasesPage/CourtCasesPage"));
+const CorrespondencePage = React.lazy(() => import("@/pages/CorrespondencePage/CorrespondencePage"));
+const DefectsPage = React.lazy(() => import("@/pages/DefectsPage/DefectsPage"));
+const LoginPage = React.lazy(() => import("@/pages/UnitsPage/LoginPage"));
+const RegisterPage = React.lazy(() => import("@/pages/UnitsPage/RegisterPage"));
+const AdminPage = React.lazy(() => import("@/pages/UnitsPage/AdminPage"));
+const ProjectStructurePage = React.lazy(() => import("@/pages/ProjectStructurePage/ProjectStructurePage"));
+const ObjectArchivePage = React.lazy(() => import("@/pages/ObjectArchivePage/ObjectArchivePage"));
+const ProfilePage = React.lazy(() => import("@/pages/ProfilePage/ProfilePage"));
 
 /** --------------------------------------------------------------------------
  *  Компонент-сторож
@@ -46,7 +49,8 @@ function RequireAuth({ children }) {
  *  -------------------------------------------------------------------------*/
 export default function AppRouter() {
   return (
-    <Routes data-oid="t89l.33">
+    <Suspense fallback={<PageLoader />}>
+      <Routes data-oid="t89l.33">
       {/* Публичные -------------------------------------------------------*/}
       <Route
         path="/login"
@@ -79,7 +83,7 @@ export default function AppRouter() {
         element={
           <RequireAuth>
             <RequirePermission page="claims">
-              <ClaimsPage />
+              <ClaimsPagePaginated />
             </RequirePermission>
           </RequireAuth>
         }
@@ -170,6 +174,7 @@ export default function AppRouter() {
         element={<Navigate to="/" replace data-oid="6dl71c8" />}
         data-oid="r4:ccsh"
       />
-    </Routes>
+      </Routes>
+    </Suspense>
   );
 }

@@ -239,6 +239,95 @@ export function useUserStats(
   return query;
 }
 
+/**
+ * Оптимизированная версия useUserStats которая устраняет N+1 проблему
+ * Использует одну оптимизированную функцию вместо 6 отдельных запросов
+ */
+export function useUserStatsOptimized(
+  userId?: string | null,
+  period?: [string, string] | null,
+) {
+  const qc = useQueryClient();
+  const from = period?.[0] ?? null;
+  const to = period?.[1] ?? null;
+
+  const query = useQuery<UserStats>({
+    queryKey: ['user-stats-optimized', userId, from, to],
+    enabled: !!userId && !!from && !!to,
+    queryFn: async () => {
+      // Используем оптимизированную функцию базы данных
+      const { data, error } = await supabase.rpc('get_user_stats_optimized', {
+        user_id: userId,
+        from_date: from,
+        to_date: to,
+      });
+
+      if (error) {
+        console.error('Error fetching optimized user stats:', error);
+        throw error;
+      }
+
+      const result = data?.[0];
+      if (!result) {
+        return {
+          claimsCreated: 0,
+          claimsResponsible: 0,
+          defectsCreated: 0,
+          defectsResponsible: 0,
+          courtCasesCreated: 0,
+          courtCasesResponsible: 0,
+          claimStatusCounts: [],
+          defectStatusCounts: [],
+          claimResponsibleStatusCounts: [],
+          defectResponsibleStatusCounts: [],
+          courtCaseStatusCounts: [],
+          courtCaseResponsibleStatusCounts: [],
+        };
+      }
+
+      return {
+        claimsCreated: result.claims_created || 0,
+        claimsResponsible: result.claims_responsible || 0,
+        defectsCreated: result.defects_created || 0,
+        defectsResponsible: result.defects_responsible || 0,
+        courtCasesCreated: result.court_cases_created || 0,
+        courtCasesResponsible: result.court_cases_responsible || 0,
+        claimStatusCounts: result.claim_status_counts || [],
+        defectStatusCounts: result.defect_status_counts || [],
+        claimResponsibleStatusCounts: result.claim_responsible_status_counts || [],
+        defectResponsibleStatusCounts: result.defect_responsible_status_counts || [],
+        courtCaseStatusCounts: result.court_case_status_counts || [],
+        courtCaseResponsibleStatusCounts: result.court_case_responsible_status_counts || [],
+      };
+    },
+    staleTime: 60_000,
+  });
+
+  // Подписка на изменения остается той же
+  useEffect(() => {
+    if (!userId) return;
+    const createdFilter = `created_by=eq.${userId}`;
+    const engineerFilter = `engineer_id=eq.${userId}`;
+    const lawyerFilter = `responsible_lawyer_id=eq.${userId}`;
+    const key = ['user-stats-optimized', userId, from, to];
+    const invalidate = () => qc.invalidateQueries({ queryKey: key });
+    const channel = supabase
+      .channel(`user-stats-optimized-${userId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'claims', filter: createdFilter }, invalidate)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'claims', filter: engineerFilter }, invalidate)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'defects', filter: createdFilter }, invalidate)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'defects', filter: engineerFilter }, invalidate)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'court_cases', filter: createdFilter }, invalidate)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'court_cases', filter: lawyerFilter }, invalidate);
+    channel.subscribe();
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [userId, from, to, qc]);
+
+  return query;
+}
+
 export function useMultipleUserStats(
   userIds: string[],
   period?: [string, string] | null,
@@ -268,7 +357,92 @@ export function useMultipleUserStats(
   });
 
   const isPending = queries.some((q) => q.isPending);
+  const isError = queries.some((q) => q.isError);
+  const error = queries.find((q) => q.error)?.error;
   const data = queries.map((q) => q.data as UserStats | undefined);
 
-  return { data, isPending } as { data: (UserStats | undefined)[]; isPending: boolean };
+  return { data, isPending, isError, error } as { 
+    data: (UserStats | undefined)[]; 
+    isPending: boolean; 
+    isError: boolean; 
+    error?: Error;
+  };
+}
+
+/**
+ * Оптимизированная версия useMultipleUserStats которая устраняет N+1 проблему
+ * Использует batch loading для получения статистики нескольких пользователей
+ */
+export function useMultipleUserStatsOptimized(
+  userIds: string[],
+  period?: [string, string] | null,
+) {
+  const from = period?.[0] ?? null;
+  const to = period?.[1] ?? null;
+
+  const queries = useQueries({
+    queries: userIds.map((id) => ({
+      queryKey: ['user-stats-optimized', id, from, to],
+      enabled: !!from && !!to,
+      queryFn: async () => {
+        // Используем оптимизированную функцию базы данных
+        const { data, error } = await supabase.rpc('get_user_stats_optimized', {
+          user_id: id,
+          from_date: from,
+          to_date: to,
+        });
+
+        if (error) {
+          console.error('Error fetching optimized user stats:', error);
+          throw error;
+        }
+
+        const result = data?.[0];
+        if (!result) {
+          return {
+            claimsCreated: 0,
+            claimsResponsible: 0,
+            defectsCreated: 0,
+            defectsResponsible: 0,
+            courtCasesCreated: 0,
+            courtCasesResponsible: 0,
+            claimStatusCounts: [],
+            defectStatusCounts: [],
+            claimResponsibleStatusCounts: [],
+            defectResponsibleStatusCounts: [],
+            courtCaseStatusCounts: [],
+            courtCaseResponsibleStatusCounts: [],
+          };
+        }
+
+        return {
+          claimsCreated: result.claims_created || 0,
+          claimsResponsible: result.claims_responsible || 0,
+          defectsCreated: result.defects_created || 0,
+          defectsResponsible: result.defects_responsible || 0,
+          courtCasesCreated: result.court_cases_created || 0,
+          courtCasesResponsible: result.court_cases_responsible || 0,
+          claimStatusCounts: result.claim_status_counts || [],
+          defectStatusCounts: result.defect_status_counts || [],
+          claimResponsibleStatusCounts: result.claim_responsible_status_counts || [],
+          defectResponsibleStatusCounts: result.defect_responsible_status_counts || [],
+          courtCaseStatusCounts: result.court_case_status_counts || [],
+          courtCaseResponsibleStatusCounts: result.court_case_responsible_status_counts || [],
+        };
+      },
+      staleTime: 60_000,
+    })),
+  });
+
+  const isPending = queries.some((q) => q.isPending);
+  const isError = queries.some((q) => q.isError);
+  const error = queries.find((q) => q.error)?.error;
+  const data = queries.map((q) => q.data as UserStats | undefined);
+
+  return { data, isPending, isError, error } as { 
+    data: (UserStats | undefined)[]; 
+    isPending: boolean; 
+    isError: boolean; 
+    error?: Error;
+  };
 }

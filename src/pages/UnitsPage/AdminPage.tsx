@@ -1,70 +1,98 @@
-import React from "react";
-import { Container, Stack } from "@mui/material";
+import React, { Suspense } from "react";
+import { Container, Stack, CircularProgress, Box } from "@mui/material";
 
-import ProjectsTable from "../../widgets/ProjectsTable";
-import ContractorAdmin from "../../widgets/ContractorAdmin";
-import BrigadesAdmin from "../../widgets/BrigadesAdmin";
-import ClaimStatusesAdmin from "../../widgets/ClaimStatusesAdmin";
-import DefectTypesAdmin from "../../widgets/DefectTypesAdmin";
-import DefectStatusesAdmin from "../../widgets/DefectStatusesAdmin";
-import UsersTable from "../../widgets/UsersTable";
-import CourtCaseStatusesAdmin from "../../widgets/CourtCaseStatusesAdmin";
-import LawsuitClaimTypesAdmin from "../../widgets/LawsuitClaimTypesAdmin";
-import LetterTypesAdmin from "../../widgets/LetterTypesAdmin";
-import LetterStatusesAdmin from "../../widgets/LetterStatusesAdmin";
-import RolePermissionsAdmin from "../../widgets/RolePermissionsAdmin";
+// Lazy loading для всех admin компонентов
+const ProjectsTable = React.lazy(() => import("../../widgets/ProjectsTable"));
+const ContractorAdmin = React.lazy(() => import("../../widgets/ContractorAdmin"));
+const BrigadesAdmin = React.lazy(() => import("../../widgets/BrigadesAdmin"));
+const ClaimStatusesAdmin = React.lazy(() => import("../../widgets/ClaimStatusesAdmin"));
+const DefectTypesAdmin = React.lazy(() => import("../../widgets/DefectTypesAdmin"));
+const DefectStatusesAdmin = React.lazy(() => import("../../widgets/DefectStatusesAdmin"));
+const UsersTable = React.lazy(() => import("../../widgets/UsersTable"));
+const CourtCaseStatusesAdmin = React.lazy(() => import("../../widgets/CourtCaseStatusesAdmin"));
+const LawsuitClaimTypesAdmin = React.lazy(() => import("../../widgets/LawsuitClaimTypesAdmin"));
+const LetterTypesAdmin = React.lazy(() => import("../../widgets/LetterTypesAdmin"));
+const LetterStatusesAdmin = React.lazy(() => import("../../widgets/LetterStatusesAdmin"));
+const RolePermissionsAdmin = React.lazy(() => import("../../widgets/RolePermissionsAdmin"));
+
+const AdminLoader = () => (
+  <Box display="flex" justifyContent="center" p={2}>
+    <CircularProgress size={24} />
+  </Box>
+);
 
 export default function AdminPage() {
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
       <Stack spacing={4}>
-        <ProjectsTable pageSize={5} rowsPerPageOptions={[5, 10, 25, 50, 100]} />
+        <Suspense fallback={<AdminLoader />}>
+          <ProjectsTable pageSize={5} rowsPerPageOptions={[5, 10, 25, 50, 100]} />
+        </Suspense>
 
-        <ContractorAdmin pageSize={5} rowsPerPageOptions={[5, 10, 25, 50, 100]} />
-        <BrigadesAdmin pageSize={5} rowsPerPageOptions={[5, 10, 25, 50, 100]} />
+        <Suspense fallback={<AdminLoader />}>
+          <ContractorAdmin pageSize={5} rowsPerPageOptions={[5, 10, 25, 50, 100]} />
+        </Suspense>
+        
+        <Suspense fallback={<AdminLoader />}>
+          <BrigadesAdmin pageSize={5} rowsPerPageOptions={[5, 10, 25, 50, 100]} />
+        </Suspense>
 
+        <Suspense fallback={<AdminLoader />}>
+          <ClaimStatusesAdmin
+            pageSize={5}
+            rowsPerPageOptions={[5, 10, 25, 50, 100]}
+          />
+        </Suspense>
 
-        <ClaimStatusesAdmin
-          pageSize={5}
-          rowsPerPageOptions={[5, 10, 25, 50, 100]}
-        />
+        <Suspense fallback={<AdminLoader />}>
+          <DefectTypesAdmin
+            pageSize={5}
+            rowsPerPageOptions={[5, 10, 25, 50, 100]}
+          />
+        </Suspense>
 
-        <DefectTypesAdmin
-          pageSize={5}
-          rowsPerPageOptions={[5, 10, 25, 50, 100]}
-        />
+        <Suspense fallback={<AdminLoader />}>
+          <DefectStatusesAdmin
+            pageSize={5}
+            rowsPerPageOptions={[5, 10, 25, 50, 100]}
+          />
+        </Suspense>
 
-        <DefectStatusesAdmin
-          pageSize={5}
-          rowsPerPageOptions={[5, 10, 25, 50, 100]}
-        />
+        <Suspense fallback={<AdminLoader />}>
+          <CourtCaseStatusesAdmin
+            pageSize={5}
+            rowsPerPageOptions={[5, 10, 25, 50, 100]}
+          />
+        </Suspense>
 
+        <Suspense fallback={<AdminLoader />}>
+          <LawsuitClaimTypesAdmin
+            pageSize={5}
+            rowsPerPageOptions={[5, 10, 25, 50, 100]}
+          />
+        </Suspense>
 
-        <CourtCaseStatusesAdmin
-          pageSize={5}
-          rowsPerPageOptions={[5, 10, 25, 50, 100]}
-        />
+        <Suspense fallback={<AdminLoader />}>
+          <LetterTypesAdmin
+            pageSize={5}
+            rowsPerPageOptions={[5, 10, 25, 50, 100]}
+          />
+        </Suspense>
 
-        <LawsuitClaimTypesAdmin
-          pageSize={5}
-          rowsPerPageOptions={[5, 10, 25, 50, 100]}
-        />
+        <Suspense fallback={<AdminLoader />}>
+          <LetterStatusesAdmin
+            pageSize={5}
+            rowsPerPageOptions={[5, 10, 25, 50, 100]}
+          />
+        </Suspense>
 
+        <Suspense fallback={<AdminLoader />}>
+          <UsersTable pageSize={5} rowsPerPageOptions={[5, 10, 25, 50, 100]} />
+        </Suspense>
 
-        <LetterTypesAdmin
-          pageSize={5}
-          rowsPerPageOptions={[5, 10, 25, 50, 100]}
-        />
-
-        <LetterStatusesAdmin
-          pageSize={5}
-          rowsPerPageOptions={[5, 10, 25, 50, 100]}
-        />
-
-
-        <UsersTable pageSize={5} rowsPerPageOptions={[5, 10, 25, 50, 100]} />
-
-        <RolePermissionsAdmin />
+        <Suspense fallback={<AdminLoader />}>
+          <RolePermissionsAdmin />
+        </Suspense>
       </Stack>
     </Container>
   );

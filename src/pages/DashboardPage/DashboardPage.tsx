@@ -1,11 +1,13 @@
-import React, { useEffect } from 'react';
-import { Card, Typography, Skeleton, Space, Button } from 'antd';
+import React, { useEffect, Suspense } from 'react';
+import { Card, Typography, Skeleton, Space, Button, Spin } from 'antd';
 import { useSnackbar } from 'notistack';
 import { useVisibleProjects } from '@/entities/project';
 import { useAuthStore } from '@/shared/store/authStore';
 import ProjectsMultiSelect from '@/features/project/ProjectsMultiSelect';
-import ProjectStatsCard from '@/widgets/ProjectStatsCard';
-import UserStatsBlock from '@/widgets/UserStatsBlock';
+
+// Lazy loading для тяжелых компонентов статистики
+const ProjectStatsCard = React.lazy(() => import('@/widgets/ProjectStatsCard'));
+const UserStatsBlock = React.lazy(() => import('@/widgets/UserStatsBlock'));
 
 /** Главная страница с инфографикой. */
 export default function DashboardPage() {
@@ -43,10 +45,14 @@ export default function DashboardPage() {
       </Card>
 
       {selected.map((id) => (
-        <ProjectStatsCard key={id} projectId={id} />
+        <Suspense key={id} fallback={<Spin size="large" style={{ display: 'block', textAlign: 'center', padding: '20px' }} />}>
+          <ProjectStatsCard projectId={id} />
+        </Suspense>
       ))}
 
-      <UserStatsBlock projectIds={selected} resetSignal={resetCounter} />
+      <Suspense fallback={<Spin size="large" style={{ display: 'block', textAlign: 'center', padding: '20px' }} />}>
+        <UserStatsBlock projectIds={selected} resetSignal={resetCounter} />
+      </Suspense>
     </Space>
   );
 }

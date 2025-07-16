@@ -10,12 +10,13 @@ import {
   Skeleton,
   Statistic,
   Segmented,
+  Alert,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import ruRU from 'antd/locale/ru_RU';
 import { useUsers } from '@/entities/user';
 import { useRoles } from '@/entities/role';
-import { useMultipleUserStats } from '@/shared/hooks/useUserStats';
+import { useMultipleUserStats, useMultipleUserStatsOptimized } from '@/shared/hooks/useUserStats';
 import { Dayjs } from 'dayjs';
 
 const { RangePicker } = DatePicker;
@@ -73,7 +74,8 @@ export default function UserStatsBlock({
     });
   }, [users, projectIds, role]);
 
-  const { data, isPending: loadingStats } = useMultipleUserStats(
+  // Используем оптимизированную версию для устранения N+1 проблемы
+  const { data, isPending: loadingStats, isError, error } = useMultipleUserStatsOptimized(
     userIds,
     period,
   );
@@ -247,7 +249,15 @@ export default function UserStatsBlock({
           {loadingStats && userIds.length && period ? (
             <Skeleton active paragraph={{ rows: 2 }} />
           ) : null}
-          {data && userIds.length && !loadingStats ? (
+          {isError && (
+            <Alert
+              type="error"
+              message="Ошибка загрузки статистики"
+              description={error?.message || 'Не удалось загрузить данные статистики пользователей'}
+              showIcon
+            />
+          )}
+          {data && userIds.length && !loadingStats && !isError ? (
             <Table
               columns={columns}
               dataSource={tableData}

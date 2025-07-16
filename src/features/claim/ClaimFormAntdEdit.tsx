@@ -66,7 +66,7 @@ export interface ClaimFormAntdEditProps {
 export interface ClaimFormAntdEditValues {
   project_id: number | null;
   unit_ids: number[];
-  building: string | null;
+  building: string[] | null;
   claim_status_id: number | null;
   claim_no: string;
   claimed_on: Dayjs | null;
@@ -160,13 +160,13 @@ const ClaimFormAntdEdit = React.forwardRef<
     [units],
   );
 
-  // Следим за выбранным корпусом
+  // Следим за выбранными корпусами
   const buildingWatch = Form.useWatch("building", form);
   
-  // Фильтруем объекты по выбранному корпусу
+  // Фильтруем объекты по выбранным корпусам
   const filteredUnits = React.useMemo(() => {
-    if (!buildingWatch) return units;
-    return units.filter((u) => u.building === buildingWatch);
+    if (!Array.isArray(buildingWatch) || buildingWatch.length === 0) return units;
+    return units.filter((u) => buildingWatch.includes(u.building));
   }, [units, buildingWatch]);
 
   useImperativeHandle(ref, () => ({
@@ -215,17 +215,16 @@ const ClaimFormAntdEdit = React.forwardRef<
     console.log('Claim buildings:', claimBuildings);
     
     if (claimBuildings.length >= 1) {
-      const building = claimBuildings[0];
-      console.log('Setting building to:', building);
-      form.setFieldValue("building", building);
+      console.log('Setting buildings to:', claimBuildings);
+      form.setFieldValue("building", claimBuildings);
       
       // Также устанавливаем ref для предотвращения сброса
-      prevBuildingRef.current = building;
+      prevBuildingRef.current = claimBuildings;
     }
   }, [claim, selectedUnits, form]);
 
-  // Очищаем объекты при смене корпуса
-  const prevBuildingRef = React.useRef<string | null>(null);
+  // Очищаем объекты при смене корпусов
+  const prevBuildingRef = React.useRef<string[] | null>(null);
   const isInitialLoadRef = React.useRef(true);
   
   useEffect(() => {
@@ -236,15 +235,21 @@ const ClaimFormAntdEdit = React.forwardRef<
       return;
     }
     
-    // Только если корпус действительно изменился пользователем
-    if (prevBuildingRef.current !== null && prevBuildingRef.current !== buildingWatch) {
+    // Только если корпуса действительно изменились пользователем
+    const arraysEqual = (a: string[] | null, b: string[] | null) => {
+      if (a === null && b === null) return true;
+      if (a === null || b === null) return false;
+      return a.length === b.length && a.every(val => b.includes(val));
+    };
+    
+    if (prevBuildingRef.current !== null && !arraysEqual(prevBuildingRef.current, buildingWatch)) {
       const currentUnitIds = form.getFieldValue("unit_ids") || [];
       
-      if (buildingWatch) {
-        // Фильтруем объекты по новому корпусу
+      if (Array.isArray(buildingWatch) && buildingWatch.length > 0) {
+        // Фильтруем объекты по новым корпусам
         const validUnitIds = currentUnitIds.filter((id: number) => {
           const unit = units.find(u => u.id === id);
-          return unit && unit.building === buildingWatch;
+          return unit && buildingWatch.includes(unit.building);
         });
         
         if (validUnitIds.length !== currentUnitIds.length) {
@@ -387,12 +392,13 @@ const ClaimFormAntdEdit = React.forwardRef<
           <Col span={8}>
             <Form.Item 
               name="building" 
-              label="Корпус"
+              label="Корпуса"
               style={highlight("building")}
             >
               <Select
+                mode="multiple"
                 allowClear
-                placeholder="Выберите корпус"
+                placeholder="Выберите корпуса"
                 options={availableBuildings.map((b) => ({ value: b, label: b }))}
                 disabled={!projectId}
               />

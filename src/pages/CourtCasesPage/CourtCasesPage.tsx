@@ -44,8 +44,10 @@ import {
 import { useNotify } from "@/shared/hooks/useNotify";
 import CourtCaseStatusSelect from "@/features/courtCase/CourtCaseStatusSelect";
 import LinkCasesDialog from "@/features/courtCase/LinkCasesDialog";
-import ExportCourtCasesButton from "@/features/courtCase/ExportCourtCasesButton";
 import AddCourtCaseFormAntd from "@/features/courtCase/AddCourtCaseFormAntd";
+
+// Lazy loading для компонента экспорта (содержит ExcelJS)
+const ExportCourtCasesButton = React.lazy(() => import("@/features/courtCase/ExportCourtCasesButton"));
 import CourtCaseViewModal from "@/features/courtCase/CourtCaseViewModal";
 import CourtCasesFilters from "@/widgets/CourtCasesFilters";
 import type { CourtCasesFiltersValues } from "@/shared/types/courtCasesFilters";
@@ -610,11 +612,13 @@ export default function CourtCasesPage() {
           onClick={() => setShowColumnsDrawer(true)}
         />
         <span style={{ marginLeft: 8, display: "inline-block" }}>
-          <ExportCourtCasesButton
-            cases={filteredCases}
-            stages={Object.fromEntries(stages.map((s) => [s.id, s.name]))}
-            closedStageId={closedStageId ?? undefined}
-          />
+          <React.Suspense fallback={<Button loading>Экспорт</Button>}>
+            <ExportCourtCasesButton
+              cases={filteredCases}
+              stages={Object.fromEntries(stages.map((s) => [s.id, s.name]))}
+              closedStageId={closedStageId ?? undefined}
+            />
+          </React.Suspense>
         </span>
         {showAddForm && (
           <AddCourtCaseFormAntd

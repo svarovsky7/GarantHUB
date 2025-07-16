@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import {
   Form,
   Input,
@@ -12,6 +12,7 @@ import {
   Space,
   Popconfirm,
   Modal,
+  Spin,
 } from 'antd';
 
 import ClaimAttachmentsBlock from './ClaimAttachmentsBlock';
@@ -26,8 +27,10 @@ import { addDefectAttachments } from '@/entities/attachment';
 import { supabase } from '@/shared/api/supabaseClient';
 import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useNotify } from '@/shared/hooks/useNotify';
-import DefectEditableTable from '@/widgets/DefectEditableTable';
 import { useCreateDefects, type NewDefect } from '@/entities/defect';
+
+// Lazy loading для тяжелого компонента DefectEditableTable
+const DefectEditableTable = React.lazy(() => import('@/widgets/DefectEditableTable'));
 import type { NewDefectFile } from '@/shared/types/defectFile';
 import type { NewClaimFile } from '@/shared/types/claimFile';
 import { useAuthStore } from '@/shared/store/authStore';
@@ -50,7 +53,7 @@ export interface ClaimFormAntdProps {
 export interface ClaimFormValues {
   project_id: number | null;
   unit_ids: number[];
-  building: string | null;
+  building: string[] | null;
   claim_status_id: number | null;
   claim_no: string;
   claimed_on: dayjs.Dayjs | null;
@@ -86,12 +89,21 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
 
   const { data: projects = [] } = useVisibleProjects();
   const { buildings = [] } = useProjectBuildings(projectId);
-  const buildingWatch = Form.useWatch('building', form) ?? null;
+  const buildingWatch = Form.useWatch('building', form) ?? [];
   const buildingDebounced = useDebounce(buildingWatch);
-  const { data: units = [] } = useUnitsByProject(
-    projectId,
-    buildingDebounced ?? undefined,
-  );
+  
+  // Получаем все объекты для проекта
+  const { data: allUnits = [] } = useUnitsByProject(projectId);
+  
+  // Фильтруем объекты по выбранным корпусам
+  const units = React.useMemo(() => {
+    if (!Array.isArray(buildingDebounced) || buildingDebounced.length === 0) {
+      return allUnits;
+    }
+    return allUnits.filter(unit => 
+      buildingDebounced.some(building => unit.building === building)
+    );
+  }, [allUnits, buildingDebounced]);
   const { data: lockedUnitIds = [] } = useLockedUnitIds();
   const unitIdsWatch = Form.useWatch('unit_ids', form) ?? [];
   const { data: users = [] } = useUsers();
@@ -145,7 +157,12 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
       form.setFieldValue('project_id', Number(globalProjectId));
     }
     if (initialValues.unit_ids) form.setFieldValue('unit_ids', initialValues.unit_ids);
-    if (initialValues.building) form.setFieldValue('building', initialValues.building);
+    if (initialValues.building) {
+      const buildingArray = Array.isArray(initialValues.building) 
+        ? initialValues.building 
+        : [initialValues.building];
+      form.setFieldValue('building', buildingArray);
+    }
     if (initialValues.engineer_id)
       form.setFieldValue('engineer_id', initialValues.engineer_id);
     if (initialValues.claim_status_id != null) form.setFieldValue('claim_status_id', initialValues.claim_status_id);
@@ -191,7 +208,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
     if (!initialValues.unit_ids) {
       form.setFieldValue('unit_ids', []);
     }
-    form.setFieldValue('building', null);
+    form.setFieldValue('building', []);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId, form]);
 
@@ -233,7 +250,7 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
       });
       return;
     }
-    const { defects: defs, building: _bld, ...rest } = values;
+    const { defects: defs, building, ...rest } = values;
     if (!defs || defs.length === 0) {
       notify.error('Добавьте хотя бы один дефект');
       return;
@@ -341,8 +358,14 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
           </Form.Item>
         </Col>
         <Col span={8}>
-          <Form.Item name="building" label="Корпус">
-            <Select allowClear options={buildings.map((b) => ({ value: b, label: b }))} disabled={!projectId} />
+          <Form.Item name="building" label="Корпуса">
+            <Select 
+              mode="multiple"
+              allowClear 
+              placeholder="Выберите корпуса"
+              options={buildings.map((b) => ({ value: b, label: b }))} 
+              disabled={!projectId} 
+            />
           </Form.Item>
         </Col>
         <Col span={8}>
@@ -419,16 +442,18 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
       {showDefectsForm && (
         <Form.List name="defects">
           {(fields, { add, remove }) => (
-            <DefectEditableTable
-              fields={fields}
-              add={add}
-              remove={remove}
-              projectId={projectId}
-              showFiles={false}
-              fileMap={defectFiles}
-              onFilesChange={changeDefectFiles}
-              defaultReceivedAt={acceptedOnWatch}
-            />
+            <Suspense fallback={<Spin size="large" style={{ display: 'block', textAlign: 'center', padding: '20px' }} />}>
+              <DefectEditableTable
+                fields={fields}
+                add={add}
+                remove={remove}
+                projectId={projectId}
+                showFiles={false}
+                fileMap={defectFiles}
+                onFilesChange={changeDefectFiles}
+                defaultReceivedAt={acceptedOnWatch}
+              />
+            </Suspense>
           )}
         </Form.List>
       )}

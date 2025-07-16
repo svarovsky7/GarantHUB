@@ -9,6 +9,7 @@ import {
   Popconfirm,
   message,
   Modal,
+  Alert,
 } from "antd";
 import {
   SettingOutlined,
@@ -38,10 +39,14 @@ const TableColumnsDrawer = React.lazy(
   () => import("@/widgets/TableColumnsDrawer"),
 );
 import type { TableColumnSetting } from "@/shared/types/tableColumnSetting";
-import DefectViewModal from "@/features/defect/DefectViewModal";
 import DefectStatusSelect from "@/features/defect/DefectStatusSelect";
-import ExportDefectsButton from "@/features/defect/ExportDefectsButton";
 import DefectFixModal from "@/features/defect/DefectFixModal";
+
+// Lazy loading для тяжелых модальных компонентов
+const DefectViewModal = React.lazy(() => import("@/features/defect/DefectViewModal"));
+
+// Lazy loading для компонента экспорта (содержит ExcelJS)
+const ExportDefectsButton = React.lazy(() => import("@/features/defect/ExportDefectsButton"));
 import { useCancelDefectFix } from "@/entities/defect";
 import { filterDefects } from "@/shared/utils/defectFilter";
 import { naturalCompare, naturalCompareArrays } from "@/shared/utils/naturalSort";
@@ -56,7 +61,7 @@ const fmtDateTime = (v: string | null) =>
   v ? dayjs(v).format("DD.MM.YYYY HH:mm") : "—";
 
 export default function DefectsPage() {
-  const { data: defects = [], isPending } = useDefects();
+  const { data: defects = [], isPending, isError, error } = useDefects();
   const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
   const { data: perm } = useRolePermission(role);
   const { data: claimsAll = [] } = useClaimsSimpleAll();
@@ -624,12 +629,23 @@ const LS_COLUMN_WIDTHS_KEY = "defectsColumnWidths";
   return (
     <ConfigProvider locale={ruRU}>
       <>
+        {isError && (
+          <Alert
+            type="error"
+            message="Ошибка загрузки дефектов"
+            description={error?.message || 'Не удалось загрузить данные дефектов'}
+            showIcon
+            style={{ marginBottom: 16 }}
+          />
+        )}
         <Button onClick={() => setShowFilters((p) => !p)}>
           {showFilters ? "Скрыть фильтры" : "Показать фильтры"}
         </Button>
         <Button icon={<SettingOutlined />} style={{ marginLeft: 8 }} onClick={() => setShowColumnsDrawer(true)} />
         <span style={{ marginLeft: 8, display: "inline-block" }}>
-          <ExportDefectsButton defects={filteredData} filters={filters} />
+          <React.Suspense fallback={<Button loading>Экспорт</Button>}>
+            <ExportDefectsButton defects={filteredData} filters={filters} />
+          </React.Suspense>
         </span>
         {showFilters && (
           <div style={{ marginTop: 16, marginBottom: 24, maxWidth: 1040 }}>
@@ -666,11 +682,13 @@ const LS_COLUMN_WIDTHS_KEY = "defectsColumnWidths";
         <Typography.Text style={{ display: "block", marginTop: 4 }}>
           Готовых дефектов к выгрузке: {readyToExport}
         </Typography.Text>
-        <DefectViewModal
-          open={viewId !== null}
-          defectId={viewId}
-          onClose={() => setViewId(null)}
-        />
+        <React.Suspense fallback={<div>Загрузка модального окна...</div>}>
+          <DefectViewModal
+            open={viewId !== null}
+            defectId={viewId}
+            onClose={() => setViewId(null)}
+          />
+        </React.Suspense>
         <DefectFixModal
           open={fixId !== null}
           defectId={fixId}

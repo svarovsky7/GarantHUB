@@ -39,7 +39,7 @@ export interface AddLetterFormData {
   responsible_user_id: string | null;
   letter_type_id: number | null;
   project_id: number | null;
-  building: string | null;
+  buildings: string[];
   unit_ids: number[];
   /** Статус письма */
   status_id: number | null;
@@ -58,7 +58,7 @@ interface AddLetterFormProps {
 export default function AddLetterForm({ onSubmit, parentId = null, initialValues: defaults = {} }: AddLetterFormProps) {
   const [form] = Form.useForm<Omit<AddLetterFormData, 'attachments'>>();
   const projectId = Form.useWatch('project_id', form);
-  const building = Form.useWatch('building', form);
+  const buildings = Form.useWatch('buildings', form);
   const senderValue = Form.useWatch('sender', form);
   const receiverValue = Form.useWatch('receiver', form);
 
@@ -87,11 +87,11 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
     }));
   }, [units]);
   
-  // Filter units by both project and building
+  // Filter units by both project and selected buildings
   const filteredUnits = React.useMemo(() => {
-    if (!building) return units;
-    return units.filter(unit => unit.building === building);
-  }, [units, building]);
+    if (!buildings || buildings.length === 0) return units;
+    return units.filter(unit => unit.building && buildings.includes(unit.building));
+  }, [units, buildings]);
   const { data: contractors = [], isLoading: loadingContractors } = useContractors();
   const { data: persons = [], isLoading: loadingPersons } = usePersons();
   const { data: statuses = [] } = useLetterStatuses();
@@ -123,18 +123,18 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
       prevProjectId.current = projectId ?? null;
       return;
     }
-    // Если проект изменился после инициализации — сбрасываем выбранные объекты и корпус
+    // Если проект изменился после инициализации — сбрасываем выбранные объекты и корпуса
     if (prevProjectId.current !== projectId) {
       form.setFieldValue('unit_ids', []);
-      form.setFieldValue('building', null);
+      form.setFieldValue('buildings', []);
       prevProjectId.current = projectId ?? null;
     }
   }, [projectId, form]);
 
-  // Clear unit_ids when building changes
+  // Clear unit_ids when buildings change
   useEffect(() => {
     form.setFieldValue('unit_ids', []);
-  }, [building, form]);
+  }, [buildings, form]);
 
   // Подставляем текущего пользователя, если ответственный не выбран
   useEffect(() => {
@@ -167,7 +167,7 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
         form={form}
         layout="vertical"
         onFinish={submit}
-        initialValues={{ type: 'incoming', date: dayjs(), unit_ids: [], ...defaults }}
+        initialValues={{ type: 'incoming', date: dayjs(), unit_ids: [], buildings: [], ...defaults }}
         autoComplete="off"
       >
         <Row gutter={16}>
@@ -361,11 +361,12 @@ export default function AddLetterForm({ onSubmit, parentId = null, initialValues
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item name="building" label="Корпус">
+            <Form.Item name="buildings" label="Корпуса">
               <Select
+                  mode="multiple"
                   options={buildingOptions}
                   allowClear
-                  placeholder="Выберите корпус"
+                  placeholder="Выберите корпуса"
                   disabled={!projectId}
               />
             </Form.Item>

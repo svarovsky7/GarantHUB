@@ -1,7 +1,9 @@
-import React from 'react';
-import { Modal, Form } from 'antd';
+import React, { Suspense } from 'react';
+import { Modal, Form, Spin } from 'antd';
 import dayjs from 'dayjs';
-import DefectEditableTable from '@/widgets/DefectEditableTable';
+
+// Lazy loading для тяжелого компонента DefectEditableTable
+const DefectEditableTable = React.lazy(() => import('@/widgets/DefectEditableTable'));
 import type { NewDefect } from '@/entities/defect';
 import { useAuthStore } from '@/shared/store/authStore';
 
@@ -55,14 +57,16 @@ export default function DefectAddModal({ open, projectId, defaultReceivedAt, onC
       <Form form={form} layout="vertical">
         <Form.List name="defects" initialValue={[]}>
           {(fields, { add, remove }) => (
-            <DefectEditableTable
-              fields={fields}
-              add={add}
-              remove={remove}
-              projectId={projectId ?? null}
-              showFiles={false}
-              defaultReceivedAt={defaultReceivedAt}
-            />
+            <Suspense fallback={<Spin size="large" style={{ display: 'block', textAlign: 'center', padding: '20px' }} />}>
+              <DefectEditableTable
+                fields={fields}
+                add={add}
+                remove={remove}
+                projectId={projectId ?? null}
+                showFiles={false}
+                defaultReceivedAt={defaultReceivedAt}
+              />
+            </Suspense>
           )}
         </Form.List>
       </Form>

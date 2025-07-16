@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Row, Col, Statistic, Skeleton } from 'antd';
+import { Card, Row, Col, Statistic, Skeleton, Alert } from 'antd';
 import { useDashboardStats } from '@/shared/hooks/useDashboardStats';
 import { useVisibleProjects } from '@/entities/project';
 
@@ -11,14 +11,40 @@ interface Props {
  * Карточка статистики выбранного проекта.
  */
 export default function ProjectStatsCard({ projectId }: Props) {
-  const { data, isPending } = useDashboardStats(projectId);
+  const { data, isPending, isError, error } = useDashboardStats(projectId);
   const { data: projects = [] } = useVisibleProjects();
   const name = projects.find((p) => p.id === projectId)?.name || 'Проект';
 
-  if (isPending || !data) {
+  if (isPending) {
     return (
       <Card title={name} style={{ width: '100%' }}>
         <Skeleton active paragraph={{ rows: 2 }} />
+      </Card>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Card title={name} style={{ width: '100%' }}>
+        <Alert
+          type="error"
+          message="Ошибка загрузки статистики проекта"
+          description={error?.message || 'Не удалось загрузить данные'}
+          showIcon
+        />
+      </Card>
+    );
+  }
+
+  if (!data) {
+    return (
+      <Card title={name} style={{ width: '100%' }}>
+        <Alert
+          type="warning"
+          message="Нет данных"
+          description="Статистика проекта недоступна"
+          showIcon
+        />
       </Card>
     );
   }

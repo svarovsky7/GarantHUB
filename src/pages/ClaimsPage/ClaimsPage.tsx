@@ -44,6 +44,8 @@ import { naturalCompare } from "@/shared/utils/naturalSort";
 import type { ClaimFilters } from "@/shared/types/claimFilters";
 import type { TableColumnSetting } from "@/shared/types/tableColumnSetting";
 import type { ColumnsType } from "antd/es/table";
+
+import type { ClaimTableData } from './types/ClaimTableData';
 import dayjs from "dayjs";
 import ClaimStatusSelect from "@/features/claim/ClaimStatusSelect";
 import { useDeleteClaim } from "@/entities/claim";
@@ -135,9 +137,9 @@ export default function ClaimsPage() {
   const { mutateAsync: remove, isPending: removing } = useDeleteClaim();
 
   // Хелперы для форматирования
-  const fmt = (d: any) =>
+  const fmt = (d: dayjs.Dayjs | null | undefined) =>
     d && dayjs.isDayjs(d) && d.isValid() ? d.format("DD.MM.YYYY") : "—";
-  const fmtDateTime = (d: any) =>
+  const fmtDateTime = (d: dayjs.Dayjs | null | undefined) =>
     d && dayjs.isDayjs(d) && d.isValid() ? d.format("DD.MM.YYYY HH:mm") : "—";
 
   // Мемоизированные мапы для производительности
@@ -286,7 +288,7 @@ export default function ClaimsPage() {
         title: "",
         dataIndex: "treeIcon",
         width: 40,
-        render: (_: any, record: any) => {
+        render: (_: unknown, record: ClaimTableData) => {
           if (!record.parent_id) {
             return (
               <Tooltip title="Основная претензия">
@@ -305,32 +307,32 @@ export default function ClaimsPage() {
         title: "ID",
         dataIndex: "id",
         width: 80,
-        sorter: (a: any, b: any) => a.id - b.id,
+        sorter: (a: ClaimTableData, b: ClaimTableData) => a.id - b.id,
       },
       projectName: {
         title: "Проект",
         dataIndex: "projectName",
         width: 180,
-        sorter: (a: any, b: any) => a.projectName.localeCompare(b.projectName),
+        sorter: (a: ClaimTableData, b: ClaimTableData) => a.projectName.localeCompare(b.projectName),
       },
       buildings: {
         title: "Корпус",
         dataIndex: "buildings",
         width: 120,
-        sorter: (a: any, b: any) => (a.buildings || "").localeCompare(b.buildings || ""),
+        sorter: (a: ClaimTableData, b: ClaimTableData) => (a.buildings || "").localeCompare(b.buildings || ""),
       },
       unitNames: {
         title: "Объекты",
         dataIndex: "unitNames",
         width: 160,
-        sorter: (a: any, b: any) => a.unitNames.localeCompare(b.unitNames),
+        sorter: (a: ClaimTableData, b: ClaimTableData) => a.unitNames.localeCompare(b.unitNames),
       },
       claim_status_id: {
         title: "Статус",
         dataIndex: "claim_status_id",
         width: 160,
-        sorter: (a: any, b: any) => a.statusName.localeCompare(b.statusName),
-        render: (_: any, row: any) => (
+        sorter: (a: ClaimTableData, b: ClaimTableData) => a.statusName.localeCompare(b.statusName),
+        render: (_: unknown, row: ClaimTableData) => (
           <ClaimStatusSelect
             claimId={row.id}
             statusId={row.claim_status_id}
@@ -346,49 +348,49 @@ export default function ClaimsPage() {
         title: "№ претензии",
         dataIndex: "claim_no",
         width: 160,
-        sorter: (a: any, b: any) => a.claim_no.localeCompare(b.claim_no),
+        sorter: (a: ClaimTableData, b: ClaimTableData) => a.claim_no.localeCompare(b.claim_no),
       },
       claimedOn: {
         title: "Дата претензии",
         dataIndex: "claimedOn",
         width: 120,
-        sorter: (a: any, b: any) =>
+        sorter: (a: ClaimTableData, b: ClaimTableData) =>
           (a.claimedOn ? a.claimedOn.valueOf() : 0) -
           (b.claimedOn ? b.claimedOn.valueOf() : 0),
-        render: (v: any) => fmt(v),
+        render: (v: dayjs.Dayjs | null) => fmt(v),
       },
       acceptedOn: {
         title: "Дата получения Застройщиком",
         dataIndex: "acceptedOn",
         width: 120,
-        sorter: (a: any, b: any) =>
+        sorter: (a: ClaimTableData, b: ClaimTableData) =>
           (a.acceptedOn ? a.acceptedOn.valueOf() : 0) -
           (b.acceptedOn ? b.acceptedOn.valueOf() : 0),
-        render: (v: any) => fmt(v),
+        render: (v: dayjs.Dayjs | null) => fmt(v),
       },
       registeredOn: {
         title: "Дата регистрации претензии",
         dataIndex: "registeredOn",
         width: 120,
-        sorter: (a: any, b: any) =>
+        sorter: (a: ClaimTableData, b: ClaimTableData) =>
           (a.registeredOn ? a.registeredOn.valueOf() : 0) -
           (b.registeredOn ? b.registeredOn.valueOf() : 0),
-        render: (v: any) => fmt(v),
+        render: (v: dayjs.Dayjs | null) => fmt(v),
       },
       resolvedOn: {
         title: "Дата устранения",
         dataIndex: "resolvedOn",
         width: 120,
-        sorter: (a: any, b: any) =>
+        sorter: (a: ClaimTableData, b: ClaimTableData) =>
           (a.resolvedOn ? a.resolvedOn.valueOf() : 0) -
           (b.resolvedOn ? b.resolvedOn.valueOf() : 0),
-        render: (v: any) => fmt(v),
+        render: (v: dayjs.Dayjs | null) => fmt(v),
       },
       responsibleEngineerName: {
         title: "Закрепленный инженер",
         dataIndex: "responsibleEngineerName",
         width: 180,
-        sorter: (a: any, b: any) =>
+        sorter: (a: ClaimTableData, b: ClaimTableData) =>
           (a.responsibleEngineerName || "").localeCompare(
             b.responsibleEngineerName || "",
           ),
@@ -397,23 +399,23 @@ export default function ClaimsPage() {
         title: "Добавлено",
         dataIndex: "createdAt",
         width: 160,
-        sorter: (a: any, b: any) =>
+        sorter: (a: ClaimTableData, b: ClaimTableData) =>
           (a.createdAt ? a.createdAt.valueOf() : 0) -
           (b.createdAt ? b.createdAt.valueOf() : 0),
-        render: (v: any) => fmtDateTime(v),
+        render: (v: dayjs.Dayjs | null) => fmtDateTime(v),
       },
       createdByName: {
         title: "Автор",
         dataIndex: "createdByName",
         width: 160,
-        sorter: (a: any, b: any) =>
+        sorter: (a: ClaimTableData, b: ClaimTableData) =>
           (a.createdByName || "").localeCompare(b.createdByName || ""),
       },
       actions: {
         title: "Действия",
         key: "actions",
         width: 140,
-        render: (_: any, record: any) => (
+        render: (_: unknown, record: ClaimTableData) => (
           <Space size="middle">
             <Tooltip title="Просмотр">
               <Button
@@ -468,7 +470,7 @@ export default function ClaimsPage() {
           </Space>
         ),
       },
-    } as Record<string, ColumnsType<ClaimWithNames>[number]>;
+    } as Record<string, ColumnsType<ClaimTableData>[number]>;
     
     // Применяем сохраненные ширины колонок
     Object.keys(cols).forEach((k) => {
@@ -568,7 +570,7 @@ export default function ClaimsPage() {
   }, []);
 
   // Финальные колонки для таблицы
-  const columns = useMemo(() => {
+  const columns: ColumnsType<ClaimTableData> = useMemo(() => {
     return columnsState
       .filter((c) => c.visible && baseColumns[c.key])
       .map((c) => baseColumns[c.key]);

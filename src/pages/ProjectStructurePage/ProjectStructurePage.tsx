@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import {
     Box,
     Stack,
@@ -12,14 +12,17 @@ import {
     DialogContent,
     DialogActions,
     Button,
+    CircularProgress,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutline from "@mui/icons-material/DeleteOutline";
 import EditIcon from "@mui/icons-material/Edit";
 import AddBuildingDialog from "@/features/addBuilding/AddBuildingDialog";
 import RenameBuildingDialog from "@/features/renameBuilding/RenameBuildingDialog";
-import UnitsMatrix from "@/widgets/UnitsMatrix/UnitsMatrix";
 import StatusLegend from "@/widgets/StatusLegend";
+
+// Lazy loading для тяжелого компонента UnitsMatrix
+const UnitsMatrix = React.lazy(() => import("@/widgets/UnitsMatrix/UnitsMatrix"));
 import useProjectStructure, { LS_KEY } from "@/shared/hooks/useProjectStructure";
 import { useProjectId } from '@/shared/hooks/useProjectId';
 import { useDeleteUnitsByBuilding } from '@/entities/unit';
@@ -367,7 +370,13 @@ export default function ProjectStructurePage() {
             )}
 
             {projectId && building && buildings.length > 0 && (
-                <UnitsMatrix projectId={projectId} building={building} />
+                <Suspense fallback={
+                    <Box display="flex" justifyContent="center" p={4}>
+                        <CircularProgress size={48} />
+                    </Box>
+                }>
+                    <UnitsMatrix projectId={projectId} building={building} />
+                </Suspense>
             )}
             <StatusLegend />
         </Stack>
