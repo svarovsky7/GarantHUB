@@ -43,9 +43,7 @@ export function useClaimsPageState() {
   // URL sync for view modal
   useEffect(() => {
     const claimId = searchParams.get('claim_id');
-    if (claimId) {
-      setViewId(claimId);
-    }
+    setViewId(claimId);
   }, [searchParams]);
 
   // URL sync for add form
