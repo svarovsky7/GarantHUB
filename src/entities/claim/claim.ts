@@ -741,11 +741,15 @@ export function useCreateClaim() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [TABLE] });
       qc.invalidateQueries({ queryKey: [SUMMARY_TABLE] });
+      qc.invalidateQueries({ queryKey: [SUMMARY_TABLE + '-all'] });
       qc.invalidateQueries({ queryKey: ['defects'] });
       qc.invalidateQueries({ queryKey: ['claims-simple'] });
       qc.invalidateQueries({ queryKey: ['claims-simple-all'] });
       qc.invalidateQueries({ queryKey: ['claims-all'] });
       qc.invalidateQueries({ queryKey: ['claims-all-legacy'] });
+      qc.invalidateQueries({ queryKey: ['claims-optimized'] });
+      qc.invalidateQueries({ queryKey: ['claims-stats'] });
+      qc.invalidateQueries({ queryKey: ['claims-all-stats'] });
     },
   });
 }
@@ -873,11 +877,15 @@ export function useDeleteClaim() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [TABLE] });
       qc.invalidateQueries({ queryKey: [SUMMARY_TABLE] });
+      qc.invalidateQueries({ queryKey: [SUMMARY_TABLE + '-all'] });
       qc.invalidateQueries({ queryKey: ['defects'] });
       qc.invalidateQueries({ queryKey: ['claims-simple'] });
       qc.invalidateQueries({ queryKey: ['claims-simple-all'] });
       qc.invalidateQueries({ queryKey: ['claims-all'] });
       qc.invalidateQueries({ queryKey: ['claims-all-legacy'] });
+      qc.invalidateQueries({ queryKey: ['claims-optimized'] });
+      qc.invalidateQueries({ queryKey: ['claims-stats'] });
+      qc.invalidateQueries({ queryKey: ['claims-all-stats'] });
     },
   });
 }
@@ -983,6 +991,14 @@ export async function signedUrl(path: string, filename = ''): Promise<string> {
   const { data, error } = await supabase.storage
     .from(ATTACH_BUCKET)
     .createSignedUrl(path, 60, { download: filename || undefined });
+  if (error) throw error;
+  return data.signedUrl;
+}
+
+export async function signedUrlForPreview(path: string): Promise<string> {
+  const { data, error } = await supabase.storage
+    .from(ATTACH_BUCKET)
+    .createSignedUrl(path, 60);
   if (error) throw error;
   return data.signedUrl;
 }

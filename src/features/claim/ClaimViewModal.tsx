@@ -4,6 +4,7 @@ import {
   useClaim,
   useClaimAll,
   signedUrl,
+  signedUrlForPreview,
   closeDefectsForClaim,
 } from "@/entities/claim";
 import ClaimFormAntdEdit from "./ClaimFormAntdEdit";
@@ -465,6 +466,8 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
                   onRemoveRemoteFile={removeDefRemote}
                   onDescRemoteFile={changeDefRemoteDesc}
                   getSignedUrl={(p, n) => signedUrl(p, n)}
+                  getSignedUrlForPreview={(p) => signedUrlForPreview(p)}
+                  onPreview={(f) => setPreviewFile(f)}
                 />
               ) : (
                 <Typography.Text>Дефекты не указаны</Typography.Text>
@@ -489,6 +492,7 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
               onDescRemote={attachments.setRemoteDescription}
               onDescNew={attachments.setDescription}
               getSignedUrl={(path, name) => signedUrl(path, name)}
+              getSignedUrlForPreview={(path) => signedUrlForPreview(path)}
               onPreview={(f) => setPreviewFile(f)}
             />
             <div style={{ textAlign: "right", marginTop: 16 }}>

@@ -17,6 +17,7 @@ import AttachmentEditorTable from '@/shared/ui/AttachmentEditorTable';
 import DefectFilesModal from '@/features/defect/DefectFilesModal';
 import type { NewDefectFile } from '@/shared/types/defectFile';
 import type { RemoteClaimFile } from '@/shared/types/claimFile';
+import type { PreviewFile } from '@/shared/types/previewFile';
 
 interface Item {
   id: number;
@@ -54,6 +55,8 @@ interface Props {
     description: string,
   ) => void;
   getSignedUrl?: (path: string, name: string) => Promise<string>;
+  getSignedUrlForPreview?: (path: string) => Promise<string>;
+  onPreview?: (file: PreviewFile) => void;
 }
 
 /**
@@ -74,6 +77,8 @@ export default function TicketDefectsEditorTable({
   onRemoveRemoteFile,
   onDescRemoteFile,
   getSignedUrl,
+  getSignedUrlForPreview,
+  onPreview,
 }: Props) {
   const fmt = (d: string | null) => (d ? dayjs(d).format('DD.MM.YYYY') : undefined);
 
@@ -270,6 +275,8 @@ export default function TicketDefectsEditorTable({
                 onFilesChange?.(record.id, arr);
               }}
               getSignedUrl={getSignedUrl}
+              getSignedUrlForPreview={getSignedUrlForPreview}
+              onPreview={onPreview}
               showMime={false}
               showDetails
             />

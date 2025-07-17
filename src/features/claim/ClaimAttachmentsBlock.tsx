@@ -28,6 +28,8 @@ export interface ClaimAttachmentsBlockProps {
   showUpload?: boolean;
   /** Получить подписанную ссылку */
   getSignedUrl?: (path: string, name: string) => Promise<string>;
+  /** Получить подписанную ссылку для просмотра */
+  getSignedUrlForPreview?: (path: string) => Promise<string>;
   /** Открыть предпросмотр */
   onPreview?: (file: PreviewFile) => void;
 }
@@ -42,6 +44,7 @@ export default function ClaimAttachmentsBlock({
   onDescRemote,
   showUpload = true,
   getSignedUrl,
+  getSignedUrlForPreview,
   onPreview,
 }: ClaimAttachmentsBlockProps) {
   return (
@@ -66,6 +69,7 @@ export default function ClaimAttachmentsBlock({
         onDescRemote={onDescRemote}
         onDescNew={onDescNew}
         getSignedUrl={getSignedUrl}
+        getSignedUrlForPreview={getSignedUrlForPreview}
         showDetails
         onPreview={onPreview}
       />
