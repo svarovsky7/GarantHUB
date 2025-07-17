@@ -214,8 +214,6 @@ const DefectsTable = React.memo<Props>(({
   const columnsWithResize = columnsProp ?? defaultColumns;
   const [pageSize, setPageSize] = React.useState(50);
 
-  if (loading) return <Skeleton active paragraph={{ rows: 6 }} />;
-
   const rowClassName = React.useCallback((row: DefectWithInfo) => {
     const classes = ["main-defect-row"];
     const checking = row.defectStatusName?.toLowerCase().includes("провер");
@@ -228,6 +226,8 @@ const DefectsTable = React.memo<Props>(({
     if (locked) classes.push("locked-object-row");
     return classes.join(" ");
   }, [lockedUnitIds]);
+
+  if (loading) return <Skeleton active paragraph={{ rows: 6 }} />;
 
   return (
     <Table

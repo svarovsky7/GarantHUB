@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/shared/api/supabaseClient';
 import { useProjectFilter } from '@/shared/hooks/useProjectFilter';
 import type { ClaimSummary } from '@/shared/types/claimSummary';
+import type { UserStats } from '@/shared/types/userStats';
 import dayjs from 'dayjs';
 
 /**
@@ -76,20 +77,36 @@ export function useUserStatsOptimized(
         throw error;
       }
 
-      return data?.[0] || {
-        claimsCreated: 0,
-        claimsResponsible: 0,
-        defectsCreated: 0,
-        defectsResponsible: 0,
-        courtCasesCreated: 0,
-        courtCasesResponsible: 0,
-        claimStatusCounts: [],
-        defectStatusCounts: [],
-        claimResponsibleStatusCounts: [],
-        defectResponsibleStatusCounts: [],
-        courtCaseStatusCounts: [],
-        courtCaseResponsibleStatusCounts: [],
-      };
+      const result = data?.[0];
+      if (!result) {
+        return {
+          claimCount: 0,
+          claimResponsibleCount: 0,
+          defectCount: 0,
+          defectResponsibleCount: 0,
+          courtCaseCount: 0,
+          courtCaseResponsibleCount: 0,
+          claimStatusCounts: [],
+          defectStatusCounts: [],
+          claimResponsibleStatusCounts: [],
+          defectResponsibleStatusCounts: [],
+          courtCaseStatusCounts: [],
+        } as UserStats;
+      }
+
+      return {
+        claimCount: result.claims_created || 0,
+        claimResponsibleCount: result.claims_responsible || 0,
+        defectCount: result.defects_created || 0,
+        defectResponsibleCount: result.defects_responsible || 0,
+        courtCaseCount: result.court_cases_created || 0,
+        courtCaseResponsibleCount: result.court_cases_responsible || 0,
+        claimStatusCounts: result.claim_status_counts || [],
+        defectStatusCounts: result.defect_status_counts || [],
+        claimResponsibleStatusCounts: result.claim_responsible_status_counts || [],
+        defectResponsibleStatusCounts: result.defect_responsible_status_counts || [],
+        courtCaseStatusCounts: result.court_case_status_counts || [],
+      } as UserStats;
     },
     staleTime: 60_000,
   });
