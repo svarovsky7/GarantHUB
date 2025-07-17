@@ -115,7 +115,10 @@ const ClaimsPageContent = React.memo<ClaimsPageContentProps>(({
           Всего претензий: {totalClaims}, из них закрытых: {closedClaims} и открытых: {openClaims}
         </Typography.Text>
         <Typography.Text style={{ display: 'block', marginTop: 4 }}>
-          Готовых претензий к выгрузке: {readyToExport}
+          {pagination?.usesPagination 
+            ? `Претензий на текущей странице: ${readyToExport}`
+            : `Готовых претензий к выгрузке: ${readyToExport}`
+          }
         </Typography.Text>
       </div>
 

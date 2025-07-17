@@ -16,7 +16,11 @@ import dayjs from 'dayjs';
 const LS_COLUMNS_KEY = "claimsColumns";
 const LS_COLUMN_WIDTHS_KEY = "claimsColumnWidths";
 
-export function useClaimsTableColumns() {
+export function useClaimsTableColumns(handlers?: {
+  onView?: (id: number) => void;
+  onLink?: (claim: ClaimTableData) => void;
+  onDelete?: (id: number) => void;
+}) {
   // Хелперы для форматирования
   const fmt = (d: dayjs.Dayjs | null | undefined) =>
     d && dayjs.isDayjs(d) && d.isValid() ? d.format("DD.MM.YYYY") : "—";
@@ -159,27 +163,21 @@ export function useClaimsTableColumns() {
               <Button 
                 type="text" 
                 icon={<EyeOutlined />} 
-                onClick={() => {
-                  // This will be passed as prop from parent
-                }} 
+                onClick={() => handlers?.onView?.(record.id)} 
               />
             </Tooltip>
             <Tooltip title="Связать">
               <Button 
                 type="text" 
                 icon={<BranchesOutlined />} 
-                onClick={() => {
-                  // This will be passed as prop from parent
-                }} 
+                onClick={() => handlers?.onLink?.(record)} 
               />
             </Tooltip>
             <Popconfirm
               title="Удалить претензию?"
               okText="Да"
               cancelText="Нет"
-              onConfirm={() => {
-                // This will be passed as prop from parent
-              }}
+              onConfirm={() => handlers?.onDelete?.(record.id)}
             >
               <Button type="text" danger icon={<DeleteOutlined />} />
             </Popconfirm>
@@ -187,7 +185,7 @@ export function useClaimsTableColumns() {
         ),
       },
     } as Record<string, ColumnsType<ClaimTableData>[number]>;
-  }, []);
+  }, [handlers]);
 
   const baseColumns = useMemo(getBaseColumns, [getBaseColumns]);
 

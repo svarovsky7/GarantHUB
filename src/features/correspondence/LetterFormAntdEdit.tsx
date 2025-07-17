@@ -21,7 +21,7 @@ import { useVisibleProjects } from '@/entities/project';
 import { useUnitsByProject, useUnitsByIds } from '@/entities/unit';
 import { useContractors, useDeleteContractor } from '@/entities/contractor';
 import { usePersons, useDeletePerson } from '@/entities/person';
-import { useLetter, useUpdateLetter, signedUrl } from '@/entities/correspondence';
+import { useLetter, useUpdateLetter, signedUrl, signedUrlForPreview } from '@/entities/correspondence';
 import FileDropZone from '@/shared/ui/FileDropZone';
 import AttachmentEditorTable from '@/shared/ui/AttachmentEditorTable';
 import { useLetterAttachments } from './model/useLetterAttachments';
@@ -31,6 +31,8 @@ import PersonModal from '@/features/person/PersonModal';
 import ContractorModal from '@/features/contractor/ContractorModal';
 import { useChangedFields } from '@/shared/hooks/useChangedFields';
 import { naturalCompare } from '@/shared/utils/naturalSort';
+import FilePreviewModal from '@/shared/ui/FilePreviewModal';
+import type { PreviewFile } from '@/shared/types/previewFile';
 
 export interface LetterFormAntdEditProps {
   letterId: string;
@@ -94,6 +96,7 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
   const [receiverType, setReceiverType] = React.useState<'person' | 'contractor'>('contractor');
   const [personModal, setPersonModal] = React.useState<{ target: 'sender' | 'receiver'; data?: any } | null>(null);
   const [contractorModal, setContractorModal] = React.useState<{ target: 'sender' | 'receiver'; data?: any } | null>(null);
+  const [previewFile, setPreviewFile] = React.useState<PreviewFile | null>(null);
 
   const personOptions = React.useMemo(
     () => persons.map((p) => ({ value: p.full_name })),
@@ -458,6 +461,7 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
             path: f.path,
             mime: f.mime_type,
             description: f.description,
+            url: f.url,
           }))}
           newFiles={attachments.newFiles.map((f) => ({
             file: f.file,
@@ -469,6 +473,8 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
           onDescNew={(idx, d) => attachments.setDescription(idx, d)}
           showDetails
           getSignedUrl={(path, name) => signedUrl(path, name)}
+          getSignedUrlForPreview={(path) => signedUrlForPreview(path)}
+          onPreview={setPreviewFile}
         />
       </Form.Item>
       <Form.Item style={{ textAlign: 'right' }}>
@@ -498,6 +504,11 @@ export default function LetterFormAntdEdit({ letterId, onCancel, onSaved, embedd
           initialData={contractorModal.data}
         />
       )}
+      <FilePreviewModal
+        open={previewFile !== null}
+        file={previewFile}
+        onClose={() => setPreviewFile(null)}
+      />
     </Form>
   );
 }

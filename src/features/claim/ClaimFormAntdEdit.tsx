@@ -236,13 +236,14 @@ const ClaimFormAntdEdit = React.forwardRef<
     }
     
     // Только если корпуса действительно изменились пользователем
-    const arraysEqual = (a: string[] | null, b: string[] | null) => {
+    const arraysEqual = (a: string[] | null | undefined, b: string[] | null | undefined) => {
       if (a === null && b === null) return true;
-      if (a === null || b === null) return false;
+      if (a === undefined && b === undefined) return true;
+      if (a === null || b === null || a === undefined || b === undefined) return false;
       return a.length === b.length && a.every(val => b.includes(val));
     };
     
-    if (prevBuildingRef.current !== null && !arraysEqual(prevBuildingRef.current, buildingWatch)) {
+    if (prevBuildingRef.current !== null && prevBuildingRef.current !== undefined && !arraysEqual(prevBuildingRef.current, buildingWatch)) {
       const currentUnitIds = form.getFieldValue("unit_ids") || [];
       
       if (Array.isArray(buildingWatch) && buildingWatch.length > 0) {

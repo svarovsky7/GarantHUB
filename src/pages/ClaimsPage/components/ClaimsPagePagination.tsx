@@ -54,23 +54,6 @@ const ClaimsPagePagination = React.memo<ClaimsPagePaginationProps>(({
       gap: 16 
     }}>
       <Space>
-        <Typography.Text>
-          Размер страницы:
-        </Typography.Text>
-        <Select
-          value={pageSize}
-          onChange={handlePageSizeChange}
-          options={[
-            { value: 25, label: '25' },
-            { value: 50, label: '50' },
-            { value: 100, label: '100' },
-            { value: 200, label: '200' },
-          ]}
-          style={{ width: 80 }}
-        />
-      </Space>
-
-      <Space>
         <Typography.Text type="secondary">
           Показано {startRecord}-{endRecord} из {total} записей
           {filteredRecords !== totalRecords && ` (отфильтровано из ${totalRecords})`}
@@ -89,6 +72,23 @@ const ClaimsPagePagination = React.memo<ClaimsPagePaginationProps>(({
         }
         size="small"
       />
+
+      <Space>
+        <Typography.Text>
+          Размер страницы:
+        </Typography.Text>
+        <Select
+          value={pageSize}
+          onChange={handlePageSizeChange}
+          options={[
+            { value: 25, label: '25' },
+            { value: 50, label: '50' },
+            { value: 100, label: '100' },
+            { value: 200, label: '200' },
+          ]}
+          style={{ width: 80 }}
+        />
+      </Space>
     </div>
   );
 });

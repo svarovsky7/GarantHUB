@@ -64,7 +64,14 @@ const ClaimsPageRefactored = React.memo(() => {
     setColumnsState,
     setColumnWidths,
     handleResetColumns,
-  } = useClaimsTableColumns();
+  } = useClaimsTableColumns({
+    onView: (id: number) => handleView(String(id)),
+    onLink: handleAddChild,
+    onDelete: async (id: number) => {
+      // TODO: Implement delete handler
+      console.log('Delete claim:', id);
+    }
+  });
 
 
   // Memoize heavy props to prevent unnecessary re-renders

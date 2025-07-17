@@ -2,6 +2,9 @@ import { useState, useMemo, useCallback } from 'react';
 import {
   useClaims,
   useClaimsAllSummary,
+  useClaimsStats,
+  useClaimsAllStats,
+  useClaimsAllLegacy,
 } from '@/entities/claim';
 import { useUsers } from '@/entities/user';
 import { useUnitsByIds } from '@/entities/unit';
@@ -26,7 +29,7 @@ export function useClaimsDataPaginated(filters: ClaimFilters, perm: RolePermissi
   // Pagination state
   const [pagination, setPagination] = useState<PaginationState>({
     page: 0,
-    pageSize: 50,
+    pageSize: 100,
     total: 0,
     hasMore: false,
   });
@@ -154,20 +157,13 @@ export function useClaimsDataPaginated(filters: ClaimFilters, perm: RolePermissi
     return filterClaims(claimsWithNames, filters);
   }, [claimsWithNames, filters]);
 
+  // Get statistics from server
+  const statsQuery = usesPagination ? useClaimsAllStats() : useClaimsStats();
+  
   // Statistics
-  const closedStatusId = useMemo(
-    () => statuses.find((s) => /закры/i.test(s.name))?.id ?? null,
-    [statuses],
-  );
-
-  const totalClaims = claimsWithNames.length;
-  const closedClaims = useMemo(
-    () => claimsWithNames.filter((c) => 
-      closedStatusId !== null && c.claim_status_id === closedStatusId
-    ).length,
-    [claimsWithNames, closedStatusId],
-  );
-  const openClaims = totalClaims - closedClaims;
+  const totalClaims = statsQuery.data?.total || 0;
+  const closedClaims = statsQuery.data?.closed || 0;
+  const openClaims = statsQuery.data?.open || 0;
   const readyToExport = filteredClaims.length;
 
   // Filter options for the filter component

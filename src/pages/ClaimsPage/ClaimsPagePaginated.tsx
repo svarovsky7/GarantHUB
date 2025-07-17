@@ -69,7 +69,14 @@ const ClaimsPagePaginated = React.memo(() => {
     setColumnsState,
     setColumnWidths,
     handleResetColumns,
-  } = useClaimsTableColumns();
+  } = useClaimsTableColumns({
+    onView: (id: number) => handleView(String(id)),
+    onLink: handleAddChild,
+    onDelete: async (id: number) => {
+      // TODO: Implement delete handler
+      console.log('Delete claim:', id);
+    }
+  });
 
 
   // Memoize heavy props to prevent unnecessary re-renders
@@ -81,7 +88,8 @@ const ClaimsPagePaginated = React.memo(() => {
     onToggleAddForm: handleToggleAddForm,
     onToggleFilters: handleToggleFilters,
     onShowColumnsDrawer: handleShowColumnsDrawer,
-  }), [showAddForm, showFilters, claimsWithNames, filters, handleToggleAddForm, handleToggleFilters, handleShowColumnsDrawer]);
+    usesPagination: pagination.usesPagination,
+  }), [showAddForm, showFilters, claimsWithNames, filters, handleToggleAddForm, handleToggleFilters, handleShowColumnsDrawer, pagination.usesPagination]);
 
   const contentProps = React.useMemo(() => ({
     showAddForm,

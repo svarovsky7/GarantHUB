@@ -17,7 +17,7 @@ export function useLetterAttachments(options: {
     const attachments = (letter.attachments || []).map((file: any) => {
       const storagePath = file.storage_path ?? file.path;
       const fileUrl = file.path ?? file.url ?? '';
-      const fileType = file.mime_type ?? file.type ?? '';
+      const fileType = file.mime_type ?? file.file_type ?? '';
       const originalName = file.original_name ?? null;
       const name =
         originalName ||
@@ -30,6 +30,7 @@ export function useLetterAttachments(options: {
         path: storagePath ?? '',
         url: fileUrl,
         mime_type: fileType,
+        description: file.description ?? '',
       } as RemoteLetterFile;
     });
     setRemoteFiles(attachments);

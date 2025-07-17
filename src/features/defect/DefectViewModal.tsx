@@ -13,6 +13,8 @@ import { useContractors } from '@/entities/contractor';
 import DefectAttachmentsBlock from './DefectAttachmentsBlock';
 import { createDefectDocx } from '@/shared/utils/createDefectDocx';
 import type { RemoteDefectFile } from '@/shared/types/defectFile';
+import FilePreviewModal from '@/shared/ui/FilePreviewModal';
+import type { PreviewFile } from '@/shared/types/previewFile';
 
 interface Props {
   open: boolean;
@@ -29,6 +31,7 @@ export default function DefectViewModal({ open, defectId, onClose }: Props) {
   const removeAtt = useRemoveDefectAttachment();
 
   const [files, setFiles] = useState<RemoteDefectFile[]>([]);
+  const [previewFile, setPreviewFile] = useState<PreviewFile | null>(null);
 
   useEffect(() => {
     if (defect) {
@@ -129,6 +132,7 @@ export default function DefectViewModal({ open, defectId, onClose }: Props) {
             onFiles={handleFiles}
             onRemove={handleRemove}
             getSignedUrl={(p, n) => signedUrl(p, n)}
+            onPreview={setPreviewFile}
           />
           <div style={{ textAlign: 'right' }}>
             <Tooltip title="Скачать форму устранения">
@@ -137,6 +141,11 @@ export default function DefectViewModal({ open, defectId, onClose }: Props) {
           </div>
         </div>
       )}
+      <FilePreviewModal
+        open={previewFile !== null}
+        file={previewFile}
+        onClose={() => setPreviewFile(null)}
+      />
     </Modal>
   );
 }

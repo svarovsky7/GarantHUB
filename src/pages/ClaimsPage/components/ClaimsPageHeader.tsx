@@ -15,6 +15,7 @@ interface ClaimsPageHeaderProps {
   onToggleAddForm: () => void;
   onToggleFilters: () => void;
   onShowColumnsDrawer: () => void;
+  usesPagination?: boolean;
 }
 
 const ClaimsPageHeader = React.memo<ClaimsPageHeaderProps>(({
@@ -25,6 +26,7 @@ const ClaimsPageHeader = React.memo<ClaimsPageHeaderProps>(({
   onToggleAddForm,
   onToggleFilters,
   onShowColumnsDrawer,
+  usesPagination = false,
 }) => {
   return (
     <div style={{ marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
@@ -47,7 +49,7 @@ const ClaimsPageHeader = React.memo<ClaimsPageHeaderProps>(({
       />
       
       <Suspense fallback={<Button loading>Экспорт</Button>}>
-        <ExportClaimsButton claims={claimsWithNames} filters={filters} />
+        <ExportClaimsButton claims={claimsWithNames} filters={filters} useAllData={usesPagination} />
       </Suspense>
     </div>
   );

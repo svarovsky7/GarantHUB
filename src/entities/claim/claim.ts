@@ -1058,5 +1058,93 @@ export function useClaimIdsByDefectIds(defectIds?: number[]) {
   });
 }
 
+/**
+ * Получить статистику по всем претензиям (общее количество, закрытые, открытые).
+ */
+export function useClaimsAllStats() {
+  return useQuery({
+    queryKey: ['claims-all-stats'],
+    queryFn: async () => {
+      // Получаем общее количество претензий
+      const { count: totalCount } = await supabase
+        .from(TABLE)
+        .select('*', { count: 'exact', head: true });
+
+      // Получаем ID статуса "Закрыто"
+      const { data: closedStatus } = await supabase
+        .from('statuses')
+        .select('id')
+        .eq('entity', 'claim')
+        .ilike('name', '%закры%')
+        .maybeSingle();
+
+      let closedCount = 0;
+      if (closedStatus?.id) {
+        // Получаем количество закрытых претензий
+        const { count } = await supabase
+          .from(TABLE)
+          .select('*', { count: 'exact', head: true })
+          .eq('claim_status_id', closedStatus.id);
+        closedCount = count || 0;
+      }
+
+      return {
+        total: totalCount || 0,
+        closed: closedCount,
+        open: (totalCount || 0) - closedCount,
+      };
+    },
+    staleTime: 30_000, // Кешировать на 30 секунд
+  });
+}
+
+/**
+ * Получить статистику по претензиям проекта (общее количество, закрытые, открытые).
+ */
+export function useClaimsStats() {
+  const { projectId, projectIds, onlyAssigned, enabled } = useProjectFilter();
+  
+  return useQuery({
+    queryKey: ['claims-stats', projectId, projectIds.join(',')],
+    enabled,
+    queryFn: async () => {
+      // Строим базовый запрос
+      let baseQuery: any = supabase.from(TABLE).select('*', { count: 'exact', head: true });
+      baseQuery = filterByProjects(baseQuery, projectId, projectIds, onlyAssigned);
+      
+      // Получаем общее количество претензий
+      const { count: totalCount } = await baseQuery;
+
+      // Получаем ID статуса "Закрыто"
+      const { data: closedStatus } = await supabase
+        .from('statuses')
+        .select('id')
+        .eq('entity', 'claim')
+        .ilike('name', '%закры%')
+        .maybeSingle();
+
+      let closedCount = 0;
+      if (closedStatus?.id) {
+        // Получаем количество закрытых претензий
+        let closedQuery: any = supabase
+          .from(TABLE)
+          .select('*', { count: 'exact', head: true })
+          .eq('claim_status_id', closedStatus.id);
+        closedQuery = filterByProjects(closedQuery, projectId, projectIds, onlyAssigned);
+        
+        const { count } = await closedQuery;
+        closedCount = count || 0;
+      }
+
+      return {
+        total: totalCount || 0,
+        closed: closedCount,
+        open: (totalCount || 0) - closedCount,
+      };
+    },
+    staleTime: 30_000, // Кешировать на 30 секунд
+  });
+}
+
 export { closeDefectsForClaim, markClaimDefectsPreTrial };
 

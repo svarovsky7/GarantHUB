@@ -54,6 +54,7 @@ export default function ClaimAttachmentsBlock({
           path: f.path,
           mime: f.mime_type,
           description: f.description ?? '',
+          url: f.url,
         }))}
         newFiles={newFiles.map((f) => ({
           file: f.file,

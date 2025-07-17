@@ -146,9 +146,9 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
   const removeFile = (idx: number) => setFiles((p) => p.filter((_, i) => i !== idx));
   const changeFileDesc = (idx: number, d: string) =>
     setFiles((p) => p.map((f, i) => (i === idx ? { ...f, description: d } : f)));
-  const changeDefectFiles = (idx: number, fs: NewDefectFile[]) => {
+  const changeDefectFiles = React.useCallback((idx: number, fs: NewDefectFile[]) => {
     setDefectFiles((p) => ({ ...p, [idx]: fs }));
-  };
+  }, []);
 
   useEffect(() => {
     if (initialValues.project_id != null) {

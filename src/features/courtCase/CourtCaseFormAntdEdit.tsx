@@ -33,6 +33,8 @@ import {
   useAddCaseClaimLinks,
   useDeleteCaseClaimLink,
 } from '@/entities/courtCaseClaimLink';
+import FilePreviewModal from '@/shared/ui/FilePreviewModal';
+import type { PreviewFile } from '@/shared/types/previewFile';
 
 export interface CourtCaseFormAntdEditProps {
   caseId: string;
@@ -64,6 +66,7 @@ export default function CourtCaseFormAntdEdit({
   const deleteLink = useDeleteCaseClaimLink();
   const [relatedIds, setRelatedIds] = React.useState<number[]>([]);
   const [preTrialOnly, setPreTrialOnly] = React.useState(true);
+  const [previewFile, setPreviewFile] = React.useState<PreviewFile | null>(null);
 
   useEffect(() => {
     setRelatedIds(links.map((l) => l.claim_id));
@@ -360,6 +363,7 @@ export default function CourtCaseFormAntdEdit({
             path: f.path,
             mime: f.mime_type,
             description: f.description,
+            url: f.url,
           }))}
           newFiles={attachments.newFiles.map((f) => ({
             file: f.file,
@@ -371,6 +375,7 @@ export default function CourtCaseFormAntdEdit({
           onDescNew={(idx, d) => attachments.setDescription(idx, d)}
           showDetails
           getSignedUrl={(path, name) => signedUrl(path, name)}
+          onPreview={setPreviewFile}
         />
       </Form.Item>
       <Form.Item style={{ textAlign: 'right' }}>
@@ -384,7 +389,11 @@ export default function CourtCaseFormAntdEdit({
         </Button>
       </Form.Item>
     </Form>
-
+    <FilePreviewModal
+      open={previewFile !== null}
+      file={previewFile}
+      onClose={() => setPreviewFile(null)}
+    />
     </>
   );
 }

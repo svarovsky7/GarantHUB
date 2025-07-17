@@ -27,6 +27,8 @@ interface RemoteFile {
     createdAt?: string | null;
     /** Имя автора создания */
     createdByName?: string | null;
+    /** Готовая ссылка на файл (если есть) */
+    url?: string;
 }
 
 interface NewFile {
@@ -45,6 +47,8 @@ interface Props {
     onDescRemote?: (id: string, d: string) => void;
     onDescNew?: (idx: number, d: string) => void;
     getSignedUrl?: (path: string, name: string) => Promise<string>;
+    /** Получить подписанную ссылку для просмотра (без download) */
+    getSignedUrlForPreview?: (path: string) => Promise<string>;
     /** Показывать колонку MIME */
     showMime?: boolean;
     /** Показывать поле подробностей */
@@ -83,6 +87,7 @@ export default function AttachmentEditorTable({
   onDescRemote,
   onDescNew,
   getSignedUrl,
+  getSignedUrlForPreview,
   showMime = true,
   showDetails = false,
   showLink = false,
@@ -101,9 +106,36 @@ export default function AttachmentEditorTable({
     /** Вернуть подписанную ссылку и закэшировать по id */
     const signed = async (path: string, name: string, id: string) => {
         if (cache[id]) return cache[id];
-        const url = await getSignedUrl?.(path, name);
-        if (url) setCache((p) => ({ ...p, [id]: url }));
-        return url;
+        if (!getSignedUrl) {
+            console.error('getSignedUrl function is not provided');
+            return null;
+        }
+        try {
+            const url = await getSignedUrl(path, name);
+            if (url) setCache((p) => ({ ...p, [id]: url }));
+            return url;
+        } catch (error) {
+            console.error('Error in getSignedUrl:', error);
+            return null;
+        }
+    };
+
+    /** Вернуть подписанную ссылку для просмотра и закэшировать по id с суффиксом _preview */
+    const signedForPreview = async (path: string, id: string) => {
+        const cacheKey = `${id}_preview`;
+        if (cache[cacheKey]) return cache[cacheKey];
+        if (!getSignedUrlForPreview) {
+            console.error('getSignedUrlForPreview function is not provided');
+            return null;
+        }
+        try {
+            const url = await getSignedUrlForPreview(path);
+            if (url) setCache((p) => ({ ...p, [cacheKey]: url }));
+            return url;
+        } catch (error) {
+            console.error('Error in getSignedUrlForPreview:', error);
+            return null;
+        }
     };
 
     /** ObjectURL'ы для локально выбранных файлов */
@@ -149,6 +181,7 @@ export default function AttachmentEditorTable({
         entityId?: number;
         createdAt?: string | null;
         createdByName?: string | null;
+        url?: string;
         isRemote: boolean;
     }
 
@@ -164,6 +197,7 @@ export default function AttachmentEditorTable({
             entityId: f.entityId,
             createdAt: f.createdAt ?? null,
             createdByName: f.createdByName ?? null,
+            url: f.url,
             isRemote: true,
         })),
         ...newFiles.map<Row>((f, i) => ({
@@ -311,13 +345,28 @@ export default function AttachmentEditorTable({
                                 size="small"
                                 icon={<EyeOutlined />}
                                 onClick={async () => {
-                                    if (row.isRemote && row.id && row.path) {
-                                        const url = await signed(row.path, row.name, row.id);
-                                        if (url) onPreview?.({ url, name: row.name, mime: row.mime });
-                                    } else if (idx != null) {
+                                    if (row.isRemote) {
+                                        try {
+                                            // Используем готовый URL если есть, иначе получаем подписанную ссылку для просмотра
+                                            let url = row.url;
+                                            if (!url && row.path && row.id) {
+                                                url = await signedForPreview(row.path, row.id);
+                                            }
+                                            if (url) {
+                                                onPreview?.({ url, name: row.name, mime: row.mime });
+                                            } else {
+                                                console.error('Failed to get URL for file:', row.name, 'Available data:', { path: row.path, id: row.id, url: row.url });
+                                            }
+                                        } catch (error) {
+                                            console.error('Error getting URL for file:', row.name, error);
+                                        }
+                                    } else if (idx != null && objUrls[idx]) {
                                         onPreview?.({ url: objUrls[idx], name: row.name, mime: row.mime });
+                                    } else {
+                                        console.error('Failed to get preview URL for file:', row.name, 'idx:', idx, 'objUrls length:', objUrls.length);
                                     }
                                 }}
+                                disabled={!onPreview}
                             />
                         </Tooltip>
                         <Tooltip title="Скачать">
