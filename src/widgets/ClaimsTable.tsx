@@ -29,6 +29,7 @@ interface Props {
   onAddChild?: (parent: ClaimWithNames) => void;
   onUnlink?: (id: number) => void;
   lockedUnitIds?: number[];
+  showPagination?: boolean;
 }
 
 export default function ClaimsTable({
@@ -40,6 +41,7 @@ export default function ClaimsTable({
   onAddChild,
   onUnlink,
   lockedUnitIds = [],
+  showPagination = true,
 }: Props) {
   const { mutateAsync: remove, isPending } = useDeleteClaim();
   const defaultColumns: ColumnsType<any> = useMemo(
@@ -359,11 +361,11 @@ export default function ClaimsTable({
       sticky={{ offsetHeader: 64 }}
       dataSource={treeData}
       loading={loading}
-      pagination={{
+      pagination={showPagination ? {
         pageSize,
         showSizeChanger: true,
         onChange: (_p, size) => size && setPageSize(size),
-      }}
+      } : false}
       size="middle"
       expandable={{
         expandRowByClick: true,

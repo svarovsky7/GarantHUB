@@ -36,21 +36,21 @@ interface Props {
  * Таблица дефектов с возможностью изменения колонок и просмотра карточки.
  * Заголовок фиксируется при прокрутке, как и на странице претензий.
  */
-export default function DefectsTable({
+const DefectsTable = React.memo<Props>(({
   defects,
   filters,
   loading,
   columns: columnsProp,
   onView,
   lockedUnitIds = [],
-}: Props) {
+}) => {
   const { mutateAsync: remove, isPending } = useDeleteDefect();
   const filtered = useMemo(
     () => filterDefects(defects, filters),
     [defects, filters],
   );
 
-  const defaultColumns: ColumnsType<DefectWithInfo> = [
+  const defaultColumns: ColumnsType<DefectWithInfo> = useMemo(() => [
     {
       title: "ID дефекта",
       dataIndex: "id",
@@ -209,14 +209,14 @@ export default function DefectsTable({
         </Space>
       ),
     },
-  ];
+  ], [onView, remove, isPending]);
 
   const columnsWithResize = columnsProp ?? defaultColumns;
-  const [pageSize, setPageSize] = React.useState(100);
+  const [pageSize, setPageSize] = React.useState(50);
 
   if (loading) return <Skeleton active paragraph={{ rows: 6 }} />;
 
-  const rowClassName = (row: DefectWithInfo) => {
+  const rowClassName = React.useCallback((row: DefectWithInfo) => {
     const classes = ["main-defect-row"];
     const checking = row.defectStatusName?.toLowerCase().includes("провер");
     const closed = row.defectStatusName?.toLowerCase().includes("закры");
@@ -227,7 +227,7 @@ export default function DefectsTable({
     if (closed) classes.push("defect-closed-row");
     if (locked) classes.push("locked-object-row");
     return classes.join(" ");
-  };
+  }, [lockedUnitIds]);
 
   return (
     <Table
@@ -246,4 +246,8 @@ export default function DefectsTable({
       style={{ background: "#fff" }}
     />
   );
-}
+});
+
+DefectsTable.displayName = 'DefectsTable';
+
+export default DefectsTable;

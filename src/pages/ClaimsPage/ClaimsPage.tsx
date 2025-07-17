@@ -686,6 +686,7 @@ export default function ClaimsPage() {
             onUnlink={handleUnlink}
             lockedUnitIds={lockedUnitIds}
             columns={columns}
+            showPagination={true}
           />
         )}
 

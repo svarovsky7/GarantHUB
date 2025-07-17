@@ -100,33 +100,55 @@ export default function DefectsPage() {
     return map;
   }, [users]);
 
-  const data: DefectWithInfo[] = useMemo(() => {
-    const unitMap = new Map(units.map((u) => [u.id, formatUnitName(u, false)]));
-    const buildingMap = new Map(units.map((u) => [u.id, u.building || ""]));
-    const projectMap = new Map(projects.map((p) => [p.id, p.name]));
-    const ticketsMap = new Map<number, { id: number; unit_ids: number[]; project_id: number }[]>();
-    // замена: no tickets
-    const claimsMap = new Map<
+  // Мемоизированные мапы для производительности
+  const unitMap = useMemo(
+    () => new Map(units.map((u) => [u.id, formatUnitName(u, false)])),
+    [units]
+  );
+  const buildingMap = useMemo(
+    () => new Map(units.map((u) => [u.id, u.building || ""])),
+    [units]
+  );
+  const projectMap = useMemo(
+    () => new Map(projects.map((p) => [p.id, p.name])),
+    [projects]
+  );
+  const brigadeMap = useMemo(
+    () => new Map(brigades.map((b) => [b.id, b.name])),
+    [brigades]
+  );
+  const contractorMap = useMemo(
+    () => new Map(contractors.map((c) => [c.id, c.name])),
+    [contractors]
+  );
+
+  // Оптимизированная карта претензий
+  const claimsMap = useMemo(() => {
+    const map = new Map<
       number,
       { id: number; unit_ids: number[]; project_id: number; pre_trial_claim: boolean }[]
     >();
     claims.forEach((c: any) => {
       (c.claim_defects || []).forEach((cd: any) => {
-        const arr = claimsMap.get(cd.defect_id) || [];
+        const arr = map.get(cd.defect_id) || [];
         arr.push({
           id: c.id,
           unit_ids: c.unit_ids || [],
           project_id: c.project_id,
           pre_trial_claim: cd.pre_trial_claim ?? false,
         });
-        claimsMap.set(cd.defect_id, arr);
+        map.set(cd.defect_id, arr);
       });
     });
+    return map;
+  }, [claims]);
+
+  const data: DefectWithInfo[] = useMemo(() => {
+    if (isPending || !defects.length) return [];
     return defects.map((d: any) => {
       const claimLinked = claimsMap.get(d.id) || [];
-      const linked = claimLinked;
-      const hasPretrial = linked.some((l) => l.pre_trial_claim);
-      const unitIdsFromClaims = Array.from(new Set(linked.flatMap((l) => l.unit_ids)));
+      const hasPretrial = claimLinked.some((l) => l.pre_trial_claim);
+      const unitIdsFromClaims = Array.from(new Set(claimLinked.flatMap((l) => l.unit_ids)));
       const unitIds = unitIdsFromClaims.length
         ? unitIdsFromClaims
         : d.unit_id != null
@@ -140,7 +162,7 @@ export default function DefectsPage() {
         new Set(unitIds.map((id) => buildingMap.get(id)).filter(Boolean)),
       );
       const buildingNames = buildingNamesList.join(", ");
-      const projectIdsFromClaims = Array.from(new Set(linked.map((l) => l.project_id)));
+      const projectIdsFromClaims = Array.from(new Set(claimLinked.map((l) => l.project_id)));
       const projectIds = projectIdsFromClaims.length
         ? projectIdsFromClaims
         : d.project_id != null
@@ -152,12 +174,9 @@ export default function DefectsPage() {
         .join(", ");
       let fixByName = "—";
       if (d.brigade_id) {
-        fixByName =
-          brigades.find((b) => b.id === d.brigade_id)?.name || "Бригада";
+        fixByName = brigadeMap.get(d.brigade_id) || "Бригада";
       } else if (d.contractor_id) {
-        fixByName =
-          contractors.find((c) => c.id === d.contractor_id)?.name ||
-          "Подрядчик";
+        fixByName = contractorMap.get(d.contractor_id) || "Подрядчик";
       }
       return {
         ...d,
@@ -187,7 +206,7 @@ export default function DefectsPage() {
         filesCount: fileCountsMap[d.id] ?? 0,
       } as DefectWithInfo;
     });
-  }, [defects, claims, units, projects, userMap, claimIdMap, fileCountsMap]);
+  }, [defects, claimsMap, unitMap, buildingMap, projectMap, brigadeMap, contractorMap, userMap, claimIdMap, fileCountsMap, isPending]);
 
   const filteredData = useMemo(() => {
     if (perm?.only_assigned_project) {
@@ -200,14 +219,8 @@ export default function DefectsPage() {
 
   const [filters, setFilters] = useState<DefectFilters>({});
 
-  const options = useMemo(() => {
-    const without = <K extends keyof DefectFilters>(key: K) => {
-      const { [key]: _omit, ...rest } = filters;
-      return rest as DefectFilters;
-    };
-    const filtered = <K extends keyof DefectFilters>(key: K) =>
-      filterDefects(filteredData, without(key));
-
+  // Базовые опции, не зависящие от фильтров
+  const baseOptions = useMemo(() => {
     const uniq = (values: (string | number | null | undefined)[]) =>
       Array.from(new Set(values.filter(Boolean) as (string | number)[])).sort(naturalCompare);
     const mapNumOptions = (vals: (number | null | undefined)[]) =>
@@ -225,34 +238,40 @@ export default function DefectsPage() {
         .map(([value, label]) => ({ value, label }));
     };
 
-    const unitMap = new Map(units.map((u) => [u.id, u.name]));
-    const projectMap = new Map(projects.map((p) => [p.id, p.name]));
+    const unitOptionsMap = new Map(units.map((u) => [u.id, u.name]));
+    const projectOptionsMap = new Map(projects.map((p) => [p.id, p.name]));
 
-      return {
-        ids: mapNumOptions(filtered('id').map((d) => d.id)),
-        claimIds: mapNumOptions(filtered('claimId').flatMap((d) => d.claimIds)),
-        units: Array.from(
-          new Set(filtered('units').flatMap((d) => d.unitIds)),
-        )
-          .map((id) => ({ label: unitMap.get(id) ?? String(id), value: id }))
-          .sort((a, b) => naturalCompare(a.label, b.label)),
-        buildings: mapStrOptions(
-          filtered('building').flatMap((d) => d.buildingNamesList || []),
+    return {
+      ids: mapNumOptions(filteredData.map((d) => d.id)),
+      claimIds: mapNumOptions(filteredData.flatMap((d) => d.claimIds)),
+      units: Array.from(
+        new Set(filteredData.flatMap((d) => d.unitIds)),
+      )
+        .map((id) => ({ label: unitOptionsMap.get(id) ?? String(id), value: id }))
+        .sort((a, b) => naturalCompare(a.label, b.label)),
+      buildings: mapStrOptions(
+        filteredData.flatMap((d) => d.buildingNamesList || []),
       ),
       projects: Array.from(
-        new Set(filtered('projectId').flatMap((d) => d.projectIds || [])),
+        new Set(filteredData.flatMap((d) => d.projectIds || [])),
       )
-        .map((id) => ({ label: projectMap.get(id) ?? String(id), value: id }))
+        .map((id) => ({ label: projectOptionsMap.get(id) ?? String(id), value: id }))
         .sort((a, b) => naturalCompare(a.label, b.label)),
-      types: uniqPairs(filtered('typeId').map((d) => [d.type_id, d.defectTypeName])),
+      types: uniqPairs(filteredData.map((d) => [d.type_id, d.defectTypeName])),
       statuses: uniqPairs(
-        filtered('statusId').map((d) => [d.status_id, d.defectStatusName]),
+        filteredData.map((d) => [d.status_id, d.defectStatusName]),
       ),
-      fixBy: mapStrOptions(filtered('fixBy').map((d) => d.fixByName)),
-      engineers: mapStrOptions(filtered('engineer').map((d) => d.engineerName)),
-      authors: mapStrOptions(filtered('author').map((d) => d.createdByName)),
+      fixBy: mapStrOptions(filteredData.map((d) => d.fixByName)),
+      engineers: mapStrOptions(filteredData.map((d) => d.engineerName)),
+      authors: mapStrOptions(filteredData.map((d) => d.createdByName)),
     };
-  }, [filteredData, filters, units, projects]);
+  }, [filteredData, units, projects]);
+
+  // Динамические опции для фильтров (если нужно)
+  const options = useMemo(() => {
+    // Используем базовые опции для упрощения
+    return baseOptions;
+  }, [baseOptions]);
   const [viewId, setViewId] = useState<number | null>(null);
   const [fixId, setFixId] = useState<number | null>(null);
   const { mutateAsync: removeDefect, isPending: removing } = useDeleteDefect();
