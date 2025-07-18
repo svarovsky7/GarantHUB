@@ -1,8 +1,9 @@
 import React from 'react';
-import { ConfigProvider } from 'antd';
+import { ConfigProvider, message } from 'antd';
 import ruRU from 'antd/locale/ru_RU';
 import { useRolePermission } from '@/entities/rolePermission';
 import { useAuthStore } from '@/shared/store/authStore';
+import { useDeleteClaim } from '@/entities/claim';
 import type { RoleName } from '@/shared/types/rolePermission';
 
 // Page components
@@ -16,6 +17,7 @@ import { useClaimsDataPaginated } from './hooks/useClaimsDataPaginated';
 const ClaimsPagePaginated = React.memo(() => {
   const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
   const { data: perm } = useRolePermission(role);
+  const { mutateAsync: deleteClaim, isPending: isDeleting } = useDeleteClaim();
 
   // Page state management
   const {
@@ -73,8 +75,13 @@ const ClaimsPagePaginated = React.memo(() => {
     onView: (id: number) => handleView(String(id)),
     onLink: handleAddChild,
     onDelete: async (id: number) => {
-      // TODO: Implement delete handler
-      console.log('Delete claim:', id);
+      try {
+        await deleteClaim({ id });
+        message.success('Претензия удалена');
+      } catch (error) {
+        message.error('Ошибка при удалении претензии');
+        console.error('Delete error:', error);
+      }
     }
   });
 

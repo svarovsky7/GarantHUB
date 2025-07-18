@@ -3,8 +3,8 @@ import React, { useEffect, useCallback } from "react";
 import { Container, Box, Toolbar } from "@mui/material";
 import { useLocation } from "react-router-dom";
 
-import { supabase } from "@shared/api/supabaseClient";
-import { useAuthStore } from "@shared/store/authStore";
+import { supabase } from "@/shared/api/supabaseClient";
+import { useAuthStore } from "@/shared/store/authStore";
 import { useRealtimeUpdates } from "@/shared/hooks/useRealtimeUpdates";
 
 import NavBar from "@/widgets/NavBar";
