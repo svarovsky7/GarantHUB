@@ -64,8 +64,8 @@ export default function AddCourtCaseFormAntd({
   const projectIdStr = Form.useWatch("project_id", form);
   const globalProjectId = useProjectId();
   const projectId = projectIdStr != null ? Number(projectIdStr) : null;
-  const buildingWatch = Form.useWatch("building", form) ?? null;
-  const buildingDebounced = useDebounce(buildingWatch);
+  const buildingsWatch = Form.useWatch("buildings", form) ?? [];
+  const buildingsDebounced = useDebounce(buildingsWatch);
   const unitIdsWatch: number[] = Form.useWatch("unit_ids", form) || [];
   const [relatedIds, setRelatedIds] = React.useState<number[]>([]);
   const [preTrialOnly, setPreTrialOnly] = React.useState(true);
@@ -106,17 +106,26 @@ export default function AddCourtCaseFormAntd({
   useEffect(() => {
     const prev = prevProjectIdRef.current;
     if (prev != null && projectId != null && prev !== projectId) {
-      form.setFieldsValue({ unit_ids: [], building: undefined });
+      form.setFieldsValue({ unit_ids: [], buildings: [] });
     }
     prevProjectIdRef.current = projectId ?? null;
   }, [projectId]);
 
   const { data: projects = [] } = useVisibleProjects();
   const { buildings = [] } = useProjectBuildings(projectId);
-  const { data: units = [], isPending: unitsLoading } = useUnitsByProject(
+  // Получаем все юниты для проекта и фильтруем по корпусам на клиенте
+  const { data: allUnits = [], isPending: unitsLoading } = useUnitsByProject(
     projectId,
-    buildingDebounced ?? undefined,
+    undefined, // не фильтруем по корпусу на сервере
   );
+  
+  // Фильтруем юниты по выбранным корпусам
+  const units = React.useMemo(() => {
+    if (buildingsDebounced.length === 0) return allUnits;
+    return allUnits.filter(unit => 
+      unit.building && buildingsDebounced.includes(unit.building)
+    );
+  }, [allUnits, buildingsDebounced]);
   const { data: users = [], isPending: usersLoading } = useUsers();
   const { data: stages = [], isPending: stagesLoading } =
     useCourtCaseStatuses();
@@ -265,9 +274,11 @@ export default function AddCourtCaseFormAntd({
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item name="building" label="Корпус">
+            <Form.Item name="buildings" label="Корпуса">
               <Select
+                mode="multiple"
                 allowClear
+                placeholder="Выберите корпуса"
                 options={buildings.map((b) => ({ value: b, label: b }))}
                 disabled={!projectId}
               />

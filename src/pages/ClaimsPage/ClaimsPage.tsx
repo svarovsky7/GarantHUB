@@ -666,7 +666,7 @@ export default function ClaimsPage() {
           <div className="claims-filters" style={{ marginBottom: 24 }}>
             <OptimizedClaimsFilters
               options={filterOptions}
-              loading={filtersLoading}
+              loading={filtersLoading || isLoading}
               initialValues={filters}
               onSubmit={applyFilters}
               onReset={resetFilters}

@@ -132,6 +132,10 @@ export function useClaimsDataPaginated(filters: ClaimFilters, perm: RolePermissi
           .filter(Boolean)
           .sort(naturalCompare)
           .join(", "),
+        unitNumbers: c.unit_ids
+          .map((id) => unitMap[id])
+          .filter(Boolean)
+          .join(", "),
         responsibleEngineerName: userMap[c.engineer_id || ""] || "—",
         createdByName: userMap[c.created_by || ""] || "—",
         statusName: statusMap[c.claim_status_id || 0]?.name || "—",
@@ -167,15 +171,41 @@ export function useClaimsDataPaginated(filters: ClaimFilters, perm: RolePermissi
   const readyToExport = filteredClaims.length;
 
   // Filter options for the filter component
-  const filterOptions = useMemo(() => ({
-    users: users.map((u) => ({ value: u.id, label: u.name })),
-    projects: projects.map((p) => ({ value: p.id, label: p.name })),
-    statuses: statuses.map((s) => ({ value: s.id, label: s.name })),
-    buildings: Array.from(
-      new Set(units.map((u) => u.building).filter(Boolean)),
-    ).map((b) => ({ value: b, label: b })),
-    units: units.map((u) => ({ value: u.id, label: u.name })),
-  }), [users, projects, statuses, units]);
+  const filterOptions = useMemo(() => {
+    const without = <K extends keyof ClaimFilters>(key: K) => {
+      const { [key]: _omit, ...rest } = filters;
+      return rest as ClaimFilters;
+    };
+    const filtered = <K extends keyof ClaimFilters>(key: K) =>
+      filterClaims(claimsWithNames, without(key));
+
+    const uniq = (values: (string | number | undefined | null)[]) =>
+      Array.from(new Set(values.filter(Boolean) as (string | number)[])).sort(
+        naturalCompare,
+      );
+    const mapOptions = (vals: (string | number | undefined | null)[]) =>
+      uniq(vals).map((v) => ({ label: String(v), value: v }));
+
+    return {
+      projects: mapOptions(filtered("project").map((c) => c.projectName)),
+      units: mapOptions(
+        filtered("units").flatMap((c) =>
+          c.unitNumbers ? c.unitNumbers.split(",").map((n) => n.trim()) : [],
+        ),
+      ),
+      buildings: mapOptions(
+        filtered("building").flatMap((c) =>
+          c.buildings ? c.buildings.split(",").map((n) => n.trim()) : [],
+        ),
+      ),
+      statuses: mapOptions(filtered("status").map((c) => c.statusName)),
+      responsibleEngineers: mapOptions(
+        filtered("responsible").map((c) => c.responsibleEngineerName),
+      ),
+      ids: mapOptions(filtered("id").map((c) => c.id)),
+      authors: mapOptions(filtered("author").map((c) => c.createdByName)),
+    };
+  }, [claimsWithNames, filters]);
 
   // Pagination handlers
   const goToPage = useCallback((page: number) => {
