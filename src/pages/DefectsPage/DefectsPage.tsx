@@ -389,6 +389,14 @@ const LS_COLUMN_WIDTHS_KEY = "defectsColumnWidths";
           />
         ),
       },
+      warranty: {
+        title: "Гарантия",
+        dataIndex: "is_warranty",
+        width: 100,
+        sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
+          Number(a.is_warranty) - Number(b.is_warranty),
+        render: (v: boolean) => (v ? "Да" : "Нет"),
+      },
       fixBy: {
         title: "Кем устраняется",
         dataIndex: "fixByName",
@@ -544,6 +552,7 @@ const LS_COLUMN_WIDTHS_KEY = "defectsColumnWidths";
     "description",
     "type",
     "status",
+    "warranty",
     "fixBy",
     "received",
     "createdAt",
