@@ -135,6 +135,13 @@ const DefectsTable = React.memo<Props>(({
       ),
     },
     {
+      title: "Гарантия",
+      dataIndex: "is_warranty",
+      width: 100,
+      sorter: (a, b) => Number(a.is_warranty) - Number(b.is_warranty),
+      render: (v: boolean) => (v ? "Да" : "Нет"),
+    },
+    {
       title: "Кем устраняется",
       dataIndex: "fixByName",
       width: 180,
