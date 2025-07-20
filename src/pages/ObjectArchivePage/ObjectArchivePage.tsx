@@ -9,11 +9,14 @@ import ClaimViewModal from '@/features/claim/ClaimViewModal';
 import DefectViewModal from '@/features/defect/DefectViewModal';
 import CourtCaseViewModal from '@/features/courtCase/CourtCaseViewModal';
 import LetterViewModal from '@/features/correspondence/LetterViewModal';
-import {
+import { 
   signedUrl,
+  signedUrlForPreview,
   updateAttachmentDescription,
   addUnitAttachments,
 } from '@/entities/attachment';
+import FilePreviewModal from '@/shared/ui/FilePreviewModal';
+import type { PreviewFile } from '@/shared/types/previewFile';
 import { downloadZip } from '@/shared/utils/downloadZip';
 import type { ArchiveFile } from '@/shared/types/archiveFile';
 import { useUsers } from '@/entities/user';
@@ -48,6 +51,7 @@ export default function ObjectArchivePage() {
   const [viewDefectId, setViewDefectId] = React.useState<number | null>(null);
   const [viewCourtId, setViewCourtId] = React.useState<number | null>(null);
   const [viewLetterId, setViewLetterId] = React.useState<number | null>(null);
+  const [previewFile, setPreviewFile] = React.useState<PreviewFile | null>(null);
 
   const changedFlags = React.useMemo(() => {
     const map: Record<string, boolean> = {};
@@ -190,9 +194,11 @@ export default function ObjectArchivePage() {
             showLink
             showCreatedAt
             showCreatedBy
-            changedMap={changedFlags}
-            getSignedUrl={(p, n) => signedUrl(p, n)}
-          />
+          changedMap={changedFlags}
+          getSignedUrl={(p, n) => signedUrl(p, n)}
+          getSignedUrlForPreview={(p) => signedUrlForPreview(p)}
+          onPreview={setPreviewFile}
+        />
           <Divider />
           <Typography.Title level={4}>Документы по замечаниям</Typography.Title>
           <AttachmentEditorTable
@@ -205,11 +211,13 @@ export default function ObjectArchivePage() {
             showLink
             showCreatedAt
             showCreatedBy
-            changedMap={changedFlags}
-            getSignedUrl={(p, n) => signedUrl(p, n)}
-            onOpenLink={(f) => setViewClaimId(Number(f.entityId))}
-            getLinkLabel={() => 'Замечание'}
-          />
+          changedMap={changedFlags}
+          getSignedUrl={(p, n) => signedUrl(p, n)}
+          getSignedUrlForPreview={(p) => signedUrlForPreview(p)}
+          onPreview={setPreviewFile}
+          onOpenLink={(f) => setViewClaimId(Number(f.entityId))}
+          getLinkLabel={() => 'Замечание'}
+        />
           <Divider />
           <Typography.Title level={4}>Документы по дефектам</Typography.Title>
           <AttachmentEditorTable
@@ -222,11 +230,13 @@ export default function ObjectArchivePage() {
             showLink
             showCreatedAt
             showCreatedBy
-            changedMap={changedFlags}
-            getSignedUrl={(p, n) => signedUrl(p, n)}
-            onOpenLink={(f) => setViewDefectId(Number(f.entityId))}
-            getLinkLabel={() => 'Дефект'}
-          />
+          changedMap={changedFlags}
+          getSignedUrl={(p, n) => signedUrl(p, n)}
+          getSignedUrlForPreview={(p) => signedUrlForPreview(p)}
+          onPreview={setPreviewFile}
+          onOpenLink={(f) => setViewDefectId(Number(f.entityId))}
+          getLinkLabel={() => 'Дефект'}
+        />
           <Divider />
           <Typography.Title level={4}>Документы по судебным делам</Typography.Title>
           <AttachmentEditorTable
@@ -239,11 +249,13 @@ export default function ObjectArchivePage() {
             showLink
             showCreatedAt
             showCreatedBy
-            changedMap={changedFlags}
-            getSignedUrl={(p, n) => signedUrl(p, n)}
-            onOpenLink={(f) => setViewCourtId(Number(f.entityId))}
-            getLinkLabel={() => 'Судебное дело'}
-          />
+          changedMap={changedFlags}
+          getSignedUrl={(p, n) => signedUrl(p, n)}
+          getSignedUrlForPreview={(p) => signedUrlForPreview(p)}
+          onPreview={setPreviewFile}
+          onOpenLink={(f) => setViewCourtId(Number(f.entityId))}
+          getLinkLabel={() => 'Судебное дело'}
+        />
           <Divider />
           <Typography.Title level={4}>Файлы из писем</Typography.Title>
           <AttachmentEditorTable
@@ -256,11 +268,13 @@ export default function ObjectArchivePage() {
             showLink
             showCreatedAt
             showCreatedBy
-            changedMap={changedFlags}
-            getSignedUrl={(p, n) => signedUrl(p, n)}
-            onOpenLink={(f) => setViewLetterId(Number(f.entityId))}
-            getLinkLabel={(f) => `Письмо №${f.entityId}`}
-          />
+          changedMap={changedFlags}
+          getSignedUrl={(p, n) => signedUrl(p, n)}
+          getSignedUrlForPreview={(p) => signedUrlForPreview(p)}
+          onPreview={setPreviewFile}
+          onOpenLink={(f) => setViewLetterId(Number(f.entityId))}
+          getLinkLabel={(f) => `Письмо №${f.entityId}`}
+        />
           <Divider />
           <Button type="primary" disabled={!newObjectFiles.length && !Object.keys(changed).length} onClick={handleSave}>
             Сохранить изменения
@@ -269,6 +283,11 @@ export default function ObjectArchivePage() {
           <DefectViewModal open={viewDefectId !== null} defectId={viewDefectId} onClose={() => setViewDefectId(null)} />
           <CourtCaseViewModal open={viewCourtId !== null} caseId={viewCourtId} onClose={() => setViewCourtId(null)} />
           <LetterViewModal open={viewLetterId !== null} letterId={viewLetterId} onClose={() => setViewLetterId(null)} />
+          <FilePreviewModal
+            open={previewFile !== null}
+            file={previewFile}
+            onClose={() => setPreviewFile(null)}
+          />
         </>
       )}
     </ConfigProvider>
