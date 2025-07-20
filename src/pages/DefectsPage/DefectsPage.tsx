@@ -219,6 +219,11 @@ export default function DefectsPage() {
 
   const [filters, setFilters] = useState<DefectFilters>({});
 
+  const filteredDefects = useMemo(
+    () => filterDefects(filteredData, filters),
+    [filteredData, filters],
+  );
+
   // Базовые опции, не зависящие от фильтров
   const baseOptions = useMemo(() => {
     const uniq = (values: (string | number | null | undefined)[]) =>
@@ -242,30 +247,30 @@ export default function DefectsPage() {
     const projectOptionsMap = new Map(projects.map((p) => [p.id, p.name]));
 
     return {
-      ids: mapNumOptions(filteredData.map((d) => d.id)),
-      claimIds: mapNumOptions(filteredData.flatMap((d) => d.claimIds)),
+      ids: mapNumOptions(filteredDefects.map((d) => d.id)),
+      claimIds: mapNumOptions(filteredDefects.flatMap((d) => d.claimIds)),
       units: Array.from(
-        new Set(filteredData.flatMap((d) => d.unitIds)),
+        new Set(filteredDefects.flatMap((d) => d.unitIds)),
       )
         .map((id) => ({ label: unitOptionsMap.get(id) ?? String(id), value: id }))
         .sort((a, b) => naturalCompare(a.label, b.label)),
       buildings: mapStrOptions(
-        filteredData.flatMap((d) => d.buildingNamesList || []),
+        filteredDefects.flatMap((d) => d.buildingNamesList || []),
       ),
       projects: Array.from(
-        new Set(filteredData.flatMap((d) => d.projectIds || [])),
+        new Set(filteredDefects.flatMap((d) => d.projectIds || [])),
       )
         .map((id) => ({ label: projectOptionsMap.get(id) ?? String(id), value: id }))
         .sort((a, b) => naturalCompare(a.label, b.label)),
-      types: uniqPairs(filteredData.map((d) => [d.type_id, d.defectTypeName])),
+      types: uniqPairs(filteredDefects.map((d) => [d.type_id, d.defectTypeName])),
       statuses: uniqPairs(
-        filteredData.map((d) => [d.status_id, d.defectStatusName]),
+        filteredDefects.map((d) => [d.status_id, d.defectStatusName]),
       ),
-      fixBy: mapStrOptions(filteredData.map((d) => d.fixByName)),
-      engineers: mapStrOptions(filteredData.map((d) => d.engineerName)),
-      authors: mapStrOptions(filteredData.map((d) => d.createdByName)),
+      fixBy: mapStrOptions(filteredDefects.map((d) => d.fixByName)),
+      engineers: mapStrOptions(filteredDefects.map((d) => d.engineerName)),
+      authors: mapStrOptions(filteredDefects.map((d) => d.createdByName)),
     };
-  }, [filteredData, units, projects]);
+  }, [filteredDefects, units, projects]);
 
   // Динамические опции для фильтров (если нужно)
   const options = useMemo(() => {
@@ -650,8 +655,8 @@ const LS_COLUMN_WIDTHS_KEY = "defectsColumnWidths";
   );
   const openCount = total - closedCount;
   const readyToExport = useMemo(
-    () => filterDefects(filteredData, filters).length,
-    [filteredData, filters],
+    () => filteredDefects.length,
+    [filteredDefects],
   );
 
   return (
