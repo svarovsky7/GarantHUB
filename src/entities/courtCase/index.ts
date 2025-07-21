@@ -641,6 +641,29 @@ export function useUpdateCourtCaseFull() {
   });
 }
 
+export async function removeCaseAttachmentsBulk(
+  caseId: number,
+  attachmentIds: number[],
+): Promise<void> {
+  if (attachmentIds.length === 0) return;
+  const { data: atts } = await supabase
+    .from('attachments')
+    .select('storage_path')
+    .in('id', attachmentIds);
+  const paths = (atts ?? [])
+    .map((a: any) => a.storage_path)
+    .filter(Boolean);
+  if (paths.length) {
+    await supabase.storage.from(ATTACH_BUCKET).remove(paths);
+  }
+  await supabase.from('attachments').delete().in('id', attachmentIds);
+  await supabase
+    .from(CASE_ATTACH_TABLE)
+    .delete()
+    .eq('court_case_id', caseId)
+    .in('attachment_id', attachmentIds);
+}
+
 export async function signedUrl(path: string, filename = ''): Promise<string> {
   const { data, error } = await supabase.storage
     .from(ATTACH_BUCKET)
