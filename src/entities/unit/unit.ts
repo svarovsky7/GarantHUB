@@ -11,7 +11,7 @@ import { useAuthStore } from '@/shared/store/authStore';
 import { filterByProjects } from '@/shared/utils/projectQuery';
 import { useNotify } from '@/shared/hooks/useNotify';
 import { getUnitNameComparator } from '@/shared/utils/unitNumberSort';
-import { fetchByChunks } from '@/shared/api/fetchAll';
+import { fetchByChunks, fetchPaged } from '@/shared/api/fetchAll';
 
 /* ---------- базовый SELECT ---------- */
 const SELECT = `
@@ -134,6 +134,42 @@ export const useUnit = (unitId) => {
         staleTime: 5 * 60_000,
     });
 };
+
+/**
+ * Получить объекты (units) с претензиями в выбранном проекте.
+ */
+export const useUnitsWithClaimsByProject = (projectId: number | null) =>
+    useQuery<import('@/shared/types/unit').Unit[], Error>({
+        queryKey: ['units-with-claims', projectId],
+        enabled : !!projectId,
+        queryFn : async () => {
+            if (!projectId) return [];
+
+            // Получаем все unit_id, которые присутствуют в претензиях проекта
+            const unitIdRows = await fetchPaged<any>((from, to) =>
+                supabase
+                    .from('claim_units')
+                    .select('unit_id, claims!inner(project_id)')
+                    .eq('claims.project_id', projectId)
+                    .range(from, to),
+            );
+            const unitIds = Array.from(new Set(unitIdRows.map(r => r.unit_id)));
+            if (!unitIds.length) return [];
+
+            const units = await fetchByChunks(unitIds, (chunk) =>
+                supabase
+                    .from('units')
+                    .select('id, name, building, floor, project_id')
+                    .in('id', chunk),
+            );
+
+            // Natural sort by номер объекта
+            units.sort(getUnitNameComparator('asc'));
+
+            return units as import('@/shared/types/unit').Unit[];
+        },
+        staleTime: 5 * 60_000,
+    });
 
 /* ====================== CREATE ====================== */
 const createUnit = async (payload) => {

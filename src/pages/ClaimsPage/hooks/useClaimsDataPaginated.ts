@@ -7,7 +7,7 @@ import {
   useClaimsAllLegacy,
 } from '@/entities/claim';
 import { useUsers } from '@/entities/user';
-import { useUnitsByIds } from '@/entities/unit';
+import { useUnitsByIds, useUnitsWithClaimsByProject } from '@/entities/unit';
 import { useVisibleProjects } from '@/entities/project';
 import { useClaimStatuses } from '@/entities/claimStatus';
 import formatUnitShortName from '@/shared/utils/formatUnitShortName';
@@ -113,6 +113,16 @@ export function useClaimsDataPaginated(filters: ClaimFilters, perm: RolePermissi
     return map;
   }, [statuses]);
 
+  // Выбранный проект
+  const selectedProjectId = useMemo(() => {
+    const p = projects.find(pr => pr.name === filters.project);
+    return p?.id ?? null;
+  }, [projects, filters.project]);
+
+  // Все объекты с претензиями в проекте
+  const { data: projectUnits = [], isLoading: projectUnitsLoading } =
+    useUnitsWithClaimsByProject(selectedProjectId);
+
   // Enhanced claims with computed fields
   const claimsWithNames: ClaimWithNames[] = useMemo(() => {
     if (!claims) return [];
@@ -186,18 +196,20 @@ export function useClaimsDataPaginated(filters: ClaimFilters, perm: RolePermissi
     const mapOptions = (vals: (string | number | undefined | null)[]) =>
       uniq(vals).map((v) => ({ label: String(v), value: v }));
 
+    const unitsOpts = selectedProjectId
+      ? projectUnits.map(u => u.name)
+      : filtered("units").flatMap((c) =>
+          c.unitNumbers ? c.unitNumbers.split(",").map((n) => n.trim()) : []);
+
+    const buildingsOpts = selectedProjectId
+      ? projectUnits.map(u => u.building)
+      : filtered("building").flatMap((c) =>
+          c.buildings ? c.buildings.split(",").map((n) => n.trim()) : []);
+
     return {
       projects: mapOptions(projects.map((p) => p.name)),
-      units: mapOptions(
-        filtered("units").flatMap((c) =>
-          c.unitNumbers ? c.unitNumbers.split(",").map((n) => n.trim()) : [],
-        ),
-      ),
-      buildings: mapOptions(
-        filtered("building").flatMap((c) =>
-          c.buildings ? c.buildings.split(",").map((n) => n.trim()) : [],
-        ),
-      ),
+      units: mapOptions(unitsOpts),
+      buildings: mapOptions(buildingsOpts),
       statuses: mapOptions(filtered("status").map((c) => c.statusName)),
       responsibleEngineers: mapOptions(
         filtered("responsible").map((c) => c.responsibleEngineerName),
@@ -205,7 +217,7 @@ export function useClaimsDataPaginated(filters: ClaimFilters, perm: RolePermissi
       ids: mapOptions(filtered("id").map((c) => c.id)),
       authors: mapOptions(filtered("author").map((c) => c.createdByName)),
     };
-  }, [claimsWithNames, filters, projects]);
+  }, [claimsWithNames, filters, projects, selectedProjectId, projectUnits]);
 
   // Pagination handlers
   const goToPage = useCallback((page: number) => {
@@ -228,7 +240,7 @@ export function useClaimsDataPaginated(filters: ClaimFilters, perm: RolePermissi
     setPagination(prev => ({ ...prev, pageSize, page: 0 }));
   }, [usesPagination]);
 
-  const filtersLoading = false; // Можно добавить логику загрузки
+  const filtersLoading = projectUnitsLoading; // Загрузка опций по объектам
 
   return {
     claims,
