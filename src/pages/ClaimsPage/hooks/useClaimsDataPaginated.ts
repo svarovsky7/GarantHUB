@@ -186,19 +186,15 @@ export function useClaimsDataPaginated(filters: ClaimFilters, perm: RolePermissi
     const mapOptions = (vals: (string | number | undefined | null)[]) =>
       uniq(vals).map((v) => ({ label: String(v), value: v }));
 
-    const projectFiltered = filters.project
-      ? filterClaims(claimsWithNames, { project: filters.project })
-      : claimsWithNames;
-
     return {
       projects: mapOptions(projects.map((p) => p.name)),
       units: mapOptions(
-        projectFiltered.flatMap((c) =>
+        filtered("units").flatMap((c) =>
           c.unitNumbers ? c.unitNumbers.split(",").map((n) => n.trim()) : [],
         ),
       ),
       buildings: mapOptions(
-        projectFiltered.flatMap((c) =>
+        filtered("building").flatMap((c) =>
           c.buildings ? c.buildings.split(",").map((n) => n.trim()) : [],
         ),
       ),
