@@ -302,6 +302,29 @@ export async function addUnitAttachments(files: FileToUpload[], unitId: number):
     return data ?? [];
 }
 
+export async function removeUnitAttachmentsBulk(
+    unitId: number,
+    attachmentIds: number[],
+): Promise<void> {
+    if (attachmentIds.length === 0) return;
+    const { data: atts } = await supabase
+        .from('attachments')
+        .select('storage_path')
+        .in('id', attachmentIds);
+    const paths = (atts ?? [])
+        .map((a: any) => a.storage_path)
+        .filter(Boolean);
+    if (paths.length) {
+        await supabase.storage.from(ATTACH_BUCKET).remove(paths);
+    }
+    await supabase.from('attachments').delete().in('id', attachmentIds);
+    await supabase
+        .from('unit_attachments')
+        .delete()
+        .eq('unit_id', unitId)
+        .in('attachment_id', attachmentIds);
+}
+
 export async function updateAttachmentDescription(id: number, description: string): Promise<void> {
     const { error } = await supabase
         .from('attachments')
