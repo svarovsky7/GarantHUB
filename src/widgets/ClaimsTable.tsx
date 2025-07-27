@@ -11,7 +11,6 @@ import {
   LinkOutlined,
 } from "@ant-design/icons";
 import { useDeleteClaim } from "@/entities/claim";
-import type { ClaimFilters } from "@/shared/types/claimFilters";
 import type { ClaimWithNames } from "@/shared/types/claimWithNames";
 import ClaimStatusSelect from "@/features/claim/ClaimStatusSelect";
 
@@ -22,7 +21,6 @@ const fmtDateTime = (d: any) =>
 
 interface Props {
   claims: ClaimWithNames[];
-  filters: ClaimFilters;
   loading?: boolean;
   columns?: ColumnsType<any>;
   onView?: (id: number) => void;
@@ -34,7 +32,6 @@ interface Props {
 
 export default function ClaimsTable({
   claims,
-  filters,
   loading,
   columns: columnsProp,
   onView,
@@ -238,88 +235,16 @@ export default function ClaimsTable({
 
   const columnsWithResize = columnsProp ?? defaultColumns;
 
-  const filtered = useMemo(() => {
-    return claims.filter((c) => {
-      const matchesProject =
-        !filters.project || c.projectName === filters.project;
-      const matchesUnits =
-        !filters.units ||
-        (() => {
-          const units = c.unitNumbers
-            ? c.unitNumbers.split(",").map((n) => n.trim())
-            : [];
-          return filters.units.every((u) => units.includes(u));
-        })();
-      const matchesBuilding =
-        !filters.building ||
-        (() => {
-          const blds = c.buildings
-            ? c.buildings.split(",").map((n) => n.trim())
-            : [];
-          return blds.includes(filters.building!);
-        })();
-      const matchesStatus = !filters.status || c.statusName === filters.status;
-      const matchesResponsible =
-        !filters.responsible ||
-        c.responsibleEngineerName === filters.responsible;
-      const matchesAuthor =
-        !filters.author || c.createdByName === filters.author;
-      const matchesNumber =
-        !filters.claim_no || c.claim_no.includes(filters.claim_no);
-      const matchesIds = !filters.id || filters.id.includes(c.id);
-      const matchesDescription =
-        !filters.description ||
-        (c.description ?? "").includes(filters.description);
-      const matchesHideClosed = !(
-        filters.hideClosed && /(закры|не\s*гаран)/i.test(c.statusName)
-      );
-      const matchesPeriod =
-        !filters.period ||
-        (c.registeredOn &&
-          c.registeredOn.isSameOrAfter(filters.period[0], "day") &&
-          c.registeredOn.isSameOrBefore(filters.period[1], "day"));
-      const matchesClaimedPeriod =
-        !filters.claimedPeriod ||
-        (c.claimedOn &&
-          c.claimedOn.isSameOrAfter(filters.claimedPeriod[0], "day") &&
-          c.claimedOn.isSameOrBefore(filters.claimedPeriod[1], "day"));
-      const matchesAcceptedPeriod =
-        !filters.acceptedPeriod ||
-        (c.acceptedOn &&
-          c.acceptedOn.isSameOrAfter(filters.acceptedPeriod[0], "day") &&
-          c.acceptedOn.isSameOrBefore(filters.acceptedPeriod[1], "day"));
-      const matchesResolvedPeriod =
-        !filters.resolvedPeriod ||
-        (c.resolvedOn &&
-          c.resolvedOn.isSameOrAfter(filters.resolvedPeriod[0], "day") &&
-          c.resolvedOn.isSameOrBefore(filters.resolvedPeriod[1], "day"));
-      return (
-        matchesProject &&
-        matchesUnits &&
-        matchesBuilding &&
-        matchesStatus &&
-        matchesResponsible &&
-        matchesAuthor &&
-        matchesNumber &&
-        matchesIds &&
-        matchesDescription &&
-        matchesHideClosed &&
-        matchesPeriod &&
-        matchesClaimedPeriod &&
-        matchesAcceptedPeriod &&
-        matchesResolvedPeriod
-      );
-    });
-  }, [claims, filters]);
+  // Claims are already filtered in parent component
 
   const treeData = useMemo(() => {
     const map = new Map<number, any>();
     const roots: any[] = [];
-    filtered.forEach((c) => {
+    claims.forEach((c) => {
       const row = { ...c, key: c.id, children: [] as any[] };
       map.set(c.id, row);
     });
-    filtered.forEach((c) => {
+    claims.forEach((c) => {
       const row = map.get(c.id);
       if (c.parent_id && map.has(c.parent_id)) {
         map.get(c.parent_id).children.push(row);
@@ -331,7 +256,7 @@ export default function ClaimsTable({
       if (!row.children.length) row.children = undefined;
     });
     return roots;
-  }, [filtered]);
+  }, [claims]);
 
   const [expandedRowKeys, setExpandedRowKeys] = React.useState<React.Key[]>([]);
   const [pageSize, setPageSize] = React.useState(100);
@@ -339,7 +264,7 @@ export default function ClaimsTable({
   React.useEffect(() => {
     // По умолчанию все строки свернуты
     setExpandedRowKeys([]);
-  }, [filtered]);
+  }, [claims]);
 
   const rowClassName = (row: ClaimWithNames) => {
     const checking = row.statusName?.toLowerCase().includes("провер");
@@ -358,7 +283,7 @@ export default function ClaimsTable({
     <Table
       rowKey="id"
       columns={columnsWithResize}
-      sticky={{ offsetHeader: 64 }}
+      sticky={{ offsetHeader: 80 }}
       dataSource={treeData}
       loading={loading}
       pagination={showPagination ? {

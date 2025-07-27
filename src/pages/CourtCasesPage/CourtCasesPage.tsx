@@ -247,7 +247,7 @@ export default function CourtCasesPage() {
           .filter(Boolean),
       ),
     ).join(", "),
-    totalClaimAmount: c.total_claim_amount ?? 0,
+    totalClaimAmount: c.total_claim_amount || 0,
     responsibleLawyer:
       users.find((u) => u.id === c.responsible_lawyer_id)?.name ??
       c.responsibleLawyer,
@@ -382,7 +382,11 @@ export default function CourtCasesPage() {
       sorter: (a, b) => (a.defendants || "").localeCompare(b.defendants || ""),
     },
     totalClaimAmount: {
-      title: "Сумма требований",
+      title: (
+        <div style={{ textAlign: 'center', lineHeight: '1.2' }}>
+          Сумма<br />требований
+        </div>
+      ),
       dataIndex: "totalClaimAmount",
       width: 150,
       sorter: (a, b) =>
@@ -404,7 +408,11 @@ export default function CourtCasesPage() {
       ),
     },
     fix_start_date: {
-      title: "Дата начала устранения",
+      title: (
+        <div style={{ textAlign: 'center', lineHeight: '1.2' }}>
+          Дата начала<br />устранения
+        </div>
+      ),
       dataIndex: "fix_start_date",
       width: 120,
       render: (v: string | null) => (v ? dayjs(v).format("DD.MM.YYYY") : ""),
@@ -413,7 +421,11 @@ export default function CourtCasesPage() {
         dayjs(b.fix_start_date || 0).valueOf(),
     },
     fix_end_date: {
-      title: "Дата окончания устранения",
+      title: (
+        <div style={{ textAlign: 'center', lineHeight: '1.2' }}>
+          Дата окончания<br />устранения
+        </div>
+      ),
       dataIndex: "fix_end_date",
       width: 120,
       render: (v: string | null) => (v ? dayjs(v).format("DD.MM.YYYY") : ""),
@@ -422,7 +434,11 @@ export default function CourtCasesPage() {
         dayjs(b.fix_end_date || 0).valueOf(),
     },
     daysSinceFixStart: {
-      title: "Прошло дней с начала устранения",
+      title: (
+        <div style={{ textAlign: 'center', lineHeight: '1.2' }}>
+          Прошло дней с начала<br />устранения
+        </div>
+      ),
       dataIndex: "daysSinceFixStart",
       width: 200,
       sorter: (a, b) => (a.daysSinceFixStart ?? 0) - (b.daysSinceFixStart ?? 0),
@@ -693,7 +709,7 @@ export default function CourtCasesPage() {
           <Table
             rowKey="id"
             columns={columns}
-            sticky={{ offsetHeader: 64 }}
+            sticky={{ offsetHeader: 80 }}
             dataSource={treeData}
             loading={casesLoading}
             pagination={{

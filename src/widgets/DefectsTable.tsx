@@ -240,7 +240,7 @@ const DefectsTable = React.memo<Props>(({
     <Table
       rowKey="id"
       columns={columnsWithResize}
-      sticky={{ offsetHeader: 64 }}
+      sticky={{ offsetHeader: 80 }}
       dataSource={filtered}
       pagination={{
         pageSize,

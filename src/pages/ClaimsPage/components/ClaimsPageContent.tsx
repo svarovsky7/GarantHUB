@@ -2,7 +2,6 @@ import React from 'react';
 import { Alert, Typography } from 'antd';
 import ClaimFormAntd from '@/features/claim/ClaimFormAntd';
 import ClaimsTable from '@/widgets/ClaimsTable';
-import OptimizedClaimsFilters from '@/widgets/OptimizedClaimsFilters';
 import ClaimsPagePagination from './ClaimsPagePagination';
 import type { ClaimWithNames } from '@/shared/types/claimWithNames';
 import type { ClaimFilters } from '@/shared/types/claimFilters';
@@ -84,24 +83,12 @@ const ClaimsPageContent = React.memo<ClaimsPageContentProps>(({
         </div>
       )}
 
-      {showFilters && (
-        <div className="claims-filters" style={{ marginBottom: 24 }}>
-          <OptimizedClaimsFilters
-            options={filterOptions}
-            loading={filtersLoading}
-            initialValues={filters}
-            onSubmit={onSubmitFilters}
-            onReset={onResetFilters}
-          />
-        </div>
-      )}
 
       {error ? (
         <Alert type="error" message={error.message} />
       ) : (
         <ClaimsTable
           claims={claimsWithNames}
-          filters={filters}
           loading={isLoading}
           onView={onView}
           onAddChild={onAddChild}

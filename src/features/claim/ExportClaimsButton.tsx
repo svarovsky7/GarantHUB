@@ -5,8 +5,6 @@ import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import dayjs from 'dayjs';
 import type { ClaimWithNames } from '@/shared/types/claimWithNames';
-import type { ClaimFilters } from '@/shared/types/claimFilters';
-import { filterClaims } from '@/shared/utils/claimFilter';
 import { useClaimsAllLegacy } from '@/entities/claim';
 import { useUsers } from '@/entities/user';
 import { useUnitsByIds } from '@/entities/unit';
@@ -17,11 +15,10 @@ import { naturalCompare } from '@/shared/utils/naturalSort';
 
 export interface ExportClaimsButtonProps {
   claims: ClaimWithNames[];
-  filters: ClaimFilters;
   useAllData?: boolean;
 }
 
-export default function ExportClaimsButton({ claims, filters, useAllData = false }: ExportClaimsButtonProps) {
+export default function ExportClaimsButton({ claims, useAllData = false }: ExportClaimsButtonProps) {
   const [loading, setLoading] = React.useState(false);
   
   // Хуки для получения всех данных, если необходимо
@@ -113,7 +110,7 @@ export default function ExportClaimsButton({ claims, filters, useAllData = false
         });
       }
       
-      const filteredData = filterClaims(dataToExport, filters);
+      const filteredData = dataToExport;
       const rows = filteredData.map((c) => ({
         ID: c.id,
         Проект: c.projectName,
@@ -150,7 +147,7 @@ export default function ExportClaimsButton({ claims, filters, useAllData = false
     } finally {
       setLoading(false);
     }
-  }, [claims, filters, useAllData, allClaimsQuery.data, userMap, projectMap, unitNumberMap, buildingMap, statusMap]);
+  }, [claims, useAllData, allClaimsQuery.data, userMap, projectMap, unitNumberMap, buildingMap, statusMap]);
 
   return (
     <Tooltip title="Выгрузить в Excel">

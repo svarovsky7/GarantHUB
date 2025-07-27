@@ -325,7 +325,7 @@ export default function CorrespondenceTable({
       <Table
           rowKey="id"
           columns={resizableColumns}
-          sticky={{ offsetHeader: 64 }}
+          sticky={{ offsetHeader: 80 }}
           dataSource={treeData}
           pagination={{
             pageSize,

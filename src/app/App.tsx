@@ -78,7 +78,14 @@ export default function App() {
       {!hideNavBar && <NavBar data-oid="fyv_m5h" />}
       <Container
         maxWidth={false}
-        sx={{ flexGrow: 1, py: 2, px: 3 }}
+        sx={{ 
+          flexGrow: 1, 
+          py: 2, 
+          px: 3,
+          width: '100%',
+          maxWidth: '100%',
+          overflowX: 'auto'
+        }}
         data-oid=".x4sl-p"
       >
         <AppRouter data-oid="ozp552w" />

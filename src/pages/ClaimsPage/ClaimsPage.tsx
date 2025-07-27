@@ -32,16 +32,12 @@ import { useAuthStore } from "@/shared/store/authStore";
 import type { RoleName } from "@/shared/types/rolePermission";
 import formatUnitShortName from "@/shared/utils/formatUnitShortName";
 import ClaimsTable from "@/widgets/ClaimsTable";
-import OptimizedClaimsFilters from "@/widgets/OptimizedClaimsFilters";
 import ClaimFormAntd from "@/features/claim/ClaimFormAntd";
 import ClaimViewModal from "@/features/claim/ClaimViewModal";
 import LinkClaimsDialog from "@/features/claim/LinkClaimsDialog";
 import ExportClaimsButton from "@/features/claim/ExportClaimsButton";
 import { useSearchParams } from "react-router-dom";
 import type { ClaimWithNames } from "@/shared/types/claimWithNames";
-import { filterClaims } from "@/shared/utils/claimFilter";
-import { naturalCompare } from "@/shared/utils/naturalSort";
-import type { ClaimFilters } from "@/shared/types/claimFilters";
 import type { TableColumnSetting } from "@/shared/types/tableColumnSetting";
 import type { ColumnsType } from "antd/es/table";
 
@@ -56,10 +52,8 @@ const TableColumnsDrawer = React.lazy(
   () => import("@/widgets/TableColumnsDrawer"),
 );
 
-const LS_HIDE_CLOSED = "claimsHideClosed";
 const LS_COLUMNS_KEY = "claimsColumns";
 const LS_COLUMN_WIDTHS_KEY = "claimsColumnWidths";
-const LS_FILTERS_VISIBLE_KEY = "claimsFiltersVisible";
 
 export default function ClaimsPage() {
   const { enqueueSnackbar } = useSnackbar();
@@ -92,20 +86,10 @@ export default function ClaimsPage() {
     [claims],
   );
   const { data: units = [], isPending: unitsLoading } = useUnitsByIds(unitIds);
-  const filtersLoading = usersLoading || unitsLoading;
 
   // Состояние компонента
   const [searchParams] = useSearchParams();
   
-  const [filters, setFilters] = useState<ClaimFilters>(() => {
-    try {
-      const saved = localStorage.getItem(LS_HIDE_CLOSED);
-      const hideClosed = saved ? JSON.parse(saved) : false;
-      return hideClosed ? { hideClosed } : {};
-    } catch {
-      return {} as ClaimFilters;
-    }
-  });
   
   const [showAddForm, setShowAddForm] = useState(
     searchParams.get("open_form") === "1",
@@ -113,14 +97,6 @@ export default function ClaimsPage() {
   const [viewId, setViewId] = useState<number | null>(null);
   const [linkFor, setLinkFor] = useState<ClaimWithNames | null>(null);
   const [showColumnsDrawer, setShowColumnsDrawer] = useState(false);
-  const [showFilters, setShowFilters] = useState(() => {
-    try {
-      const saved = localStorage.getItem(LS_FILTERS_VISIBLE_KEY);
-      return saved ? JSON.parse(saved) : true;
-    } catch {
-      return true;
-    }
-  });
 
   // Состояние колонок таблицы
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>(() => {
@@ -197,78 +173,18 @@ export default function ClaimsPage() {
     [claims, unitMap, unitNumberMap, buildingMap, userMap],
   );
 
-  // Мемоизированные опции для фильтров с дебаунсом
-  const filterOptions = useMemo(() => {
-    const without = <K extends keyof ClaimFilters>(key: K) => {
-      const { [key]: _omit, ...rest } = filters;
-      return rest as ClaimFilters;
-    };
-    const filtered = <K extends keyof ClaimFilters>(key: K) =>
-      filterClaims(claimsWithNames, without(key));
-
-    const uniq = (values: (string | number | undefined | null)[]) =>
-      Array.from(new Set(values.filter(Boolean) as (string | number)[])).sort(
-        naturalCompare,
-      );
-    const mapOptions = (vals: (string | number | undefined | null)[]) =>
-      uniq(vals).map((v) => ({ label: String(v), value: v }));
-
-    return {
-      projects: mapOptions(claimsWithNames.map((c) => c.projectName)),
-      units: mapOptions(
-        claimsWithNames.flatMap((c) =>
-          c.unitNumbers ? c.unitNumbers.split(",").map((n) => n.trim()) : [],
-        ),
-      ),
-      buildings: mapOptions(
-        claimsWithNames.flatMap((c) =>
-          c.buildings ? c.buildings.split(",").map((n) => n.trim()) : [],
-        ),
-      ),
-      statuses: mapOptions(claimsWithNames.map((c) => c.statusName)),
-      responsibleEngineers: mapOptions(
-        claimsWithNames.map((c) => c.responsibleEngineerName),
-      ),
-      ids: mapOptions(claimsWithNames.map((c) => c.id)),
-      authors: mapOptions(claimsWithNames.map((c) => c.createdByName)),
-    };
-  }, [claimsWithNames, filters]);
-
-  // Мемоизированные отфильтрованные претензии
-  const filteredClaims = useMemo(() => {
-    return filterClaims(claimsWithNames, filters);
-  }, [claimsWithNames, filters]);
 
   // Мемоизированная статистика
   const statistics = useMemo(() => {
     const total = claimsWithNames.length;
     const closedCount = claimsWithNames.filter((c) => /закры/i.test(c.statusName ?? "")).length;
     const openCount = total - closedCount;
-    const readyToExport = filteredClaims.length;
-    return { total, closedCount, openCount, readyToExport };
-  }, [claimsWithNames, filteredClaims]);
-
-  const { total, closedCount, openCount, readyToExport } = statistics;
-
-  // Мемоизированные обработчики для лучшей производительности
-  const applyFilters = useCallback((vals: ClaimFilters) => {
-    setFilters(vals);
-    if (Object.prototype.hasOwnProperty.call(vals, "hideClosed")) {
-      try {
-        localStorage.setItem(LS_HIDE_CLOSED, JSON.stringify(vals.hideClosed));
-      } catch {}
-    }
-    const count = filterClaims(claimsWithNames, vals).length;
-    message.success(`Фильтры применены (${count} результатов)`);
+    return { total, closedCount, openCount };
   }, [claimsWithNames]);
 
-  const resetFilters = useCallback(() => {
-    setFilters({});
-    try {
-      localStorage.setItem(LS_HIDE_CLOSED, "false");
-    } catch {}
-    message.info("Фильтры сброшены");
-  }, []);
+  const { total, closedCount, openCount } = statistics;
+
+  // Мемоизированные обработчики для лучшей производительности
 
   const handleView = useCallback((id: number) => setViewId(id), []);
   const handleAddChild = useCallback((parent: ClaimWithNames) => setLinkFor(parent), []);
@@ -279,7 +195,6 @@ export default function ClaimsPage() {
   const handleCloseAddForm = useCallback(() => setShowAddForm(false), []);
   const handleCloseViewModal = useCallback(() => setViewId(null), []);
   const handleCloseLinkDialog = useCallback(() => setLinkFor(null), []);
-  const handleToggleFilters = useCallback(() => setShowFilters(p => !p), []);
 
   // Базовые колонки таблицы
   const baseColumns = useMemo(() => {
@@ -550,24 +465,6 @@ export default function ClaimsPage() {
     } catch {}
   }, [columnWidths]);
 
-  React.useEffect(() => {
-    try {
-      localStorage.setItem(LS_FILTERS_VISIBLE_KEY, JSON.stringify(showFilters));
-    } catch {}
-  }, [showFilters]);
-
-  // Слушаем изменения в других вкладках
-  React.useEffect(() => {
-    const handler = (e: StorageEvent) => {
-      if (e.key === LS_FILTERS_VISIBLE_KEY) {
-        try {
-          setShowFilters(JSON.parse(e.newValue || "true"));
-        } catch {}
-      }
-    };
-    window.addEventListener("storage", handler);
-    return () => window.removeEventListener("storage", handler);
-  }, []);
 
   // Финальные колонки для таблицы
   const columns: ColumnsType<ClaimTableData> = useMemo(() => {
@@ -604,16 +501,12 @@ export default function ClaimsPage() {
             {showAddForm ? "Скрыть форму" : "Добавить претензию"}
           </Button>
           
-          <Button onClick={handleToggleFilters}>
-            {showFilters ? "Скрыть фильтры" : "Показать фильтры"}
-          </Button>
-          
           <Button
             icon={<SettingOutlined />}
             onClick={handleShowColumnsDrawer}
           />
           
-          <ExportClaimsButton claims={claimsWithNames} filters={filters} />
+          <ExportClaimsButton claims={claimsWithNames} />
           
         </div>
 
@@ -662,24 +555,12 @@ export default function ClaimsPage() {
           />
         </React.Suspense>
 
-        {showFilters && (
-          <div className="claims-filters" style={{ marginBottom: 24 }}>
-            <OptimizedClaimsFilters
-              options={filterOptions}
-              loading={filtersLoading || isLoading}
-              initialValues={filters}
-              onSubmit={applyFilters}
-              onReset={resetFilters}
-            />
-          </div>
-        )}
 
         {error ? (
           <Alert type="error" message={error.message} />
         ) : (
           <ClaimsTable
             claims={claimsWithNames}
-            filters={filters}
             loading={isLoading}
             onView={handleView}
             onAddChild={handleAddChild}
@@ -694,9 +575,6 @@ export default function ClaimsPage() {
           <Typography.Text style={{ display: "block" }}>
             Всего претензий: {total}, из них закрытых: {closedCount} и не
             закрытых: {openCount}
-          </Typography.Text>
-          <Typography.Text style={{ display: "block", marginTop: 4 }}>
-            Готовых претензий к выгрузке: {readyToExport}
           </Typography.Text>
         </div>
 

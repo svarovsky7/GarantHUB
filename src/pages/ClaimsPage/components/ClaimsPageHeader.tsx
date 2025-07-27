@@ -49,7 +49,7 @@ const ClaimsPageHeader = React.memo<ClaimsPageHeaderProps>(({
       />
       
       <Suspense fallback={<Button loading>Экспорт</Button>}>
-        <ExportClaimsButton claims={claimsWithNames} filters={filters} useAllData={usesPagination} />
+        <ExportClaimsButton claims={claimsWithNames} useAllData={usesPagination} />
       </Suspense>
     </div>
   );

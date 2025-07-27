@@ -148,23 +148,11 @@ export function useCourtCases() {
       const linkMap = new Map<number, number>();
       (links ?? []).forEach((l) => linkMap.set(l.child_id, l.parent_id));
 
-      const { data: claimRows } = ids.length
-        ? await supabase
-            .from('court_case_claims')
-            .select('case_id, claimed_amount')
-            .in('case_id', ids)
-        : { data: [] };
-      const claimMap = new Map<number, number>();
-      (claimRows ?? []).forEach((r: any) => {
-        const sum = claimMap.get(r.case_id) || 0;
-        claimMap.set(r.case_id, sum + Number(r.claimed_amount) || 0);
-      });
-
       return (data ?? []).map((row: any) => ({
         ...row,
         unit_ids: unitMap.get(row.id) || [],
         parent_id: linkMap.get(row.id) ?? null,
-        total_claim_amount: claimMap.get(row.id) ?? null,
+        total_claim_amount: row.total_claim_amount || 0,
         caseUid: row.court_cases_uids?.uid ?? null,
       })) as CourtCase[];
     },
