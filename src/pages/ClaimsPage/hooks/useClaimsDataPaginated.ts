@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import {
   useClaims,
   useClaimsAllSummary,
@@ -36,46 +36,21 @@ export function useClaimsDataPaginated(filters: ClaimFilters, perm: RolePermissi
 
   // Data queries
   const claimsAssigned = useClaims(); // For assigned projects (non-paginated)
-  const claimsAllPaginated = useClaimsAllSummary(
-    pagination.page,
-    pagination.pageSize,
-  ); // For all projects (paginated)
-  const claimsAll = useClaimsAllLegacy(); // Full dataset without pagination
+  const claimsAllPaginated = useClaimsAllSummary(pagination.page, pagination.pageSize); // For all projects (paginated)
   
-  // Disable pagination when filtering by project or unit/building
-  const disablePagination = Boolean(
-    filters.project ||
-      (filters.units && filters.units.length > 0) ||
-      filters.building,
-  );
-
-  // Choose between assigned or all claims based on permissions and filters
-  const usesPagination = !perm?.only_assigned_project && !disablePagination;
-
-  // Reset to first page when pagination is disabled
-  useEffect(() => {
-    if (!usesPagination) {
-      setPagination(prev => ({ ...prev, page: 0 }));
-    }
-  }, [usesPagination]);
-
-  const claims = perm?.only_assigned_project
-    ? claimsAssigned.data
-    : usesPagination
-      ? claimsAllPaginated.data?.data
-      : claimsAll.data;
-
-  const isLoading = perm?.only_assigned_project
-    ? claimsAssigned.isLoading
-    : usesPagination
-      ? claimsAllPaginated.isLoading
-      : claimsAll.isLoading;
-
-  const error = perm?.only_assigned_project
-    ? claimsAssigned.error
-    : usesPagination
-      ? claimsAllPaginated.error
-      : claimsAll.error;
+  // Choose between assigned or all claims based on permissions
+  const usesPagination = !perm?.only_assigned_project;
+  const claims = usesPagination 
+    ? claimsAllPaginated.data?.data 
+    : claimsAssigned.data;
+  
+  const isLoading = usesPagination 
+    ? claimsAllPaginated.isLoading 
+    : claimsAssigned.isLoading;
+  
+  const error = usesPagination 
+    ? claimsAllPaginated.error 
+    : claimsAssigned.error;
 
   // Update pagination state when data changes
   useMemo(() => {
