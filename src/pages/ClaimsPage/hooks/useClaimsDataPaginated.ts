@@ -187,7 +187,7 @@ export function useClaimsDataPaginated(filters: ClaimFilters, perm: RolePermissi
       uniq(vals).map((v) => ({ label: String(v), value: v }));
 
     return {
-      projects: mapOptions(filtered("project").map((c) => c.projectName)),
+      projects: mapOptions(projects.map((p) => p.name)),
       units: mapOptions(
         filtered("units").flatMap((c) =>
           c.unitNumbers ? c.unitNumbers.split(",").map((n) => n.trim()) : [],
@@ -205,7 +205,7 @@ export function useClaimsDataPaginated(filters: ClaimFilters, perm: RolePermissi
       ids: mapOptions(filtered("id").map((c) => c.id)),
       authors: mapOptions(filtered("author").map((c) => c.createdByName)),
     };
-  }, [claimsWithNames, filters]);
+  }, [claimsWithNames, filters, projects]);
 
   // Pagination handlers
   const goToPage = useCallback((page: number) => {
