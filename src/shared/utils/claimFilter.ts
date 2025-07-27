@@ -7,6 +7,7 @@ export function filterClaims<
     projectName?: string;
     unitNames?: string;
     unitNumbers?: string;
+    buildings?: string;
     statusName?: string;
     responsibleEngineerName?: string | null;
     createdByName?: string | null;
@@ -25,6 +26,10 @@ export function filterClaims<
       const units = r.unitNumbers.split(",").map((u) => u.trim());
       const ok = f.units.every((u) => units.includes(u));
       if (!ok) return false;
+    }
+    if (f.building && r.buildings) {
+      const buildings = r.buildings.split(",").map((b) => b.trim());
+      if (!buildings.includes(f.building)) return false;
     }
     if (f.status && r.statusName !== f.status) return false;
     if (f.responsible && r.responsibleEngineerName !== f.responsible)

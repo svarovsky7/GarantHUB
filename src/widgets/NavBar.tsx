@@ -29,6 +29,7 @@ const NavBar: React.FC = () => {
     perm?.pages.includes('defects')         && { key: 'defects',        label: <RouterLink to="/defects">Дефекты</RouterLink> },
     perm?.pages.includes('court-cases')     && { key: 'court-cases',    label: <RouterLink to="/court-cases">Судебные дела</RouterLink> },
     perm?.pages.includes('correspondence')  && { key: 'correspondence', label: <RouterLink to="/correspondence">Письма</RouterLink> },
+    { key: 'documents', label: <RouterLink to="/documents">Документы</RouterLink> },
     perm?.pages.includes('admin')           && { key: 'admin',          label: <RouterLink to="/admin">Администрирование</RouterLink> },
   ].filter(Boolean);
 

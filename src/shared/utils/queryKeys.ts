@@ -8,3 +8,7 @@
  * @param projectIds Список проектов пользователя
  */
 
+export const queryKeys = {
+  documents: () => ['documents'] as const,
+} as const;
+

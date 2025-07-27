@@ -77,6 +77,7 @@ export default function OptimizedClaimsFilters({
 
   useEffect(() => {
     form.setFieldsValue(initialValues);
+    setFormValues(initialValues || {});
     calcExtra();
   }, [initialValues, form]);
 
@@ -119,7 +120,14 @@ export default function OptimizedClaimsFilters({
   
   // Автоматически применяем фильтры после дебаунса
   useEffect(() => {
-    if (Object.keys(debouncedFormValues).length > 0) {
+    // Проверяем, есть ли реально заполненные значения
+    const hasValues = Object.entries(debouncedFormValues).some(([key, value]) => {
+      if (key === 'hideClosed') return false; // hideClosed обрабатывается отдельно
+      if (Array.isArray(value)) return value.length > 0;
+      return value !== undefined && value !== null && value !== '';
+    });
+    
+    if (hasValues) {
       onSubmit(debouncedFormValues);
     }
   }, [debouncedFormValues, onSubmit]);
@@ -149,6 +157,7 @@ export default function OptimizedClaimsFilters({
   const handleReset = useCallback(() => {
     form.resetFields();
     setExtraCount(0);
+    setFormValues({});
     try {
       localStorage.setItem(LS_HIDE_CLOSED, "false");
     } catch {}
@@ -322,6 +331,11 @@ export default function OptimizedClaimsFilters({
         <Row justify="end" gutter={12}>
           <Col>
             <Button onClick={handleReset}>Сброс</Button>
+          </Col>
+          <Col>
+            <Button type="primary" htmlType="submit">
+              Найти
+            </Button>
           </Col>
         </Row>
       </Form>

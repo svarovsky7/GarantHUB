@@ -22,6 +22,7 @@ const AdminPage = React.lazy(() => import("@/pages/UnitsPage/AdminPage"));
 const ProjectStructurePage = React.lazy(() => import("@/pages/ProjectStructurePage/ProjectStructurePage"));
 const ObjectArchivePage = React.lazy(() => import("@/pages/ObjectArchivePage/ObjectArchivePage"));
 const ProfilePage = React.lazy(() => import("@/pages/ProfilePage/ProfilePage"));
+const DocumentsPage = React.lazy(() => import("@/pages/DocumentsPage/DocumentsPage"));
 
 /** --------------------------------------------------------------------------
  *  Компонент-сторож
@@ -153,8 +154,14 @@ export default function AppRouter() {
         }
       />
 
-
-
+      <Route
+        path="/documents"
+        element={
+          <RequireAuth>
+            <DocumentsPage />
+          </RequireAuth>
+        }
+      />
 
       <Route
         path="/admin"

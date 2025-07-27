@@ -21,7 +21,7 @@ import {
 import { useSnackbar } from "notistack";
 import {
   useClaims,
-  useClaimsAllLegacy as useClaimsAll,
+  useClaimsAllLegacy,
   useLinkClaims,
   useUnlinkClaim,
 } from "@/entities/claim";
@@ -76,7 +76,7 @@ export default function ClaimsPage() {
     data: claimsAll = [],
     isLoading: loadingAll,
     error: errorAll,
-  } = useClaimsAll();
+  } = useClaimsAllLegacy();
   
   const claims = perm?.only_assigned_project ? claimsAssigned : claimsAll;
   const isLoading = perm?.only_assigned_project ? loadingAssigned : loadingAll;
@@ -88,7 +88,7 @@ export default function ClaimsPage() {
   
   // Получаем только нужные unit IDs
   const unitIds = useMemo(
-    () => Array.from(new Set(claims.flatMap((t) => t.unit_ids))),
+    () => Array.from(new Set(claims.flatMap((t) => (t.unit_ids || []) as number[]))),
     [claims],
   );
   const { data: units = [], isPending: unitsLoading } = useUnitsByIds(unitIds);
@@ -214,23 +214,23 @@ export default function ClaimsPage() {
       uniq(vals).map((v) => ({ label: String(v), value: v }));
 
     return {
-      projects: mapOptions(filtered("project").map((c) => c.projectName)),
+      projects: mapOptions(claimsWithNames.map((c) => c.projectName)),
       units: mapOptions(
-        filtered("units").flatMap((c) =>
+        claimsWithNames.flatMap((c) =>
           c.unitNumbers ? c.unitNumbers.split(",").map((n) => n.trim()) : [],
         ),
       ),
       buildings: mapOptions(
-        filtered("building").flatMap((c) =>
+        claimsWithNames.flatMap((c) =>
           c.buildings ? c.buildings.split(",").map((n) => n.trim()) : [],
         ),
       ),
-      statuses: mapOptions(filtered("status").map((c) => c.statusName)),
+      statuses: mapOptions(claimsWithNames.map((c) => c.statusName)),
       responsibleEngineers: mapOptions(
-        filtered("responsible").map((c) => c.responsibleEngineerName),
+        claimsWithNames.map((c) => c.responsibleEngineerName),
       ),
-      ids: mapOptions(filtered("id").map((c) => c.id)),
-      authors: mapOptions(filtered("author").map((c) => c.createdByName)),
+      ids: mapOptions(claimsWithNames.map((c) => c.id)),
+      authors: mapOptions(claimsWithNames.map((c) => c.createdByName)),
     };
   }, [claimsWithNames, filters]);
 
