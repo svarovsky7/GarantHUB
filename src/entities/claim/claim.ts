@@ -503,10 +503,9 @@ export function useClaimsAll(page = 0, pageSize = 50) {
 /**
  * Получить все претензии без пагинации (для обратной совместимости).
  */
-export function useClaimsAllLegacy(enabled = true) {
+export function useClaimsAllLegacy() {
   return useQuery({
     queryKey: ['claims-all-legacy'],
-    enabled,
     queryFn: async () => {
       const rows = await fetchPaged<any>((from, to) =>
         supabase
