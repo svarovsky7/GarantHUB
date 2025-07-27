@@ -164,10 +164,7 @@ export function useCourtCases() {
         ...row,
         unit_ids: unitMap.get(row.id) || [],
         parent_id: linkMap.get(row.id) ?? null,
-        total_claim_amount:
-          row.total_claim_amount != null && Number(row.total_claim_amount) > 0
-            ? Number(row.total_claim_amount)
-            : claimMap.get(row.id) ?? null,
+        total_claim_amount: claimMap.get(row.id) ?? null,
         caseUid: row.court_cases_uids?.uid ?? null,
       })) as CourtCase[];
     },
