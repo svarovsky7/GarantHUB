@@ -2,10 +2,10 @@ import { Dayjs } from 'dayjs';
 
 export interface ClaimFilters {
   id?: number[];
-  project?: string;
+  project?: string | string[];
   units?: string[];
   /** Корпус */
-  building?: string;
+  building?: string | string[];
   status?: string;
   responsible?: string;
   /** Автор создания */

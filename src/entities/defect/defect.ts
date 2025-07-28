@@ -166,19 +166,29 @@ export function useDefectFileCounts(defectIds: number[]) {
     queryFn: async () => {
       if (defectIds.length === 0) return {};
       
-      const { data, error } = await supabase
-        .from('defect_attachments')
-        .select('defect_id')
-        .in('defect_id', defectIds);
-        
-      if (error) throw error;
-      
       const counts: Record<number, number> = {};
       defectIds.forEach(id => counts[id] = 0);
       
-      (data ?? []).forEach((row: any) => {
-        counts[row.defect_id] = (counts[row.defect_id] || 0) + 1;
-      });
+      // Разбиваем большой массив на части по 1000 элементов для избежания слишком длинных URL
+      const chunkSize = 1000;
+      const chunks = [];
+      for (let i = 0; i < defectIds.length; i += chunkSize) {
+        chunks.push(defectIds.slice(i, i + chunkSize));
+      }
+      
+      // Выполняем запросы для каждой части
+      for (const chunk of chunks) {
+        const { data, error } = await supabase
+          .from('defect_attachments')
+          .select('defect_id')
+          .in('defect_id', chunk);
+          
+        if (error) throw error;
+        
+        (data ?? []).forEach((row: any) => {
+          counts[row.defect_id] = (counts[row.defect_id] || 0) + 1;
+        });
+      }
       
       return counts;
     },

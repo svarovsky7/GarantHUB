@@ -79,18 +79,17 @@ export default function ClaimsFilters({
     all: ClaimFilters,
   ) => {
     calcExtra();
+    // Автоматически применяем фильтры при изменении
+    handleFinish(all);
     if (Object.prototype.hasOwnProperty.call(changed, "hideClosed")) {
-      handleFinish(all);
+      try {
+        localStorage.setItem(LS_HIDE_CLOSED, JSON.stringify(all.hideClosed));
+      } catch {}
     }
   };
 
   const handleFinish = (values: ClaimFilters) => {
     onSubmit(values);
-    if (Object.prototype.hasOwnProperty.call(values, "hideClosed")) {
-      try {
-        localStorage.setItem(LS_HIDE_CLOSED, JSON.stringify(values.hideClosed));
-      } catch {}
-    }
   };
 
   const handleReset = () => {
@@ -105,7 +104,7 @@ export default function ClaimsFilters({
   const badge = <Badge count={extraCount} size="small" />;
 
   return (
-    <Card bordered={false} size="small" style={{ maxWidth: 1040 }}>
+    <Card variant="outlined" size="small" style={{ maxWidth: 1040, border: 'none' }}>
       {loading ? (
         <Skeleton active paragraph={{ rows: 4 }} />
       ) : (
@@ -130,11 +129,14 @@ export default function ClaimsFilters({
             <Col span={5}>
               <Form.Item name="project" label="Проект">
                 <Select 
+                  mode="multiple"
                   allowClear 
                   options={options.projects}
+                  showSearch
+                  optionFilterProp="label"
                   onChange={(value) => {
                     // При изменении проекта очищаем зависимые поля
-                    if (!value) {
+                    if (!value || value.length === 0) {
                       form.setFieldsValue({ 
                         units: undefined,
                         building: undefined 
@@ -150,8 +152,10 @@ export default function ClaimsFilters({
                   mode="multiple"
                   allowClear
                   options={options.units}
-                  disabled={!form.getFieldValue('project')}
-                  placeholder={form.getFieldValue('project') ? "Выберите объекты" : "Сначала выберите проект"}
+                  showSearch
+                  optionFilterProp="label"
+                  disabled={!form.getFieldValue('project') || form.getFieldValue('project').length === 0}
+                  placeholder={form.getFieldValue('project') && form.getFieldValue('project').length > 0 ? "Выберите объекты" : "Сначала выберите проект"}
                 />
               </Form.Item>
             </Col>
@@ -197,10 +201,13 @@ export default function ClaimsFilters({
                     <Col span={6}>
                       <Form.Item name="building" label="Корпус">
                         <Select 
+                          mode="multiple"
                           allowClear 
-                          options={options.buildings} 
-                          disabled={!form.getFieldValue('project')}
-                          placeholder={form.getFieldValue('project') ? "Выберите корпус" : "Сначала выберите проект"}
+                          options={options.buildings}
+                          showSearch
+                          optionFilterProp="label"
+                          disabled={!form.getFieldValue('project') || form.getFieldValue('project').length === 0}
+                          placeholder={form.getFieldValue('project') && form.getFieldValue('project').length > 0 ? "Выберите корпус" : "Сначала выберите проект"}
                         />
                       </Form.Item>
                     </Col>
@@ -264,11 +271,6 @@ export default function ClaimsFilters({
           <Row justify="end" gutter={12}>
             <Col>
               <Button onClick={handleReset}>Сброс</Button>
-            </Col>
-            <Col>
-              <Button type="primary" htmlType="submit">
-                Найти
-              </Button>
             </Col>
           </Row>
         </Form>

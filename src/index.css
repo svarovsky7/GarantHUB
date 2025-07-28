@@ -134,3 +134,57 @@ body {
   border-radius: 2px;
 }
 
+/* === НАСТРОЙКА СТОЛБЦОВ ТАБЛИЦЫ ========================================== */
+.columns-drawer-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.columns-drawer-row:last-child {
+  border-bottom: none;
+}
+
+.columns-drawer-row > span {
+  flex: 1;
+  font-size: 14px;
+  color: #262626;
+  line-height: 1.4;
+}
+
+.columns-drawer-input {
+  width: 80px !important;
+  flex-shrink: 0;
+}
+
+.columns-drawer-row .ant-switch {
+  flex-shrink: 0;
+}
+
+.columns-drawer-row .ant-btn {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.columns-drawer-row .ant-space {
+  flex-shrink: 0;
+}
+
+.columns-drawer-row .ant-btn:hover:not(:disabled) {
+  border-color: #40a9ff;
+  color: #40a9ff;
+}
+
+.columns-drawer-row .ant-btn:disabled {
+  opacity: 0.3;
+}
+

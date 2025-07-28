@@ -1,7 +1,9 @@
 import React from 'react';
-import { Drawer, Switch, Button, InputNumber } from 'antd';
+import { Drawer, Switch, Button, InputNumber, Typography, Space, Divider } from 'antd';
 import { UpOutlined, DownOutlined } from '@ant-design/icons';
 import type { TableColumnSetting } from '@/shared/types/tableColumnSetting';
+
+const { Text } = Typography;
 
 interface Props {
   open: boolean;
@@ -38,35 +40,44 @@ export default function TableColumnsDrawer({ open, columns, onChange, onClose, w
       {columns.map((c, idx) => (
         <div key={c.key} className="columns-drawer-row">
           <Switch checked={c.visible} onChange={(v) => toggle(idx, v)} size="small" />
-          <span>{c.title || '(без названия)'}</span>
+          <Text>{c.title || '(без названия)'}</Text>
           <InputNumber
             className="columns-drawer-input"
             min={40}
+            max={500}
+            placeholder="Ширина"
             value={widths[c.key]}
             onChange={(v) =>
               onWidthsChange({ ...widths, [c.key]: typeof v === 'number' ? v : widths[c.key] })
             }
           />
-          <Button
-            size="small"
-            type="text"
-            icon={<UpOutlined />}
-            disabled={idx === 0}
-            onClick={() => move(idx, idx - 1)}
-          />
-          <Button
-            size="small"
-            type="text"
-            icon={<DownOutlined />}
-            disabled={idx === columns.length - 1}
-            onClick={() => move(idx, idx + 1)}
-          />
+          <Space size="small">
+            <Button
+              size="small"
+              type="text"
+              icon={<UpOutlined />}
+              disabled={idx === 0}
+              onClick={() => move(idx, idx - 1)}
+              title="Переместить вверх"
+            />
+            <Button
+              size="small"
+              type="text"
+              icon={<DownOutlined />}
+              disabled={idx === columns.length - 1}
+              onClick={() => move(idx, idx + 1)}
+              title="Переместить вниз"
+            />
+          </Space>
         </div>
       ))}
       {onReset && (
-        <Button style={{ marginTop: 16 }} block onClick={onReset}>
-          По умолчанию
-        </Button>
+        <>
+          <Divider />
+          <Button style={{ marginTop: 8 }} block onClick={onReset}>
+            По умолчанию
+          </Button>
+        </>
       )}
     </Drawer>
   );

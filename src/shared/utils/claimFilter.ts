@@ -21,15 +21,31 @@ export function filterClaims<
 >(rows: T[], f: ClaimFilters): T[] {
   return rows.filter((r) => {
     if (f.id && f.id.length > 0 && !f.id.includes(r.id)) return false;
-    if (f.project && r.projectName !== f.project) return false;
+    if (f.project) {
+      if (Array.isArray(f.project)) {
+        if (f.project.length > 0 && !f.project.includes(r.projectName)) return false;
+      } else {
+        if (r.projectName !== f.project) return false;
+      }
+    }
     if (f.units && f.units.length > 0 && r.unitNumbers) {
       const units = r.unitNumbers.split(",").map((u) => u.trim());
       const ok = f.units.every((u) => units.includes(u));
       if (!ok) return false;
     }
-    if (f.building && r.buildings) {
-      const buildings = r.buildings.split(",").map((b) => b.trim());
-      if (!buildings.includes(f.building)) return false;
+    if (f.building) {
+      if (Array.isArray(f.building)) {
+        if (f.building.length > 0 && r.buildings) {
+          const buildings = r.buildings.split(",").map((b) => b.trim());
+          const ok = f.building.some((b) => buildings.includes(b));
+          if (!ok) return false;
+        }
+      } else {
+        if (r.buildings) {
+          const buildings = r.buildings.split(",").map((b) => b.trim());
+          if (!buildings.includes(f.building)) return false;
+        }
+      }
     }
     if (f.status && r.statusName !== f.status) return false;
     if (f.responsible && r.responsibleEngineerName !== f.responsible)

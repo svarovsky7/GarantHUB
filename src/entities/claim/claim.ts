@@ -376,16 +376,76 @@ export function useClaimAll(id?: number | string) {
 /**
  * Получить список претензий по всем проектам с пагинацией (оптимизированный).
  */
-export function useClaimsAllSummary(page = 0, pageSize = 50) {
+export function useClaimsAllSummary(page = 0, pageSize = 50, filters?: any) {
   return useQuery({
-    queryKey: [SUMMARY_TABLE + '-all', page, pageSize],
+    queryKey: [SUMMARY_TABLE + '-all', page, pageSize, filters],
     queryFn: async () => {
       const from = page * pageSize;
       const to = from + pageSize - 1;
       
-      const { data: rows, error, count } = await supabase
+      let query = supabase
         .from(SUMMARY_TABLE)
-        .select('*', { count: 'exact' })
+        .select('*', { count: 'exact' });
+      
+      // Применяем фильтры на сервере
+      if (filters) {
+        if (filters.project && Array.isArray(filters.project) && filters.project.length > 0) {
+          query = query.in('project_name', filters.project);
+        }
+        if (filters.status) {
+          query = query.eq('status_name', filters.status);
+        }
+        if (filters.responsible) {
+          query = query.eq('responsible_engineer_name', filters.responsible);
+        }
+        if (filters.units && Array.isArray(filters.units) && filters.units.length > 0) {
+          // Фильтрация по объектам через связанную таблицу claim_units
+          const { data: unitIds } = await supabase
+            .from('units')
+            .select('id')
+            .in('name', filters.units);
+          
+          if (unitIds && unitIds.length > 0) {
+            const { data: claimIds } = await supabase
+              .from('claim_units')
+              .select('claim_id')
+              .in('unit_id', unitIds.map(u => u.id));
+            
+            if (claimIds && claimIds.length > 0) {
+              query = query.in('id', claimIds.map(c => c.claim_id));
+            } else {
+              // Если не найдены претензии для выбранных объектов, возвращаем пустой результат
+              query = query.in('id', [-1]);
+            }
+          }
+        }
+        if (filters.building && Array.isArray(filters.building) && filters.building.length > 0) {
+          // Фильтрация по корпусам через связанную таблицу
+          const { data: unitIds } = await supabase
+            .from('units')
+            .select('id')
+            .in('building', filters.building);
+          
+          if (unitIds && unitIds.length > 0) {
+            const { data: claimIds } = await supabase
+              .from('claim_units')
+              .select('claim_id')
+              .in('unit_id', unitIds.map(u => u.id));
+            
+            if (claimIds && claimIds.length > 0) {
+              query = query.in('id', claimIds.map(c => c.claim_id));
+            } else {
+              query = query.in('id', [-1]);
+            }
+          }
+        }
+        if (filters.hideClosed) {
+          query = query.not('status_name', 'ilike', '%закры%')
+                       .not('status_name', 'ilike', '%не%гаран%');
+        }
+      }
+      
+      const { data: rows, error, count } = await query
         .order('created_at', { ascending: false })
         .range(from, to);
         

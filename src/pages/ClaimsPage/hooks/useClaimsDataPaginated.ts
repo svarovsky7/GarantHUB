@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   useClaims,
   useClaimsAllSummary,
@@ -34,9 +34,14 @@ export function useClaimsDataPaginated(filters: ClaimFilters, perm: RolePermissi
     hasMore: false,
   });
 
+  // Reset page to 0 when filters change
+  useEffect(() => {
+    setPagination(prev => ({ ...prev, page: 0 }));
+  }, [filters]);
+
   // Data queries
   const claimsAssigned = useClaims(); // For assigned projects (non-paginated)
-  const claimsAllPaginated = useClaimsAllSummary(pagination.page, pagination.pageSize); // For all projects (paginated)
+  const claimsAllPaginated = useClaimsAllSummary(pagination.page, pagination.pageSize, filters); // For all projects (paginated)
   
   // Choose between assigned or all claims based on permissions
   const usesPagination = !perm?.only_assigned_project;
@@ -113,13 +118,21 @@ export function useClaimsDataPaginated(filters: ClaimFilters, perm: RolePermissi
     return map;
   }, [statuses]);
 
-  // Выбранный проект
-  const selectedProjectId = useMemo(() => {
-    const p = projects.find(pr => pr.name === filters.project);
-    return p?.id ?? null;
+  // Выбранные проекты
+  const selectedProjectIds = useMemo(() => {
+    if (!filters.project) return [];
+    if (Array.isArray(filters.project)) {
+      return projects
+        .filter(pr => filters.project.includes(pr.name))
+        .map(pr => pr.id);
+    } else {
+      const p = projects.find(pr => pr.name === filters.project);
+      return p ? [p.id] : [];
+    }
   }, [projects, filters.project]);
 
   // Все объекты с претензиями в проекте
+  const selectedProjectId = selectedProjectIds.length === 1 ? selectedProjectIds[0] : null;
   const { data: projectUnits = [], isLoading: projectUnitsLoading } =
     useUnitsWithClaimsByProject(selectedProjectId);
 
@@ -166,11 +179,6 @@ export function useClaimsDataPaginated(filters: ClaimFilters, perm: RolePermissi
     statusMap,
   ]);
 
-  // Apply filters
-  const filteredClaims = useMemo(() => {
-    return filterClaims(claimsWithNames, filters);
-  }, [claimsWithNames, filters]);
-
   // Get statistics from server
   const statsQuery = usesPagination ? useClaimsAllStats() : useClaimsStats();
   
@@ -178,16 +186,11 @@ export function useClaimsDataPaginated(filters: ClaimFilters, perm: RolePermissi
   const totalClaims = statsQuery.data?.total || 0;
   const closedClaims = statsQuery.data?.closed || 0;
   const openClaims = statsQuery.data?.open || 0;
-  const readyToExport = filteredClaims.length;
+  const readyToExport = claimsWithNames.length;
 
   // Filter options for the filter component
   const filterOptions = useMemo(() => {
-    const without = <K extends keyof ClaimFilters>(key: K) => {
-      const { [key]: _omit, ...rest } = filters;
-      return rest as ClaimFilters;
-    };
-    const filtered = <K extends keyof ClaimFilters>(key: K) =>
-      filterClaims(claimsWithNames, without(key));
+    const allClaims = claimsWithNames;
 
     const uniq = (values: (string | number | undefined | null)[]) =>
       Array.from(new Set(values.filter(Boolean) as (string | number)[])).sort(
@@ -198,24 +201,24 @@ export function useClaimsDataPaginated(filters: ClaimFilters, perm: RolePermissi
 
     const unitsOpts = selectedProjectId
       ? projectUnits.map(u => u.name)
-      : filtered("units").flatMap((c) =>
+      : allClaims.flatMap((c) =>
           c.unitNumbers ? c.unitNumbers.split(",").map((n) => n.trim()) : []);
 
     const buildingsOpts = selectedProjectId
       ? projectUnits.map(u => u.building)
-      : filtered("building").flatMap((c) =>
+      : allClaims.flatMap((c) =>
           c.buildings ? c.buildings.split(",").map((n) => n.trim()) : []);
 
     return {
       projects: mapOptions(projects.map((p) => p.name)),
       units: mapOptions(unitsOpts),
       buildings: mapOptions(buildingsOpts),
-      statuses: mapOptions(filtered("status").map((c) => c.statusName)),
+      statuses: mapOptions(allClaims.map((c) => c.statusName)),
       responsibleEngineers: mapOptions(
-        filtered("responsible").map((c) => c.responsibleEngineerName),
+        allClaims.map((c) => c.responsibleEngineerName),
       ),
-      ids: mapOptions(filtered("id").map((c) => c.id)),
-      authors: mapOptions(filtered("author").map((c) => c.createdByName)),
+      ids: mapOptions(allClaims.map((c) => c.id)),
+      authors: mapOptions(allClaims.map((c) => c.createdByName)),
     };
   }, [claimsWithNames, filters, projects, selectedProjectId, projectUnits]);
 
@@ -246,7 +249,7 @@ export function useClaimsDataPaginated(filters: ClaimFilters, perm: RolePermissi
     claims,
     isLoading,
     error,
-    claimsWithNames: filteredClaims,
+    claimsWithNames,
     filterOptions,
     filtersLoading,
     totalClaims,
