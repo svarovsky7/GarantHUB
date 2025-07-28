@@ -2,6 +2,7 @@
 import React, { useEffect, useCallback } from "react";
 import { Container, Box, Toolbar } from "@mui/material";
 import { useLocation } from "react-router-dom";
+import { useSnackbar } from "notistack";
 
 import { supabase } from "@/shared/api/supabaseClient";
 import { useAuthStore } from "@/shared/store/authStore";
@@ -13,6 +14,7 @@ import AppRouter from "./Router";
 export default function App() {
   const setProfile = useAuthStore((s) => s.setProfile);
   const location = useLocation();
+  const { enqueueSnackbar } = useSnackbar();
   useRealtimeUpdates();
 
   const loadProfile = useCallback(
@@ -20,10 +22,13 @@ export default function App() {
       const { data, error } = await supabase
         .from("profiles")
         .select(
-          "id, email, name, role, created_at, profiles_projects(project_id)"
+          "id, email, name, role, created_at, is_active, profiles_projects(project_id)"
         )
         .eq("id", user.id)
         .single();
+
+      // Проверка активности происходит в LoginPage при входе
+      // Здесь пропускаем проверку, чтобы избежать дублирования сообщений
 
       setProfile(
         data
@@ -38,10 +43,11 @@ export default function App() {
               role: "USER",
               project_ids: [],
               created_at: null,
+              is_active: true,
             },
       );
     },
-    [setProfile],
+    [setProfile, enqueueSnackbar],
   );
 
   useEffect(() => {

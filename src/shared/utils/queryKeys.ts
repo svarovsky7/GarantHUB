@@ -10,5 +10,7 @@
 
 export const queryKeys = {
   documents: () => ['documents'] as const,
+  documentFolders: (projectId?: number | null) => 
+    projectId !== undefined ? ['document-folders', projectId] as const : ['document-folders'] as const,
 } as const;
 

@@ -41,15 +41,17 @@ export const useUnits = () => {
         queryFn : async () => {
             let query: any = supabase.from('units').select(SELECT);
             query = filterByProjects(query, projectId, projectIds, onlyAssigned);
-            query = query.order('id');
+            query = query.order('id').limit(10000); // Увеличиваем лимит для большого количества объектов
             const { data, error } = await query;
 
             if (error) throw error;
 
-            return (data ?? []).map((u) => ({
-                ...u,
-                persons: [], // unit_persons removed
-            }));
+            return (data ?? [])
+                .filter((u) => u.name && u.name.trim() !== '') // Фильтруем объекты с пустым name
+                .map((u) => ({
+                    ...u,
+                    persons: [], // unit_persons removed
+                }));
         },
         staleTime: 5 * 60_000,
     });
@@ -69,21 +71,26 @@ export const useUnitsByProject = (
         queryKey: ['units', projectId ?? 'all', building ?? ''],
         enabled : !!projectId,
         queryFn : async () => {
-            let query: any = supabase
-                .from('units')
-                .select(SELECT)
-                .eq('project_id', projectId)
-                .order('id');
-            if (building) query = query.eq('building', building);
+            if (!projectId) return [];
 
-            const { data, error } = await query;
+            // Используем пагинацию для получения всех записей
+            const allUnits = await fetchPaged<any>((from, to) => {
+                let query = supabase
+                    .from('units')
+                    .select(SELECT)
+                    .eq('project_id', projectId)
+                    .order('id')
+                    .range(from, to);
+                if (building) query = query.eq('building', building);
+                return query;
+            });
 
-            if (error) throw error;
-
-            const units = (data ?? []).map((u) => ({
-                ...u,
-                persons: [], // unit_persons removed
-            }));
+            const units = allUnits
+                .filter((u) => u.name && u.name.trim() !== '') // Фильтруем объекты с пустым name
+                .map((u) => ({
+                    ...u,
+                    persons: [], // unit_persons removed
+                }));
 
             // Natural sort by unit name (e.g. 1, 1A, 2B)
             units.sort(getUnitNameComparator('asc'));
@@ -105,7 +112,8 @@ export const useUnitsByIds = (ids: number[]) =>
                     .select('id, name, building, floor, project_id')
                     .in('id', chunk),
             );
-            return rows as import('@/shared/types/unit').Unit[];
+            // Фильтруем объекты с пустым name
+            return rows.filter((u) => u.name && u.name.trim() !== '') as import('@/shared/types/unit').Unit[];
         },
         staleTime: 5 * 60_000,
     });
@@ -163,16 +171,24 @@ export const useUnitsWithClaimsByProject = (projectId: number | null) =>
                     .in('id', chunk),
             );
 
-            // Natural sort by номер объекта
-            units.sort(getUnitNameComparator('asc'));
+            // Фильтруем объекты с пустым name
+            const filteredUnits = units.filter((u) => u.name && u.name.trim() !== '');
 
-            return units as import('@/shared/types/unit').Unit[];
+            // Natural sort by номер объекта
+            filteredUnits.sort(getUnitNameComparator('asc'));
+
+            return filteredUnits as import('@/shared/types/unit').Unit[];
         },
         staleTime: 5 * 60_000,
     });
 
 /* ====================== CREATE ====================== */
 const createUnit = async (payload) => {
+    // Проверка на пустое имя
+    if (!payload.name || payload.name.trim() === '') {
+        throw new Error('Номер объекта не может быть пустым');
+    }
+
     // Защита от дублей (квартира + проект уникальны)
     const { data: dup } = await supabase
         .from('units')
@@ -211,6 +227,11 @@ export const useAddUnit = () => {
 
 /* ====================== UPDATE ====================== */
 const updateUnit = async ({ id, updates }) => {
+    // Проверка на пустое имя при обновлении
+    if (updates.name !== undefined && (!updates.name || updates.name.trim() === '')) {
+        throw new Error('Номер объекта не может быть пустым');
+    }
+
     // Проверка дубликата при смене номера
     if (updates.name && updates.project_id) {
         const { data: dup } = await supabase

@@ -5,11 +5,12 @@
 
 import React from 'react';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
-import { Form, Input, Select, Button, Typography, Tooltip, Skeleton } from 'antd';
+import { Form, Input, Select, Button, Typography, Tooltip, Skeleton, Alert } from 'antd';
 import { useSnackbar } from 'notistack';
 import { supabase } from '@/shared/api/supabaseClient';
 
 import { useVisibleProjects } from '@/entities/project';
+import { useSystemSetting } from '@/entities/systemSettings';
 import type { RoleName } from '@/shared/types/rolePermission';
 import type { RegisterFormValues } from '@/shared/types/register';
 
@@ -31,6 +32,9 @@ export default function RegisterPage() {
   const [loading, setLoading] = React.useState(false);
 
   const { data: projects = [], isLoading: projLoad } = useVisibleProjects();
+  const { data: registrationSetting } = useSystemSetting('registration_enabled');
+
+  const isRegistrationEnabled = registrationSetting?.setting_value === 'true';
 
   const options = React.useMemo(
     () => projects.map((p) => ({ label: p.name, value: p.id })),
@@ -78,6 +82,26 @@ export default function RegisterPage() {
       setLoading(false);
     }
   };
+
+  if (!isRegistrationEnabled) {
+    return (
+      <div style={{ maxWidth: 440, margin: '16px auto' }}>
+        <Typography.Title level={3} style={{ textAlign: 'center' }}>
+          Регистрация
+        </Typography.Title>
+        <Alert
+          type="warning"
+          message="Регистрация отключена"
+          description="Администратор временно отключил регистрацию новых пользователей. Обратитесь к администратору для получения доступа."
+          showIcon
+          style={{ marginBottom: 16 }}
+        />
+        <Typography.Text style={{ textAlign: 'center', display: 'block' }}>
+          Уже зарегистрированы? <RouterLink to="/login">Войти</RouterLink>
+        </Typography.Text>
+      </div>
+    );
+  }
 
   return (
     <div style={{ maxWidth: 440, margin: '16px auto' }}>

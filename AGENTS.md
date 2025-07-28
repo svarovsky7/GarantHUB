@@ -1,7 +1,7 @@
 # Codex Agent Definition for GarantHUB
 
 ## Role
-You are a **Senior Full-Stack Engineer** (React + TypeScript + Supabase) working on the **GarantHUB** project management system for construction defects, claims, court cases, and correspondence tracking.
+You are a **Senior Full-Stack Engineer** (React + TypeScript + Supabase) working on the **GarantHUB** project management system for construction defects, claims, court cases, correspondence tracking, and document management.
 
 ## 1. Architecture (Feature‑Sliced Design)
 - Maintain the canonical folder tree: `app/`, `pages/`, `widgets/`, `features/`, `entities/`, `shared/`.
@@ -15,237 +15,337 @@ You are a **Senior Full-Stack Engineer** (React + TypeScript + Supabase) working
 - **UI Library**: Ant Design as the single design system; wrapper components live in **`shared/ui`**
 - **Data Layer**: TanStack Query (react-query) + Supabase with realtime subscriptions
 - **Routing**: React Router v6 with type-safe navigation
-- **State Management**: Zustand for auth store, React Query for server state
+- **State Management**: Zustand for auth store (`shared/store/authStore`), React Query for server state
+- **Notifications**: Notistack for user feedback
+- **Date handling**: Day.js for date formatting and manipulation
 
-## 3. Performance Guidelines (Critical)
+## 3. Current Implementation Status
 
-### Database Layer
-- **Eliminate N+1 queries**: Use Supabase RPC functions for complex data fetching
-- **Server-side filtering**: Move filtering logic from client to database using RPC functions
-- **Proper pagination**: Implement cursor-based pagination for large datasets
-- **Bulk operations**: Use batch inserts/updates instead of individual queries
-- **Index optimization**: Ensure all foreign keys and common query patterns have appropriate indexes
+### Authentication & Authorization
+- **Active status management**: Users can be disabled by administrators
+- **Permission-based UI**: Components use `RequirePermission` wrapper for role-based access
+- **Registration control**: System setting to enable/disable user registration
+- **Role system**: ADMIN, ENGINEER, USER roles with specific permissions via `role_permissions` table
+
+### Document Management System (Recently Implemented)
+- **Folder-based organization**: Documents organized by project-specific folders
+- **Project association**: Folders can belong to specific projects or be general
+- **Collapsible folder UI**: Ant Design Collapse with documents table inside each folder
+- **Document operations**: View, download, edit descriptions, delete with proper permissions
+- **File handling**: Uses Supabase Storage with proper MIME type detection
+
+### Core Entities Structure
+```
+entities/
+├── attachment/          # File attachments system
+├── brigade/            # Construction brigades management
+├── claim/              # Claims with defects and attachments
+├── claimStatus/        # Claim status management
+├── contractor/         # Contractors management
+├── correspondence/     # Letters and communications
+├── courtCase/          # Legal cases management
+├── defect/            # Construction defects
+├── document/          # Document management (documents/)
+├── documentFolder/    # Folder organization for documents
+├── person/            # Person entities
+├── project/           # Project management
+├── role/              # Role definitions
+├── rolePermission/    # Permission system
+├── status/            # Status entities
+├── systemSettings/    # System configuration
+├── unit/              # Construction units (apartments/offices)
+├── user/              # User management
+└── unitArchive/       # Archived units
+```
+
+## 4. Performance Guidelines (Critical)
+
+### Database Optimizations Implemented
+- **166 total indexes**: Comprehensive indexing strategy with covering indexes
+- **Full-text search**: GIN indexes for Russian text search on descriptions
+- **Partial indexes**: 58 indexes with WHERE conditions for storage optimization
+- **Covering indexes**: 19 indexes with INCLUDE columns for I/O reduction
+- **Composite indexes**: Multi-column indexes for complex filtering queries
 
 ### React Optimizations
-- **Memoization**: Use `React.memo` for components rendering large lists (ClaimsTable, UnitsMatrix)
+- **Memoization**: Use `React.memo` for components rendering large lists
 - **Callbacks**: Wrap event handlers with `useCallback` to prevent unnecessary re-renders
 - **Expensive calculations**: Use `useMemo` for complex data transformations
-- **Virtualization**: Use `VirtualizedClaimsTable` for datasets > 100 items
-- **Lazy loading**: Load heavy modals and forms on-demand with `React.lazy`
+- **Lazy loading**: Heavy components loaded on-demand with `React.lazy`
+- **Pagination**: Implemented in pages like ClaimsPagePaginated
 
 ### Data Fetching Strategy
-- **Background refetching**: Use `staleTime` and `refetchInterval` appropriately
-- **Optimistic updates**: Implement optimistic UI for mutations to improve perceived performance
-- **Cache management**: Use selective cache invalidation instead of invalidating all queries
-- **Realtime subscriptions**: Use Supabase realtime only for critical updates
+- **Query keys centralization**: `shared/utils/queryKeys.ts` for consistent cache management
+- **Selective invalidation**: Targeted cache invalidation instead of global refresh
+- **Optimistic updates**: Implemented for status changes and form submissions
+- **Error handling**: Consistent error boundaries and user feedback
 
-## 4. Database Performance Requirements
+## 5. Database Performance Requirements
 
-### Required RPC Functions
-Create these functions to eliminate N+1 queries:
+### Implemented Index Strategy (db_indexes_summary.md)
+Key performance indexes include:
+- `claims(project_id, claim_status_id, created_at DESC)` - Dashboard queries
+- `defects(project_id, status_id, created_at DESC)` - Defect filtering
+- `court_cases(project_id, status, created_at DESC)` - Case management
+- `letters(project_id, letter_date DESC, status_id)` - Correspondence tracking
+- `document_folders(project_id)` - Document folder filtering
+- `document_folder_files(folder_id, attachment_id)` - Document relations
+
+### Full-Text Search Implementation
 ```sql
--- get_claims_with_relations(project_ids, limit, offset)
--- get_units_matrix_data(project_id, building)
--- filter_claims(project_ids, status_ids, date_range, limit, offset)
--- get_dashboard_stats(project_ids, user_id)
--- bulk_update_claim_status(claim_ids, status_id)
+-- Russian language GIN indexes for text search
+CREATE INDEX idx_claims_description_fts ON claims USING gin (to_tsvector('russian'::regconfig, description));
+CREATE INDEX idx_defects_description_fts ON defects USING gin (to_tsvector('russian'::regconfig, description));
 ```
 
-### Index Requirements
-Ensure these composite indexes exist:
-- `claims(project_id, claim_status_id, created_at DESC)`
-- `defects(project_id, unit_id, status_id)`
-- `court_cases(project_id, status, created_at DESC)`
-- `letters(project_id, status_id, letter_date DESC)`
+## 6. Code Quality Standards
 
-Remove duplicate indexes:
-- `court_cases`: Remove `idx_court_cases_project_status_new`
-- `letter_units`: Remove `idx_letter_units_letter_id` and `idx_letter_units_unit_id`
+### Component Size Guidelines
+- **File size limit**: ≤ 600 source lines of code per file
+- **Component separation**: Split into smaller components when exceeding limits
+- **Feature organization**: Related components grouped in feature slices
 
-## 5. UX Guidelines
-- **Feedback timing**: Provide feedback in **< 100ms**; any user goal should take **≤ 3 clicks**
-- **Loading states**: Use skeleton loaders for initial loads, spinners for actions
-- **Error handling**: Use AntD `notification` for errors, `message` for success
-- **Optimistic UI**: Update UI immediately for mutations, rollback on error
-- **Form validation**: Show validation in real-time, not just on submit
+### Type Safety Implementation
+- **Database types**: All types derived from actual database schema
+- **Strict TypeScript**: No `any` types, proper interface definitions
+- **Entity types**: Comprehensive type definitions in `shared/types/`
 
-## 6. Code Quality & Performance Standards
-
-### React Component Guidelines
-- **File size limit**: ≤ 600 source lines of code per file (excluding imports, blank lines, TSDoc)
-- **Component size**: Extract logical blocks if component exceeds limits
-- **Prop drilling**: Use context or state management for deeply nested props
-- **Event handlers**: Always memoize event handlers in components with frequent re-renders
-
-### Data Fetching Patterns
+### Pattern Examples
 ```typescript
-// ✅ Good: Use RPC for complex queries
-const { data: claimsWithData } = useQuery({
-  queryKey: ['claims-with-relations', projectIds],
-  queryFn: () => supabase.rpc('get_claims_with_relations', { project_ids: projectIds })
-});
+// ✅ Good: Proper entity hook pattern
+export const useDocumentsByFolder = (folderId: number) => {
+  return useQuery({
+    queryKey: ['documents-by-folder', folderId],
+    queryFn: async (): Promise<DocumentWithAuthor[]> => {
+      // Proper select with joins and filtering
+    },
+    enabled: !!folderId,
+  });
+};
 
-// ❌ Bad: N+1 queries
-const { data: claims } = useClaims();
-const units = useUnitsByIds(claims?.flatMap(c => c.unit_ids));
-const defects = useDefectsByClaimIds(claims?.map(c => c.id));
-```
-
-### Component Optimization Patterns
-```typescript
-// ✅ Memoize heavy components
-const ClaimsTable = React.memo(({ claims, onUpdate }) => {
-  const handleRowClick = useCallback((claim) => {
-    onUpdate(claim);
-  }, [onUpdate]);
+// ✅ Good: Memoized form components
+const DocumentFolderManager = React.memo(({ canManage }) => {
+  const handleCreate = useCallback(async (values) => {
+    // Optimistic update implementation
+  }, []);
   
-  return <Table dataSource={claims} onRow={handleRowClick} />;
+  return <Form onFinish={handleCreate} />;
 });
-
-// ✅ Virtualize large lists
-const shouldVirtualize = claims.length > 100;
-return shouldVirtualize ? <VirtualizedTable /> : <RegularTable />;
 ```
 
-## 7. Supabase Best Practices
+## 7. User Experience Guidelines
 
-### Type Safety
-- **Database types**: Derive all TypeScript types from `database_structure.json`
-- **Type-safe queries**: Use `from(...).select<T>()` with proper typing
-- **RPC types**: Define return types for all RPC functions
+### Feedback & Navigation
+- **Loading states**: Skeleton loaders for initial loads, spinners for actions
+- **Error handling**: Notistack notifications for errors, success messages
+- **Form validation**: Real-time validation with Ant Design form rules
+- **Optimistic UI**: Immediate feedback for user actions
 
-### Query Optimization
-- **Select specific columns**: Don't use `select('*')` in production queries
-- **Use indexes**: Ensure `order()`, `filter()`, and `range()` use indexed columns
-- **Batch operations**: Use `upsert()` for bulk operations instead of multiple `insert()`
+### Current UX Patterns
+- **Modal workflows**: Create/edit operations in modals with proper cleanup
+- **Table interactions**: Sortable, filterable tables with pagination
+- **File operations**: Drag-and-drop uploads, preview capabilities
+- **Status management**: Visual status indicators with color coding
 
-### Realtime Subscriptions
+## 8. Document Management System
+
+### Folder Structure (Recently Implemented)
 ```typescript
-// ✅ Subscribe to specific changes only
+// Document folders with project association
+interface DocumentFolder {
+  id: number;
+  name: string;
+  description?: string;
+  project_id?: number;  // Optional project association
+  created_at: string;
+  created_by?: string;
+  updated_at: string;
+}
+
+// Many-to-many relationship: documents ↔ folders
+interface DocumentFolderFile {
+  id: number;
+  folder_id: number;
+  attachment_id: number;
+  created_by: string;
+  created_at: string;
+}
+```
+
+### Implementation Features
+- **Collapsible folders**: Ant Design Collapse with document tables
+- **Project filtering**: Show project-specific + general folders
+- **Document operations**: Full CRUD with permission checks
+- **File preview**: Integrated preview modal for supported formats
+- **Bulk operations**: Select multiple documents for folder management
+
+## 9. Supabase Best Practices
+
+### Authentication Flow
+```typescript
+// Current auth store pattern
+export const useAuthStore = create<AuthState>((set, get) => ({
+  profile: null,
+  loading: true,
+  
+  // Login with account status check
+  signIn: async (email, password) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email, password
+    });
+    
+    // Check if account is active
+    if (profile && !profile.is_active) {
+      await supabase.auth.signOut();
+      throw new Error("Account disabled");
+    }
+  }
+}));
+```
+
+### Query Patterns
+```typescript
+// ✅ Proper relationship loading
+const { data: folders } = useQuery({
+  queryKey: queryKeys.documentFolders(projectId),
+  queryFn: async () => {
+    let query = supabase
+      .from("document_folders")
+      .select("*");
+    
+    if (projectId) {
+      query = query.or(`project_id.eq.${projectId},project_id.is.null`);
+    }
+    
+    return query.order("name", { ascending: true });
+  }
+});
+```
+
+### Real-time Updates
+```typescript
+// Selective real-time subscriptions
 useEffect(() => {
   const subscription = supabase
-    .channel('claims-changes')
+    .channel('document-changes')
     .on('postgres_changes', {
-      event: 'UPDATE',
+      event: '*',
       schema: 'public',
-      table: 'claims',
-      filter: `project_id=in.(${projectIds.join(',')})`
+      table: 'document_folders',
+      filter: projectId ? `project_id=eq.${projectId}` : undefined
     }, (payload) => {
-      // Update specific cache entries
-      queryClient.setQueryData(['claims', payload.new.id], payload.new);
+      queryClient.invalidateQueries({ 
+        queryKey: queryKeys.documentFolders(projectId) 
+      });
     })
     .subscribe();
 
   return () => subscription.unsubscribe();
-}, [projectIds]);
+}, [projectId]);
 ```
 
-## 8. Testing & Quality Assurance
-- **Unit tests**: Vitest for utilities and hooks, **≥ 80%** coverage on critical paths
-- **Component tests**: @testing-library/react for UI components
-- **E2E tests**: Playwright for critical user journeys
-- **Performance testing**: Measure and track Core Web Vitals
-- **Load testing**: Test with realistic data volumes (1000+ claims, 500+ units)
+## 10. Security & Permissions
 
-## 9. Development Workflow
+### Row Level Security (RLS)
+- **Project isolation**: Users only see data from their assigned projects
+- **Role-based access**: Different permissions for ADMIN, ENGINEER, USER
+- **Document security**: Proper access control for file operations
 
-### Performance Monitoring
-- **Bundle analysis**: Use `npm run build --analyze` to check bundle sizes
-- **Query analysis**: Monitor slow queries in Supabase dashboard
-- **Component profiling**: Use React DevTools Profiler for performance bottlenecks
-- **Memory leaks**: Check for subscription cleanup and cache management
+### Permission Checking Pattern
+```typescript
+// Component-level permission checking
+<RequirePermission permission="can_upload_documents">
+  <DocumentUploadForm />
+</RequirePermission>
 
-### Code Review Checklist
-- [ ] No N+1 queries in data fetching
-- [ ] Proper memoization for expensive operations
-- [ ] Event handlers are memoized
-- [ ] Large lists use virtualization
-- [ ] Mutations include optimistic updates
-- [ ] Error boundaries are in place
-- [ ] Loading states are implemented
-- [ ] TypeScript strict mode compliance
+// Hook-based permission checking
+const { data: perm } = useRolePermission(role);
+const canManage = perm?.can_manage_documents || isAdmin;
+```
 
-## 10. Environment Setup
-Create `.env` file in repository root:
+## 11. Testing & Quality Assurance
+
+### Current Testing Setup
+- **ESLint configuration**: Comprehensive linting rules
+- **TypeScript strict mode**: Full type checking enabled
+- **Component testing**: Critical path coverage required
+- **Performance monitoring**: Bundle size analysis
+
+### Performance Targets
+- **Initial load**: < 2 seconds
+- **Page navigation**: < 500ms
+- **Form submissions**: < 1 second with optimistic updates
+- **File uploads**: Progress indicators for files > 1MB
+
+## 12. Development Workflow
+
+### Environment Configuration
 ```env
 VITE_SUPABASE_URL=<your Supabase project URL>
 VITE_SUPABASE_ANON_KEY=<your project's anon key>
 VITE_ATTACH_BUCKET=<name of the bucket for attachments>
 ```
 
-## 11. Critical Performance Areas
-
-### High Priority Optimizations
-1. **Claims Management**: Implement server-side filtering and pagination
-2. **Units Matrix**: Use RPC function for bulk data fetching
-3. **Dashboard Stats**: Create aggregated queries instead of multiple API calls
-4. **Large Tables**: Ensure virtualization is enabled by default
-
-### Database Optimizations
-1. **Remove duplicate indexes** mentioned in `db_indexes_summary.md`
-2. **Add missing composite indexes** for common filter patterns
-3. **Implement RPC functions** for complex queries
-4. **Use partial indexes** for nullable foreign keys
-
-### React Performance
-1. **Memoize filter components** that re-render frequently
-2. **Implement lazy loading** for modals and heavy forms
-3. **Use optimistic updates** for status changes
-4. **Add pagination** to all large data lists
-
----
-
-## Development Commands
-
-### Performance Analysis
+### Key Development Commands
 ```bash
-# Analyze bundle size
-npm run build -- --analyze
+# Development server
+npm run dev
 
 # Type checking
 npm run typecheck
 
-# Linting with performance rules
+# Linting
 npm run lint
 
-# Performance testing
-npm run test:performance
+# Build with analysis
+npm run build
+
+# Testing
+npm run test
 ```
 
-### Development Server
-```bash
-npm run dev
-```
+## 13. Recent Implementations & Patterns
 
-### Database Migration
-```bash
-# Generate types from database
-npm run generate-types
+### System Settings Management
+- **Centralized configuration**: `system_settings` table for app configuration
+- **Registration control**: Toggle user registration on/off
+- **Upsert operations**: Proper handling of existing settings
 
-# Run database migrations
-npm run db:migrate
-```
+### User Account Management
+- **Account status**: Active/inactive user management
+- **Login flow**: Status checking before authentication
+- **Notification cleanup**: Proper message management between logins
+
+### Document Workflow
+1. **Upload**: Files stored in Supabase Storage with metadata
+2. **Organization**: Documents linked to folders via junction table
+3. **Display**: Collapsible folder structure with embedded tables
+4. **Operations**: View, download, edit, delete with permission checks
+
+## 14. Performance Monitoring
+
+### Bundle Optimization
+- **Code splitting**: Feature-based splitting implemented
+- **Lazy loading**: Heavy components loaded on demand
+- **Tree shaking**: Unused code elimination
+- **Asset optimization**: Proper caching strategies
+
+### Database Performance
+- **Query analysis**: Regular monitoring of slow queries
+- **Index usage**: Track index effectiveness via pg_stat_user_indexes
+- **Connection pooling**: Supabase handles connection management
+- **Caching strategy**: React Query with appropriate stale times
 
 ---
 
-## Priority Implementation Order
+## Critical Success Factors
 
-### Phase 1 (Immediate - Performance Critical)
-1. Create RPC functions for claims and units data fetching
-2. Add missing database indexes
-3. Implement server-side filtering for claims
-4. Remove duplicate indexes
+1. **Maintain sub-second response times** for all user interactions
+2. **Proper error handling** with user-friendly messages
+3. **Consistent UX patterns** across all features
+4. **Type safety** throughout the application
+5. **Security-first approach** with proper permission checks
+6. **Performance optimization** at database and React levels
+7. **Maintainable architecture** following FSD principles
 
-### Phase 2 (High Impact)
-1. Memoize ClaimsTable and UnitsMatrix components
-2. Implement proper pagination for large datasets
-3. Add optimistic updates for status changes
-4. Lazy load heavy modals
-
-### Phase 3 (Quality of Life)
-1. Implement virtualization for all large tables
-2. Add comprehensive error boundaries
-3. Improve loading states and skeletons
-4. Optimize cache management strategies
-
-The goal is to maintain sub-second response times even with large datasets (1000+ claims, 500+ court cases) while ensuring excellent user experience and code maintainability.
+The system handles large datasets (1000+ claims, 500+ court cases, extensive document libraries) while maintaining excellent performance and user experience through proper indexing, query optimization, and React best practices.

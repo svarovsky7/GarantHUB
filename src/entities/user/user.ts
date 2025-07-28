@@ -8,7 +8,7 @@ import type { User } from '@/shared/types/user';
 import type { RoleName } from '@/shared/types/rolePermission';
 
 const FIELDS =
-  'id, name, email, role, created_at, profiles_projects ( project_id )';
+  'id, name, email, role, created_at, is_active, profiles_projects ( project_id )';
 
 /* ─────────── SELECT ─────────── */
 /** Получить всех пользователей БД без фильтрации */
@@ -86,7 +86,10 @@ export async function addUserProfile(payload: {
     project_ids: number[];
 }): Promise<void> {
     const { project_ids, ...profile } = payload;
-    const { error } = await supabase.from('profiles').insert(profile);
+    const { error } = await supabase.from('profiles').insert({
+        ...profile,
+        is_active: true
+    });
     if (error) throw error;
     if (project_ids.length) {
         const rows = project_ids.map((pid) => ({ profile_id: payload.id, project_id: pid }));
@@ -165,3 +168,25 @@ export const useChangePassword = () =>
             if (error) throw error;
         },
     });
+
+/* ─────────── UPDATE USER STATUS ─────────── */
+/** Переключить активность пользователя. */
+export const useUpdateUserStatus = () => {
+    const qc = useQueryClient();
+    return useMutation<User, Error, { id: string; isActive: boolean }>({
+        mutationFn: async ({ id, isActive }): Promise<User> => {
+            const { data, error } = await supabase
+                .from('profiles')
+                .update({ is_active: isActive })
+                .eq('id', id)
+                .select(FIELDS)
+                .single();
+            if (error) throw error;
+            return {
+                ...data,
+                project_ids: data?.profiles_projects?.map((p: any) => p.project_id) ?? [],
+            } as User;
+        },
+        onSuccess: () => qc.invalidateQueries({ queryKey: ['users', 'all'] }),
+    });
+};

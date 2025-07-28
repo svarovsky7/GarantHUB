@@ -412,27 +412,21 @@ const ClaimFormAntdEdit = React.forwardRef<
               rules={[{ required: true }]}
               style={highlight("unit_ids")}
             >
-              {embedded ? (
-                <div style={{ 
-                  padding: '4px 11px',
-                  border: '1px solid #d9d9d9',
-                  borderRadius: '6px',
-                  minHeight: '32px',
-                  lineHeight: '24px'
-                }}>
-                  {selectedUnits.length > 0 
-                    ? selectedUnits.map(u => u.name).join(', ')
-                    : <span style={{ color: '#bfbfbf' }}>Не указаны</span>
-                  }
-                </div>
-              ) : (
-                <Select
-                  mode="multiple"
-                  options={filteredUnits.map((u) => ({ value: u.id, label: u.name }))}
-                  disabled={!projectId}
-                  placeholder={buildingWatch ? `Объекты в корпусе ${buildingWatch}` : "Сначала выберите корпус"}
-                />
-              )}
+              <Select
+                mode="multiple"
+                showSearch
+                filterOption={(input, option) =>
+                  String(option?.label ?? '')
+                    .toLowerCase()
+                    .includes(input.toLowerCase())
+                }
+                options={filteredUnits.map((u) => ({ 
+                  value: u.id, 
+                  label: u.name || `Объект #${u.id}` 
+                }))}
+                disabled={!projectId}
+                placeholder={buildingWatch ? `Объекты в корпусе ${buildingWatch}` : "Сначала выберите корпус"}
+              />
             </Form.Item>
           </Col>
           <Col span={8}>

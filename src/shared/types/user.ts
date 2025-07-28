@@ -7,4 +7,6 @@ export interface User {
   created_at?: string | null;
   /** Массив проектов, назначенных пользователю */
   project_ids: number[];
+  /** Активна ли учетная запись пользователя */
+  is_active: boolean;
 }

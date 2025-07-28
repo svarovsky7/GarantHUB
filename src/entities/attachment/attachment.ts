@@ -310,6 +310,47 @@ export async function updateAttachmentDescription(id: number, description: strin
     if (error) throw error;
 }
 
+export async function removeUnitAttachment(unitId: number, attachmentId: number | string): Promise<void> {
+    const numericAttachmentId = typeof attachmentId === 'string' ? parseInt(attachmentId, 10) : attachmentId;
+    
+    // Сначала удаляем связь из unit_attachments
+    const { error: linkError } = await supabase
+        .from('unit_attachments')
+        .delete()
+        .eq('unit_id', unitId)
+        .eq('attachment_id', numericAttachmentId);
+    if (linkError) throw linkError;
+
+    // Затем удаляем сам файл из attachments
+    const { error: attachError } = await supabase
+        .from('attachments')
+        .delete()
+        .eq('id', numericAttachmentId);
+    if (attachError) throw attachError;
+}
+
+// Универсальная функция для удаления вложений из архива
+export async function removeArchiveAttachment(attachmentId: number | string, linkTable: string, linkField: string, entityId: number): Promise<void> {
+    const numericAttachmentId = typeof attachmentId === 'string' ? parseInt(attachmentId, 10) : attachmentId;
+    
+    // Сначала удаляем связь
+    const { error: linkError } = await supabase
+        .from(linkTable)
+        .delete()
+        .eq(linkField, entityId)
+        .eq('attachment_id', numericAttachmentId);
+    
+    if (linkError) throw linkError;
+
+    // Затем удаляем сам файл из attachments
+    const { error: attachError } = await supabase
+        .from('attachments')
+        .delete()
+        .eq('id', numericAttachmentId);
+    
+    if (attachError) throw attachError;
+}
+
 export async function signedUrl(path: string, filename = ''): Promise<string> {
     const { data, error } = await supabase.storage
         .from(ATTACH_BUCKET)

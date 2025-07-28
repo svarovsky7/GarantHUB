@@ -378,7 +378,10 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
                   .toLowerCase()
                   .includes(i.toLowerCase())
               }
-              options={units.map((u) => ({ value: u.id, label: u.name }))}
+              options={units.map((u) => ({ 
+                value: u.id, 
+                label: u.name || `Объект #${u.id}` 
+              }))}
               disabled={!projectId}
             />
           </Form.Item>

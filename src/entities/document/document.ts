@@ -12,7 +12,12 @@ export const useDocuments = () => {
     queryFn: async (): Promise<DocumentWithAuthor[]> => {
       const { data, error } = await supabase
         .from("attachments")
-        .select("*")
+        .select(`
+          *,
+          folder:document_folder_files(
+            document_folders(*)
+          )
+        `)
         .like("storage_path", "documents/%")
         .order("created_at", { ascending: false });
 
@@ -44,12 +49,69 @@ export const useDocuments = () => {
             title: doc.original_name || "Без названия",
             authorName: userMap.get(doc.created_by!) || undefined,
             file_size: fileSize,
+            folders: doc.folder?.map((f: any) => f.document_folders).filter(Boolean) || [],
           };
         })
       );
 
       return documentsWithSizes;
     },
+  });
+};
+
+// Получение документов по папке
+export const useDocumentsByFolder = (folderId: number) => {
+  return useQuery({
+    queryKey: ['documents-by-folder', folderId],
+    queryFn: async (): Promise<DocumentWithAuthor[]> => {
+      const { data, error } = await supabase
+        .from("attachments")
+        .select(`
+          *,
+          folder:document_folder_files!inner(
+            document_folders(*)
+          )
+        `)
+        .like("storage_path", "documents/%")
+        .eq("document_folder_files.folder_id", folderId)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      // Получаем информацию о пользователях отдельным запросом
+      const userIds = [...new Set(data.map(doc => doc.created_by).filter(Boolean))];
+      if (userIds.length === 0) {
+        return data.map((doc) => ({
+          ...doc,
+          title: doc.original_name || "Без названия",
+          authorName: undefined,
+        }));
+      }
+
+      const { data: users } = await supabase
+        .from("profiles")
+        .select("id, name")
+        .in("id", userIds);
+
+      const userMap = new Map(users?.map(user => [user.id, user.name]) || []);
+
+      // Получаем размеры файлов
+      const documentsWithSizes = await Promise.all(
+        data.map(async (doc) => {
+          const fileSize = await getFileSize(doc.storage_path);
+          return {
+            ...doc,
+            title: doc.original_name || "Без названия",
+            authorName: userMap.get(doc.created_by!) || undefined,
+            file_size: fileSize,
+            folders: doc.folder?.map((f: any) => f.document_folders).filter(Boolean) || [],
+          };
+        })
+      );
+
+      return documentsWithSizes;
+    },
+    enabled: !!folderId,
   });
 };
 
@@ -105,6 +167,22 @@ export const useCreateDocument = () => {
         .single();
 
       if (error) throw error;
+
+      // Если указаны папки, связываем документ с папками
+      if (data.folder_ids && data.folder_ids.length > 0) {
+        const folderLinks = data.folder_ids.map(folderId => ({
+          folder_id: folderId,
+          attachment_id: document.id,
+          created_by: user.user.id
+        }));
+
+        const { error: linkError } = await supabase
+          .from("document_folder_files")
+          .insert(folderLinks);
+
+        if (linkError) throw linkError;
+      }
+
       return document;
     },
     onSuccess: () => {
@@ -164,6 +242,38 @@ export const useDownloadDocument = () => {
   });
 };
 
+// Обновление документа
+export const useUpdateDocument = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, title, description }: { id: number; title?: string; description?: string }): Promise<Attachment> => {
+      const updateData: any = {};
+      
+      if (title !== undefined) {
+        updateData.original_name = title;
+      }
+      
+      if (description !== undefined) {
+        updateData.description = description;
+      }
+
+      const { data: document, error } = await supabase
+        .from("attachments")
+        .update(updateData)
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return document;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.documents() });
+    },
+  });
+};
+
 // Получение ссылки для просмотра файла
 export const usePreviewDocument = () => {
   return useMutation({
@@ -175,6 +285,44 @@ export const usePreviewDocument = () => {
 
       if (error) throw error;
       return data.signedUrl;
+    },
+  });
+};
+
+// Управление связями документов с папками
+export const useUpdateDocumentFolders = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ documentId, folderIds }: { documentId: number; folderIds: number[] }): Promise<void> => {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error("Пользователь не авторизован");
+
+      // Сначала удаляем все существующие связи
+      const { error: deleteError } = await supabase
+        .from("document_folder_files")
+        .delete()
+        .eq("attachment_id", documentId);
+
+      if (deleteError) throw deleteError;
+
+      // Затем добавляем новые связи, если они есть
+      if (folderIds.length > 0) {
+        const folderLinks = folderIds.map(folderId => ({
+          folder_id: folderId,
+          attachment_id: documentId,
+          created_by: user.user.id
+        }));
+
+        const { error: insertError } = await supabase
+          .from("document_folder_files")
+          .insert(folderLinks);
+
+        if (insertError) throw insertError;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.documents() });
     },
   });
 };

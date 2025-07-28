@@ -403,8 +403,15 @@ export default function AttachmentEditorTable({
                                 danger
                                 icon={<DeleteOutlined />}
                                 onClick={() => {
-                                    if (row.isRemote && row.id) onRemoveRemote?.(row.id);
-                                    else onRemoveNew?.(idx as number);
+                                    if (row.isRemote && row.id) {
+                                        if (onRemoveRemote) {
+                                            onRemoveRemote(row.id);
+                                        }
+                                    } else if (typeof idx === 'number') {
+                                        if (onRemoveNew) {
+                                            onRemoveNew(idx);
+                                        }
+                                    }
                                 }}
                             />
                         </Tooltip>

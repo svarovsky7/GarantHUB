@@ -1393,6 +1393,90 @@
     "column_default": null
   },
   {
+    "table_name": "document_folder_files",
+    "column_name": "id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": "nextval('document_folder_files_id_seq'::regclass)"
+  },
+  {
+    "table_name": "document_folder_files",
+    "column_name": "folder_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "document_folder_files",
+    "column_name": "attachment_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "document_folder_files",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "document_folder_files",
+    "column_name": "created_by",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "document_folders",
+    "column_name": "id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": "nextval('document_folders_id_seq'::regclass)"
+  },
+  {
+    "table_name": "document_folders",
+    "column_name": "name",
+    "data_type": "character varying",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "document_folders",
+    "column_name": "description",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "document_folders",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "document_folders",
+    "column_name": "created_by",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "document_folders",
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "document_folders",
+    "column_name": "project_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
     "table_name": "lawsuit_claim_types",
     "column_name": "id",
     "data_type": "bigint",
@@ -1673,6 +1757,13 @@
     "column_default": null
   },
   {
+    "table_name": "profiles",
+    "column_name": "is_active",
+    "data_type": "boolean",
+    "is_nullable": "NO",
+    "column_default": "true"
+  },
+  {
     "table_name": "profiles_projects",
     "column_name": "profile_id",
     "data_type": "uuid",
@@ -1743,6 +1834,13 @@
     "column_default": "false"
   },
   {
+    "table_name": "role_permissions",
+    "column_name": "can_upload_documents",
+    "data_type": "boolean",
+    "is_nullable": "NO",
+    "column_default": "false"
+  },
+  {
     "table_name": "roles",
     "column_name": "id",
     "data_type": "integer",
@@ -1781,6 +1879,55 @@
     "table_name": "statuses",
     "column_name": "color",
     "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "system_settings",
+    "column_name": "id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": "nextval('system_settings_id_seq'::regclass)"
+  },
+  {
+    "table_name": "system_settings",
+    "column_name": "setting_key",
+    "data_type": "character varying",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "system_settings",
+    "column_name": "setting_value",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "system_settings",
+    "column_name": "description",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "system_settings",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "system_settings",
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "system_settings",
+    "column_name": "updated_by",
+    "data_type": "uuid",
     "is_nullable": "YES",
     "column_default": null
   },

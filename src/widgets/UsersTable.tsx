@@ -1,8 +1,10 @@
 import React from "react";
 import { GridActionsCellItem } from "@mui/x-data-grid";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { Switch, Tooltip } from "antd";
+import { CheckCircleOutlined, StopOutlined } from "@ant-design/icons";
 
-import { useUsers, useDeleteUser } from "@/entities/user";
+import { useUsers, useDeleteUser, useUpdateUserStatus } from "@/entities/user";
 import { useRoles } from "@/entities/role";
 import { useProjects } from "@/entities/project";
 import AdminDataGrid from "@/shared/ui/AdminDataGrid";
@@ -26,6 +28,7 @@ export default function UsersTable({
   const { data: roles = [], isPending: rLoad } = useRoles();
   const { data: projects = [], isPending: pLoad } = useProjects();
   const delUser = useDeleteUser();
+  const updateUserStatus = useUpdateUserStatus();
 
   // Таблица
   const columns = [
@@ -51,6 +54,37 @@ export default function UsersTable({
       flex: 1,
       renderCell: ({ row }) => (
         <UserProjectsSelect user={row} projects={projects} loading={pLoad} />
+      ),
+    },
+    {
+      field: "is_active",
+      headerName: "Статус",
+      width: 120,
+      renderCell: ({ row }) => (
+        <Tooltip title={row.is_active ? "Аккаунт активен" : "Аккаунт отключен"}>
+          <Switch
+            checked={row.is_active}
+            size="small"
+            checkedChildren={<CheckCircleOutlined />}
+            unCheckedChildren={<StopOutlined />}
+            loading={updateUserStatus.isPending}
+            onChange={(checked) => {
+              updateUserStatus.mutate(
+                { id: row.id, isActive: checked },
+                {
+                  onSuccess: () => {
+                    notify.success(
+                      checked 
+                        ? "Пользователь активирован" 
+                        : "Пользователь отключен"
+                    );
+                  },
+                  onError: (e) => notify.error(e.message),
+                }
+              );
+            }}
+          />
+        </Tooltip>
       ),
     },
     {

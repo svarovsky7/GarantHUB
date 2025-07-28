@@ -137,6 +137,34 @@ export default function DocumentPreviewModal({ open, document, onClose }: Props)
           />
         );
 
+      case "word":
+        return (
+          <iframe
+            src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(previewUrl)}`}
+            width="100%"
+            height={contentHeight}
+            style={{ 
+              border: "none",
+              minHeight: isFullscreen ? "calc(100vh - 140px)" : "600px"
+            }}
+            title={`Просмотр ${document.title}`}
+          />
+        );
+
+      case "excel":
+        return (
+          <iframe
+            src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(previewUrl)}`}
+            width="100%"
+            height={contentHeight}
+            style={{ 
+              border: "none",
+              minHeight: isFullscreen ? "calc(100vh - 140px)" : "600px"
+            }}
+            title={`Просмотр ${document.title}`}
+          />
+        );
+
       default:
         return (
           <div style={{ textAlign: "center", padding: "40px 0" }}>

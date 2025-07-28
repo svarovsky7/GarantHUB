@@ -1,51 +1,66 @@
 import React, { useState } from "react";
 import {
+  Card,
+  Collapse,
   Table,
-  Button,
   Space,
   Typography,
+  Tag,
+  Button,
   Tooltip,
   Popconfirm,
   message,
-  Tag,
+  Empty,
   Input,
 } from "antd";
 import {
+  FolderOutlined,
+  GlobalOutlined,
+  FileOutlined,
   DownloadOutlined,
   DeleteOutlined,
-  FileOutlined,
   EyeOutlined,
   EditOutlined,
-  FolderOutlined,
 } from "@ant-design/icons";
-import { useDeleteDocument, useDownloadDocument, useUpdateDocument } from "@/entities/document";
+import { useDocumentFolders } from "@/entities/documentFolder";
+import { useDocumentsByFolder, useDeleteDocument, useDownloadDocument, useUpdateDocument } from "@/entities/document";
+import { useProjects } from "@/entities/project";
 import type { DocumentWithAuthor } from "@/shared/types/document";
+import type { DocumentFolderWithAuthor } from "@/shared/types/documentFolder";
 import { formatFileSize } from "@/shared/utils/formatFileSize";
-import DocumentPreviewModal from "./DocumentPreviewModal";
+import DocumentPreviewModal from "@/widgets/DocumentPreviewModal";
 import dayjs from "dayjs";
 
 const { Text } = Typography;
+const { Panel } = Collapse;
 
 interface Props {
-  documents: DocumentWithAuthor[];
-  loading?: boolean;
   canDelete?: boolean;
+  projectId?: number | null;
 }
 
-export default function DocumentsTable({ documents, loading, canDelete = false }: Props) {
+export default function FoldersWithDocuments({ canDelete = false, projectId }: Props) {
+  const { data: folders = [], isLoading: foldersLoading } = useDocumentFolders();
+  const { data: projects = [] } = useProjects();
   const deleteDocument = useDeleteDocument();
-  const downloadDocument = useDownloadDocument();  
+  const downloadDocument = useDownloadDocument();
   const updateDocument = useUpdateDocument();
+  
+  const [activeKeys, setActiveKeys] = useState<string[]>([]);
   const [previewDocument, setPreviewDocument] = useState<DocumentWithAuthor | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingDescription, setEditingDescription] = useState<string>("");
 
+  // Фильтруем папки по проекту если нужно
+  const filteredFolders = projectId 
+    ? folders.filter(folder => folder.project_id === projectId || folder.project_id === null)
+    : folders;
+
   const handleDownload = async (storagePath: string, fileName: string) => {
     try {
       const url = await downloadDocument.mutateAsync(storagePath);
       
-      // Используем fetch + blob для принудительного скачивания
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -63,7 +78,6 @@ export default function DocumentsTable({ documents, loading, canDelete = false }
       link.click();
       document.body.removeChild(link);
       
-      // Освобождаем память
       URL.revokeObjectURL(objectUrl);
       
     } catch (error) {
@@ -123,7 +137,7 @@ export default function DocumentsTable({ documents, loading, canDelete = false }
     return "📎";
   };
 
-  const columns = [
+  const getDocumentColumns = () => [
     {
       title: "Файл",
       dataIndex: "file_name",
@@ -208,26 +222,6 @@ export default function DocumentsTable({ documents, loading, canDelete = false }
           </div>
         );
       },
-    },
-    {
-      title: "Папки",
-      dataIndex: "folders",
-      key: "folders",
-      width: 200,
-      render: (folders: any[]) => (
-        folders && folders.length > 0 ? (
-          <Space direction="vertical" size={4} style={{ width: "100%" }}>
-            {folders.map((folder, index) => (
-              <Tag key={folder.id} color="blue" style={{ margin: 0 }}>
-                <FolderOutlined style={{ marginRight: 4 }} />
-                {folder.name}
-              </Tag>
-            ))}
-          </Space>
-        ) : (
-          <Text type="secondary">—</Text>
-        )
-      ),
     },
     {
       title: "Размер",
@@ -318,25 +312,95 @@ export default function DocumentsTable({ documents, loading, canDelete = false }
     },
   ];
 
-  return (
-    <>
+  const renderFolderHeader = (folder: DocumentFolderWithAuthor) => {
+    const project = projects.find(p => p.id === folder.project_id);
+    
+    return (
+      <Space>
+        <FolderOutlined style={{ color: "#1890ff" }} />
+        <Text strong>{folder.name}</Text>
+        {folder.project_id ? (
+          <Tag color="blue" size="small">
+            {project?.name || "—"}
+          </Tag>
+        ) : (
+          <Tag icon={<GlobalOutlined />} color="default" size="small">
+            Общая
+          </Tag>
+        )}
+        {folder.description && (
+          <Text type="secondary" style={{ fontSize: 12 }}>
+            — {folder.description}
+          </Text>
+        )}
+      </Space>
+    );
+  };
+
+  const FolderContent = ({ folder }: { folder: DocumentFolderWithAuthor }) => {
+    const { data: documents = [], isLoading: documentsLoading } = useDocumentsByFolder(folder.id);
+
+    if (documentsLoading) {
+      return <div style={{ padding: 16, textAlign: "center" }}>Загрузка документов...</div>;
+    }
+
+    if (documents.length === 0) {
+      return (
+        <div style={{ padding: 16 }}>
+          <Empty 
+            image={<FileOutlined style={{ fontSize: 48, color: "#d9d9d9" }} />}
+            description="В папке нет документов"
+            style={{ margin: 0 }}
+          />
+        </div>
+      );
+    }
+
+    return (
       <Table
-        columns={columns}
+        columns={getDocumentColumns()}
         dataSource={documents}
         rowKey="id"
-        loading={loading}
-        pagination={{
-          pageSize: 20,
-          showSizeChanger: true,
-          showQuickJumper: true,
-          showTotal: (total, range) => 
-            `${range[0]}-${range[1]} из ${total} документов`,
-        }}
-        locale={{
-          emptyText: "Нет документов",
-        }}
+        pagination={false}
+        size="small"
       />
-      
+    );
+  };
+
+  if (filteredFolders.length === 0) {
+    return (
+      <Card size="small">
+        <Empty 
+          image={<FolderOutlined style={{ fontSize: 48, color: "#d9d9d9" }} />}
+          description="Нет папок с документами"
+        />
+      </Card>
+    );
+  }
+
+  return (
+    <>
+      <Card
+        title="Папки с документами"
+        size="small"
+        loading={foldersLoading}
+      >
+        <Collapse
+          activeKey={activeKeys}
+          onChange={(keys) => setActiveKeys(Array.isArray(keys) ? keys : [keys])}
+          size="small"
+        >
+          {filteredFolders.map((folder) => (
+            <Panel
+              key={folder.id.toString()}
+              header={renderFolderHeader(folder)}
+            >
+              <FolderContent folder={folder} />
+            </Panel>
+          ))}
+        </Collapse>
+      </Card>
+
       <DocumentPreviewModal
         open={showPreview}
         document={previewDocument}

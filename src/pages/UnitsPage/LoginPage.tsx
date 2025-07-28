@@ -20,7 +20,7 @@ import { useSnackbar } from "notistack";
  */
 export default function LoginPage() {
   const nav = useNavigate();
-  const { enqueueSnackbar } = useSnackbar();
+  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const profile = useAuthStore((s) => s.profile);
 
   const [email, setEmail] = useState("");
@@ -37,18 +37,50 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    setLoading(false);
-
     if (error) {
+      setLoading(false);
       enqueueSnackbar(error.message, { variant: "error" });
       return;
     }
 
+    // Проверяем активность аккаунта до показа успешного сообщения
+    if (data.user) {
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("is_active")
+        .eq("id", data.user.id)
+        .single();
+
+      setLoading(false);
+
+      if (profileError) {
+        enqueueSnackbar("Ошибка при проверке аккаунта", { variant: "error" });
+        await supabase.auth.signOut();
+        return;
+      }
+
+      if (profile && !profile.is_active) {
+        enqueueSnackbar("Ваш аккаунт был отключен администратором. Обратитесь к администратору для получения доступа.", {
+          variant: "error",
+          persist: true,
+          preventDuplicate: true,
+          key: "account-disabled"
+        });
+        await supabase.auth.signOut();
+        return;
+      }
+    }
+
+    setLoading(false);
+    // Закрываем все предыдущие уведомления (включая сообщения об отключённых аккаунтах)
+    closeSnackbar();
+    // Дополнительно закрываем конкретное сообщение об отключении аккаунта
+    closeSnackbar("account-disabled");
     enqueueSnackbar("Успешный вход.", { variant: "success" });
     nav("/", { replace: true });
   };

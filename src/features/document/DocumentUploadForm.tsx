@@ -7,10 +7,12 @@ import {
   Card,
   message,
   Space,
+  Select,
 } from "antd";
-import { UploadOutlined } from "@ant-design/icons";
+import { UploadOutlined, FolderOutlined } from "@ant-design/icons";
 import type { UploadFile } from "antd";
 import { useCreateDocument } from "@/entities/document";
+import { useDocumentFolders } from "@/entities/documentFolder";
 import type { DocumentFormData } from "@/shared/types/document";
 
 const { TextArea } = Input;
@@ -23,8 +25,9 @@ export default function DocumentUploadForm({ onSuccess }: Props) {
   const [form] = Form.useForm();
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const createDocument = useCreateDocument();
+  const { data: folders = [], isLoading: foldersLoading } = useDocumentFolders();
 
-  const handleSubmit = async (values: { title: string; description?: string }) => {
+  const handleSubmit = async (values: { title: string; description?: string; folder_ids?: number[] }) => {
     if (fileList.length === 0) {
       message.error("Пожалуйста, выберите файл");
       return;
@@ -40,6 +43,7 @@ export default function DocumentUploadForm({ onSuccess }: Props) {
       title: values.title,
       description: values.description,
       file,
+      folder_ids: values.folder_ids,
     };
 
     try {
@@ -83,6 +87,29 @@ export default function DocumentUploadForm({ onSuccess }: Props) {
           ]}
         >
           <Input placeholder="Введите название документа" />
+        </Form.Item>
+
+        <Form.Item
+          name="folder_ids"
+          label="Папки"
+        >
+          <Select
+            mode="multiple"
+            placeholder="Выберите папки (необязательно)"
+            allowClear
+            loading={foldersLoading}
+            optionFilterProp="label"
+            showSearch
+          >
+            {folders.map((folder) => (
+              <Select.Option key={folder.id} value={folder.id} label={folder.name}>
+                <Space>
+                  <FolderOutlined />
+                  {folder.name}
+                </Space>
+              </Select.Option>
+            ))}
+          </Select>
         </Form.Item>
 
         <Form.Item

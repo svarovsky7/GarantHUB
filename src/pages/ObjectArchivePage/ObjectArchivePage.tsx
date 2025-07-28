@@ -14,6 +14,8 @@ import {
   signedUrlForPreview,
   updateAttachmentDescription,
   addUnitAttachments,
+  removeUnitAttachment,
+  removeArchiveAttachment,
 } from '@/entities/attachment';
 import FilePreviewModal from '@/shared/ui/FilePreviewModal';
 import type { PreviewFile } from '@/shared/types/previewFile';
@@ -52,6 +54,8 @@ export default function ObjectArchivePage() {
   const [viewCourtId, setViewCourtId] = React.useState<number | null>(null);
   const [viewLetterId, setViewLetterId] = React.useState<number | null>(null);
   const [previewFile, setPreviewFile] = React.useState<PreviewFile | null>(null);
+  const [removedIds, setRemovedIds] = React.useState<string[]>([]);
+  const [removedFilesInfo, setRemovedFilesInfo] = React.useState<Record<string, { type: string; entityId?: number }>>({});
 
   const changedFlags = React.useMemo(() => {
     const map: Record<string, boolean> = {};
@@ -114,6 +118,40 @@ export default function ObjectArchivePage() {
     setDescHelper(setLetterFiles, id, d);
   }, []);
 
+  const handleRemoveObjectFile = React.useCallback((id: string) => {
+    setObjectFiles((p) => p.filter((f) => f.id !== id));
+    setRemovedIds((p) => [...p, id]);
+    setRemovedFilesInfo((p) => ({ ...p, [id]: { type: 'object' } }));
+  }, []);
+
+  const handleRemoveRemarkFile = React.useCallback((id: string) => {
+    const file = remarkFiles.find(f => f.id === id);
+    setRemarkFiles((p) => p.filter((f) => f.id !== id));
+    setRemovedIds((p) => [...p, id]);
+    setRemovedFilesInfo((p) => ({ ...p, [id]: { type: 'remark', entityId: file?.entityId } }));
+  }, [remarkFiles]);
+
+  const handleRemoveDefectFile = React.useCallback((id: string) => {
+    const file = defectFiles.find(f => f.id === id);
+    setDefectFiles((p) => p.filter((f) => f.id !== id));
+    setRemovedIds((p) => [...p, id]);
+    setRemovedFilesInfo((p) => ({ ...p, [id]: { type: 'defect', entityId: file?.entityId } }));
+  }, [defectFiles]);
+
+  const handleRemoveCourtFile = React.useCallback((id: string) => {
+    const file = courtFiles.find(f => f.id === id);
+    setCourtFiles((p) => p.filter((f) => f.id !== id));
+    setRemovedIds((p) => [...p, id]);
+    setRemovedFilesInfo((p) => ({ ...p, [id]: { type: 'court', entityId: file?.entityId } }));
+  }, [courtFiles]);
+
+  const handleRemoveLetterFile = React.useCallback((id: string) => {
+    const file = letterFiles.find(f => f.id === id);
+    setLetterFiles((p) => p.filter((f) => f.id !== id));
+    setRemovedIds((p) => [...p, id]);
+    setRemovedFilesInfo((p) => ({ ...p, [id]: { type: 'letter', entityId: file?.entityId } }));
+  }, [letterFiles]);
+
   const handleDownloadArchive = async () => {
     const files = [
       ...objectFiles,
@@ -141,20 +179,51 @@ export default function ObjectArchivePage() {
 
   const handleSave = async () => {
     try {
+      // Удаляем файлы
+      if (removedIds.length) {
+        await Promise.all(
+          removedIds.map(async (id) => {
+            const fileInfo = removedFilesInfo[id];
+            if (!fileInfo) {
+              return;
+            }
+            
+            switch (fileInfo.type) {
+              case 'object':
+                return removeUnitAttachment(unitId, id);
+              case 'remark':
+                return removeArchiveAttachment(id, 'claim_attachments', 'claim_id', fileInfo.entityId!);
+              case 'defect':
+                return removeArchiveAttachment(id, 'defect_attachments', 'defect_id', fileInfo.entityId!);
+              case 'court':
+                return removeArchiveAttachment(id, 'court_case_attachments', 'court_case_id', fileInfo.entityId!);
+              case 'letter':
+                return removeArchiveAttachment(id, 'letter_attachments', 'letter_id', fileInfo.entityId!);
+            }
+          })
+        );
+      }
+      
+      // Обновляем описания
       await Promise.all(
         Object.entries(changed).map(([id, val]) =>
           updateAttachmentDescription(Number(id), val),
         ),
       );
+      
+      // Добавляем новые файлы
       if (newObjectFiles.length) {
         await addUnitAttachments(
           newObjectFiles.map((f) => ({ file: f.file, description: f.description })),
           unitId,
         );
       }
+      
       await qc.invalidateQueries({ queryKey: ['unit-archive', unitId] });
+      setRemovedIds([]);
+      setRemovedFilesInfo({});
     } catch (e) {
-      console.error(e);
+      console.error('Save failed:', e);
     }
   };
 
@@ -187,6 +256,8 @@ export default function ObjectArchivePage() {
               setNewObjectFiles((p) => p.map((f, i) => (i === idx ? { ...f, description: d } : f)))
             }
             onDescRemote={handleDescObject}
+            onRemoveRemote={handleRemoveObjectFile}
+            onRemoveNew={(idx) => setNewObjectFiles((p) => p.filter((_, i) => i !== idx))}
             showMime={false}
             showDetails
             showSize
@@ -204,6 +275,7 @@ export default function ObjectArchivePage() {
           <AttachmentEditorTable
             remoteFiles={remarkFiles}
             onDescRemote={handleDescRemark}
+            onRemoveRemote={handleRemoveRemarkFile}
             showMime={false}
             showDetails
             showSize
@@ -223,6 +295,7 @@ export default function ObjectArchivePage() {
           <AttachmentEditorTable
             remoteFiles={defectFiles}
             onDescRemote={handleDescDefect}
+            onRemoveRemote={handleRemoveDefectFile}
             showMime={false}
             showDetails
             showSize
@@ -242,6 +315,7 @@ export default function ObjectArchivePage() {
           <AttachmentEditorTable
             remoteFiles={courtFiles}
             onDescRemote={handleDescCourt}
+            onRemoveRemote={handleRemoveCourtFile}
             showMime={false}
             showDetails
             showSize
@@ -261,6 +335,7 @@ export default function ObjectArchivePage() {
           <AttachmentEditorTable
             remoteFiles={letterFiles}
             onDescRemote={handleDescLetter}
+            onRemoveRemote={handleRemoveLetterFile}
             showMime={false}
             showDetails
             showSize
@@ -276,7 +351,7 @@ export default function ObjectArchivePage() {
           getLinkLabel={(f) => `Письмо №${f.entityId}`}
         />
           <Divider />
-          <Button type="primary" disabled={!newObjectFiles.length && !Object.keys(changed).length} onClick={handleSave}>
+          <Button type="primary" disabled={!newObjectFiles.length && !Object.keys(changed).length && !removedIds.length} onClick={handleSave}>
             Сохранить изменения
           </Button>
           <ClaimViewModal open={viewClaimId !== null} claimId={viewClaimId} onClose={() => setViewClaimId(null)} />

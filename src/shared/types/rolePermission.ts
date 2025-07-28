@@ -7,6 +7,8 @@ export interface RolePermission {
   only_assigned_project: boolean;
   /** Разрешено ли блокировать объекты */
   can_lock_units: boolean;
+  /** Разрешено ли загружать документы */
+  can_upload_documents: boolean;
 }
 
 /** Специальная отметка в массиве pages для разрешения досудебных претензий */
@@ -32,6 +34,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<RoleName, RolePermission> = {
     delete_tables: ['defects', 'court_cases', 'letters', 'claims'],
     only_assigned_project: false,
     can_lock_units: true,
+    can_upload_documents: true,
   },
   ENGINEER: {
     role_name: 'ENGINEER',
@@ -49,6 +52,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<RoleName, RolePermission> = {
     delete_tables: ['defects', 'letters', 'claims'],
     only_assigned_project: false,
     can_lock_units: false,
+    can_upload_documents: false,
   },
   LAWYER: {
     role_name: 'LAWYER',
@@ -65,6 +69,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<RoleName, RolePermission> = {
     delete_tables: ['court_cases', 'letters'],
     only_assigned_project: false,
     can_lock_units: true,
+    can_upload_documents: false,
   },
   CONTRACTOR: {
     role_name: 'CONTRACTOR',
@@ -73,5 +78,6 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<RoleName, RolePermission> = {
     delete_tables: [],
     only_assigned_project: false,
     can_lock_units: false,
+    can_upload_documents: false,
   },
 };

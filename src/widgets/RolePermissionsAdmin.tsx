@@ -5,6 +5,7 @@ import {
   useRolePermissions,
   useUpsertRolePermission,
 } from '@/entities/rolePermission';
+import { useSystemSetting, useUpdateSystemSetting } from '@/entities/systemSettings';
 import type { RolePermission, RoleName } from '@/shared/types/rolePermission';
 import {
   DEFAULT_ROLE_PERMISSIONS,
@@ -32,13 +33,17 @@ interface RightRow {
     | 'edit_tables'
     | 'delete_tables'
     | 'only_assigned_project'
-    | 'can_lock_units';
+    | 'can_lock_units'
+    | 'can_upload_documents';
   value?: string;
 }
 
 export default function RolePermissionsAdmin() {
   const { data = [], isLoading } = useRolePermissions();
   const upsert = useUpsertRolePermission();
+  
+  const { data: registrationSetting } = useSystemSetting('registration_enabled');
+  const updateSystemSetting = useUpdateSystemSetting();
 
   const roleNames: RoleName[] = ['ADMIN', 'ENGINEER', 'LAWYER', 'CONTRACTOR'];
 
@@ -60,7 +65,7 @@ export default function RolePermissionsAdmin() {
 
   const handleBoolToggle = (
     role: RoleName,
-    field: 'only_assigned_project' | 'can_lock_units',
+    field: 'only_assigned_project' | 'can_lock_units' | 'can_upload_documents',
     value: boolean,
   ) => {
     const current = merged.find((m) => m.role_name === role)!;
@@ -72,6 +77,7 @@ export default function RolePermissionsAdmin() {
     { key: 'only_project', label: 'Только свой проект', field: 'only_assigned_project' },
     { key: 'pretrial', label: 'Досудебные претензии', field: 'pages', value: PRETRIAL_FLAG },
     { key: 'lock_unit', label: 'Блокировка объектов', field: 'can_lock_units' },
+    { key: 'upload_documents', label: 'Загрузка документов', field: 'can_upload_documents' },
   ];
 
   /** Доступ к разделам приложения */
@@ -110,13 +116,13 @@ export default function RolePermissionsAdmin() {
       dataIndex: role,
       render: (_: unknown, row: RightRow) => {
         const record = merged.find((m) => m.role_name === role)!;
-        if (row.field === 'only_assigned_project' || row.field === 'can_lock_units') {
+        if (row.field === 'only_assigned_project' || row.field === 'can_lock_units' || row.field === 'can_upload_documents') {
           return (
             <Switch
               size="small"
               checked={record[row.field as keyof RolePermission] as boolean}
               onChange={(checked) =>
-                handleBoolToggle(role, row.field as 'only_assigned_project' | 'can_lock_units', checked)
+                handleBoolToggle(role, row.field as 'only_assigned_project' | 'can_lock_units' | 'can_upload_documents', checked)
               }
             />
           );
@@ -163,6 +169,24 @@ export default function RolePermissionsAdmin() {
           dataSource={generalRights}
           columns={columns}
         />
+      </Card>
+
+      <Card title="Настройки системы" size="small">
+        <Space direction="vertical" style={{ width: '100%' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0' }}>
+            <Typography.Text>Разрешить регистрацию новых пользователей</Typography.Text>
+            <Switch
+              checked={registrationSetting?.setting_value === 'true'}
+              onChange={(checked) => {
+                updateSystemSetting.mutate({
+                  setting_key: 'registration_enabled',
+                  setting_value: checked ? 'true' : 'false'
+                });
+              }}
+              loading={updateSystemSetting.isPending}
+            />
+          </div>
+        </Space>
       </Card>
     </Space>
   );
