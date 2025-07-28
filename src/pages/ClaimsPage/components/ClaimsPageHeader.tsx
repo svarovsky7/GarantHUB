@@ -29,7 +29,10 @@ const ClaimsPageHeader = React.memo<ClaimsPageHeaderProps>(({
   usesPagination = false,
 }) => {
   return (
-    <div style={{ marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
+    <div
+      className="claims-page-header"
+      style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}
+    >
       <Button
         type="primary"
         icon={<PlusOutlined />}
