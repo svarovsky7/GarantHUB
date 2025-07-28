@@ -1,16 +1,49 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap");
 
+html {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
 body {
   font-family: "Inter", system-ui, sans-serif;
   background-color: #f5f7ff;
   margin: 0;
   font-size: 14px;
   overflow-x: hidden;
+  min-width: 100vw;
 }
 
 
 
 /* === ТАБЛИЦА ================================================================= */
+.MuiTable-root {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+}
+.MuiTableHead-root th {
+  position: sticky;
+  top: 0;
+  background: #f5f5f5;
+  white-space: pre-line;
+}
+.MuiTableCell-root {
+  padding: 12px 16px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.MuiTableBody-root tr:nth-child(even) {
+  background: #fafafa;
+}
+.MuiTableBody-root tr:hover {
+  background: #e5edff;
+}
+
+/* Антd таблицы */
+.ant-table-thead > tr > th {
+  background: #fafafa;
+}
 
 .root-letter-row .ant-table-cell {
   font-weight: 600;
