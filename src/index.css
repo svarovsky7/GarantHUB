@@ -1,7 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap");
 
-
-
 body {
   font-family: "Inter", system-ui, sans-serif;
   background-color: #f5f7ff;
@@ -10,46 +8,9 @@ body {
   overflow-x: hidden;
 }
 
-/* === ФИЛЬТРЫ ================================================================= */
-.filter-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 16px;
-}
-
-.filter-grid .MuiTextField-root,
-.filter-grid .MuiFormControl-root,
-.filter-grid .ant-input,
-.filter-grid .ant-select,
-.filter-grid button {
-  width: 100%;
-}
-
 
 
 /* === ТАБЛИЦА ================================================================= */
-.MuiTable-root {
-  width: 100%;
-  table-layout: fixed;
-  border-collapse: separate;
-}
-.MuiTableHead-root th {
-  position: sticky;
-  top: 0;
-  background: #f5f5f5;
-  white-space: pre-line;
-}
-.MuiTableCell-root {
-  padding: 12px 16px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.MuiTableBody-root tr:nth-child(even) {
-  background: #fafafa;
-}
-.MuiTableBody-root tr:hover {
-  background: #e5edff;
-}
 
 .root-letter-row .ant-table-cell {
   font-weight: 600;
@@ -140,96 +101,3 @@ body {
   border-radius: 2px;
 }
 
-/* Ручка изменения ширины колонок таблицы */
-.resize-handle {
-  position: absolute;
-  right: -5px;
-  top: 0;
-  bottom: 0;
-  width: 10px;
-  cursor: col-resize;
-  z-index: 1;
-}
-
-/* Настройка столбцов таблицы */
-.columns-drawer-row {
-  display: grid;
-  grid-template-columns: auto 1fr 80px auto auto;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.columns-drawer-input {
-  width: 80px;
-}
-
-/* === ОПТИМИЗАЦИЯ ПРОИЗВОДИТЕЛЬНОСТИ ПРЕТЕНЗИЙ ================================ */
-/* Оптимизация производительности для страницы претензий */
-
-.virtual-table-row {
-  contain: layout style paint;
-  will-change: transform;
-}
-
-.virtual-table-row-content {
-  display: flex;
-  align-items: center;
-  height: 56px;
-  padding: 0 16px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.virtual-table-row-content > div {
-  flex: 1;
-  padding: 0 8px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Оптимизация для строк таблицы */
-.ant-table-tbody > tr {
-  contain: layout style paint;
-}
-
-.ant-table-tbody > tr > td {
-  contain: layout style paint;
-}
-
-/* Ускорение анимаций */
-.ant-select-dropdown,
-.ant-table-filter-dropdown {
-  contain: layout style paint;
-}
-
-/* Оптимизация для фильтров */
-.claims-filters {
-  contain: layout style paint;
-}
-
-.claims-filters .ant-form-item {
-  contain: layout style paint;
-}
-
-/* Оптимизация для статусов */
-.claim-status-select {
-  contain: layout style paint;
-}
-
-/* Оптимизация скроллинга */
-.virtual-table-container {
-  contain: strict;
-  height: 600px;
-  overflow: auto;
-  will-change: scroll-position;
-}
-
-/* GPU ускорение для анимаций */
-.ant-btn,
-.ant-select-selector,
-.ant-input,
-.ant-table-thead > tr > th,
-.ant-table-tbody > tr > td {
-  transform: translateZ(0);
-}
