@@ -233,13 +233,3 @@ body {
 .ant-table-tbody > tr > td {
   transform: translateZ(0);
 }
-
-/* -------------------------------------------------------------------------- */
-/*  Claims page header                                                         */
-/* -------------------------------------------------------------------------- */
-.claims-page-header {
-  position: sticky;
-  top: 64px;
-  z-index: 500;
-  background: #fff;
-}
