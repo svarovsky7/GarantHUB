@@ -283,7 +283,7 @@ export default function ClaimsTable({
     <Table
       rowKey="id"
       columns={columnsWithResize}
-      sticky={{ offsetHeader: 80 }}
+      sticky={{ offsetHeader: 112 }}
       dataSource={treeData}
       loading={loading}
       pagination={showPagination ? {
