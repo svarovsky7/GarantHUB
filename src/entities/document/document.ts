@@ -186,7 +186,10 @@ export const useCreateDocument = () => {
       return document;
     },
     onSuccess: () => {
+      // Инвалидируем основной список документов
       queryClient.invalidateQueries({ queryKey: queryKeys.documents() });
+      // Инвалидируем все запросы документов по папкам
+      queryClient.invalidateQueries({ queryKey: ['documents-by-folder'] });
     },
   });
 };
@@ -222,7 +225,10 @@ export const useDeleteDocument = () => {
       if (error) throw error;
     },
     onSuccess: () => {
+      // Инвалидируем основной список документов
       queryClient.invalidateQueries({ queryKey: queryKeys.documents() });
+      // Инвалидируем все запросы документов по папкам
+      queryClient.invalidateQueries({ queryKey: ['documents-by-folder'] });
     },
   });
 };
@@ -269,7 +275,10 @@ export const useUpdateDocument = () => {
       return document;
     },
     onSuccess: () => {
+      // Инвалидируем основной список документов
       queryClient.invalidateQueries({ queryKey: queryKeys.documents() });
+      // Инвалидируем все запросы документов по папкам
+      queryClient.invalidateQueries({ queryKey: ['documents-by-folder'] });
     },
   });
 };
@@ -322,7 +331,10 @@ export const useUpdateDocumentFolders = () => {
       }
     },
     onSuccess: () => {
+      // Инвалидируем основной список документов
       queryClient.invalidateQueries({ queryKey: queryKeys.documents() });
+      // Инвалидируем все запросы документов по папкам
+      queryClient.invalidateQueries({ queryKey: ['documents-by-folder'] });
     },
   });
 };

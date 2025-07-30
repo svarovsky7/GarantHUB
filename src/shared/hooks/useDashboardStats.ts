@@ -14,10 +14,12 @@ import type { DashboardStats } from '@/shared/types/dashboardStats';
  * @param pid Опциональный идентификатор проекта. Если не указан,
  *            используется выбранный в приложении проект.
  */
-export function useDashboardStats(pid?: number | null) {
+export function useDashboardStats(pid?: number | number[] | null) {
   const qc = useQueryClient();
   const { data: projects = [] } = useVisibleProjects();
   const projectId = pid ?? useProjectId();
+  const isMultiple = Array.isArray(projectId);
+  const projectIds = isMultiple ? projectId : (projectId ? [projectId] : []);
   const { data: claimStatuses = [] } = useClaimStatuses();
   const { data: defectStatuses = [] } = useDefectStatuses();
   const { data: courtStages = [] } = useCourtCaseStatuses();
@@ -27,61 +29,104 @@ export function useDashboardStats(pid?: number | null) {
   const closedCaseId = courtStages.find((s) => /закры/i.test(s.name))?.id ?? null;
 
   const statsQuery = useQuery<DashboardStats>({
-    queryKey: ['dashboard-stats', projectId, closedClaimId, closedDefectId, closedCaseId],
-    enabled: !!projectId,
+    queryKey: ['dashboard-stats', isMultiple ? projectIds.join(',') : projectId, closedClaimId, closedDefectId, closedCaseId],
+    enabled: projectIds.length > 0,
     queryFn: async () => {
-      const project = projects.find((p) => p.id === projectId);
-      if (!project) throw new Error('no project');
+      if (projectIds.length === 0) throw new Error('no projects');
+      
+      // Загружаем статистику для всех проектов
+      const allStats = await Promise.all(
+        projectIds.map(async (pid) => {
+          const project = projects.find((p) => p.id === pid);
+          if (!project) return null;
 
-      const { data, error } = await supabase.rpc('dashboard_stats', {
-        pid: project.id,
-        closed_claim_id: closedClaimId,
-        closed_defect_id: closedDefectId,
-      });
-      if (error) throw error;
+          const { data, error } = await supabase.rpc('dashboard_stats', {
+            pid: project.id,
+            closed_claim_id: closedClaimId,
+            closed_defect_id: closedDefectId,
+          });
+          if (error) throw error;
 
-      const { data: bldData, error: bldErr } = await supabase.rpc('buildings_by_project', { pid: project.id });
-      if (bldErr) throw bldErr;
-      const buildingCount = (bldData || []).filter((b: any) => b.building).length;
+          const { data: bldData, error: bldErr } = await supabase.rpc('buildings_by_project', { pid: project.id });
+          if (bldErr) throw bldErr;
+          const buildingCount = (bldData || []).filter((b: any) => b.building).length;
 
-      const { count: totalCases } = await supabase
-        .from('court_cases')
-        .select('id', { count: 'exact', head: true })
-        .eq('project_id', project.id);
-      const { count: closedCases } = closedCaseId
-        ? await supabase
+          const { count: totalCases } = await supabase
             .from('court_cases')
             .select('id', { count: 'exact', head: true })
-            .eq('project_id', project.id)
-            .eq('status', closedCaseId)
-        : { count: 0 };
+            .eq('project_id', project.id);
+          const { count: closedCases } = closedCaseId
+            ? await supabase
+                .from('court_cases')
+                .select('id', { count: 'exact', head: true })
+                .eq('project_id', project.id)
+                .eq('status', closedCaseId)
+            : { count: 0 };
 
-      return {
-        ...(data as DashboardStats),
-        projects: (data as DashboardStats).projects.map((p) => ({ ...p, buildingCount })),
-        courtCasesOpen: (totalCases ?? 0) - (closedCases ?? 0),
-        courtCasesClosed: closedCases ?? 0,
-      } as DashboardStats;
+          return {
+            ...(data as DashboardStats),
+            projects: (data as DashboardStats).projects.map((p) => ({ ...p, buildingCount })),
+            courtCasesOpen: (totalCases ?? 0) - (closedCases ?? 0),
+            courtCasesClosed: closedCases ?? 0,
+          } as DashboardStats;
+        })
+      );
+      
+      // Фильтруем null значения
+      const validStats = allStats.filter(s => s !== null) as DashboardStats[];
+      
+      // Если только один проект, возвращаем его статистику
+      if (validStats.length === 1) {
+        return validStats[0];
+      }
+      
+      // Объединяем статистику для всех проектов
+      const combined = validStats.reduce((acc, stat) => {
+        return {
+          projects: [...acc.projects, ...stat.projects],
+          claimsOpen: acc.claimsOpen + stat.claimsOpen,
+          claimsClosed: acc.claimsClosed + stat.claimsClosed,
+          defectsOpen: acc.defectsOpen + stat.defectsOpen,
+          defectsClosed: acc.defectsClosed + stat.defectsClosed,
+          courtCasesOpen: acc.courtCasesOpen + stat.courtCasesOpen,
+          courtCasesClosed: acc.courtCasesClosed + stat.courtCasesClosed,
+        };
+      }, {
+        projects: [],
+        claimsOpen: 0,
+        claimsClosed: 0,
+        defectsOpen: 0,
+        defectsClosed: 0,
+        courtCasesOpen: 0,
+        courtCasesClosed: 0,
+      } as DashboardStats);
+      
+      return combined;
     },
     staleTime: 60_000,
   });
 
   useEffect(() => {
-    if (!projectId) return;
-    const channel = supabase.channel(`dashboard-stats-${projectId}`);
-    const tables = ['units', 'claims', 'defects', 'court_cases', 'letters'];
-    tables.forEach((table) => {
-      channel.on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table, filter: `project_id=eq.${projectId}` },
-        () => qc.invalidateQueries({ queryKey: ['dashboard-stats'] }),
-      );
+    if (!projectIds.length) return;
+    
+    const channels = projectIds.map(pid => {
+      const channel = supabase.channel(`dashboard-stats-${pid}`);
+      const tables = ['units', 'claims', 'defects', 'court_cases', 'letters'];
+      tables.forEach((table) => {
+        channel.on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table, filter: `project_id=eq.${pid}` },
+          () => qc.invalidateQueries({ queryKey: ['dashboard-stats'] }),
+        );
+      });
+      channel.subscribe();
+      return channel;
     });
-    channel.subscribe();
+    
     return () => {
-      channel.unsubscribe();
+      channels.forEach(channel => channel.unsubscribe());
     };
-  }, [projectId, qc]);
+  }, [projectIds.join(','), qc]);
 
   return statsQuery;
 }

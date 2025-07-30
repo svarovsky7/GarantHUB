@@ -11,11 +11,11 @@ import {
   Statistic,
   Segmented,
   Alert,
+  Button,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import ruRU from 'antd/locale/ru_RU';
 import { useUsers } from '@/entities/user';
-import { useRoles } from '@/entities/role';
 import { useMultipleUserStats, useMultipleUserStatsOptimized } from '@/shared/hooks/useUserStats';
 import { Dayjs } from 'dayjs';
 
@@ -34,9 +34,7 @@ export default function UserStatsBlock({
   resetSignal?: number;
 }) {
   const { data: users = [], isPending } = useUsers();
-  const { data: roles = [] } = useRoles();
   const [userIds, setUserIds] = React.useState<string[]>([]);
-  const [role, setRole] = React.useState<string | null>(null);
   const presetRanges = {
     all: [dayjs('2020-01-01'), dayjs()],
     month: [dayjs().subtract(1, 'month'), dayjs()],
@@ -69,10 +67,9 @@ export default function UserStatsBlock({
       const byProject =
         !projectIds?.length ||
         u.project_ids.some((pid) => projectIds.includes(pid));
-      const byRole = !role || u.role === role;
-      return byProject && byRole;
+      return byProject;
     });
-  }, [users, projectIds, role]);
+  }, [users, projectIds]);
 
   // Используем оптимизированную версию для устранения N+1 проблемы
   const { data, isPending: loadingStats, isError, error } = useMultipleUserStatsOptimized(
@@ -85,7 +82,6 @@ export default function UserStatsBlock({
     label: u.name ?? u.email,
   }));
 
-  const roleOptions = roles.map((r) => ({ value: r.name, label: r.name }));
 
   React.useEffect(() => {
     setUserIds((ids) => ids.filter((id) => filteredUsers.some((u) => u.id === id)));
@@ -95,7 +91,6 @@ export default function UserStatsBlock({
     setUserIds([]);
     setRange(presetRanges.all as [Dayjs, Dayjs]);
     setPreset('all');
-    setRole(null);
   }, [resetSignal]);
 
   const tableData = React.useMemo(
@@ -103,6 +98,8 @@ export default function UserStatsBlock({
       userIds.map((id, idx) => {
         const stats = data?.[idx];
         const u = filteredUsers.find((f) => f.id === id);
+        
+        
         return {
           key: id,
           name: u?.name ?? u?.email ?? id,
@@ -155,6 +152,7 @@ export default function UserStatsBlock({
     {
       title: 'Создано претензий',
       dataIndex: 'claim',
+      width: 150,
       align: 'right',
       sorter: (a, b) => a.claim - b.claim,
       render: (v: number) =>
@@ -165,6 +163,7 @@ export default function UserStatsBlock({
     {
       title: 'Претензий за ним',
       dataIndex: 'claimResp',
+      width: 150,
       align: 'right',
       sorter: (a, b) => a.claimResp - b.claimResp,
       render: (v: number) =>
@@ -177,6 +176,7 @@ export default function UserStatsBlock({
     {
       title: 'Создано дефектов',
       dataIndex: 'defect',
+      width: 150,
       align: 'right',
       sorter: (a, b) => a.defect - b.defect,
       render: (v: number) =>
@@ -189,6 +189,7 @@ export default function UserStatsBlock({
     {
       title: 'Дефектов за ним',
       dataIndex: 'defectResp',
+      width: 150,
       align: 'right',
       sorter: (a, b) => a.defectResp - b.defectResp,
       render: (v: number) =>
@@ -204,26 +205,29 @@ export default function UserStatsBlock({
     <ConfigProvider locale={ruRU}>
       <Card title="Статистика пользователя" style={{ width: 1600 }}>
         <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-          <Select
-            allowClear
-            placeholder="Роль"
-            options={roleOptions}
-            value={role ?? undefined}
-            onChange={(val) => setRole(val)}
-            style={{ width: '100%' }}
-          />
-          <Select
-            mode="multiple"
-            showSearch
-            allowClear
-            placeholder="Выберите пользователя"
-            options={userOptions}
-            optionFilterProp="label"
-            value={userIds}
-            onChange={(val) => setUserIds(val)}
-            loading={isPending}
-            style={{ width: '100%' }}
-          />
+          <Space style={{ width: '100%' }} direction="vertical">
+            <Select
+              mode="multiple"
+              showSearch
+              allowClear
+              placeholder="Выберите пользователя"
+              options={userOptions}
+              optionFilterProp="label"
+              value={userIds}
+              onChange={(val) => setUserIds(val)}
+              loading={isPending}
+              style={{ width: '100%' }}
+            />
+            {filteredUsers.length > 0 && (
+              <Button 
+                onClick={() => setUserIds(filteredUsers.map(u => u.id))}
+                type="link"
+                style={{ padding: 0 }}
+              >
+                Выбрать всех пользователей {projectIds?.length ? 'выбранных проектов' : ''}
+              </Button>
+            )}
+          </Space>
           <Segmented
             options={[
               { label: 'За все время', value: 'all' },
@@ -265,8 +269,17 @@ export default function UserStatsBlock({
               size="small"
               expandable={{
                 expandedRowRender: (record) => {
+                  // Проверяем, есть ли данные по статусам
+                  if (!record.claimStatusCounts?.length && 
+                      !record.claimResponsibleStatusCounts?.length && 
+                      !record.defectStatusCounts?.length && 
+                      !record.defectResponsibleStatusCounts?.length) {
+                    return <div style={{ padding: '10px 40px', color: '#999' }}>Нет данных по статусам</div>;
+                  }
+                  
                   // Создаем карту статусов для объединения данных
                   const statusMap = new Map<string, {
+                    statusId: number | null;
                     statusName: string;
                     claimCreated: number;
                     claimResp: number;
@@ -279,6 +292,7 @@ export default function UserStatsBlock({
                     const key = item.statusName || 'Без статуса';
                     if (!statusMap.has(key)) {
                       statusMap.set(key, {
+                        statusId: item.statusId,
                         statusName: key,
                         claimCreated: 0,
                         claimResp: 0,
@@ -286,7 +300,8 @@ export default function UserStatsBlock({
                         defectResp: 0,
                       });
                     }
-                    statusMap.get(key)!.claimCreated = item.count;
+                    // Аккумулируем значения, а не перезаписываем
+                    statusMap.get(key)!.claimCreated += item.count;
                   });
 
                   // Добавляем данные по претензиям за пользователем
@@ -294,6 +309,7 @@ export default function UserStatsBlock({
                     const key = item.statusName || 'Без статуса';
                     if (!statusMap.has(key)) {
                       statusMap.set(key, {
+                        statusId: item.statusId,
                         statusName: key,
                         claimCreated: 0,
                         claimResp: 0,
@@ -301,7 +317,8 @@ export default function UserStatsBlock({
                         defectResp: 0,
                       });
                     }
-                    statusMap.get(key)!.claimResp = item.count;
+                    // Аккумулируем значения, а не перезаписываем
+                    statusMap.get(key)!.claimResp += item.count;
                   });
 
                   // Добавляем данные по созданным дефектам
@@ -309,6 +326,7 @@ export default function UserStatsBlock({
                     const key = item.statusName || 'Без статуса';
                     if (!statusMap.has(key)) {
                       statusMap.set(key, {
+                        statusId: item.statusId,
                         statusName: key,
                         claimCreated: 0,
                         claimResp: 0,
@@ -316,7 +334,8 @@ export default function UserStatsBlock({
                         defectResp: 0,
                       });
                     }
-                    statusMap.get(key)!.defectCreated = item.count;
+                    // Аккумулируем значения, а не перезаписываем
+                    statusMap.get(key)!.defectCreated += item.count;
                   });
 
                   // Добавляем данные по дефектам за пользователем
@@ -324,6 +343,7 @@ export default function UserStatsBlock({
                     const key = item.statusName || 'Без статуса';
                     if (!statusMap.has(key)) {
                       statusMap.set(key, {
+                        statusId: item.statusId,
                         statusName: key,
                         claimCreated: 0,
                         claimResp: 0,
@@ -331,12 +351,18 @@ export default function UserStatsBlock({
                         defectResp: 0,
                       });
                     }
-                    statusMap.get(key)!.defectResp = item.count;
+                    // Аккумулируем значения, а не перезаписываем
+                    statusMap.get(key)!.defectResp += item.count;
                   });
 
-                  const statusData = Array.from(statusMap.values()).sort((a, b) => 
-                    a.statusName.localeCompare(b.statusName)
-                  );
+                  const statusData = Array.from(statusMap.values()).sort((a, b) => {
+                    // Статусы без ID (null) идут в конец
+                    if (a.statusId === null && b.statusId === null) return 0;
+                    if (a.statusId === null) return 1;
+                    if (b.statusId === null) return -1;
+                    // Сортировка по ID
+                    return a.statusId - b.statusId;
+                  });
 
                   const subColumns: ColumnsType<typeof statusData[0]> = [
                     {
@@ -353,34 +379,46 @@ export default function UserStatsBlock({
                     {
                       title: 'Создано претензий',
                       dataIndex: 'claimCreated',
+                      width: 150,
                       align: 'right',
-                      render: (v: number) => v > 0 
-                        ? `${v} (${record.claim ? Math.round((v / record.claim) * 100) : 0}%)`
-                        : '—',
+                      render: (v: number) => {
+                        if (v === 0) return '—';
+                        const percent = record.claim > 0 ? Math.round((v / record.claim) * 100) : 0;
+                        return `${v} (${percent}%)`;
+                      },
                     },
                     {
                       title: 'Претензий за ним',
                       dataIndex: 'claimResp',
+                      width: 150,
                       align: 'right',
-                      render: (v: number) => v > 0
-                        ? `${v} (${record.claimResp ? Math.round((v / record.claimResp) * 100) : 0}%)`
-                        : '—',
+                      render: (v: number) => {
+                        if (v === 0) return '—';
+                        const percent = record.claimResp > 0 ? Math.round((v / record.claimResp) * 100) : 0;
+                        return `${v} (${percent}%)`;
+                      },
                     },
                     {
                       title: 'Создано дефектов',
                       dataIndex: 'defectCreated',
+                      width: 150,
                       align: 'right',
-                      render: (v: number) => v > 0
-                        ? `${v} (${record.defect ? Math.round((v / record.defect) * 100) : 0}%)`
-                        : '—',
+                      render: (v: number) => {
+                        if (v === 0) return '—';
+                        const percent = record.defect > 0 ? Math.round((v / record.defect) * 100) : 0;
+                        return `${v} (${percent}%)`;
+                      },
                     },
                     {
                       title: 'Дефектов за ним',
                       dataIndex: 'defectResp',
+                      width: 150,
                       align: 'right',
-                      render: (v: number) => v > 0
-                        ? `${v} (${record.defectResp ? Math.round((v / record.defectResp) * 100) : 0}%)`
-                        : '—',
+                      render: (v: number) => {
+                        if (v === 0) return '—';
+                        const percent = record.defectResp > 0 ? Math.round((v / record.defectResp) * 100) : 0;
+                        return `${v} (${percent}%)`;
+                      },
                     },
                   ];
 
@@ -403,19 +441,21 @@ export default function UserStatsBlock({
               }}
               summary={() => (
                 <Table.Summary.Row>
-                  <Table.Summary.Cell index={0} />
-                  <Table.Summary.Cell index={1}>Итого</Table.Summary.Cell>
+                  <Table.Summary.Cell index={0} align="right" />
+                  <Table.Summary.Cell index={1}>
+                    <strong>Итого</strong>
+                  </Table.Summary.Cell>
                   <Table.Summary.Cell index={2} align="right">
-                    {totals.claim || '—'}
+                    <strong>{totals.claim || '—'}</strong>
                   </Table.Summary.Cell>
                   <Table.Summary.Cell index={3} align="right">
-                    {totals.claimResp || '—'}
+                    <strong>{totals.claimResp || '—'}</strong>
                   </Table.Summary.Cell>
                   <Table.Summary.Cell index={4} align="right">
-                    {totals.defect || '—'}
+                    <strong>{totals.defect || '—'}</strong>
                   </Table.Summary.Cell>
                   <Table.Summary.Cell index={5} align="right">
-                    {totals.defectResp || '—'}
+                    <strong>{totals.defectResp || '—'}</strong>
                   </Table.Summary.Cell>
                 </Table.Summary.Row>
               )}

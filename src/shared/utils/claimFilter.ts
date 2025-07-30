@@ -4,6 +4,8 @@ import { Dayjs } from "dayjs";
 export function filterClaims<
   T extends {
     id: number;
+    project_id?: number;
+    unit_ids?: number[];
     projectName?: string;
     unitNames?: string;
     unitNumbers?: string;
@@ -19,19 +21,38 @@ export function filterClaims<
     description?: string;
   },
 >(rows: T[], f: ClaimFilters): T[] {
+  
   return rows.filter((r) => {
     if (f.id && f.id.length > 0 && !f.id.includes(r.id)) return false;
     if (f.project) {
       if (Array.isArray(f.project)) {
-        if (f.project.length > 0 && !f.project.includes(r.projectName)) return false;
+        if (f.project.length > 0) {
+          // Сравниваем по именам проектов, так как фильтр передает имена
+          const hasMatch = f.project.includes(r.projectName || '');
+          if (!hasMatch) {
+            return false;
+          }
+        }
       } else {
-        if (r.projectName !== f.project) return false;
+        // Для одиночного значения сравниваем по имени
+        if (r.projectName !== f.project) {
+          return false;
+        }
       }
     }
-    if (f.units && f.units.length > 0 && r.unitNumbers) {
-      const units = r.unitNumbers.split(",").map((u) => u.trim());
-      const ok = f.units.every((u) => units.includes(u));
-      if (!ok) return false;
+    
+    if (f.units && f.units.length > 0) {
+      if (r.unitNumbers) {
+        // Сравниваем по именам объектов (unitNumbers содержит строку с именами через запятую)
+        const claimUnits = r.unitNumbers.split(",").map(u => u.trim());
+        const hasMatch = f.units.some(filterUnit => claimUnits.includes(filterUnit));
+        
+        if (!hasMatch) {
+          return false;
+        }
+      } else {
+        return false;
+      }
     }
     if (f.building) {
       if (Array.isArray(f.building)) {

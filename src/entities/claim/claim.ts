@@ -377,6 +377,7 @@ export function useClaimAll(id?: number | string) {
  * Получить список претензий по всем проектам с пагинацией (оптимизированный).
  */
 export function useClaimsAllSummary(page = 0, pageSize = 50, filters?: any) {
+  
   return useQuery({
     queryKey: [SUMMARY_TABLE + '-all', page, pageSize, filters],
     queryFn: async () => {
@@ -399,11 +400,30 @@ export function useClaimsAllSummary(page = 0, pageSize = 50, filters?: any) {
           query = query.eq('responsible_engineer_name', filters.responsible);
         }
         if (filters.units && Array.isArray(filters.units) && filters.units.length > 0) {
-          // Фильтрация по объектам через связанную таблицу claim_units
-          const { data: unitIds } = await supabase
+          // Создаем запрос для поиска объектов
+          let unitsQuery = supabase
             .from('units')
             .select('id')
             .in('name', filters.units);
+          
+          // Если есть фильтр по проектам, ограничиваем поиск объектов только этими проектами
+          if (filters.project && Array.isArray(filters.project) && filters.project.length > 0) {
+            // Сначала получаем ID проектов по их названиям
+            const { data: projectIds } = await supabase
+              .from('projects')
+              .select('id')
+              .in('name', filters.project);
+            
+            if (projectIds && projectIds.length > 0) {
+              unitsQuery = unitsQuery.in('project_id', projectIds.map(p => p.id));
+            } else {
+              // Если не найдены проекты, то и объектов не будет - возвращаем пустой результат
+              query = query.in('id', [-1]); // Фильтр, который не найдет ни одной записи
+              return { data: [], count: 0, hasMore: false };
+            }
+          }
+          
+          const { data: unitIds } = await unitsQuery;
           
           if (unitIds && unitIds.length > 0) {
             const { data: claimIds } = await supabase
@@ -412,11 +432,15 @@ export function useClaimsAllSummary(page = 0, pageSize = 50, filters?: any) {
               .in('unit_id', unitIds.map(u => u.id));
             
             if (claimIds && claimIds.length > 0) {
-              query = query.in('id', claimIds.map(c => c.claim_id));
+              const claimIdsList = claimIds.map(c => c.claim_id);
+              query = query.in('id', claimIdsList);
             } else {
               // Если не найдены претензии для выбранных объектов, возвращаем пустой результат
               query = query.in('id', [-1]);
             }
+          } else {
+            // Если не найдены объекты, возвращаем пустой результат
+            query = query.in('id', [-1]);
           }
         }
         if (filters.building && Array.isArray(filters.building) && filters.building.length > 0) {

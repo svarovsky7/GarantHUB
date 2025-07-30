@@ -4,16 +4,22 @@ import { useDashboardStats } from '@/shared/hooks/useDashboardStats';
 import { useVisibleProjects } from '@/entities/project';
 
 interface Props {
-  projectId: number;
+  projectId: number | 'all';
+  allProjects?: number[];
 }
 
 /**
  * Карточка статистики выбранного проекта.
  */
-export default function ProjectStatsCard({ projectId }: Props) {
-  const { data, isPending, isError, error } = useDashboardStats(projectId);
+export default function ProjectStatsCard({ projectId, allProjects }: Props) {
+  const isAllProjects = projectId === 'all';
+  const { data, isPending, isError, error } = useDashboardStats(
+    isAllProjects && allProjects ? allProjects : projectId as number
+  );
   const { data: projects = [] } = useVisibleProjects();
-  const name = projects.find((p) => p.id === projectId)?.name || 'Проект';
+  const name = isAllProjects 
+    ? 'Все проекты' 
+    : projects.find((p) => p.id === projectId)?.name || 'Проект';
 
   if (isPending) {
     return (
@@ -49,16 +55,18 @@ export default function ProjectStatsCard({ projectId }: Props) {
     );
   }
 
-  const prj = data.projects[0];
+  const totalUnits = data.projects.reduce((sum, p) => sum + (p?.unitCount ?? 0), 0);
+  const totalBuildings = data.projects.reduce((sum, p) => sum + (p?.buildingCount ?? 0), 0);
+  const totalLetters = data.projects.reduce((sum, p) => sum + (p?.letterCount ?? 0), 0);
 
   return (
     <Card title={name} style={{ width: '100%' }}>
       <Row gutter={16}>
         <Col span={8}>
-          <Statistic title="Объекты" value={prj?.unitCount ?? 0} />
+          <Statistic title="Объекты" value={totalUnits} />
         </Col>
         <Col span={8}>
-          <Statistic title="Корпусов" value={prj?.buildingCount ?? 0} />
+          <Statistic title="Корпусов" value={totalBuildings} />
         </Col>
         <Col span={8}>
           <Statistic title="Откр. претензий" value={data.claimsOpen} />
@@ -77,7 +85,7 @@ export default function ProjectStatsCard({ projectId }: Props) {
       </Row>
       <Row gutter={16} style={{ marginTop: 16 }}>
         <Col span={8}>
-          <Statistic title="Писем" value={prj?.letterCount ?? 0} />
+          <Statistic title="Писем" value={totalLetters} />
         </Col>
         <Col span={8}>
           <Statistic title="Откр. судебных дел" value={data.courtCasesOpen} />

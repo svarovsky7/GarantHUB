@@ -9,13 +9,16 @@ export default function ProjectsMultiSelect({
   value,
   onChange,
 }: {
-  value: number[];
-  onChange: (v: number[]) => void;
+  value: (number | string)[];
+  onChange: (v: (number | string)[]) => void;
 }) {
   const { data: projects = [], isPending } = useVisibleProjects();
 
   const options = React.useMemo(
-    () => projects.map((p) => ({ value: p.id, label: p.name })),
+    () => [
+      { value: 'all', label: 'Все проекты' },
+      ...projects.map((p) => ({ value: p.id, label: p.name }))
+    ],
     [projects],
   );
 
@@ -29,7 +32,19 @@ export default function ProjectsMultiSelect({
       allowClear
       placeholder="Выберите проекты"
       value={value}
-      onChange={onChange}
+      onChange={(values) => {
+        // Если выбрано "Все проекты", очищаем остальные выборы и оставляем только его
+        if (values.includes('all') && !value.includes('all')) {
+          onChange(['all']);
+        } 
+        // Если выбран конкретный проект при выбранном "Все проекты", убираем "Все проекты"
+        else if (value.includes('all') && values.length > 1) {
+          onChange(values.filter(v => v !== 'all'));
+        }
+        else {
+          onChange(values);
+        }
+      }}
       options={options}
       style={{ minWidth: 260 }}
     />

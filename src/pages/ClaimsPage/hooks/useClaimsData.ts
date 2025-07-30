@@ -4,7 +4,7 @@ import {
   useClaimsAllLegacy as useClaimsAll,
 } from '@/entities/claim';
 import { useUsers } from '@/entities/user';
-import { useUnitsByIds } from '@/entities/unit';
+import { useUnits, useUnitsByIds } from '@/entities/unit';
 import { useVisibleProjects } from '@/entities/project';
 import { useClaimStatuses } from '@/entities/claimStatus';
 import formatUnitShortName from '@/shared/utils/formatUnitShortName';
@@ -27,12 +27,15 @@ export function useClaimsData(filters: ClaimFilters, perm: RolePermission | unde
   const { data: projects = [] } = useVisibleProjects();
   const { data: statuses = [] } = useClaimStatuses();
 
-  // Get unit IDs from claims
+  // Get all units for filter options
+  const { data: allUnits = [] } = useUnits();
+  
+  // Get unit IDs from claims for enriching claim data
   const unitIds = useMemo(
     () => Array.from(new Set((claims ?? []).flatMap((c) => c.unit_ids))),
     [claims],
   );
-  const { data: units = [] } = useUnitsByIds(unitIds);
+  const { data: claimUnits = [] } = useUnitsByIds(unitIds);
 
   // Memoized maps for performance
   const userMap = useMemo(() => {
@@ -49,23 +52,23 @@ export function useClaimsData(filters: ClaimFilters, perm: RolePermission | unde
 
   const unitMap = useMemo(() => {
     const map = {} as Record<number, string>;
-    units.forEach((u) => (map[u.id] = u.name));
+    claimUnits.forEach((u) => (map[u.id] = u.name));
     return map;
-  }, [units]);
+  }, [claimUnits]);
 
   const unitNumberMap = useMemo(() => {
     const map = {} as Record<number, string>;
-    units.forEach((u) => (map[u.id] = formatUnitShortName({ name: u.name, floor: u.floor })));
+    claimUnits.forEach((u) => (map[u.id] = formatUnitShortName({ name: u.name, floor: u.floor })));
     return map;
-  }, [units]);
+  }, [claimUnits]);
 
   const buildingMap = useMemo(() => {
     const map = {} as Record<number, string>;
-    units.forEach((u) => {
+    claimUnits.forEach((u) => {
       if (u.building) map[u.id] = u.building;
     });
     return map;
-  }, [units]);
+  }, [claimUnits]);
 
   const statusMap = useMemo(() => {
     const map = {} as Record<number, { name: string; color: string }>;
@@ -135,14 +138,16 @@ export function useClaimsData(filters: ClaimFilters, perm: RolePermission | unde
 
   // Filter options for the filter component
   const filterOptions = useMemo(() => ({
-    users: users.map((u) => ({ value: u.id, label: u.name })),
+    responsibleEngineers: users.map((u) => ({ value: u.id, label: u.name })),
+    authors: users.map((u) => ({ value: u.id, label: u.name })),
     projects: projects.map((p) => ({ value: p.id, label: p.name })),
     statuses: statuses.map((s) => ({ value: s.id, label: s.name })),
     buildings: Array.from(
-      new Set(units.map((u) => u.building).filter(Boolean)),
+      new Set(allUnits.map((u) => u.building).filter(Boolean)),
     ).map((b) => ({ value: b, label: b })),
-    units: units.map((u) => ({ value: u.id, label: u.name })),
-  }), [users, projects, statuses, units]);
+    units: allUnits.map((u) => ({ value: u.id, label: formatUnitShortName({ name: u.name, floor: u.floor }) })),
+    ids: claims ? claims.map((c) => ({ value: c.id, label: `#${c.id}` })) : [],
+  }), [users, projects, statuses, allUnits, claims]);
 
   const filtersLoading = false; // Можно добавить логику загрузки
 

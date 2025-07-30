@@ -26,6 +26,7 @@ interface PaginationState {
 }
 
 export function useClaimsDataPaginated(filters: ClaimFilters, perm: RolePermission | undefined) {
+  
   // Pagination state
   const [pagination, setPagination] = useState<PaginationState>({
     page: 0,
@@ -45,6 +46,7 @@ export function useClaimsDataPaginated(filters: ClaimFilters, perm: RolePermissi
   
   // Choose between assigned or all claims based on permissions
   const usesPagination = !perm?.only_assigned_project;
+  
   const claims = usesPagination 
     ? claimsAllPaginated.data?.data 
     : claimsAssigned.data;
@@ -140,7 +142,7 @@ export function useClaimsDataPaginated(filters: ClaimFilters, perm: RolePermissi
   const claimsWithNames: ClaimWithNames[] = useMemo(() => {
     if (!claims) return [];
 
-    return claims.map((c) => {
+    const enhanced = claims.map((c) => {
       const buildings = Array.from(
         new Set(c.unit_ids.map((id) => buildingMap[id]).filter(Boolean)),
       );
@@ -170,6 +172,14 @@ export function useClaimsDataPaginated(filters: ClaimFilters, perm: RolePermissi
         createdAt: c.created_at ? dayjs(c.created_at) : null,
       };
     });
+
+    // Применяем клиентскую фильтрацию для assigned projects (ENGINEER роль)
+    if (!usesPagination && Object.keys(filters).some(key => filters[key] !== undefined && filters[key] !== false && (!Array.isArray(filters[key]) || filters[key].length > 0))) {
+      const filtered = filterClaims(enhanced, filters);
+      return filtered;
+    }
+
+    return enhanced;
   }, [
     claims,
     projectMap,
@@ -177,7 +187,10 @@ export function useClaimsDataPaginated(filters: ClaimFilters, perm: RolePermissi
     unitNumberMap,
     userMap,
     statusMap,
+    usesPagination,
+    filters,
   ]);
+
 
   // Get statistics from server
   const statsQuery = usesPagination ? useClaimsAllStats() : useClaimsStats();
@@ -209,9 +222,14 @@ export function useClaimsDataPaginated(filters: ClaimFilters, perm: RolePermissi
       : allClaims.flatMap((c) =>
           c.buildings ? c.buildings.split(",").map((n) => n.trim()) : []);
 
+    const projectOptions = projects.map((p) => ({ label: p.name, value: p.name }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+    
+    const unitOptions = mapOptions(unitsOpts);
+    
     return {
-      projects: mapOptions(projects.map((p) => p.name)),
-      units: mapOptions(unitsOpts),
+      projects: projectOptions,
+      units: unitOptions,
       buildings: mapOptions(buildingsOpts),
       statuses: mapOptions(allClaims.map((c) => c.statusName)),
       responsibleEngineers: mapOptions(

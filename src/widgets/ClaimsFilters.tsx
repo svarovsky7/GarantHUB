@@ -36,6 +36,7 @@ export default function ClaimsFilters({
   const [form] = Form.useForm();
   const [extraCount, setExtraCount] = useState(0);
 
+
   useEffect(() => {
     form.setFieldsValue(initialValues);
     calcExtra();
@@ -135,10 +136,9 @@ export default function ClaimsFilters({
                   showSearch
                   optionFilterProp="label"
                   onChange={(value) => {
-                    // При изменении проекта очищаем зависимые поля
+                    // При изменении проекта очищаем только корпус, но не объекты
                     if (!value || value.length === 0) {
                       form.setFieldsValue({ 
-                        units: undefined,
                         building: undefined 
                       });
                     }
@@ -154,8 +154,9 @@ export default function ClaimsFilters({
                   options={options.units}
                   showSearch
                   optionFilterProp="label"
-                  disabled={!form.getFieldValue('project') || form.getFieldValue('project').length === 0}
-                  placeholder={form.getFieldValue('project') && form.getFieldValue('project').length > 0 ? "Выберите объекты" : "Сначала выберите проект"}
+                  placeholder="Выберите объекты"
+                  onChange={(value) => {
+                  }}
                 />
               </Form.Item>
             </Col>
@@ -206,8 +207,7 @@ export default function ClaimsFilters({
                           options={options.buildings}
                           showSearch
                           optionFilterProp="label"
-                          disabled={!form.getFieldValue('project') || form.getFieldValue('project').length === 0}
-                          placeholder={form.getFieldValue('project') && form.getFieldValue('project').length > 0 ? "Выберите корпус" : "Сначала выберите проект"}
+                          placeholder="Выберите корпус"
                         />
                       </Form.Item>
                     </Col>

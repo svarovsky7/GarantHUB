@@ -40,6 +40,7 @@ export default function ClaimsTable({
   lockedUnitIds = [],
   showPagination = true,
 }: Props) {
+  
   const { mutateAsync: remove, isPending } = useDeleteClaim();
   const defaultColumns: ColumnsType<any> = useMemo(
     () => [
@@ -289,6 +290,7 @@ export default function ClaimsTable({
       pagination={showPagination ? {
         pageSize,
         showSizeChanger: true,
+        pageSizeOptions: ['100', '200'],
         onChange: (_p, size) => size && setPageSize(size),
       } : false}
       size="middle"

@@ -677,7 +677,7 @@ const LS_COLUMN_WIDTHS_KEY = "defectsColumnWidths";
         <Button icon={<SettingOutlined />} style={{ marginLeft: 8 }} onClick={() => setShowColumnsDrawer(true)} />
         <span style={{ marginLeft: 8, display: "inline-block" }}>
           <React.Suspense fallback={<Button loading>Экспорт</Button>}>
-            <ExportDefectsButton defects={filteredData} filters={filters} />
+            <ExportDefectsButton defects={filteredDefects} filters={filters} />
           </React.Suspense>
         </span>
         {showFilters && (

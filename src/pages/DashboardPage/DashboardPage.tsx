@@ -14,7 +14,7 @@ export default function DashboardPage() {
   const { enqueueSnackbar } = useSnackbar();
   const { data: projects = [], isPending, error } = useVisibleProjects();
   const profile = useAuthStore((s) => s.profile);
-  const [selected, setSelected] = React.useState<number[]>([]);
+  const [selected, setSelected] = React.useState<(number | string)[]>([]);
   const [resetCounter, setResetCounter] = React.useState(0);
 
   useEffect(() => {
@@ -44,14 +44,23 @@ export default function DashboardPage() {
         <ProjectsMultiSelect value={selected} onChange={setSelected} />
       </Card>
 
-      {selected.map((id) => (
-        <Suspense key={id} fallback={<Spin size="large" style={{ display: 'block', textAlign: 'center', padding: '20px' }} />}>
-          <ProjectStatsCard projectId={id} />
+      {selected.includes('all') ? (
+        <Suspense fallback={<Spin size="large" style={{ display: 'block', textAlign: 'center', padding: '20px' }} />}>
+          <ProjectStatsCard projectId="all" allProjects={projects.map(p => p.id)} />
         </Suspense>
-      ))}
+      ) : (
+        selected.map((id) => (
+          <Suspense key={id} fallback={<Spin size="large" style={{ display: 'block', textAlign: 'center', padding: '20px' }} />}>
+            <ProjectStatsCard projectId={id as number} />
+          </Suspense>
+        ))
+      )}
 
       <Suspense fallback={<Spin size="large" style={{ display: 'block', textAlign: 'center', padding: '20px' }} />}>
-        <UserStatsBlock projectIds={selected} resetSignal={resetCounter} />
+        <UserStatsBlock 
+          projectIds={selected.includes('all') ? [] : selected.filter(id => typeof id === 'number') as number[]} 
+          resetSignal={resetCounter} 
+        />
       </Suspense>
     </Space>
   );

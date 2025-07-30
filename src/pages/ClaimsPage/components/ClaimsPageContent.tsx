@@ -105,7 +105,7 @@ const ClaimsPageContent = React.memo<ClaimsPageContentProps>(({
           onView={onView}
           onAddChild={onAddChild}
           columns={columns}
-          showPagination={!pagination}
+          showPagination={!pagination?.usesPagination}
         />
       )}
 

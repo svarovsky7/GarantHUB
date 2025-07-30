@@ -412,6 +412,60 @@ export function useMultipleUserStatsOptimized(
         } as UserStats;
       }
 
+      
+      // Проверяем, является ли claim_status_counts строкой JSON, которую нужно распарсить
+      let claimStatusCounts = result.claim_status_counts || [];
+      let defectStatusCounts = result.defect_status_counts || [];
+      let claimResponsibleStatusCounts = result.claim_responsible_status_counts || [];
+      let defectResponsibleStatusCounts = result.defect_responsible_status_counts || [];
+      let courtCaseStatusCounts = result.court_case_status_counts || [];
+      
+      // Если данные приходят как строки JSON, парсим их
+      if (typeof claimStatusCounts === 'string') {
+        try {
+          claimStatusCounts = JSON.parse(claimStatusCounts);
+        } catch (e) {
+          console.error('Error parsing claimStatusCounts:', e);
+          claimStatusCounts = [];
+        }
+      }
+      
+      if (typeof defectStatusCounts === 'string') {
+        try {
+          defectStatusCounts = JSON.parse(defectStatusCounts);
+        } catch (e) {
+          console.error('Error parsing defectStatusCounts:', e);
+          defectStatusCounts = [];
+        }
+      }
+      
+      if (typeof claimResponsibleStatusCounts === 'string') {
+        try {
+          claimResponsibleStatusCounts = JSON.parse(claimResponsibleStatusCounts);
+        } catch (e) {
+          console.error('Error parsing claimResponsibleStatusCounts:', e);
+          claimResponsibleStatusCounts = [];
+        }
+      }
+      
+      if (typeof defectResponsibleStatusCounts === 'string') {
+        try {
+          defectResponsibleStatusCounts = JSON.parse(defectResponsibleStatusCounts);
+        } catch (e) {
+          console.error('Error parsing defectResponsibleStatusCounts:', e);
+          defectResponsibleStatusCounts = [];
+        }
+      }
+      
+      if (typeof courtCaseStatusCounts === 'string') {
+        try {
+          courtCaseStatusCounts = JSON.parse(courtCaseStatusCounts);
+        } catch (e) {
+          console.error('Error parsing courtCaseStatusCounts:', e);
+          courtCaseStatusCounts = [];
+        }
+      }
+
       return {
         claimCount: result.claims_created || 0,
         claimResponsibleCount: result.claims_responsible || 0,
@@ -419,11 +473,11 @@ export function useMultipleUserStatsOptimized(
         defectResponsibleCount: result.defects_responsible || 0,
         courtCaseCount: result.court_cases_created || 0,
         courtCaseResponsibleCount: result.court_cases_responsible || 0,
-        claimStatusCounts: result.claim_status_counts || [],
-        defectStatusCounts: result.defect_status_counts || [],
-        claimResponsibleStatusCounts: result.claim_responsible_status_counts || [],
-        defectResponsibleStatusCounts: result.defect_responsible_status_counts || [],
-        courtCaseStatusCounts: result.court_case_status_counts || [],
+        claimStatusCounts,
+        defectStatusCounts,
+        claimResponsibleStatusCounts,
+        defectResponsibleStatusCounts,
+        courtCaseStatusCounts,
       };
       },
       staleTime: 60_000,

@@ -26,26 +26,70 @@ export default function ExportDefectsButton({
   const handleClick = React.useCallback(async () => {
     setLoading(true);
     try {
-      const today = dayjs();
-      const filtered = filterDefects(defects, filters);
-      const ids = filtered.map((d) => d.id);
-      let filesMap: Record<number, string[]> = {};
-      if (ids.length) {
-        const { data, error } = await supabase
-          .from('defect_attachments')
-          .select('defect_id, attachments(file_url:path)')
-          .in('defect_id', ids);
-        if (error) throw error;
-        filesMap = (data ?? []).reduce<Record<number, string[]>>((acc, row: any) => {
-          const url = row.attachments?.file_url;
-          if (url) {
-            if (!acc[row.defect_id]) acc[row.defect_id] = [];
-            acc[row.defect_id].push(url);
-          }
-          return acc;
-        }, {});
+      console.log('ExportDefectsButton: Начало экспорта');
+      console.log('ExportDefectsButton: Дефектов для экспорта:', defects.length);
+      
+      if (defects.length === 0) {
+        console.warn('ExportDefectsButton: Нет дефектов для экспорта');
+        // Показываем пользователю уведомление
+        import('antd').then(({ message }) => {
+          message.warning('Нет дефектов для экспорта. Проверьте фильтры или убедитесь, что дефекты загружены.');
+        });
+        return;
       }
-      const rows = filtered.map((d) => ({
+      
+      const today = dayjs();
+      
+      const ids = defects.map((d) => d.id);
+      let filesMap: Record<number, string[]> = {};
+      
+      if (ids.length) {
+        console.log('ExportDefectsButton: Загрузка файлов для дефектов:', ids.length);
+        
+        // Разбиваем ID на чанки по 1000 элементов, чтобы избежать слишком длинных URL
+        const chunkSize = 1000;
+        const chunks = [];
+        for (let i = 0; i < ids.length; i += chunkSize) {
+          chunks.push(ids.slice(i, i + chunkSize));
+        }
+        
+        console.log('ExportDefectsButton: Загрузка файлов по частям:', chunks.length, 'чанков');
+        
+        // Выполняем запросы по частям
+        for (const chunk of chunks) {
+          const { data, error } = await supabase
+            .from('defect_attachments')
+            .select('defect_id, attachments(file_url:path)')
+            .in('defect_id', chunk);
+          
+          if (error) {
+            console.error('ExportDefectsButton: Ошибка загрузки файлов:', error);
+            throw error;
+          }
+          
+          // Объединяем результаты
+          const chunkFilesMap = (data ?? []).reduce<Record<number, string[]>>((acc, row: any) => {
+            const url = row.attachments?.file_url;
+            if (url) {
+              if (!acc[row.defect_id]) acc[row.defect_id] = [];
+              acc[row.defect_id].push(url);
+            }
+            return acc;
+          }, {});
+          
+          // Объединяем с общей картой
+          Object.keys(chunkFilesMap).forEach(defectId => {
+            const id = parseInt(defectId);
+            if (!filesMap[id]) filesMap[id] = [];
+            filesMap[id].push(...chunkFilesMap[id]);
+          });
+        }
+        
+        console.log('ExportDefectsButton: Найдено файлов:', Object.keys(filesMap).length);
+      }
+      
+      console.log('ExportDefectsButton: Формирование строк Excel');
+      const rows = defects.map((d) => ({
         'ID дефекта': d.id,
         'ID претензии': d.claimIds.join(', '),
         Проект: d.projectNames ?? '',
@@ -65,14 +109,31 @@ export default function ExportDefectsButton({
           : '',
         'Ссылки на файлы': (filesMap[d.id] ?? []).join('\n'),
       }));
+      
+      console.log('ExportDefectsButton: Создание Excel файла');
       const wb = new ExcelJS.Workbook();
       const ws = wb.addWorksheet('Defects');
       if (rows.length) {
         ws.columns = Object.keys(rows[0]).map((key) => ({ header: key, key }));
         rows.forEach((r) => ws.addRow(r));
       }
+      
+      console.log('ExportDefectsButton: Сохранение файла');
       const buffer = await wb.xlsx.writeBuffer();
       saveAs(new Blob([buffer], { type: 'application/octet-stream' }), 'defects.xlsx');
+      console.log('ExportDefectsButton: Экспорт завершен успешно');
+      
+      // Показываем пользователю уведомление об успехе
+      import('antd').then(({ message }) => {
+        message.success(`Экспорт завершен успешно. Выгружено ${defects.length} дефектов.`);
+      });
+      
+    } catch (error) {
+      console.error('ExportDefectsButton: Ошибка экспорта:', error);
+      // Показываем пользователю уведомление об ошибке
+      import('antd').then(({ message }) => {
+        message.error('Ошибка при экспорте данных. Проверьте консоль браузера для подробностей.');
+      });
     } finally {
       setLoading(false);
     }

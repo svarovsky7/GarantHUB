@@ -158,9 +158,9 @@ export const useDeleteDocumentFolder = () => {
 
   return useMutation({
     mutationFn: async (id: number): Promise<void> => {
-      // Проверяем, есть ли документы в папке
+      // Проверяем, есть ли документы в папке через связующую таблицу
       const { data: documents, error: checkError } = await supabase
-        .from("attachments")
+        .from("document_folder_files")
         .select("id")
         .eq("folder_id", id)
         .limit(1);
