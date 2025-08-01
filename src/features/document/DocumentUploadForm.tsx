@@ -33,6 +33,11 @@ export default function DocumentUploadForm({ onSuccess }: Props) {
       return;
     }
 
+    if (!values.folder_ids || values.folder_ids.length === 0) {
+      message.error("Пожалуйста, выберите хотя бы одну папку");
+      return;
+    }
+
     const file = fileList[0].originFileObj;
     if (!file) {
       message.error("Ошибка при выборе файла");
@@ -63,9 +68,9 @@ export default function DocumentUploadForm({ onSuccess }: Props) {
   };
 
   const beforeUpload = (file: File) => {
-    const isLt50M = file.size / 1024 / 1024 < 50;
-    if (!isLt50M) {
-      message.error("Размер файла не должен превышать 50MB");
+    const isLt500M = file.size / 1024 / 1024 < 500;
+    if (!isLt500M) {
+      message.error("Размер файла не должен превышать 500MB");
     }
     return false; // Предотвращаем автоматическую загрузку
   };
@@ -92,10 +97,13 @@ export default function DocumentUploadForm({ onSuccess }: Props) {
         <Form.Item
           name="folder_ids"
           label="Папки"
+          rules={[
+            { required: true, message: "Пожалуйста, выберите хотя бы одну папку" },
+          ]}
         >
           <Select
             mode="multiple"
-            placeholder="Выберите папки (необязательно)"
+            placeholder="Выберите папки"
             allowClear
             loading={foldersLoading}
             optionFilterProp="label"
@@ -142,7 +150,7 @@ export default function DocumentUploadForm({ onSuccess }: Props) {
           <div style={{ fontSize: 12, color: "#666", marginTop: 4 }}>
             Поддерживаемые форматы: PDF, DOC, DOCX, XLS, XLSX, TXT, PNG, JPG, JPEG
             <br />
-            Максимальный размер: 50MB
+            Максимальный размер: 500MB
           </div>
         </Form.Item>
 
