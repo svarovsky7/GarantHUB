@@ -9,13 +9,14 @@ import {
   Space,
   Select,
 } from "antd";
-import { UploadOutlined, FolderOutlined } from "@ant-design/icons";
+import { UploadOutlined, FolderOutlined, InboxOutlined } from "@ant-design/icons";
 import type { UploadFile } from "antd";
 import { useCreateDocument } from "@/entities/document";
 import { useDocumentFolders } from "@/entities/documentFolder";
 import type { DocumentFormData } from "@/shared/types/document";
 
 const { TextArea } = Input;
+const { Dragger } = Upload;
 
 interface Props {
   onSuccess?: () => void;
@@ -125,9 +126,9 @@ export default function DocumentUploadForm({ onSuccess }: Props) {
           label="Описание (необязательно)"
         >
           <TextArea
-            rows={3}
+            rows={4}
             placeholder="Введите описание документа"
-            maxLength={500}
+            maxLength={1000}
             showCount
           />
         </Form.Item>
@@ -136,22 +137,39 @@ export default function DocumentUploadForm({ onSuccess }: Props) {
           label="Файл"
           required
         >
-          <Upload
+          <Dragger
             fileList={fileList}
             onChange={handleFileChange}
             beforeUpload={beforeUpload}
             maxCount={1}
             accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.png,.jpg,.jpeg"
+            style={{ padding: '20px' }}
           >
-            <Button icon={<UploadOutlined />}>
-              Выберите файл
-            </Button>
-          </Upload>
-          <div style={{ fontSize: 12, color: "#666", marginTop: 4 }}>
-            Поддерживаемые форматы: PDF, DOC, DOCX, XLS, XLSX, TXT, PNG, JPG, JPEG
-            <br />
-            Максимальный размер: 500MB
-          </div>
+            <p className="ant-upload-drag-icon">
+              <InboxOutlined style={{ fontSize: '48px', color: '#1890ff' }} />
+            </p>
+            <p className="ant-upload-text">
+              Нажмите или перетащите файл в эту область
+            </p>
+            <p className="ant-upload-hint">
+              Поддерживаемые форматы: PDF, DOC, DOCX, XLS, XLSX, TXT, PNG, JPG, JPEG
+              <br />
+              Максимальный размер: 500MB
+            </p>
+          </Dragger>
+          {fileList.length > 0 && (
+            <div style={{ 
+              marginTop: '8px', 
+              padding: '8px', 
+              background: '#f0f2f5', 
+              borderRadius: '4px' 
+            }}>
+              <Space>
+                <span style={{ color: '#52c41a' }}>✓</span>
+                <span>Файл выбран: {fileList[0].name}</span>
+              </Space>
+            </div>
+          )}
         </Form.Item>
 
         <Form.Item>

@@ -26,14 +26,5 @@ VITE_ATTACH_BUCKET=<название корзины для вложений>
 
 Для совместимости можно использовать переменные с префиксом `REACT_APP_`.
 
-## Структура базы данных
-
-Описание БД: [database_structure.json](database_structure.json).
-
-
-## Индексы базы данных
-
-Индексы: [db_indexes_summary.md](db_indexes_summary.md).
-
 
 

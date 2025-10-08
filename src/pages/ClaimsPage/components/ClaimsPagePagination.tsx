@@ -24,8 +24,8 @@ const ClaimsPagePagination = React.memo<ClaimsPagePaginationProps>(({
   onPageChange,
   onPageSizeChange,
 }) => {
-  // Don't show pagination if not using server-side pagination
-  if (!pagination.usesPagination) {
+  // Don't show pagination if there's only one page or less
+  if (!pagination.usesPagination || pagination.total <= pagination.pageSize) {
     return null;
   }
 

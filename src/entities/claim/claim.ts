@@ -188,13 +188,17 @@ export function useClaimsSummary() {
       
       const ids = rows.map((r: ClaimSummary) => r.id);
       
-      // Получаем связи претензий
-      const { data: links } = ids.length
-        ? await supabase
-            .from(LINK_TABLE)
-            .select('parent_id, child_id')
-            .in('child_id', ids)
-        : { data: [] };
+      // Получаем связи претензий (с чанкингом для избежания лимита URL)
+      console.log(`[useClaimsSummary] Fetching links for ${ids.length} claims`);
+      const links = ids.length
+        ? await fetchByChunks(ids, (chunk) => {
+            console.log(`[useClaimsSummary] Fetching links chunk of ${chunk.length} IDs`);
+            return supabase
+              .from(LINK_TABLE)
+              .select('parent_id, child_id')
+              .in('child_id', chunk);
+          })
+        : [];
       const linkMap = new Map<number, number>();
       (links ?? []).forEach((l: any) => linkMap.set(l.child_id, l.parent_id));
       
@@ -240,6 +244,7 @@ export function useClaimsSummary() {
  */
 export function useClaims() {
   const { projectId, projectIds, onlyAssigned } = useProjectFilter();
+  
   return useQuery({
     queryKey: [TABLE, projectId, projectIds.join(',')],
     queryFn: async () => {
@@ -262,15 +267,29 @@ export function useClaims() {
         return q as unknown as PromiseLike<PostgrestSingleResponse<any[]>>;
       });
       const ids = rows.map((r: any) => r.id);
-      const { data: links } = ids.length
-        ? await supabase
+      
+      // Chunk IDs to avoid URL length limit (max 100 IDs per request)
+      const chunkSize = 100;
+      let allLinks: any[] = [];
+      
+      if (ids.length > 0) {
+        for (let i = 0; i < ids.length; i += chunkSize) {
+          const chunk = ids.slice(i, i + chunkSize);
+          const { data: chunkLinks } = await supabase
             .from(LINK_TABLE)
             .select('parent_id, child_id')
-            .in('child_id', ids)
-        : { data: [] };
+            .in('child_id', chunk);
+          if (chunkLinks) {
+            allLinks = allLinks.concat(chunkLinks);
+          }
+        }
+      }
+      
+      const links = allLinks;
       const linkMap = new Map<number, number>();
       (links ?? []).forEach((l: any) => linkMap.set(l.child_id, l.parent_id));
-      return (rows ?? []).map((r: any) =>
+      
+      const result = (rows ?? []).map((r: any) =>
         mapClaim({
           ...r,
           parent_id: linkMap.get(r.id) ?? null,
@@ -279,6 +298,8 @@ export function useClaims() {
           attachments: (r.claim_attachments ?? []).map((a: any) => a.attachments),
         }),
       );
+      
+      return result;
     },
     staleTime: 5 * 60_000,
   });
@@ -381,6 +402,7 @@ export function useClaimsAllSummary(page = 0, pageSize = 50, filters?: any) {
   return useQuery({
     queryKey: [SUMMARY_TABLE + '-all', page, pageSize, filters],
     queryFn: async () => {
+      console.log(`[useClaimsAllSummary] Called with page=${page}, pageSize=${pageSize}`);
       const from = page * pageSize;
       const to = from + pageSize - 1;
       
@@ -397,7 +419,7 @@ export function useClaimsAllSummary(page = 0, pageSize = 50, filters?: any) {
           query = query.eq('status_name', filters.status);
         }
         if (filters.responsible) {
-          query = query.eq('responsible_engineer_name', filters.responsible);
+          query = query.eq('engineer_name', filters.responsible);
         }
         if (filters.units && Array.isArray(filters.units) && filters.units.length > 0) {
           // Создаем запрос для поиска объектов
@@ -469,21 +491,98 @@ export function useClaimsAllSummary(page = 0, pageSize = 50, filters?: any) {
         }
       }
       
-      const { data: rows, error, count } = await query
-        .order('created_at', { ascending: false })
-        .range(from, to);
+      // For large page sizes (client-side filtering), fetch all records using pagination
+      let rows: ClaimSummary[] = [];
+      let count = 0;
+      let error = null;
+      
+      if (pageSize >= 10000) {
+        // Fetch all records in chunks to bypass Supabase's 1000 row limit
+        console.log('[useClaimsAllSummary] Fetching all records in chunks...');
+        const allRows: ClaimSummary[] = [];
+        const chunkSize = 1000;
+        let currentFrom = 0;
+        
+        // First get the total count
+        const { count: totalCount, error: countError } = await query.select('*', { count: 'exact', head: true });
+        if (countError) {
+          error = countError;
+        } else {
+          count = totalCount || 0;
+          console.log(`[useClaimsAllSummary] Total records to fetch: ${count}`);
+          
+          // Fetch all records in chunks
+          while (currentFrom < count) {
+            const currentTo = currentFrom + chunkSize - 1;
+            console.log(`[useClaimsAllSummary] Fetching chunk: ${currentFrom}-${currentTo}`);
+            
+            // Create a fresh query for each chunk to avoid state issues
+            let chunkQuery = supabase
+              .from(SUMMARY_TABLE)
+              .select('*');
+            
+            // Re-apply the same filters
+            if (filters) {
+              if (filters.project && Array.isArray(filters.project) && filters.project.length > 0) {
+                chunkQuery = chunkQuery.in('project_name', filters.project);
+              }
+              if (filters.status) {
+                chunkQuery = chunkQuery.eq('status_name', filters.status);
+              }
+              if (filters.responsible) {
+                chunkQuery = chunkQuery.eq('engineer_name', filters.responsible);
+              }
+              if (filters.hideClosed) {
+                chunkQuery = chunkQuery.not('status_name', 'ilike', '%закры%')
+                                       .not('status_name', 'ilike', '%не%гаран%');
+              }
+            }
+            
+            const { data: chunk, error: chunkError } = await chunkQuery
+              .order('created_at', { ascending: false })
+              .range(currentFrom, currentTo);
+            
+            if (chunkError) {
+              error = chunkError;
+              break;
+            }
+            
+            if (chunk) {
+              allRows.push(...chunk);
+            }
+            
+            if (!chunk || chunk.length < chunkSize) {
+              break; // No more records
+            }
+            
+            currentFrom += chunkSize;
+          }
+          rows = allRows;
+          console.log(`[useClaimsAllSummary] Fetched ${rows.length} total records`);
+        }
+      } else {
+        // Normal pagination
+        const result = await query.order('created_at', { ascending: false }).range(from, to);
+        rows = result.data || [];
+        count = result.count || 0;
+        error = result.error;
+      }
         
       if (error) throw error;
       
       const ids = (rows ?? []).map((r: ClaimSummary) => r.id);
       
-      // Получаем связи претензий
-      const { data: links } = ids.length
-        ? await supabase
-            .from(LINK_TABLE)
-            .select('parent_id, child_id')
-            .in('child_id', ids)
-        : { data: [] };
+      // Получаем связи претензий (с чанкингом для избежания лимита URL)
+      console.log(`[useClaimsAllSummary] Fetching links for ${ids.length} claims`);
+      const links = ids.length
+        ? await fetchByChunks(ids, (chunk) => {
+            console.log(`[useClaimsAllSummary] Fetching links chunk of ${chunk.length} IDs`);
+            return supabase
+              .from(LINK_TABLE)
+              .select('parent_id, child_id')
+              .in('child_id', chunk);
+          })
+        : [];
       const linkMap = new Map<number, number>();
       (links ?? []).forEach((l: any) => linkMap.set(l.child_id, l.parent_id));
       
@@ -556,12 +655,16 @@ export function useClaimsAll(page = 0, pageSize = 50) {
       if (error) throw error;
       
       const ids = (rows ?? []).map((r: any) => r.id);
-      const { data: links } = ids.length
-        ? await supabase
-            .from(LINK_TABLE)
-            .select('parent_id, child_id')
-            .in('child_id', ids)
-        : { data: [] };
+      console.log(`[useClaimsAll] Fetching links for ${ids.length} claims`);
+      const links = ids.length
+        ? await fetchByChunks(ids, (chunk) => {
+            console.log(`[useClaimsAll] Fetching links chunk of ${chunk.length} IDs`);
+            return supabase
+              .from(LINK_TABLE)
+              .select('parent_id, child_id')
+              .in('child_id', chunk);
+          })
+        : [];
       
       const linkMap = new Map<number, number>();
       (links ?? []).forEach((l: any) => linkMap.set(l.child_id, l.parent_id));
@@ -608,12 +711,16 @@ export function useClaimsAllLegacy() {
           .range(from, to) as unknown as PromiseLike<PostgrestSingleResponse<any[]>>,
       );
       const ids = rows.map((r: any) => r.id);
-      const { data: links } = ids.length
-        ? await supabase
-            .from(LINK_TABLE)
-            .select('parent_id, child_id')
-            .in('child_id', ids)
-        : { data: [] };
+      console.log(`[useClaimsLegacy] Fetching links for ${ids.length} claims`);
+      const links = ids.length
+        ? await fetchByChunks(ids, (chunk) => {
+            console.log(`[useClaimsLegacy] Fetching links chunk of ${chunk.length} IDs`);
+            return supabase
+              .from(LINK_TABLE)
+              .select('parent_id, child_id')
+              .in('child_id', chunk);
+          })
+        : [];
       const linkMap = new Map<number, number>();
       (links ?? []).forEach((l: any) => linkMap.set(l.child_id, l.parent_id));
       return (rows ?? []).map((r: any) =>
@@ -893,7 +1000,6 @@ export function useDeleteClaim() {
    * @param payload объект с идентификатором претензии
    */
     mutationFn: async ({ id }) => {
-      console.log('[useDeleteClaim] start delete id:', id);
       const { data: attachRows } = await supabase
         .from('claim_attachments')
         .select('attachment_id, attachments(storage_path)')
@@ -902,7 +1008,6 @@ export function useDeleteClaim() {
       const paths = (attachRows ?? [])
         .map((r: any) => r.attachments?.storage_path)
         .filter(Boolean);
-      console.log('[useDeleteClaim] claim attachments:', paths);
 
 
       if (paths.length) {
@@ -918,7 +1023,6 @@ export function useDeleteClaim() {
         .select('defect_id')
         .eq('claim_id', id);
       const defectIds = (defectRows ?? []).map((d: any) => d.defect_id);
-      console.log('[useDeleteClaim] defects for claim:', defectIds);
 
       if (defectIds.length) {
         const { data: defAttachRows } = await supabase
@@ -930,7 +1034,6 @@ export function useDeleteClaim() {
           .map((r: any) => r.attachments?.storage_path)
           .filter(Boolean);
         if (defPaths.length) {
-          console.log('[useDeleteClaim] defect attachments:', defPaths);
           await supabase.storage.from(ATTACH_BUCKET).remove(defPaths);
           await supabase.from('attachments').delete().in('id', defFiles);
         }
@@ -941,7 +1044,6 @@ export function useDeleteClaim() {
             .in('attachment_id', defFiles);
         }
         const dq = await supabase.from('defects').delete().in('id', defectIds);
-        console.log('[useDeleteClaim] delete defects result:', dq.error || 'ok');
         if (dq.error) throw dq.error;
         await supabase.from('claim_defects').delete().eq('claim_id', id);
       }
@@ -954,7 +1056,6 @@ export function useDeleteClaim() {
         .or(`child_id.eq.${id},parent_id.eq.${id}`);
 
       const { error } = await supabase.from(TABLE).delete().eq('id', id);
-      console.log('[useDeleteClaim] delete claim result:', error || 'ok');
       if (error) throw error;
       return id;
     },
@@ -1107,12 +1208,22 @@ export function useLinkClaims() {
     mutationFn: async ({ parentId, childIds }: { parentId: string; childIds: string[] }) => {
       const ids = childIds.map((c) => Number(c));
       if (ids.length === 0) return;
-      await supabase.from(LINK_TABLE).delete().in('child_id', ids);
+      
+      // Delete existing links with chunking for large ID arrays
+      console.log(`[useLinkClaims] Deleting links for ${ids.length} child claims`);
+      for (let i = 0; i < ids.length; i += 1000) {
+        const chunk = ids.slice(i, i + 1000);
+        console.log(`[useLinkClaims] Deleting links chunk of ${chunk.length} IDs`);
+        await supabase.from(LINK_TABLE).delete().in('child_id', chunk);
+      }
+      
       const rows = ids.map((child_id) => ({ parent_id: Number(parentId), child_id }));
       await supabase.from(LINK_TABLE).insert(rows);
       qc.invalidateQueries({ queryKey: [LINK_TABLE] });
-      qc.invalidateQueries({ queryKey: [TABLE] });
-      qc.invalidateQueries({ queryKey: [SUMMARY_TABLE] });
+      qc.invalidateQueries({ queryKey: [TABLE], exact: false });
+      qc.invalidateQueries({ queryKey: [SUMMARY_TABLE], exact: false });
+      qc.invalidateQueries({ queryKey: [SUMMARY_TABLE + '-all'], exact: false });
+      qc.invalidateQueries({ queryKey: ['claims-optimized'], exact: false });
     },
   });
 }
@@ -1124,8 +1235,10 @@ export function useUnlinkClaim() {
       const childId = Number(id);
       await supabase.from(LINK_TABLE).delete().eq('child_id', childId);
       qc.invalidateQueries({ queryKey: [LINK_TABLE] });
-      qc.invalidateQueries({ queryKey: [TABLE] });
-      qc.invalidateQueries({ queryKey: [SUMMARY_TABLE] });
+      qc.invalidateQueries({ queryKey: [TABLE], exact: false });
+      qc.invalidateQueries({ queryKey: [SUMMARY_TABLE], exact: false });
+      qc.invalidateQueries({ queryKey: [SUMMARY_TABLE + '-all'], exact: false });
+      qc.invalidateQueries({ queryKey: ['claims-optimized'], exact: false });
     },
   });
 }
@@ -1170,21 +1283,24 @@ export function useClaimsAllStats() {
         .from(TABLE)
         .select('*', { count: 'exact', head: true });
 
-      // Получаем ID статуса "Закрыто"
-      const { data: closedStatus } = await supabase
+      // Получаем все статусы для претензий
+      const { data: allStatuses } = await supabase
         .from('statuses')
-        .select('id')
-        .eq('entity', 'claim')
-        .ilike('name', '%закры%')
-        .maybeSingle();
+        .select('id, name')
+        .eq('entity', 'claim');
+      
+      // Фильтруем статусы по тем же критериям что и в фильтре hideClosed
+      const closedStatusIds = allStatuses
+        ?.filter(s => /(закры|не\s*гаран)/i.test(s.name))
+        .map(s => s.id) || [];
 
       let closedCount = 0;
-      if (closedStatus?.id) {
-        // Получаем количество закрытых претензий
+      if (closedStatusIds.length > 0) {
+        // Получаем количество закрытых/не гарантийных претензий
         const { count } = await supabase
           .from(TABLE)
           .select('*', { count: 'exact', head: true })
-          .eq('claim_status_id', closedStatus.id);
+          .in('claim_status_id', closedStatusIds);
         closedCount = count || 0;
       }
 
@@ -1215,21 +1331,24 @@ export function useClaimsStats() {
       // Получаем общее количество претензий
       const { count: totalCount } = await baseQuery;
 
-      // Получаем ID статуса "Закрыто"
-      const { data: closedStatus } = await supabase
+      // Получаем все статусы для претензий
+      const { data: allStatuses } = await supabase
         .from('statuses')
-        .select('id')
-        .eq('entity', 'claim')
-        .ilike('name', '%закры%')
-        .maybeSingle();
+        .select('id, name')
+        .eq('entity', 'claim');
+      
+      // Фильтруем статусы по тем же критериям что и в фильтре hideClosed
+      const closedStatusIds = allStatuses
+        ?.filter(s => /(закры|не\s*гаран)/i.test(s.name))
+        .map(s => s.id) || [];
 
       let closedCount = 0;
-      if (closedStatus?.id) {
-        // Получаем количество закрытых претензий
+      if (closedStatusIds.length > 0) {
+        // Получаем количество закрытых/не гарантийных претензий
         let closedQuery: any = supabase
           .from(TABLE)
           .select('*', { count: 'exact', head: true })
-          .eq('claim_status_id', closedStatus.id);
+          .in('claim_status_id', closedStatusIds);
         closedQuery = filterByProjects(closedQuery, projectId, projectIds, onlyAssigned);
         
         const { count } = await closedQuery;

@@ -32,6 +32,52 @@ const sanitize = (obj) => {
     );
 };
 
+/**
+ * Получить все уникальные объекты, которые имеют претензии
+ * Используется для формирования списка фильтров
+ */
+export const useAllUnitsWithClaims = () => {
+    return useQuery({
+        queryKey: ['units-with-claims-all'],
+        queryFn: async () => {
+            console.log('[useAllUnitsWithClaims] Fetching all units with claims...');
+            
+            // Используем fetchPaged для получения всех записей
+            const claimUnits = await fetchPaged(async (from, to) => {
+                return supabase
+                    .from('claim_units')
+                    .select('unit_id')
+                    .range(from, to);
+            });
+            
+            console.log(`[useAllUnitsWithClaims] Found ${claimUnits.length} claim_units records`);
+            
+            const uniqueUnitIds = Array.from(new Set(claimUnits?.map(cu => cu.unit_id) || []));
+            console.log(`[useAllUnitsWithClaims] Found ${uniqueUnitIds.length} unique unit IDs`);
+            
+            if (uniqueUnitIds.length === 0) return [];
+            
+            // Получаем информацию об этих объектах
+            const units = await fetchByChunks(uniqueUnitIds, async (chunk) => {
+                return supabase
+                    .from('units')
+                    .select('id, name, building, floor, project_id')
+                    .in('id', chunk);
+            });
+            
+            const filteredUnits = units
+                .filter((u) => u.name && u.name.trim() !== '')
+                .sort(getUnitNameComparator());
+            
+            console.log(`[useAllUnitsWithClaims] Returning ${filteredUnits.length} units`);
+            console.log(`[useAllUnitsWithClaims] Sample units:`, filteredUnits.slice(0, 5).map(u => u.name));
+            
+            return filteredUnits;
+        },
+        staleTime: 5 * 60_000, // Кешируем на 5 минут
+    });
+};
+
 /* ====================== READ ====================== */
 export const useUnits = () => {
     const { projectId, projectIds, onlyAssigned, enabled } = useProjectFilter();

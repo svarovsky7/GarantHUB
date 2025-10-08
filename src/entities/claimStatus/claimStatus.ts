@@ -11,20 +11,20 @@ const ENTITY = 'claim';
 /**
  * Хук получения списка статусов претензии.
  */
-export const useClaimStatuses = () => useStatuses<ClaimStatus>(ENTITY);
+export const useClaimStatuses = () => useStatuses(ENTITY);
 
 /**
  * Хук обновления статуса претензии.
  */
 export const useUpdateClaimStatus = () =>
-  useUpdateStatus<ClaimStatus>(ENTITY);
+  useUpdateStatus();
 
 /**
  * Хук добавления статуса претензии.
  */
-export const useAddClaimStatus = () => useAddStatus<ClaimStatus>(ENTITY);
+export const useAddClaimStatus = () => useAddStatus();
 
 /**
  * Хук удаления статуса претензии.
  */
-export const useDeleteClaimStatus = () => useDeleteStatus(ENTITY);
+export const useDeleteClaimStatus = () => useDeleteStatus();

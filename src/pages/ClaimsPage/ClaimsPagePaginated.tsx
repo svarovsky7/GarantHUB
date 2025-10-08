@@ -3,7 +3,7 @@ import { ConfigProvider, message } from 'antd';
 import ruRU from 'antd/locale/ru_RU';
 import { useRolePermission } from '@/entities/rolePermission';
 import { useAuthStore } from '@/shared/store/authStore';
-import { useDeleteClaim } from '@/entities/claim';
+import { useDeleteClaim, useUnlinkClaim } from '@/entities/claim';
 import type { RoleName } from '@/shared/types/rolePermission';
 
 // Page components
@@ -18,6 +18,7 @@ const ClaimsPagePaginated = React.memo(() => {
   const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
   const { data: perm } = useRolePermission(role);
   const { mutateAsync: deleteClaim, isPending: isDeleting } = useDeleteClaim();
+  const { mutateAsync: unlinkClaim, isPending: isUnlinking } = useUnlinkClaim();
 
   // Page state management
   const {
@@ -60,6 +61,8 @@ const ClaimsPagePaginated = React.memo(() => {
     nextPage,
     prevPage,
     setPageSize,
+    handleTableChange,
+    sortState,
   } = useClaimsDataPaginated(filters, perm);
 
   // Table columns management
@@ -74,6 +77,15 @@ const ClaimsPagePaginated = React.memo(() => {
   } = useClaimsTableColumns({
     onView: (id: number) => handleView(String(id)),
     onLink: handleAddChild,
+    onUnlink: async (id: number) => {
+      try {
+        await unlinkClaim(id);
+        message.success('Претензия исключена из связи');
+      } catch (error) {
+        message.error('Ошибка при исключении из связи');
+        console.error('Unlink error:', error);
+      }
+    },
     onDelete: async (id: number) => {
       try {
         await deleteClaim({ id });
@@ -121,7 +133,9 @@ const ClaimsPagePaginated = React.memo(() => {
     pagination,
     onPageChange: goToPage,
     onPageSizeChange: setPageSize,
-  }), [showAddForm, initialValues, handleCloseAddForm, showFilters, filters, filterOptions, filtersLoading, applyFilters, resetFilters, claimsWithNames, columns, isLoading, error, handleView, handleAddChild, totalClaims, closedClaims, openClaims, readyToExport, pagination, goToPage, setPageSize]);
+    onTableChange: handleTableChange,
+    sortState,
+  }), [showAddForm, initialValues, handleCloseAddForm, showFilters, filters, filterOptions, filtersLoading, applyFilters, resetFilters, claimsWithNames, columns, isLoading, error, handleView, handleAddChild, totalClaims, closedClaims, openClaims, readyToExport, pagination, goToPage, setPageSize, handleTableChange, sortState]);
 
   const dialogProps = React.useMemo(() => ({
     linkFor,

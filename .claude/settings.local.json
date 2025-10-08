@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "permissions": {
     "allow": [
       "mcp__ide__getDiagnostics",
@@ -17,8 +18,52 @@
       "Bash(npx vite:*)",
       "Bash(rg:*)",
       "Bash(timeout 10s npm run dev)",
-      "Bash(psql:*)"
+      "Bash(psql:*)",
+      "Bash(npm ls:*)",
+      "Bash(npm:*)",
+      "Bash(dir:*)",
+      "Bash(test:*)",
+      "Bash(npx tsx:*)",
+      "Bash(powershell:*)",
+      "Bash(npx @modelcontextprotocol/server-filesystem:*)",
+      "Bash(npx puppeteer-mcp-server:*)",
+      "Bash(npx:*)",
+      "Bash(claude mcp add supabase npx tsx:*)",
+      "Bash(claude mcp add filesystem npx:*)",
+      "Bash(claude mcp add filesystem:*)",
+      "Bash(claude mcp add sequential-thinking:*)",
+      "Bash(claude mcp add puppeteer:*)",
+      "Bash(claude mcp:*)",
+      "Bash(cat:*)",
+      "WebFetch(domain:supabase.com)",
+      "WebFetch(domain:github.com)",
+      "mcp__playwright-official__browser_navigate",
+      "mcp__playwright-official__browser_wait_for",
+      "mcp__playwright-official__browser_click",
+      "mcp__playwright-official__browser_take_screenshot",
+      "mcp__sequential-thinking__sequentialthinking",
+      "Bash(timeout 8s npm run dev)",
+      "mcp__playwright-official__browser_snapshot",
+      "mcp__playwright-official__browser_console_messages",
+      "mcp__playwright-official__browser_fill_form",
+      "mcp__playwright-official__browser_evaluate",
+      "mcp__supabase__execute_sql",
+      "mcp__supabase__apply_migration",
+      "mcp__supabase__list_branches",
+      "Bash(awk:*)"
     ],
-    "deny": []
-  }
+    "deny": [],
+    "additionalDirectories": [
+      "C:\\mnt\\c\\Users\\svarovsky\\WebstormProjects\\GarantHUB",
+      "C:\\c\\Users\\svarovsky\\WebstormProjects"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "supabase",
+    "context7",
+    "playwright-official",
+    "filesystem",
+    "sequential-thinking"
+  ]
 }

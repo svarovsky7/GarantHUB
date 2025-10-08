@@ -1,6 +1,6 @@
 // src/widgets/NavBar.tsx
 import React from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Layout, Menu, Button, Select, Skeleton, Typography, Space } from 'antd';
 import { LogoutOutlined } from '@ant-design/icons';
 
@@ -10,6 +10,7 @@ import { useVisibleProjects } from '@/entities/project';
 import { useRolePermission } from '@/entities/rolePermission';
 
 const NavBar: React.FC = () => {
+  const navigate = useNavigate();
   const profile     = useAuthStore((s) => s.profile);
   const projectId   = useAuthStore((s) => s.projectId);
   const setProfile  = useAuthStore((s) => s.setProfile);
@@ -24,13 +25,15 @@ const NavBar: React.FC = () => {
   };
 
   const items = [
-    perm?.pages.includes('structure')       && { key: 'structure',      label: <RouterLink to="/structure">Структура проекта</RouterLink> },
-    perm?.pages.includes('claims')          && { key: 'claims',         label: <RouterLink to="/claims">Претензии</RouterLink> },
-    perm?.pages.includes('defects')         && { key: 'defects',        label: <RouterLink to="/defects">Дефекты</RouterLink> },
-    perm?.pages.includes('court-cases')     && { key: 'court-cases',    label: <RouterLink to="/court-cases">Судебные дела</RouterLink> },
-    perm?.pages.includes('correspondence')  && { key: 'correspondence', label: <RouterLink to="/correspondence">Письма</RouterLink> },
-    { key: 'documents', label: <RouterLink to="/documents">Документы</RouterLink> },
-    perm?.pages.includes('admin')           && { key: 'admin',          label: <RouterLink to="/admin">Администрирование</RouterLink> },
+    { key: 'personal-cabinet', label: 'Личный кабинет', onClick: () => navigate('/personal-cabinet') },
+    perm?.pages.includes('structure')       && { key: 'structure',      label: 'Структура проекта', onClick: () => navigate('/structure') },
+    perm?.pages.includes('claims')          && { key: 'claims',         label: 'Претензии', onClick: () => navigate('/claims') },
+    perm?.pages.includes('defects')         && { key: 'defects',        label: 'Дефекты', onClick: () => navigate('/defects') },
+    perm?.pages.includes('court-cases')     && { key: 'court-cases',    label: 'Судебные дела', onClick: () => navigate('/court-cases') },
+    perm?.pages.includes('correspondence')  && { key: 'correspondence', label: 'Письма', onClick: () => navigate('/correspondence') },
+    { key: 'engineer-calls', label: 'Календарь вызовов', onClick: () => navigate('/engineer-calls') },
+    { key: 'documents', label: 'Документы', onClick: () => navigate('/documents') },
+    perm?.pages.includes('admin')           && { key: 'admin',          label: 'Администрирование', onClick: () => navigate('/admin') },
   ].filter(Boolean);
 
   return (
@@ -47,14 +50,14 @@ const NavBar: React.FC = () => {
           }}
       >
         {/* Логотип */}
-        <RouterLink
+        <Link
             to="/"
-            style={{ color: '#fff', flexShrink: 0 }}
+            style={{ color: '#fff', flexShrink: 0, textDecoration: 'none' }}
         >
           <Typography.Title level={4} style={{ color: 'inherit', margin: 0, whiteSpace: 'nowrap' }}>
             Garant&nbsp;HUB
           </Typography.Title>
-        </RouterLink>
+        </Link>
 
         {/* Меню */}
         <Menu
@@ -84,7 +87,7 @@ const NavBar: React.FC = () => {
                 }}
             >
               <Space direction="vertical" size={0} align="end" style={{ flex: 1, minWidth: 0 }}>
-                <RouterLink to="/profile">
+                <Link to="/profile" style={{ textDecoration: 'none' }}>
                   <Typography.Text
                       style={{
                         color: '#fff',
@@ -96,7 +99,7 @@ const NavBar: React.FC = () => {
                   >
                     {profile.name ? `${profile.name} (${profile.email})` : profile.email}
                   </Typography.Text>
-                </RouterLink>
+                </Link>
 
                 {perm?.only_assigned_project && (
                     isPending ? (

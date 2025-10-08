@@ -1,5 +1,5 @@
 import React from "react";
-import { Modal, Skeleton, Typography, Button } from "antd";
+import { Modal, Skeleton, Typography, Button, message } from "antd";
 import {
   useClaim,
   useClaimAll,
@@ -104,10 +104,12 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
       ids.length !== defectIds.length ||
       ids.some((d, i) => d !== defectIds[i]);
     if (changed) {
+      console.log('[ClaimViewModal] Defect IDs changed, resetting state');
       lastClaimIdRef.current = claim.id;
       setDefectIds(ids);
       setNewDefs([]);
       setRemovedIds([]);
+      setEditedDefs({}); // Reset edited defects when claim changes
     }
   }, [claim, open]);
 
@@ -152,10 +154,12 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
 
   React.useEffect(() => {
     if (!open) {
+      console.log('[ClaimViewModal] Modal closed, resetting all state');
       lastClaimIdRef.current = null;
       setDefectIds([]);
       setNewDefs([]);
       setRemovedIds([]);
+      setEditedDefs({}); // Reset edited defects when modal closes
       attachments.reset();
       setDefectFiles({});
       setDefectRemoteFiles({});
@@ -165,7 +169,15 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
     }
   }, [open]);
 
-  const { data: loadedDefs = [] } = useDefectsWithNames(defectIds);
+  const { data: loadedDefs = [], refetch: refetchDefects } = useDefectsWithNames(defectIds);
+
+  // Refetch defects when modal opens to ensure fresh data
+  React.useEffect(() => {
+    if (open && defectIds.length > 0) {
+      console.log('[ClaimViewModal] Modal opened, refetching defects');
+      refetchDefects();
+    }
+  }, [open, defectIds, refetchDefects]);
 
   const defectTypeMap = React.useMemo(() => {
     const map: Record<number, string> = {};
@@ -294,15 +306,20 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
     field: keyof NewDefect | "id",
     value: any,
   ) => {
+    console.log(`[ClaimViewModal] Changing defect ${id}, field: ${field}, value:`, value);
     if (id < 0) {
       setNewDefs((p) =>
         p.map((d) => (d.tmpId === id ? { ...d, [field]: value } : d)),
       );
     } else {
-      setEditedDefs((p) => ({
-        ...p,
-        [id]: { ...(p[id] ?? {}), [field]: value },
-      }));
+      setEditedDefs((p) => {
+        const updated = {
+          ...p,
+          [id]: { ...(p[id] ?? {}), [field]: value },
+        };
+        console.log('[ClaimViewModal] Updated editedDefs:', updated);
+        return updated;
+      });
     }
   };
 
@@ -391,20 +408,34 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
           ),
         );
       }
+      // Save edited defects BEFORE other operations
       const updates = Object.entries(editedDefs).map(([id, upd]) => ({
         id: Number(id),
         updates: upd,
       }));
       if (updates.length) {
+        console.log('[ClaimViewModal] Saving edited defects:', updates);
         await Promise.all(updates.map((u) => updateDef.mutateAsync(u)));
+        console.log('[ClaimViewModal] Defects updates saved successfully');
       }
-      qc.invalidateQueries({ queryKey: ["defects"] });
-      qc.invalidateQueries({ queryKey: ["claims"] });
-      qc.invalidateQueries({ queryKey: ["claims", claim.id] });
-      qc.invalidateQueries({ queryKey: ["claim-all", claim.id] });
-      qc.invalidateQueries({ queryKey: ["claims-simple"] });
-      qc.invalidateQueries({ queryKey: ["claims-simple-all"] });
-      qc.invalidateQueries({ queryKey: ["claims-all"] });
+      
+      // Invalidate queries to refresh data
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["defects"] }),
+        qc.invalidateQueries({ queryKey: ["defects-with-names"] }), // Important: invalidate the specific query for defects with names
+        qc.invalidateQueries({ queryKey: ["defects-summary"] }),
+        qc.invalidateQueries({ queryKey: ["claims"] }),
+        qc.invalidateQueries({ queryKey: ["claims", claim.id] }),
+        qc.invalidateQueries({ queryKey: ["claim-all", claim.id] }),
+        qc.invalidateQueries({ queryKey: ["claims-simple"] }),
+        qc.invalidateQueries({ queryKey: ["claims-simple-all"] }),
+        qc.invalidateQueries({ queryKey: ["claims-all"] }),
+      ]);
+      
+      // Force refetch the defects data to ensure we have latest data
+      await refetchDefects();
+      
+      // Reset state only after successful save
       setEditedDefs({});
       setNewDefs([]);
       setRemovedIds([]);
@@ -416,9 +447,15 @@ export default function ClaimViewModal({ open, claimId, onClose }: Props) {
           .flat()
           .map((f) => [Number(f.id), f.description ?? ""]),
       );
-      onClose();
+      message.success('Изменения успешно сохранены');
+      
+      // Small delay to ensure data is refreshed before closing
+      setTimeout(() => {
+        onClose();
+      }, 100);
     } catch (e) {
-      console.error(e);
+      console.error('[ClaimViewModal] Error saving changes:', e);
+      message.error('Ошибка при сохранении изменений. Пожалуйста, попробуйте еще раз.');
     }
   };
   if (!open || !claimId) return null;

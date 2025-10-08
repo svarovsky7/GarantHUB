@@ -47,6 +47,13 @@ interface ClaimsPageContentProps {
   };
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (pageSize: number) => void;
+  
+  // Sorting
+  onTableChange?: (pagination: any, filters: any, sorter: any) => void;
+  sortState?: {
+    field: string | null;
+    order: 'ascend' | 'descend' | null;
+  };
 }
 
 const ClaimsPageContent = React.memo<ClaimsPageContentProps>(({
@@ -72,6 +79,8 @@ const ClaimsPageContent = React.memo<ClaimsPageContentProps>(({
   pagination,
   onPageChange,
   onPageSizeChange,
+  onTableChange,
+  sortState,
 }) => {
   return (
     <>
@@ -106,6 +115,7 @@ const ClaimsPageContent = React.memo<ClaimsPageContentProps>(({
           onAddChild={onAddChild}
           columns={columns}
           showPagination={!pagination?.usesPagination}
+          onChange={onTableChange}
         />
       )}
 
@@ -115,7 +125,7 @@ const ClaimsPageContent = React.memo<ClaimsPageContentProps>(({
         </Typography.Text>
         <Typography.Text style={{ display: 'block', marginTop: 4 }}>
           {pagination?.usesPagination 
-            ? `Претензий на текущей странице: ${readyToExport}`
+            ? `Претензий на текущей странице: ${pagination.currentItems}`
             : `Готовых претензий к выгрузке: ${readyToExport}`
           }
         </Typography.Text>

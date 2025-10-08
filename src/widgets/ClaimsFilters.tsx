@@ -62,6 +62,7 @@ export default function ClaimsFilters({
     "acceptedPeriod",
     "resolvedPeriod",
     "description",
+    "courtCase",
   ];
 
   const calcExtra = () => {
@@ -79,9 +80,19 @@ export default function ClaimsFilters({
     changed: Partial<ClaimFilters>,
     all: ClaimFilters,
   ) => {
+    // Создаем новый объект с объединенными значениями
+    const mergedValues = { ...all };
+    
+    // Убираем undefined значения
+    Object.keys(mergedValues).forEach(key => {
+      if (mergedValues[key] === undefined) {
+        delete mergedValues[key];
+      }
+    });
+    
     calcExtra();
     // Автоматически применяем фильтры при изменении
-    handleFinish(all);
+    handleFinish(mergedValues);
     if (Object.prototype.hasOwnProperty.call(changed, "hideClosed")) {
       try {
         localStorage.setItem(LS_HIDE_CLOSED, JSON.stringify(all.hideClosed));
@@ -177,94 +188,116 @@ export default function ClaimsFilters({
           </Row>
           <Row gutter={12}>
             <Col flex="auto">
-              <Collapse ghost>
-                <Collapse.Panel header="Доп. фильтры" key="more" extra={badge}>
-                  <Row gutter={12}>
-                    <Col span={6}>
-                      <Form.Item name="id" label="ID претензии">
-                        <Select
-                          mode="multiple"
-                          allowClear
-                          options={options.ids}
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col span={6}>
-                      <Form.Item name="claim_no" label="№ претензии">
-                        <Input />
-                      </Form.Item>
-                    </Col>
-                    <Col span={6}>
-                      <Form.Item name="author" label="Автор">
-                        <Select allowClear options={options.authors} />
-                      </Form.Item>
-                    </Col>
-                    <Col span={6}>
-                      <Form.Item name="building" label="Корпус">
-                        <Select 
-                          mode="multiple"
-                          allowClear 
-                          options={options.buildings}
-                          showSearch
-                          optionFilterProp="label"
-                          placeholder="Выберите корпус"
-                        />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-                  <Row gutter={12}>
-                    <Col span={6}>
-                      <Form.Item name="period" label="Дата регистрации">
-                        <RangePicker
-                          size="small"
-                          format="DD.MM.YYYY"
-                          style={{ width: "100%" }}
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col span={6}>
-                      <Form.Item name="claimedPeriod" label="Дата претензии">
-                        <RangePicker
-                          size="small"
-                          format="DD.MM.YYYY"
-                          style={{ width: "100%" }}
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col span={6}>
-                      <Form.Item
-                        name="acceptedPeriod"
-                        label="Дата получения Застройщиком"
-                      >
-                        <RangePicker
-                          size="small"
-                          format="DD.MM.YYYY"
-                          style={{ width: "100%" }}
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col span={6}>
-                      <Form.Item name="resolvedPeriod" label="Дата устранения">
-                        <RangePicker
-                          size="small"
-                          format="DD.MM.YYYY"
-                          style={{ width: "100%" }}
-                        />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-                  <Row gutter={12} align="middle">
-                    <Col span={12}>
-                      <Form.Item
-                        name="description"
-                        label="Дополнительная информация"
-                      >
-                        <Input />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-                </Collapse.Panel>
-              </Collapse>
+              <Collapse 
+                ghost
+                items={[
+                  {
+                    key: 'more',
+                    label: 'Доп. фильтры',
+                    extra: badge,
+                    children: (
+                      <>
+                        <Row gutter={12}>
+                          <Col span={6}>
+                            <Form.Item name="id" label="ID претензии">
+                              <Select
+                                mode="multiple"
+                                allowClear
+                                options={options.ids}
+                              />
+                            </Form.Item>
+                          </Col>
+                          <Col span={6}>
+                            <Form.Item name="claim_no" label="№ претензии">
+                              <Input />
+                            </Form.Item>
+                          </Col>
+                          <Col span={6}>
+                            <Form.Item name="author" label="Автор">
+                              <Select allowClear options={options.authors} />
+                            </Form.Item>
+                          </Col>
+                          <Col span={6}>
+                            <Form.Item name="building" label="Корпус">
+                              <Select 
+                                mode="multiple"
+                                allowClear 
+                                options={options.buildings}
+                                showSearch
+                                optionFilterProp="label"
+                                placeholder="Выберите корпус"
+                              />
+                            </Form.Item>
+                          </Col>
+                        </Row>
+                        <Row gutter={12}>
+                          <Col span={6}>
+                            <Form.Item name="period" label="Дата регистрации">
+                              <RangePicker
+                                size="small"
+                                format="DD.MM.YYYY"
+                                style={{ width: "100%" }}
+                              />
+                            </Form.Item>
+                          </Col>
+                          <Col span={6}>
+                            <Form.Item name="claimedPeriod" label="Дата претензии">
+                              <RangePicker
+                                size="small"
+                                format="DD.MM.YYYY"
+                                style={{ width: "100%" }}
+                              />
+                            </Form.Item>
+                          </Col>
+                          <Col span={6}>
+                            <Form.Item
+                              name="acceptedPeriod"
+                              label="Дата получения Застройщиком"
+                            >
+                              <RangePicker
+                                size="small"
+                                format="DD.MM.YYYY"
+                                style={{ width: "100%" }}
+                              />
+                            </Form.Item>
+                          </Col>
+                          <Col span={6}>
+                            <Form.Item name="resolvedPeriod" label="Дата устранения">
+                              <RangePicker
+                                size="small"
+                                format="DD.MM.YYYY"
+                                style={{ width: "100%" }}
+                              />
+                            </Form.Item>
+                          </Col>
+                        </Row>
+                        <Row gutter={12} align="middle">
+                          <Col span={12}>
+                            <Form.Item
+                              name="description"
+                              label="Дополнительная информация"
+                            >
+                              <Input />
+                            </Form.Item>
+                          </Col>
+                          <Col span={6}>
+                            <Form.Item name="courtCase" label="Судебная претензия">
+                              <Select 
+                                allowClear
+                                placeholder="Все"
+                                options={[
+                                  { value: 'true', label: 'Да' },
+                                  { value: 'false', label: 'Нет' }
+                                ]}
+                              />
+                            </Form.Item>
+                          </Col>
+                        </Row>
+                      </>
+                    ),
+                  },
+                ]}
+              />
             </Col>
           </Row>
 

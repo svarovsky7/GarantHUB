@@ -30,9 +30,10 @@ interface Props {
   documents: DocumentWithAuthor[];
   loading?: boolean;
   canDelete?: boolean;
+  canEditDescription?: boolean;
 }
 
-export default function DocumentsTable({ documents, loading, canDelete = false }: Props) {
+export default function DocumentsTable({ documents, loading, canDelete = false, canEditDescription = false }: Props) {
   const deleteDocument = useDeleteDocument();
   const downloadDocument = useDownloadDocument();  
   const updateDocument = useUpdateDocument();
@@ -182,13 +183,13 @@ export default function DocumentsTable({ documents, loading, canDelete = false }
         return (
           <div style={{ width: "100%", position: "relative" }}>
             {description ? (
-              <Text style={{ width: "100%", display: "block", paddingRight: canDelete ? "32px" : "0" }}>
+              <Text style={{ width: "100%", display: "block", paddingRight: canEditDescription ? "32px" : "0" }}>
                 {description}
               </Text>
             ) : (
-              <Text type="secondary" style={{ paddingRight: canDelete ? "32px" : "0" }}>—</Text>
+              <Text type="secondary" style={{ paddingRight: canEditDescription ? "32px" : "0" }}>—</Text>
             )}
-            {canDelete && (
+            {canEditDescription && (
               <Tooltip title="Редактировать описание">
                 <Button
                   size="small"

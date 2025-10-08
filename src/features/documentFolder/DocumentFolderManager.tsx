@@ -242,7 +242,7 @@ export default function DocumentFolderManager({ canManage = false }: Props) {
           createForm.resetFields();
         }}
         footer={null}
-        destroyOnClose
+        destroyOnHidden
       >
         <Form
           form={createForm}
@@ -322,7 +322,7 @@ export default function DocumentFolderManager({ canManage = false }: Props) {
           editForm.resetFields();
         }}
         footer={null}
-        destroyOnClose
+        destroyOnHidden
       >
         <Form
           form={editForm}

@@ -69,7 +69,7 @@ const LS_FILTERS_VISIBLE_KEY = "courtCasesFiltersVisible";
 export default function CourtCasesPage() {
   const { data: cases = [], isPending: casesLoading } = useCourtCases();
   const caseIds = React.useMemo(() => cases.map((c) => c.id), [cases]);
-  const { data: parties = [] } = useCasePartiesByCaseIds(caseIds);
+  const { data: parties = [], isLoading: partiesLoading } = useCasePartiesByCaseIds(caseIds);
   const deleteCaseMutation = useDeleteCourtCase();
   const notify = useNotify();
   const linkCases = useLinkCases();
@@ -143,13 +143,27 @@ export default function CourtCasesPage() {
       number,
       { plaintiffs: string[]; defendants: string[] }
     >();
+    
     (parties ?? []).forEach((p) => {
       const entry = map.get(p.case_id) || { plaintiffs: [], defendants: [] };
       const name = p.persons?.full_name ?? p.contractors?.name ?? "";
-      if (p.role === "plaintiff") entry.plaintiffs.push(name);
-      else if (p.role === "defendant") entry.defendants.push(name);
+      
+      // Проверка роли с учетом возможных вариантов написания
+      const roleStr = String(p.role || '').toLowerCase().trim();
+      
+      if (roleStr === "plaintiff" || roleStr === "истец") {
+        if (name) {
+          entry.plaintiffs.push(name);
+        }
+      } else if (roleStr === "defendant" || roleStr === "ответчик") {
+        if (name) {
+          entry.defendants.push(name);
+        }
+      }
+      
       map.set(p.case_id, entry);
     });
+    
     return map;
   }, [parties]);
 
@@ -223,13 +237,16 @@ export default function CourtCasesPage() {
     return stages.find((s) => s.name.toLowerCase().includes("закры"))?.id;
   }, [stages]);
 
-  const casesData = cases.map((c: any) => ({
-    ...c,
-    caseUid: c.caseUid,
-    plaintiffs: (partiesMap.get(c.id)?.plaintiffs || []).join(", "),
-    defendants: (partiesMap.get(c.id)?.defendants || []).join(", "),
-    projectName: projects.find((p) => p.id === c.project_id)?.name ?? "",
-    projectObject: (c.unit_ids ?? [])
+  const casesData = cases.map((c: any) => {
+    const partiesData = partiesMap.get(c.id);
+    
+    return {
+      ...c,
+      caseUid: c.caseUid,
+      plaintiffs: (partiesData?.plaintiffs || []).join(", "),
+      defendants: (partiesData?.defendants || []).join(", "),
+      projectName: projects.find((p) => p.id === c.project_id)?.name ?? "",
+      projectObject: (c.unit_ids ?? [])
       .map((id: number) => caseUnits.find((u) => u.id === id)?.name)
       .filter(Boolean)
       .join(", "),
@@ -258,7 +275,8 @@ export default function CourtCasesPage() {
       : null,
     statusName: stages.find((s) => s.id === c.status)?.name ?? null,
     statusColor: stages.find((s) => s.id === c.status)?.color ?? null,
-  }));
+    };
+  });
 
   const {
     filteredCases,

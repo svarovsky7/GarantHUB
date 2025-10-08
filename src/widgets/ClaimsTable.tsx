@@ -28,6 +28,7 @@ interface Props {
   onUnlink?: (id: number) => void;
   lockedUnitIds?: number[];
   showPagination?: boolean;
+  onChange?: (pagination: any, filters: any, sorter: any) => void;
 }
 
 export default function ClaimsTable({
@@ -39,6 +40,7 @@ export default function ClaimsTable({
   onUnlink,
   lockedUnitIds = [],
   showPagination = true,
+  onChange,
 }: Props) {
   
   const { mutateAsync: remove, isPending } = useDeleteClaim();
@@ -293,6 +295,7 @@ export default function ClaimsTable({
         pageSizeOptions: ['100', '200'],
         onChange: (_p, size) => size && setPageSize(size),
       } : false}
+      onChange={onChange}
       size="middle"
       expandable={{
         expandRowByClick: true,

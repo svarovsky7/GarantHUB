@@ -43,10 +43,17 @@ export function useCasePartiesByCaseIds(caseIds: number[]) {
     queryKey: [TABLE, 'by-ids', caseIds.join(',')],
     enabled: Array.isArray(caseIds) && caseIds.length > 0,
     queryFn: async () => {
-      const rows = await fetchByChunks(caseIds, (chunk) =>
-        supabase.from(TABLE).select(FIELDS).in('case_id', chunk),
-      );
-      return (rows ?? []) as unknown as CasePartyWithRelations[];
+      // Для конкретных case_id делаем прямой запрос без чанков
+      // это более эффективно и гарантирует получение всех данных
+      const { data, error } = await supabase
+        .from(TABLE)
+        .select(FIELDS)
+        .in('case_id', caseIds)
+        .order('case_id');
+        
+      if (error) throw error;
+      
+      return (data ?? []) as unknown as CasePartyWithRelations[];
     },
     staleTime: 5 * 60_000,
   });

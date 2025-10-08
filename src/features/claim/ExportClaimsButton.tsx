@@ -111,6 +111,7 @@ export default function ExportClaimsButton({ claims, useAllData = false }: Expor
       }
       
       const filteredData = dataToExport;
+      const today = dayjs();
       const rows = filteredData.map((c) => ({
         ID: c.id,
         Проект: c.projectName,
@@ -125,9 +126,15 @@ export default function ExportClaimsButton({ claims, useAllData = false }: Expor
         'Дата регистрации претензии': c.registeredOn
           ? c.registeredOn.format('DD.MM.YYYY')
           : '',
+        'Дней с регистрации': c.registeredOn 
+          ? today.diff(c.registeredOn, 'day')
+          : '',
         'Дата устранения': c.resolvedOn ? c.resolvedOn.format('DD.MM.YYYY') : '',
         'Закрепленный инженер': c.responsibleEngineerName ?? '',
-        Добавлено: c.createdAt ? c.createdAt.format('DD.MM.YYYY HH:mm') : '',
+        'Судебная': (c.caseUid || c.pre_trial_claim) ? 'Да' : 'Нет',
+        Добавлено: c.created_at 
+          ? dayjs(c.created_at).format('DD.MM.YYYY HH:mm') 
+          : (c.createdAt ? c.createdAt.format('DD.MM.YYYY HH:mm') : ''),
         Автор: c.createdByName ?? '',
       }));
       

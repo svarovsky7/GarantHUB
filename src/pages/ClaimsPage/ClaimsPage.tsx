@@ -183,11 +183,7 @@ export default function ClaimsPage() {
   // Фильтрованные претензии
   const filteredClaims = useMemo(
     () => {
-      console.log('ClaimsPage: Фильтруем претензии');
-      console.log('ClaimsPage: Всего претензий до фильтрации:', claimsWithNames.length);
-      console.log('ClaimsPage: Текущие фильтры:', filters);
       const result = filterClaims(claimsWithNames, filters);
-      console.log('ClaimsPage: Результат фильтрации:', result.length);
       return result;
     },
     [claimsWithNames, filters],
@@ -195,14 +191,11 @@ export default function ClaimsPage() {
 
   // Опции для фильтров
   const filterOptions = useMemo(() => {
-    console.log('ClaimsPage: Формируем опции для фильтров');
-    console.log('ClaimsPage: Проекты:', projects);
-    console.log('ClaimsPage: Объекты:', units);
     
-    const uniqueProjects = Array.from(new Set(projects.map(p => ({ value: p.id, label: p.name }))))
+    const uniqueProjects = Array.from(new Set(projects.map(p => ({ value: p.name, label: p.name }))))
       .sort((a, b) => a.label.localeCompare(b.label));
 
-    const uniqueUnits = Array.from(new Set(units.map(u => ({ value: u.id, label: formatUnitShortName(u) }))))
+    const uniqueUnits = Array.from(new Set(units.map(u => ({ value: formatUnitShortName(u), label: formatUnitShortName(u) }))))
       .sort((a, b) => a.label.localeCompare(b.label));
 
     const uniqueBuildings = Array.from(
@@ -212,7 +205,7 @@ export default function ClaimsPage() {
 
     const uniqueStatuses = Array.from(
       new Set(claimsWithNames.map(c => ({ id: c.claim_status_id, name: c.statusName })).filter(s => s.name))
-    ).map(s => ({ value: s.id, label: s.name }))
+    ).map(s => ({ value: s.name, label: s.name }))
       .sort((a, b) => a.label.localeCompare(b.label));
 
     const uniqueEngineers = Array.from(
@@ -228,7 +221,7 @@ export default function ClaimsPage() {
     const uniqueIds = claimsWithNames.map(c => ({ value: c.id, label: c.id.toString() }))
       .sort((a, b) => b.value - a.value);
 
-    return {
+    const result = {
       projects: uniqueProjects,
       units: uniqueUnits,
       buildings: uniqueBuildings,
@@ -237,6 +230,8 @@ export default function ClaimsPage() {
       authors: uniqueAuthors,
       ids: uniqueIds,
     };
+    
+    return result;
   }, [projects, units, claimsWithNames]);
 
 
@@ -264,11 +259,9 @@ export default function ClaimsPage() {
   const handleCloseViewModal = useCallback(() => setViewId(null), []);
   const handleCloseLinkDialog = useCallback(() => setLinkFor(null), []);
   const handleSubmitFilters = useCallback((newFilters: ClaimFilters) => {
-    console.log('ClaimsPage: Применяем фильтры:', newFilters);
     setFilters(newFilters);
   }, []);
   const handleResetFilters = useCallback(() => {
-    console.log('ClaimsPage: Сброс фильтров');
     setFilters({});
   }, []);
 

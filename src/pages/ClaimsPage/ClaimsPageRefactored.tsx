@@ -69,7 +69,6 @@ const ClaimsPageRefactored = React.memo(() => {
     onLink: handleAddChild,
     onDelete: async (id: number) => {
       // TODO: Implement delete handler
-      console.log('Delete claim:', id);
     }
   });
 

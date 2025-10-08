@@ -8,9 +8,11 @@ import AddIcon from "@mui/icons-material/Add";
 
 const CELL_SIZE = 54;
 const FLOOR_COLOR = "#1976d2";
+const UNITS_PER_ROW = 20; // Максимум объектов в одной строке
 
 /**
  * Отображает один этаж в шахматке.
+ * Если объектов больше 20, они разбиваются на несколько строк.
  */
 export default function FloorCell({
   floor,
@@ -27,21 +29,34 @@ export default function FloorCell({
   onSortUnits,
   sortDirection,
 }) {
+  // Разбиваем квартиры на строки по UNITS_PER_ROW штук
+  const unitRows = [];
+  for (let i = 0; i < units.length; i += UNITS_PER_ROW) {
+    unitRows.push(units.slice(i, i + UNITS_PER_ROW));
+  }
+  
+  // Если квартир нет, создаем одну пустую строку для кнопки добавления
+  if (unitRows.length === 0) {
+    unitRows.push([]);
+  }
+
   return (
     <Box
       sx={{
         display: "flex",
         flexDirection: "row",
-        alignItems: "center",
-        mb: 1,
+        alignItems: "flex-start",
+        mb: 2,
+        position: "relative",
       }}
       data-oid="0y4bqhw"
     >
+      {/* Ячейка этажа отображается один раз для всех строк */}
       <Box
         sx={{
           width: 80,
           minWidth: 80,
-          height: CELL_SIZE,
+          minHeight: CELL_SIZE,
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -50,9 +65,11 @@ export default function FloorCell({
           background: "#fff",
           fontWeight: 600,
           fontSize: 20,
-          position: "relative",
+          position: "sticky",
+          left: 0,
           color: FLOOR_COLOR,
           px: 2,
+          py: 1,
           boxShadow: "0 1px 6px 0 #E3ECFB",
           mr: 1,
         }}
@@ -111,42 +128,89 @@ export default function FloorCell({
           </Tooltip>
         </Box>
       </Box>
-      {units.map((unit) => (
-        <UnitCell
-          key={unit.id}
-          unit={unit}
-          cases={casesByUnit ? casesByUnit[unit.id] : []}
-          hasLetter={Boolean(lettersByUnit ? lettersByUnit[unit.id] : false)}
-          claimInfo={claimsByUnit ? claimsByUnit[unit.id] : null}
-          onEditUnit={() => onEditUnit?.(unit)}
-          onDeleteUnit={() => onDeleteUnit?.(unit)}
-          onAction={() => onUnitClick?.(unit)}
-          data-oid="acj2jio"
-        />
-      ))}
+      
+      {/* Контейнер для всех строк квартир */}
       <Box
         sx={{
-          width: CELL_SIZE,
-          height: CELL_SIZE,
-          ml: 1,
           display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          border: "1.5px dashed #1976d2",
-          borderRadius: "12px",
-          bgcolor: "#F3F7FF",
-          cursor: "pointer",
-          transition: "background 0.2s",
-          "&:hover": { bgcolor: "#e3ecfb" },
+          flexDirection: "column",
+          gap: 1,
+          flex: 1,
         }}
-        onClick={onAddUnit}
-        data-oid="kxqr4ho"
       >
-        <AddIcon
-          fontSize="medium"
-          sx={{ color: FLOOR_COLOR }}
-          data-oid="62-0u9e"
-        />
+        {unitRows.map((rowUnits, rowIndex) => (
+          <Box
+            key={rowIndex}
+            sx={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 1,
+            }}
+          >
+            {/* Отображаем квартиры текущей строки */}
+            {rowUnits.map((unit) => (
+            <UnitCell
+              key={unit.id}
+              unit={unit}
+              cases={casesByUnit ? casesByUnit[unit.id] : []}
+              hasLetter={Boolean(lettersByUnit ? lettersByUnit[unit.id] : false)}
+              claimInfo={claimsByUnit ? claimsByUnit[unit.id] : null}
+              onEditUnit={() => onEditUnit?.(unit)}
+              onDeleteUnit={() => onDeleteUnit?.(unit)}
+              onAction={() => onUnitClick?.(unit)}
+              data-oid="acj2jio"
+            />
+          ))}
+          
+          {/* Кнопка добавления показывается только на последней строке */}
+          {rowIndex === unitRows.length - 1 && (
+            <Box
+              sx={{
+                width: CELL_SIZE,
+                height: CELL_SIZE,
+                ml: 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                border: "1.5px dashed #1976d2",
+                borderRadius: "12px",
+                bgcolor: "#F3F7FF",
+                cursor: "pointer",
+                transition: "background 0.2s",
+                "&:hover": { bgcolor: "#e3ecfb" },
+              }}
+              onClick={onAddUnit}
+              data-oid="kxqr4ho"
+            >
+              <AddIcon
+                fontSize="medium"
+                sx={{ color: FLOOR_COLOR }}
+                data-oid="62-0u9e"
+              />
+            </Box>
+          )}
+          
+          {/* Добавляем индикатор продолжения строки, если это не последняя строка */}
+          {rowIndex < unitRows.length - 1 && rowUnits.length === UNITS_PER_ROW && (
+            <Box
+              sx={{
+                ml: 1,
+                px: 1,
+                py: 0.5,
+                bgcolor: "#f5f5f5",
+                borderRadius: "8px",
+                fontSize: 12,
+                color: "#666",
+                fontWeight: 500,
+              }}
+            >
+              ↓ продолжение
+            </Box>
+          )}
+        </Box>
+      ))}
       </Box>
     </Box>
   );

@@ -5,7 +5,16 @@ import * as path from 'path';
 export default defineConfig({
     plugins: [react()],
     optimizeDeps: {
-        include: ['react', 'react-dom', 'react-router-dom'],
+        include: [
+            'react', 
+            'react-dom', 
+            'react-router-dom', 
+            '@mui/material',
+            '@mui/icons-material',
+            '@mui/x-data-grid',
+            'antd',
+            '@tanstack/react-query'
+        ],
     },
     resolve: {
         alias: {
@@ -17,9 +26,13 @@ export default defineConfig({
             '@entities': path.resolve(__dirname, 'src/entities'),
             '@shared': path.resolve(__dirname, 'src/shared'),
         },
+        dedupe: ['react', 'react-dom'],
     },
     server: {
         port: 3000,
+        hmr: {
+            overlay: false,
+        },
     },
     build: {
         chunkSizeWarningLimit: 1000,

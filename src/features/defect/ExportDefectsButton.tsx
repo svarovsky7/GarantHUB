@@ -26,8 +26,6 @@ export default function ExportDefectsButton({
   const handleClick = React.useCallback(async () => {
     setLoading(true);
     try {
-      console.log('ExportDefectsButton: Начало экспорта');
-      console.log('ExportDefectsButton: Дефектов для экспорта:', defects.length);
       
       if (defects.length === 0) {
         console.warn('ExportDefectsButton: Нет дефектов для экспорта');
@@ -44,7 +42,6 @@ export default function ExportDefectsButton({
       let filesMap: Record<number, string[]> = {};
       
       if (ids.length) {
-        console.log('ExportDefectsButton: Загрузка файлов для дефектов:', ids.length);
         
         // Разбиваем ID на чанки по 1000 элементов, чтобы избежать слишком длинных URL
         const chunkSize = 1000;
@@ -53,7 +50,6 @@ export default function ExportDefectsButton({
           chunks.push(ids.slice(i, i + chunkSize));
         }
         
-        console.log('ExportDefectsButton: Загрузка файлов по частям:', chunks.length, 'чанков');
         
         // Выполняем запросы по частям
         for (const chunk of chunks) {
@@ -85,10 +81,8 @@ export default function ExportDefectsButton({
           });
         }
         
-        console.log('ExportDefectsButton: Найдено файлов:', Object.keys(filesMap).length);
       }
       
-      console.log('ExportDefectsButton: Формирование строк Excel');
       const rows = defects.map((d) => ({
         'ID дефекта': d.id,
         'ID претензии': d.claimIds.join(', '),
@@ -110,7 +104,6 @@ export default function ExportDefectsButton({
         'Ссылки на файлы': (filesMap[d.id] ?? []).join('\n'),
       }));
       
-      console.log('ExportDefectsButton: Создание Excel файла');
       const wb = new ExcelJS.Workbook();
       const ws = wb.addWorksheet('Defects');
       if (rows.length) {
@@ -118,10 +111,8 @@ export default function ExportDefectsButton({
         rows.forEach((r) => ws.addRow(r));
       }
       
-      console.log('ExportDefectsButton: Сохранение файла');
       const buffer = await wb.xlsx.writeBuffer();
       saveAs(new Blob([buffer], { type: 'application/octet-stream' }), 'defects.xlsx');
-      console.log('ExportDefectsButton: Экспорт завершен успешно');
       
       // Показываем пользователю уведомление об успехе
       import('antd').then(({ message }) => {

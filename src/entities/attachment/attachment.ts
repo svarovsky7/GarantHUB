@@ -99,6 +99,13 @@ export function uploadTicketAttachment(file: File, projectId: number, ticketId: 
 }
 
 /**
+ * Загружает файл для вызова инженера в хранилище Supabase.
+ */
+export function uploadEngineerCallAttachment(file: File, callId: string): Promise<UploadResult> {
+    return upload(file, `engineer_calls/${callId}`);
+}
+
+/**
  * Загружает файл претензии в хранилище Supabase.
  */
 export function uploadClaimAttachment(file: File, claimId: number): Promise<UploadResult> {

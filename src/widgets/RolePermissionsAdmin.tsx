@@ -1,5 +1,5 @@
 import React from 'react';
-import { Table, Switch, Skeleton, Card, Space, Typography } from 'antd';
+import { Table, Switch, Skeleton, Card, Space, Typography, Alert } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
   useRolePermissions,
@@ -15,15 +15,15 @@ import {
 /** Основные разделы приложения */
 const MAIN_PAGES = ['dashboard', 'structure', 'claims'];
 /** Работа с обращениями и дефектами */
-const WORK_PAGES = ['defects', 'court-cases', 'correspondence'];
+const WORK_PAGES = ['defects', 'court-cases', 'correspondence', 'engineer-calls'];
 /** Администрирование */
 const ADMIN_PAGES = ['admin'];
 /** Все страницы, доступные для назначения прав */
 const PAGES = [...MAIN_PAGES, ...WORK_PAGES, ...ADMIN_PAGES];
 
 // Таблицы, для которых можно назначать права на редактирование и удаление.
-// Дополнены таблицей "claims" для управления претензиями.
-const TABLES = ['defects', 'court_cases', 'letters', 'claims'];
+// Дополнены таблицей "claims" для управления претензиями и "engineer_calls" для вызовов инженеров.
+const TABLES = ['defects', 'court_cases', 'letters', 'claims', 'engineer_calls'];
 
 interface RightRow {
   key: string;
@@ -81,28 +81,59 @@ export default function RolePermissionsAdmin() {
   ];
 
   /** Доступ к разделам приложения */
-  const pageRights: RightRow[] = PAGES.map((p) => ({
-    key: `page_${p}`,
-    label: `Стр. ${p}`,
-    field: 'pages' as const,
-    value: p,
-  }));
+  const pageRights: RightRow[] = PAGES.map((p) => {
+    // Добавляем русские названия для страниц
+    const pageLabels: Record<string, string> = {
+      'dashboard': 'Главная',
+      'structure': 'Структура',
+      'claims': 'Претензии',
+      'defects': 'Дефекты',
+      'court-cases': 'Суд. дела',
+      'correspondence': 'Переписка',
+      'engineer-calls': 'Вызовы инженеров',
+      'admin': 'Администрирование'
+    };
+    return {
+      key: `page_${p}`,
+      label: pageLabels[p] || `Стр. ${p}`,
+      field: 'pages' as const,
+      value: p,
+    };
+  });
 
   /** Разрешение на редактирование справочников */
-  const editRights: RightRow[] = TABLES.map((t) => ({
-    key: `edit_${t}`,
-    label: `Редакт. ${t}`,
-    field: 'edit_tables' as const,
-    value: t,
-  }));
+  const editRights: RightRow[] = TABLES.map((t) => {
+    const tableLabels: Record<string, string> = {
+      'defects': 'Дефекты',
+      'court_cases': 'Суд. дела',
+      'letters': 'Письма',
+      'claims': 'Претензии',
+      'engineer_calls': 'Вызовы'
+    };
+    return {
+      key: `edit_${t}`,
+      label: `Редакт. ${tableLabels[t] || t}`,
+      field: 'edit_tables' as const,
+      value: t,
+    };
+  });
 
   /** Разрешение на удаление записей */
-  const deleteRights: RightRow[] = TABLES.map((t) => ({
-    key: `delete_${t}`,
-    label: `Удал. ${t}`,
-    field: 'delete_tables' as const,
-    value: t,
-  }));
+  const deleteRights: RightRow[] = TABLES.map((t) => {
+    const tableLabels: Record<string, string> = {
+      'defects': 'Дефекты',
+      'court_cases': 'Суд. дела',
+      'letters': 'Письма',
+      'claims': 'Претензии',
+      'engineer_calls': 'Вызовы'
+    };
+    return {
+      key: `delete_${t}`,
+      label: `Удал. ${tableLabels[t] || t}`,
+      field: 'delete_tables' as const,
+      value: t,
+    };
+  });
 
 
   const columns: ColumnsType<RightRow> = [
@@ -168,6 +199,19 @@ export default function RolePermissionsAdmin() {
           pagination={false}
           dataSource={generalRights}
           columns={columns}
+        />
+        <Alert
+          style={{ marginTop: '16px' }}
+          message="Календарь вызовов инженеров"
+          description={
+            <ul style={{ marginBottom: 0, paddingLeft: '20px' }}>
+              <li><strong>Администраторы (ADMIN)</strong> - видят ВСЕ вызовы инженеров из ВСЕХ проектов</li>
+              <li><strong>Другие роли</strong> - видят только вызовы из назначенных им проектов</li>
+              <li>Эта настройка применяется автоматически и не может быть изменена</li>
+            </ul>
+          }
+          type="info"
+          showIcon
         />
       </Card>
 

@@ -25,6 +25,7 @@ import {
 import AttachmentEditorTable from '@/shared/ui/AttachmentEditorTable';
 import { useDefectTypes } from '@/entities/defectType';
 import { useDefectStatuses } from '@/entities/defectStatus';
+import { useDefaultStatus } from '@/entities/status';
 import { useBrigades } from '@/entities/brigade';
 import { useContractors } from '@/entities/contractor';
 import type { ColumnsType } from 'antd/es/table';
@@ -151,6 +152,7 @@ const FixByField: React.FC<FixByFieldProps> = React.memo(
 const DefectEditableTable = React.memo<Props>(({ fields, add, remove, projectId, fileMap = {}, onFilesChange, showFiles = true, defaultReceivedAt }) => {
   const { data: defectTypes = [], isPending: loadingTypes } = useDefectTypes();
   const { data: defectStatuses = [], isPending: loadingStatuses } = useDefectStatuses();
+  const { data: defaultDefectStatus } = useDefaultStatus('defect');
   const { data: brigades = [] } = useBrigades();
   const { data: contractors = [] } = useContractors();
   const form = Form.useFormInstance();
@@ -173,7 +175,7 @@ const DefectEditableTable = React.memo<Props>(({ fields, add, remove, projectId,
   const handleAddDefect = React.useCallback(() => {
     add({
       description: '',
-      status_id: defectStatuses[0]?.id ?? null,
+      status_id: defaultDefectStatus?.id ?? defectStatuses[0]?.id ?? null,
       type_id: null,
       is_warranty: false,
       received_at: defaultReceivedAt ?? dayjs(),
@@ -181,7 +183,7 @@ const DefectEditableTable = React.memo<Props>(({ fields, add, remove, projectId,
       brigade_id: null,
       contractor_id: null,
     });
-  }, [add, defectStatuses, defaultReceivedAt]);
+  }, [add, defectStatuses, defaultReceivedAt, defaultDefectStatus]);
 
   // Мемоизируем функции для expandable
   const handleExpand = React.useCallback((exp: boolean, record: any) => {
@@ -243,7 +245,7 @@ const DefectEditableTable = React.memo<Props>(({ fields, add, remove, projectId,
       name={[field.name, 'status_id']}
       noStyle
       rules={[{ required: true, message: 'Выберите статус' }]}
-      initialValue={defectStatuses[0]?.id}
+      initialValue={defaultDefectStatus?.id ?? defectStatuses[0]?.id}
     >
       <Select
         size="small"
@@ -253,7 +255,7 @@ const DefectEditableTable = React.memo<Props>(({ fields, add, remove, projectId,
         options={defectStatusOptions}
       />
     </Form.Item>
-  ), [defectStatuses, defectStatusOptions]);
+  ), [defaultDefectStatus, defectStatuses, defectStatusOptions]);
 
   const renderType = React.useCallback((field: any) => (
     <Form.Item

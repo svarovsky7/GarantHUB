@@ -8,6 +8,7 @@ import ProjectsMultiSelect from '@/features/project/ProjectsMultiSelect';
 // Lazy loading для тяжелых компонентов статистики
 const ProjectStatsCard = React.lazy(() => import('@/widgets/ProjectStatsCard'));
 const UserStatsBlock = React.lazy(() => import('@/widgets/UserStatsBlock'));
+const CourtCasesStatsBlock = React.lazy(() => import('@/widgets/CourtCasesStatsBlock'));
 
 /** Главная страница с инфографикой. */
 export default function DashboardPage() {
@@ -58,6 +59,13 @@ export default function DashboardPage() {
 
       <Suspense fallback={<Spin size="large" style={{ display: 'block', textAlign: 'center', padding: '20px' }} />}>
         <UserStatsBlock 
+          projectIds={selected.includes('all') ? [] : selected.filter(id => typeof id === 'number') as number[]} 
+          resetSignal={resetCounter} 
+        />
+      </Suspense>
+
+      <Suspense fallback={<Spin size="large" style={{ display: 'block', textAlign: 'center', padding: '20px' }} />}>
+        <CourtCasesStatsBlock 
           projectIds={selected.includes('all') ? [] : selected.filter(id => typeof id === 'number') as number[]} 
           resetSignal={resetCounter} 
         />

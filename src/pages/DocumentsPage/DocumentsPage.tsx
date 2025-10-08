@@ -29,8 +29,10 @@ export default function DocumentsPage() {
   const [showUploadForm, setShowUploadForm] = useState(false);
 
   const isAdmin = role === "ADMIN";
-  const canManageDocuments = isAdmin;
+  const isLawyer = role === "LAWYER";
+  const canManageDocuments = isAdmin || isLawyer;
   const canUploadDocuments = perm?.can_upload_documents || isAdmin;
+  const canEditDescription = isAdmin || isLawyer;
 
   const handleUploadSuccess = () => {
     setShowUploadForm(false);
@@ -109,7 +111,8 @@ export default function DocumentsPage() {
       {/* Папки с документами */}
       <div style={{ marginBottom: 24 }}>
         <FoldersWithDocuments 
-          canDelete={canManageDocuments} 
+          canDelete={canManageDocuments}
+          canEditDescription={canEditDescription}
           projectId={currentProjectId}
         />
       </div>

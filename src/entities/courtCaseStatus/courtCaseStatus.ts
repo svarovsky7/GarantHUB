@@ -14,16 +14,16 @@ const ENTITY = 'court_case';
 
 /** Получить список стадий судебного дела */
 export const useCourtCaseStatuses = () =>
-    useStatuses<CourtCaseStatus>(ENTITY);
+    useStatuses(ENTITY);
 
 /** Добавить стадию судебного дела */
 export const useAddCourtCaseStatus = () =>
-    useAddStatus<CourtCaseStatus>(ENTITY);
+    useAddStatus();
 
 /** Обновить стадию судебного дела */
 export const useUpdateCourtCaseStatus = () =>
-    useUpdateStatus<CourtCaseStatus>(ENTITY);
+    useUpdateStatus();
 
 /** Удалить стадию судебного дела */
 export const useDeleteCourtCaseStatus = () =>
-    useDeleteStatus(ENTITY);
+    useDeleteStatus();

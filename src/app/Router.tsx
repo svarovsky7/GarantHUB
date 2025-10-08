@@ -23,6 +23,8 @@ const ProjectStructurePage = React.lazy(() => import("@/pages/ProjectStructurePa
 const ObjectArchivePage = React.lazy(() => import("@/pages/ObjectArchivePage/ObjectArchivePage"));
 const ProfilePage = React.lazy(() => import("@/pages/ProfilePage/ProfilePage"));
 const DocumentsPage = React.lazy(() => import("@/pages/DocumentsPage/DocumentsPage"));
+const EngineerCallsPage = React.lazy(() => import("@/pages/EngineerCallsPage/EngineerCallsPage"));
+const PersonalCabinetPage = React.lazy(() => import("@/pages/PersonalCabinetPage/PersonalCabinetPage"));
 
 /** --------------------------------------------------------------------------
  *  Компонент-сторож
@@ -155,10 +157,30 @@ export default function AppRouter() {
       />
 
       <Route
+        path="/personal-cabinet"
+        element={
+          <RequireAuth>
+            <PersonalCabinetPage />
+          </RequireAuth>
+        }
+      />
+
+      <Route
         path="/documents"
         element={
           <RequireAuth>
             <DocumentsPage />
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/engineer-calls"
+        element={
+          <RequireAuth>
+            <RequirePermission page="engineer-calls">
+              <EngineerCallsPage />
+            </RequirePermission>
           </RequireAuth>
         }
       />

@@ -7,11 +7,11 @@ import {
 import type { LetterStatus } from '@/shared/types/letterStatus';
 const ENTITY = 'letter';
 
-export const useLetterStatuses = () => useStatuses<LetterStatus>(ENTITY);
+export const useLetterStatuses = () => useStatuses(ENTITY);
 
-export const useAddLetterStatus = () => useAddStatus<LetterStatus>(ENTITY);
+export const useAddLetterStatus = () => useAddStatus();
 
 export const useUpdateLetterStatus = () =>
-  useUpdateStatus<LetterStatus>(ENTITY);
+  useUpdateStatus();
 
-export const useDeleteLetterStatus = () => useDeleteStatus(ENTITY);
+export const useDeleteLetterStatus = () => useDeleteStatus();

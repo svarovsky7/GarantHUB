@@ -22,4 +22,6 @@ export interface ClaimFilters {
   acceptedPeriod?: [Dayjs, Dayjs];
   /** Период устранения дефекта */
   resolvedPeriod?: [Dayjs, Dayjs];
+  /** Фильтр по судебным претензиям */
+  courtCase?: string;
 }

@@ -35,11 +35,19 @@ export async function fetchByChunks<T>(
     chunk: readonly number[],
   ) => PromiseLike<PostgrestSingleResponse<T[]>>,
 ): Promise<T[]> {
+  console.log('[fetchByChunks] Starting with values count:', values.length);
   const result: T[] = [];
   for (let i = 0; i < values.length; i += CHUNK_SIZE) {
-    const { data, error } = await fn(values.slice(i, i + CHUNK_SIZE));
-    if (error) throw error;
+    const chunk = values.slice(i, i + CHUNK_SIZE);
+    console.log(`[fetchByChunks] Processing chunk ${i / CHUNK_SIZE + 1}, size:`, chunk.length);
+    const { data, error } = await fn(chunk);
+    if (error) {
+      console.error('[fetchByChunks] Error:', error);
+      throw error;
+    }
+    console.log(`[fetchByChunks] Chunk returned ${data?.length ?? 0} items`);
     result.push(...(data ?? []));
   }
+  console.log('[fetchByChunks] Total items fetched:', result.length);
   return result;
 }

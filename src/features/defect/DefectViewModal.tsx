@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import dayjs from 'dayjs';
-import { Modal, Typography, Skeleton, Tooltip, Button } from 'antd';
-import { DownloadOutlined } from '@ant-design/icons';
+import { Modal, Typography, Skeleton, Tooltip, Button, Space } from 'antd';
+import { DownloadOutlined, FileTextOutlined, EyeOutlined } from '@ant-design/icons';
 import {
   useDefect,
   signedUrl,
@@ -15,6 +15,9 @@ import { createDefectDocx } from '@/shared/utils/createDefectDocx';
 import type { RemoteDefectFile } from '@/shared/types/defectFile';
 import FilePreviewModal from '@/shared/ui/FilePreviewModal';
 import type { PreviewFile } from '@/shared/types/previewFile';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/shared/api/supabaseClient';
+import ClaimViewModal from '@/features/claim/ClaimViewModal';
 
 interface Props {
   open: boolean;
@@ -32,6 +35,7 @@ export default function DefectViewModal({ open, defectId, onClose }: Props) {
 
   const [files, setFiles] = useState<RemoteDefectFile[]>([]);
   const [previewFile, setPreviewFile] = useState<PreviewFile | null>(null);
+  const [viewClaimId, setViewClaimId] = useState<number | null>(null);
 
   useEffect(() => {
     if (defect) {
@@ -47,6 +51,25 @@ export default function DefectViewModal({ open, defectId, onClose }: Props) {
       );
     }
   }, [defect]);
+
+  // Получаем связанную претензию
+  const { data: relatedClaim } = useQuery({
+    queryKey: ['defect-claim', defectId],
+    queryFn: async () => {
+      if (!defectId) return null;
+      
+      const { data, error } = await supabase
+        .from('claim_defects')
+        .select('claim_id')
+        .eq('defect_id', defectId)
+        .limit(1)
+        .single();
+      
+      if (error || !data) return null;
+      return data.claim_id;
+    },
+    enabled: !!defectId,
+  });
 
   const fixByName = useMemo(() => {
     if (!defect) return '—';
@@ -134,7 +157,19 @@ export default function DefectViewModal({ open, defectId, onClose }: Props) {
             getSignedUrl={(p, n) => signedUrl(p, n)}
             onPreview={setPreviewFile}
           />
-          <div style={{ textAlign: 'right' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 }}>
+            <div>
+              {relatedClaim && (
+                <Button 
+                  type="primary"
+                  ghost
+                  icon={<FileTextOutlined />}
+                  onClick={() => setViewClaimId(relatedClaim)}
+                >
+                  Открыть связанную претензию
+                </Button>
+              )}
+            </div>
             <Tooltip title="Скачать форму устранения">
               <Button type="text" icon={<DownloadOutlined />} onClick={downloadDocx} />
             </Tooltip>
@@ -146,6 +181,15 @@ export default function DefectViewModal({ open, defectId, onClose }: Props) {
         file={previewFile}
         onClose={() => setPreviewFile(null)}
       />
+      
+      {/* Модальное окно просмотра претензии */}
+      {viewClaimId && (
+        <ClaimViewModal
+          open={!!viewClaimId}
+          claimId={viewClaimId}
+          onClose={() => setViewClaimId(null)}
+        />
+      )}
     </Modal>
   );
 }

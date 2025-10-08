@@ -1,10 +1,12 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Tooltip, Space, Button, Popconfirm } from 'antd';
+import { Tooltip, Space, Button, Popconfirm, Typography } from 'antd';
 import { 
   EyeOutlined, 
   DeleteOutlined, 
   BranchesOutlined, 
-  FileTextOutlined 
+  FileTextOutlined,
+  LinkOutlined,
+  PlusOutlined
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { TableColumnSetting } from '@/shared/types/tableColumnSetting';
@@ -13,12 +15,15 @@ import type { ClaimTableData } from '../types/ClaimTableData';
 import ClaimStatusSelect from '@/features/claim/ClaimStatusSelect';
 import dayjs from 'dayjs';
 
+const { Text } = Typography;
+
 const LS_COLUMNS_KEY = "claimsColumns";
 const LS_COLUMN_WIDTHS_KEY = "claimsColumnWidths";
 
 export function useClaimsTableColumns(handlers?: {
   onView?: (id: number) => void;
   onLink?: (claim: ClaimTableData) => void;
+  onUnlink?: (id: number) => void;
   onDelete?: (id: number) => void;
 }) {
   // Хелперы для форматирования
@@ -137,6 +142,25 @@ export function useClaimsTableColumns(handlers?: {
             b.responsibleEngineerName || "",
           ),
       },
+      courtCase: {
+        title: "Судебная",
+        dataIndex: "courtCase",
+        key: "courtCase",
+        width: 100,
+        sorter: (a: ClaimTableData, b: ClaimTableData) => {
+          const hasCourtA = (a.caseUid || a.pre_trial_claim) ? 1 : 0;
+          const hasCourtB = (b.caseUid || b.pre_trial_claim) ? 1 : 0;
+          return hasCourtA - hasCourtB;
+        },
+        render: (_: unknown, record: ClaimTableData) => {
+          const isCourtRelated = record.caseUid || record.pre_trial_claim;
+          return (
+            <Text style={{ color: isCourtRelated ? '#ff4d4f' : '#52c41a' }}>
+              {isCourtRelated ? 'Да' : 'Нет'}
+            </Text>
+          );
+        },
+      },
       createdAt: {
         title: "Создано",
         dataIndex: "createdAt",
@@ -156,7 +180,7 @@ export function useClaimsTableColumns(handlers?: {
       actions: {
         title: "Действия",
         key: "actions",
-        width: 140,
+        width: 180,
         render: (_: unknown, record: ClaimTableData) => (
           <Space size="middle">
             <Tooltip title="Просмотр">
@@ -169,10 +193,19 @@ export function useClaimsTableColumns(handlers?: {
             <Tooltip title="Связать">
               <Button 
                 type="text" 
-                icon={<BranchesOutlined />} 
+                icon={<PlusOutlined />} 
                 onClick={() => handlers?.onLink?.(record)} 
               />
             </Tooltip>
+            {record.parent_id && (
+              <Tooltip title="Исключить из связи">
+                <Button
+                  type="text"
+                  icon={<LinkOutlined style={{ color: '#c41d7f', textDecoration: 'line-through', fontWeight: 700 }} />}
+                  onClick={() => handlers?.onUnlink?.(record.id)}
+                />
+              </Tooltip>
+            )}
             <Popconfirm
               title="Удалить претензию?"
               okText="Да"

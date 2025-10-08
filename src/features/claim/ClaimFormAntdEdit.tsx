@@ -206,16 +206,12 @@ const ClaimFormAntdEdit = React.forwardRef<
   useEffect(() => {
     if (!claim || !selectedUnits.length || !claim.unit_ids?.length) return;
     
-    console.log('Setting building for claim:', claim.id, 'selectedUnits:', selectedUnits.length, 'unit_ids:', claim.unit_ids);
-    console.log('Selected units:', selectedUnits.map(u => ({id: u.id, building: u.building})));
     
     const claimBuildings = Array.from(
       new Set(selectedUnits.map(u => u.building).filter(Boolean))
     );
-    console.log('Claim buildings:', claimBuildings);
     
     if (claimBuildings.length >= 1) {
-      console.log('Setting buildings to:', claimBuildings);
       form.setFieldValue("building", claimBuildings);
       
       // Также устанавливаем ref для предотвращения сброса

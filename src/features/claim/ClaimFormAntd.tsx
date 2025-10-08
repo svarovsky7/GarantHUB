@@ -23,6 +23,7 @@ import { useDebounce } from '@/shared/hooks/useDebounce';
 import { useUsers } from '@/entities/user';
 import { useClaimStatuses } from '@/entities/claimStatus';
 import { useCreateClaim } from '@/entities/claim';
+import { useDefaultStatus } from '@/entities/status';
 import { addDefectAttachments } from '@/entities/attachment';
 import { supabase } from '@/shared/api/supabaseClient';
 import { useProjectId } from '@/shared/hooks/useProjectId';
@@ -86,6 +87,8 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
   const globalProjectId = useProjectId();
   const projectIdWatch = Form.useWatch('project_id', form) ?? globalProjectId;
   const projectId = projectIdWatch != null ? Number(projectIdWatch) : null;
+  
+  console.log('[ClaimFormAntd] Component rendered, initialValues:', initialValues);
 
   const { data: projects = [] } = useVisibleProjects();
   const { buildings = [] } = useProjectBuildings(projectId);
@@ -108,7 +111,10 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
   const unitIdsWatch = Form.useWatch('unit_ids', form) ?? [];
   const { data: users = [] } = useUsers();
   const { data: statuses = [] } = useClaimStatuses();
+  const { data: defaultClaimStatus } = useDefaultStatus('claim');
   const create = useCreateClaim();
+  
+  console.log('[ClaimFormAntd] Statuses loaded:', statuses.length, 'Default status:', defaultClaimStatus);
   const notify = useNotify();
   const createDefects = useCreateDefects();
   const role = useAuthStore((s) => s.profile?.role as RoleName | undefined);
@@ -191,18 +197,31 @@ export default function ClaimFormAntd({ onCreated, initialValues = {}, showDefec
   }, [form]);
 
   /**
-   * Если статус не указан, подставляем первым из списка.
+   * Если статус не указан, подставляем статус по умолчанию или первый из списка.
    */
   useEffect(() => {
-    if (
-      statuses.length &&
-      !initialValues.claim_status_id &&
-      !form.getFieldValue('claim_status_id')
-    ) {
+    // Пропускаем, если есть начальное значение
+    if (initialValues.claim_status_id) {
+      return;
+    }
+    
+    // Пропускаем, если значение уже было установлено defaultClaimStatus
+    const currentValue = form.getFieldValue('claim_status_id');
+    if (currentValue === defaultClaimStatus?.id) {
+      return;
+    }
+    
+    // Устанавливаем статус по умолчанию, если он загружен
+    if (defaultClaimStatus) {
+      console.log('[ClaimFormAntd] Setting default claim status:', defaultClaimStatus.id, defaultClaimStatus.name);
+      form.setFieldValue('claim_status_id', defaultClaimStatus.id);
+    } else if (statuses.length > 0 && !currentValue) {
+      // Устанавливаем первый статус только если нет текущего значения и нет статуса по умолчанию
+      console.log('[ClaimFormAntd] No default status found, using first:', statuses[0].id, statuses[0].name);
       form.setFieldValue('claim_status_id', statuses[0].id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statuses, form]);
+  }, [defaultClaimStatus, statuses, form, initialValues.claim_status_id]);
 
   useEffect(() => {
     if (!initialValues.unit_ids) {

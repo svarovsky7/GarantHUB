@@ -14,6 +14,7 @@ const LawsuitClaimTypesAdmin = React.lazy(() => import("../../widgets/LawsuitCla
 const LetterTypesAdmin = React.lazy(() => import("../../widgets/LetterTypesAdmin"));
 const LetterStatusesAdmin = React.lazy(() => import("../../widgets/LetterStatusesAdmin"));
 const RolePermissionsAdmin = React.lazy(() => import("../../widgets/RolePermissionsAdmin"));
+const StatusManagement = React.lazy(() => import("../../widgets/StatusManagement"));
 
 const AdminLoader = () => (
   <Box display="flex" justifyContent="center" p={2}>
@@ -27,6 +28,10 @@ export default function AdminPage() {
       <Stack spacing={4}>
         <Suspense fallback={<AdminLoader />}>
           <ProjectsTable pageSize={5} rowsPerPageOptions={[5, 10, 25, 50, 100]} />
+        </Suspense>
+
+        <Suspense fallback={<AdminLoader />}>
+          <StatusManagement pageSize={5} rowsPerPageOptions={[5, 10, 25, 50, 100]} />
         </Suspense>
 
         <Suspense fallback={<AdminLoader />}>
