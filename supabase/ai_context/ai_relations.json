@@ -1,0 +1,516 @@
+{
+  "total": 73,
+  "relations": [
+    {
+      "from_table": "attachments",
+      "from_column": "created_by",
+      "to_table": "profiles",
+      "to_column": "id",
+      "constraint_name": "attachments_created_by_fkey"
+    },
+    {
+      "from_table": "attachments",
+      "from_column": "uploaded_by",
+      "to_table": "profiles",
+      "to_column": "id",
+      "constraint_name": "attachments_uploaded_by_fkey"
+    },
+    {
+      "from_table": "claim_attachments",
+      "from_column": "attachment_id",
+      "to_table": "attachments",
+      "to_column": "id",
+      "constraint_name": "claim_attachments_attachment_id_fkey"
+    },
+    {
+      "from_table": "claim_attachments",
+      "from_column": "claim_id",
+      "to_table": "claims",
+      "to_column": "id",
+      "constraint_name": "claim_attachments_claim_id_fkey"
+    },
+    {
+      "from_table": "claim_defects",
+      "from_column": "claim_id",
+      "to_table": "claims",
+      "to_column": "id",
+      "constraint_name": "claim_defects_claim_id_fkey"
+    },
+    {
+      "from_table": "claim_defects",
+      "from_column": "defect_id",
+      "to_table": "defects",
+      "to_column": "id",
+      "constraint_name": "claim_defects_defect_id_fkey"
+    },
+    {
+      "from_table": "claim_links",
+      "from_column": "child_id",
+      "to_table": "childs",
+      "to_column": "id",
+      "constraint_name": "claim_links_child_id_fkey"
+    },
+    {
+      "from_table": "claim_links",
+      "from_column": "parent_id",
+      "to_table": "parents",
+      "to_column": "id",
+      "constraint_name": "claim_links_parent_id_fkey"
+    },
+    {
+      "from_table": "claim_units",
+      "from_column": "claim_id",
+      "to_table": "claims",
+      "to_column": "id",
+      "constraint_name": "claim_units_claim_id_fkey"
+    },
+    {
+      "from_table": "claim_units",
+      "from_column": "unit_id",
+      "to_table": "units",
+      "to_column": "id",
+      "constraint_name": "claim_units_unit_id_fkey"
+    },
+    {
+      "from_table": "claims",
+      "from_column": "case_uid_id",
+      "to_table": "case_uids",
+      "to_column": "id",
+      "constraint_name": "claims_case_uid_id_fkey"
+    },
+    {
+      "from_table": "claims",
+      "from_column": "claim_status_id",
+      "to_table": "claim_statuss",
+      "to_column": "id",
+      "constraint_name": "claims_claim_status_id_fkey"
+    },
+    {
+      "from_table": "claims",
+      "from_column": "created_by",
+      "to_table": "profiles",
+      "to_column": "id",
+      "constraint_name": "claims_created_by_fkey"
+    },
+    {
+      "from_table": "claims",
+      "from_column": "engineer_id",
+      "to_table": "engineers",
+      "to_column": "id",
+      "constraint_name": "claims_engineer_id_fkey"
+    },
+    {
+      "from_table": "claims",
+      "from_column": "project_id",
+      "to_table": "projects",
+      "to_column": "id",
+      "constraint_name": "claims_project_id_fkey"
+    },
+    {
+      "from_table": "claims",
+      "from_column": "updated_by",
+      "to_table": "profiles",
+      "to_column": "id",
+      "constraint_name": "claims_updated_by_fkey"
+    },
+    {
+      "from_table": "court_case_attachments",
+      "from_column": "attachment_id",
+      "to_table": "attachments",
+      "to_column": "id",
+      "constraint_name": "court_case_attachments_attachment_id_fkey"
+    },
+    {
+      "from_table": "court_case_attachments",
+      "from_column": "court_case_id",
+      "to_table": "court_cases",
+      "to_column": "id",
+      "constraint_name": "court_case_attachments_court_case_id_fkey"
+    },
+    {
+      "from_table": "court_case_claim_links",
+      "from_column": "case_id",
+      "to_table": "cases",
+      "to_column": "id",
+      "constraint_name": "court_case_claim_links_case_id_fkey"
+    },
+    {
+      "from_table": "court_case_claim_links",
+      "from_column": "claim_id",
+      "to_table": "claims",
+      "to_column": "id",
+      "constraint_name": "court_case_claim_links_claim_id_fkey"
+    },
+    {
+      "from_table": "court_case_claims",
+      "from_column": "case_id",
+      "to_table": "cases",
+      "to_column": "id",
+      "constraint_name": "court_case_claims_case_id_fkey"
+    },
+    {
+      "from_table": "court_case_claims",
+      "from_column": "claim_type_id",
+      "to_table": "claim_types",
+      "to_column": "id",
+      "constraint_name": "court_case_claims_claim_type_id_fkey"
+    },
+    {
+      "from_table": "court_case_defects",
+      "from_column": "case_id",
+      "to_table": "cases",
+      "to_column": "id",
+      "constraint_name": "court_case_defects_case_id_fkey"
+    },
+    {
+      "from_table": "court_case_defects",
+      "from_column": "defect_id",
+      "to_table": "defects",
+      "to_column": "id",
+      "constraint_name": "court_case_defects_defect_id_fkey"
+    },
+    {
+      "from_table": "court_case_links",
+      "from_column": "child_id",
+      "to_table": "childs",
+      "to_column": "id",
+      "constraint_name": "court_case_links_child_id_fkey"
+    },
+    {
+      "from_table": "court_case_links",
+      "from_column": "parent_id",
+      "to_table": "parents",
+      "to_column": "id",
+      "constraint_name": "court_case_links_parent_id_fkey"
+    },
+    {
+      "from_table": "court_case_parties",
+      "from_column": "case_id",
+      "to_table": "cases",
+      "to_column": "id",
+      "constraint_name": "court_case_parties_case_id_fkey"
+    },
+    {
+      "from_table": "court_case_parties",
+      "from_column": "contractor_id",
+      "to_table": "contractors",
+      "to_column": "id",
+      "constraint_name": "court_case_parties_contractor_id_fkey"
+    },
+    {
+      "from_table": "court_case_parties",
+      "from_column": "person_id",
+      "to_table": "persons",
+      "to_column": "id",
+      "constraint_name": "court_case_parties_person_id_fkey"
+    },
+    {
+      "from_table": "court_case_parties",
+      "from_column": "project_id",
+      "to_table": "projects",
+      "to_column": "id",
+      "constraint_name": "court_case_parties_project_id_fkey"
+    },
+    {
+      "from_table": "court_case_units",
+      "from_column": "court_case_id",
+      "to_table": "court_cases",
+      "to_column": "id",
+      "constraint_name": "court_case_units_court_case_id_fkey"
+    },
+    {
+      "from_table": "court_case_units",
+      "from_column": "unit_id",
+      "to_table": "units",
+      "to_column": "id",
+      "constraint_name": "court_case_units_unit_id_fkey"
+    },
+    {
+      "from_table": "court_cases",
+      "from_column": "case_uid_id",
+      "to_table": "case_uids",
+      "to_column": "id",
+      "constraint_name": "court_cases_case_uid_id_fkey"
+    },
+    {
+      "from_table": "court_cases",
+      "from_column": "created_by",
+      "to_table": "profiles",
+      "to_column": "id",
+      "constraint_name": "court_cases_created_by_fkey"
+    },
+    {
+      "from_table": "court_cases",
+      "from_column": "project_id",
+      "to_table": "projects",
+      "to_column": "id",
+      "constraint_name": "court_cases_project_id_fkey"
+    },
+    {
+      "from_table": "court_cases",
+      "from_column": "responsible_lawyer_id",
+      "to_table": "responsible_lawyers",
+      "to_column": "id",
+      "constraint_name": "court_cases_responsible_lawyer_id_fkey"
+    },
+    {
+      "from_table": "defect_attachments",
+      "from_column": "attachment_id",
+      "to_table": "attachments",
+      "to_column": "id",
+      "constraint_name": "defect_attachments_attachment_id_fkey"
+    },
+    {
+      "from_table": "defect_attachments",
+      "from_column": "defect_id",
+      "to_table": "defects",
+      "to_column": "id",
+      "constraint_name": "defect_attachments_defect_id_fkey"
+    },
+    {
+      "from_table": "defects",
+      "from_column": "status_id",
+      "to_table": "statuses",
+      "to_column": "id",
+      "constraint_name": "defects_defect_status_id_fkey"
+    },
+    {
+      "from_table": "defects",
+      "from_column": "type_id",
+      "to_table": "types",
+      "to_column": "id",
+      "constraint_name": "defects_defect_type_id_fkey"
+    },
+    {
+      "from_table": "defects",
+      "from_column": "fixed_by",
+      "to_table": "profiles",
+      "to_column": "id",
+      "constraint_name": "defects_fixed_by_fkey"
+    },
+    {
+      "from_table": "document_folder_files",
+      "from_column": "attachment_id",
+      "to_table": "attachments",
+      "to_column": "id",
+      "constraint_name": "document_folder_files_attachment_id_fkey"
+    },
+    {
+      "from_table": "document_folder_files",
+      "from_column": "created_by",
+      "to_table": "profiles",
+      "to_column": "id",
+      "constraint_name": "document_folder_files_created_by_fkey"
+    },
+    {
+      "from_table": "document_folder_files",
+      "from_column": "folder_id",
+      "to_table": "folders",
+      "to_column": "id",
+      "constraint_name": "document_folder_files_folder_id_fkey"
+    },
+    {
+      "from_table": "document_folders",
+      "from_column": "created_by",
+      "to_table": "profiles",
+      "to_column": "id",
+      "constraint_name": "document_folders_created_by_fkey"
+    },
+    {
+      "from_table": "document_folders",
+      "from_column": "project_id",
+      "to_table": "projects",
+      "to_column": "id",
+      "constraint_name": "document_folders_project_id_fkey"
+    },
+    {
+      "from_table": "engineer_call_attachments",
+      "from_column": "attachment_id",
+      "to_table": "attachments",
+      "to_column": "id",
+      "constraint_name": "engineer_call_attachments_attachment_id_fkey"
+    },
+    {
+      "from_table": "engineer_call_attachments",
+      "from_column": "engineer_call_id",
+      "to_table": "engineer_calls",
+      "to_column": "id",
+      "constraint_name": "engineer_call_attachments_engineer_call_id_fkey"
+    },
+    {
+      "from_table": "engineer_calls",
+      "from_column": "claim_id",
+      "to_table": "claims",
+      "to_column": "id",
+      "constraint_name": "engineer_calls_claim_id_fkey"
+    },
+    {
+      "from_table": "engineer_calls",
+      "from_column": "created_by",
+      "to_table": "profiles",
+      "to_column": "id",
+      "constraint_name": "engineer_calls_created_by_fkey"
+    },
+    {
+      "from_table": "engineer_calls",
+      "from_column": "engineer_id",
+      "to_table": "engineers",
+      "to_column": "id",
+      "constraint_name": "engineer_calls_engineer_id_fkey"
+    },
+    {
+      "from_table": "engineer_calls",
+      "from_column": "project_id",
+      "to_table": "projects",
+      "to_column": "id",
+      "constraint_name": "engineer_calls_project_id_fkey"
+    },
+    {
+      "from_table": "engineer_calls",
+      "from_column": "unit_id",
+      "to_table": "units",
+      "to_column": "id",
+      "constraint_name": "engineer_calls_unit_id_fkey"
+    },
+    {
+      "from_table": "letter_attachments",
+      "from_column": "attachment_id",
+      "to_table": "attachments",
+      "to_column": "id",
+      "constraint_name": "letter_attachments_attachment_id_fkey"
+    },
+    {
+      "from_table": "letter_attachments",
+      "from_column": "letter_id",
+      "to_table": "letters",
+      "to_column": "id",
+      "constraint_name": "letter_attachments_letter_id_fkey"
+    },
+    {
+      "from_table": "letter_links",
+      "from_column": "child_id",
+      "to_table": "childs",
+      "to_column": "id",
+      "constraint_name": "letter_links_child_id_fkey"
+    },
+    {
+      "from_table": "letter_links",
+      "from_column": "parent_id",
+      "to_table": "parents",
+      "to_column": "id",
+      "constraint_name": "letter_links_parent_id_fkey"
+    },
+    {
+      "from_table": "letter_units",
+      "from_column": "letter_id",
+      "to_table": "letters",
+      "to_column": "id",
+      "constraint_name": "letter_units_letter_id_fkey"
+    },
+    {
+      "from_table": "letter_units",
+      "from_column": "unit_id",
+      "to_table": "units",
+      "to_column": "id",
+      "constraint_name": "letter_units_unit_id_fkey"
+    },
+    {
+      "from_table": "letters",
+      "from_column": "created_by",
+      "to_table": "profiles",
+      "to_column": "id",
+      "constraint_name": "letters_created_by_fkey"
+    },
+    {
+      "from_table": "letters",
+      "from_column": "letter_type_id",
+      "to_table": "letter_types",
+      "to_column": "id",
+      "constraint_name": "letters_letter_type_id_fkey"
+    },
+    {
+      "from_table": "letters",
+      "from_column": "project_id",
+      "to_table": "projects",
+      "to_column": "id",
+      "constraint_name": "letters_project_id_fkey"
+    },
+    {
+      "from_table": "letters",
+      "from_column": "receiver_contractor_id",
+      "to_table": "receiver_contractors",
+      "to_column": "id",
+      "constraint_name": "letters_receiver_contractor_id_fkey"
+    },
+    {
+      "from_table": "letters",
+      "from_column": "receiver_person_id",
+      "to_table": "receiver_persons",
+      "to_column": "id",
+      "constraint_name": "letters_receiver_person_id_fkey"
+    },
+    {
+      "from_table": "letters",
+      "from_column": "sender_contractor_id",
+      "to_table": "sender_contractors",
+      "to_column": "id",
+      "constraint_name": "letters_sender_contractor_id_fkey"
+    },
+    {
+      "from_table": "letters",
+      "from_column": "sender_person_id",
+      "to_table": "sender_persons",
+      "to_column": "id",
+      "constraint_name": "letters_sender_person_id_fkey"
+    },
+    {
+      "from_table": "letters",
+      "from_column": "status_id",
+      "to_table": "statuses",
+      "to_column": "id",
+      "constraint_name": "letters_status_id_fkey"
+    },
+    {
+      "from_table": "profiles_projects",
+      "from_column": "profile_id",
+      "to_table": "profiles",
+      "to_column": "id",
+      "constraint_name": "profiles_projects_profile_id_fkey"
+    },
+    {
+      "from_table": "profiles_projects",
+      "from_column": "project_id",
+      "to_table": "projects",
+      "to_column": "id",
+      "constraint_name": "profiles_projects_project_id_fkey"
+    },
+    {
+      "from_table": "system_settings",
+      "from_column": "updated_by",
+      "to_table": "profiles",
+      "to_column": "id",
+      "constraint_name": "system_settings_updated_by_fkey"
+    },
+    {
+      "from_table": "unit_attachments",
+      "from_column": "attachment_id",
+      "to_table": "attachments",
+      "to_column": "id",
+      "constraint_name": "unit_attachments_attachment_id_fkey"
+    },
+    {
+      "from_table": "unit_attachments",
+      "from_column": "unit_id",
+      "to_table": "units",
+      "to_column": "id",
+      "constraint_name": "unit_attachments_unit_id_fkey"
+    },
+    {
+      "from_table": "units",
+      "from_column": "project_id",
+      "to_table": "projects",
+      "to_column": "id",
+      "constraint_name": "units_project_id_fkey"
+    }
+  ]
+}

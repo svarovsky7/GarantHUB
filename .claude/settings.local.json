@@ -53,7 +53,8 @@
       "Bash(awk:*)",
       "Bash(timeout 20s npm run dev)",
       "Bash(findstr:*)",
-      "Bash(timeout 15s npm run dev)"
+      "Bash(timeout 15s npm run dev)",
+      "Bash(node scripts/generate-ai-context.mjs:*)"
     ],
     "deny": [],
     "additionalDirectories": [

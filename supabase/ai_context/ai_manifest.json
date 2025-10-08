@@ -1,0 +1,23 @@
+{
+  "generated_at": "2025-10-08T20:01:26.526Z",
+  "generator": "generate-ai-context.mjs",
+  "source_files": {
+    "tables.json": "fc703b2dd8bd331e0086823089404428977a9fefc0a5f72d38a455075e422220",
+    "indexes.json": "9baaf06d2f4958bdf129848db3247f27ec9902a27fcf1f94f7911036a59e9ad3",
+    "triggers.json": "442bbdfbf193c0ffeebc1eca96a6155c3334cd23344f762c32f8389d6530b8a9",
+    "functions.json": "00550e5c670c929f7e834a432928c82a62862ae1a6924c4d614f5d0ec8078d78",
+    "enums.json": "c60ace38277b355d57ac2dc446d75df5011382315aedd9d541bb3a0279dafb58",
+    "prod.sql": "f65581290e5e4e781a6c635b4aaef19c10451805808462630309056819a37e61"
+  },
+  "files": [
+    "ai_manifest.json",
+    "ai_tables_min.json",
+    "ai_tables_full.json",
+    "ai_relations.json",
+    "ai_functions_min.json",
+    "ai_functions_full.json",
+    "ai_triggers_min.json",
+    "ai_enums_min.json",
+    "ai_examples.sql"
+  ]
+}

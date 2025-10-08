@@ -12,7 +12,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node tests/claim.test.cjs"
+    "test": "node tests/claim.test.cjs",
+    "ai-context": "node scripts/generate-ai-context.mjs"
   },
   "dependencies": {
     "@ant-design/icons": "^6.1.0",

@@ -1,0 +1,18 @@
+[
+  {
+    "name": "trigger_update_court_case_total_claim_amount",
+    "table": "court_case_claims",
+    "function": "update_court_case_total_claim_amount",
+    "event": "INSERT",
+    "timing": "AFTER",
+    "sql": "CREATE TRIGGER trigger_update_court_case_total_claim_amount AFTER INSERT OR DELETE OR UPDATE ON public.court_case_claims FOR EACH ROW EXECUTE FUNCTION update_court_case_total_claim_amount()"
+  },
+  {
+    "name": "update_engineer_calls_updated_at",
+    "table": "engineer_calls",
+    "function": "update_updated_at_column",
+    "event": "UPDATE",
+    "timing": "BEFORE",
+    "sql": "CREATE TRIGGER update_engineer_calls_updated_at BEFORE UPDATE ON public.engineer_calls FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()"
+  }
+]

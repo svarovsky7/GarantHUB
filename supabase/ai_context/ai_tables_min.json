@@ -1,0 +1,2124 @@
+{
+  "attachments": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer",
+        "nullable": false,
+        "default": "nextval('attachments_id_seq'::regclass)"
+      },
+      {
+        "name": "path",
+        "type": "text",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "mime_type",
+        "type": "text",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "uploaded_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "storage_path",
+        "type": "text",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "original_name",
+        "type": "text",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "uploaded_by",
+        "type": "uuid",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_by",
+        "type": "uuid",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()"
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "created_by",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "uploaded_by",
+        "references": "null.null(null)"
+      }
+    ]
+  },
+  "brigades": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer",
+        "nullable": false,
+        "default": "nextval('brigades_id_seq'::regclass)"
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()"
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": []
+  },
+  "claim_attachments": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "claim_id",
+        "type": "bigint",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "attachment_id",
+        "type": "integer",
+        "nullable": false,
+        "default": null
+      }
+    ],
+    "primary_keys": [
+      "attachment_id",
+      "claim_id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "attachment_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "claim_id",
+        "references": "null.null(null)"
+      }
+    ]
+  },
+  "claim_defects": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "claim_id",
+        "type": "bigint",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "defect_id",
+        "type": "bigint",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "pre_trial_claim",
+        "type": "boolean",
+        "nullable": false,
+        "default": "false"
+      }
+    ],
+    "primary_keys": [
+      "claim_id",
+      "defect_id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "claim_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "defect_id",
+        "references": "null.null(null)"
+      }
+    ]
+  },
+  "claim_links": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "id",
+        "type": "bigint",
+        "nullable": false,
+        "default": "nextval('claim_links_id_seq'::regclass)"
+      },
+      {
+        "name": "parent_id",
+        "type": "bigint",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "child_id",
+        "type": "bigint",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()"
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "child_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "parent_id",
+        "references": "null.null(null)"
+      }
+    ]
+  },
+  "claim_units": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "claim_id",
+        "type": "bigint",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "unit_id",
+        "type": "integer",
+        "nullable": false,
+        "default": null
+      }
+    ],
+    "primary_keys": [
+      "claim_id",
+      "unit_id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "claim_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "unit_id",
+        "references": "null.null(null)"
+      }
+    ]
+  },
+  "claims": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "id",
+        "type": "bigint",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "project_id",
+        "type": "integer",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "claim_status_id",
+        "type": "integer",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "claim_no",
+        "type": "text",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "claimed_on",
+        "type": "date",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "accepted_on",
+        "type": "date",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "registered_on",
+        "type": "date",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "resolved_on",
+        "type": "date",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "engineer_id",
+        "type": "uuid",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_by",
+        "type": "uuid",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "updated_by",
+        "type": "uuid",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "case_uid_id",
+        "type": "integer",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "pre_trial_claim",
+        "type": "boolean",
+        "nullable": false,
+        "default": "false"
+      },
+      {
+        "name": "owner",
+        "type": "text",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "case_uid_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "claim_status_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "created_by",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "engineer_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "project_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "updated_by",
+        "references": "null.null(null)"
+      }
+    ]
+  },
+  "contractors": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer",
+        "nullable": false,
+        "default": "nextval('contractors_id_seq'::regclass)"
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "inn",
+        "type": "character varying",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "phone",
+        "type": "character varying",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "email",
+        "type": "text",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()"
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": []
+  },
+  "court_case_attachments": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "court_case_id",
+        "type": "bigint",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "attachment_id",
+        "type": "integer",
+        "nullable": false,
+        "default": null
+      }
+    ],
+    "primary_keys": [
+      "attachment_id",
+      "court_case_id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "attachment_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "court_case_id",
+        "references": "null.null(null)"
+      }
+    ]
+  },
+  "court_case_claim_links": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "id",
+        "type": "bigint",
+        "nullable": false,
+        "default": "nextval('court_case_claim_links_id_seq'::regclass)"
+      },
+      {
+        "name": "case_id",
+        "type": "bigint",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "claim_id",
+        "type": "bigint",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()"
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "case_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "claim_id",
+        "references": "null.null(null)"
+      }
+    ]
+  },
+  "court_case_claims": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "id",
+        "type": "bigint",
+        "nullable": false,
+        "default": "nextval('court_case_claims_id_seq'::regclass)"
+      },
+      {
+        "name": "case_id",
+        "type": "bigint",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "claim_type_id",
+        "type": "bigint",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "claimed_amount",
+        "type": "numeric",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "confirmed_amount",
+        "type": "numeric",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "paid_amount",
+        "type": "numeric",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "agreed_amount",
+        "type": "numeric",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()"
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "case_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "claim_type_id",
+        "references": "null.null(null)"
+      }
+    ]
+  },
+  "court_case_defects": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "case_id",
+        "type": "bigint",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "defect_id",
+        "type": "bigint",
+        "nullable": false,
+        "default": null
+      }
+    ],
+    "primary_keys": [
+      "case_id",
+      "defect_id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "case_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "defect_id",
+        "references": "null.null(null)"
+      }
+    ]
+  },
+  "court_case_links": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "id",
+        "type": "bigint",
+        "nullable": false,
+        "default": "nextval('court_case_links_id_seq'::regclass)"
+      },
+      {
+        "name": "parent_id",
+        "type": "bigint",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "child_id",
+        "type": "bigint",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()"
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "child_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "parent_id",
+        "references": "null.null(null)"
+      }
+    ]
+  },
+  "court_case_parties": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "id",
+        "type": "bigint",
+        "nullable": false,
+        "default": "nextval('court_case_parties_id_seq'::regclass)"
+      },
+      {
+        "name": "case_id",
+        "type": "bigint",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "contractor_id",
+        "type": "integer",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "person_id",
+        "type": "integer",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "project_id",
+        "type": "integer",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "role",
+        "type": "text",
+        "nullable": false,
+        "default": null
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "case_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "contractor_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "person_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "project_id",
+        "references": "null.null(null)"
+      }
+    ]
+  },
+  "court_case_units": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "court_case_id",
+        "type": "bigint",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "unit_id",
+        "type": "integer",
+        "nullable": false,
+        "default": null
+      }
+    ],
+    "primary_keys": [
+      "court_case_id",
+      "unit_id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "court_case_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "unit_id",
+        "references": "null.null(null)"
+      }
+    ]
+  },
+  "court_cases": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "id",
+        "type": "bigint",
+        "nullable": false,
+        "default": "nextval('court_cases_id_seq'::regclass)"
+      },
+      {
+        "name": "project_id",
+        "type": "integer",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "status",
+        "type": "integer",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "responsible_lawyer_id",
+        "type": "uuid",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "fix_start_date",
+        "type": "date",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "fix_end_date",
+        "type": "date",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "date",
+        "type": "date",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "number",
+        "type": "text",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "case_uid_id",
+        "type": "integer",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_by",
+        "type": "uuid",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "total_claim_amount",
+        "type": "numeric",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "case_uid_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "created_by",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "project_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "responsible_lawyer_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "status",
+        "references": "null.null(null)"
+      }
+    ]
+  },
+  "court_cases_uids": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer",
+        "nullable": false,
+        "default": "nextval('court_cases_uids_id_seq'::regclass)"
+      },
+      {
+        "name": "uid",
+        "type": "text",
+        "nullable": false,
+        "default": null
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": []
+  },
+  "defect_attachments": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "defect_id",
+        "type": "bigint",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "attachment_id",
+        "type": "integer",
+        "nullable": false,
+        "default": null
+      }
+    ],
+    "primary_keys": [
+      "attachment_id",
+      "defect_id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "attachment_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "defect_id",
+        "references": "null.null(null)"
+      }
+    ]
+  },
+  "defect_types": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer",
+        "nullable": false,
+        "default": "nextval('defect_types_id_seq'::regclass)"
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "nullable": false,
+        "default": null
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": []
+  },
+  "defects": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "id",
+        "type": "bigint",
+        "nullable": false,
+        "default": "nextval('defects_id_seq'::regclass)"
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "type_id",
+        "type": "integer",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "status_id",
+        "type": "integer",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "received_at",
+        "type": "date",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "fixed_at",
+        "type": "date",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "brigade_id",
+        "type": "integer",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "contractor_id",
+        "type": "integer",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "fixed_by",
+        "type": "uuid",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "is_warranty",
+        "type": "boolean",
+        "nullable": false,
+        "default": "false"
+      },
+      {
+        "name": "project_id",
+        "type": "integer",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "unit_id",
+        "type": "integer",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_by",
+        "type": "uuid",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "updated_by",
+        "type": "uuid",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "engineer_id",
+        "type": "uuid",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "brigade_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "contractor_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "status_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "type_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "fixed_by",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "brigade_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "contractor_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "created_by",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "engineer_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "fixed_by",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "project_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "status_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "type_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "unit_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "updated_by",
+        "references": "null.null(null)"
+      }
+    ]
+  },
+  "document_folder_files": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer",
+        "nullable": false,
+        "default": "nextval('document_folder_files_id_seq'::regclass)"
+      },
+      {
+        "name": "folder_id",
+        "type": "integer",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "attachment_id",
+        "type": "integer",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "created_by",
+        "type": "uuid",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "attachment_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "created_by",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "folder_id",
+        "references": "null.null(null)"
+      }
+    ]
+  },
+  "document_folders": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer",
+        "nullable": false,
+        "default": "nextval('document_folders_id_seq'::regclass)"
+      },
+      {
+        "name": "name",
+        "type": "character varying",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "created_by",
+        "type": "uuid",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "project_id",
+        "type": "integer",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "created_by",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "project_id",
+        "references": "null.null(null)"
+      }
+    ]
+  },
+  "engineer_call_attachments": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "engineer_call_id",
+        "type": "uuid",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "attachment_id",
+        "type": "integer",
+        "nullable": false,
+        "default": null
+      }
+    ],
+    "primary_keys": [
+      "attachment_id",
+      "engineer_call_id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "attachment_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "engineer_call_id",
+        "references": "null.null(null)"
+      }
+    ]
+  },
+  "engineer_calls": {
+    "comment": "Table for managing engineer service calls. Updated to remove unused contact and location fields.",
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "nullable": false,
+        "default": "gen_random_uuid()"
+      },
+      {
+        "name": "project_id",
+        "type": "integer",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "title",
+        "type": "text",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "start_datetime",
+        "type": "timestamp with time zone",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "end_datetime",
+        "type": "timestamp with time zone",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "engineer_id",
+        "type": "uuid",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "unit_id",
+        "type": "integer",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "claim_id",
+        "type": "integer",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "nullable": true,
+        "default": "'scheduled'::text"
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_by",
+        "type": "uuid",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()"
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "claim_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "created_by",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "engineer_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "project_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "unit_id",
+        "references": "null.null(null)"
+      }
+    ]
+  },
+  "lawsuit_claim_types": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "id",
+        "type": "bigint",
+        "nullable": false,
+        "default": "nextval('lawsuit_claim_types_id_seq'::regclass)"
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "nullable": false,
+        "default": null
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": []
+  },
+  "letter_attachments": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "letter_id",
+        "type": "bigint",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "attachment_id",
+        "type": "integer",
+        "nullable": false,
+        "default": null
+      }
+    ],
+    "primary_keys": [
+      "attachment_id",
+      "letter_id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "attachment_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "letter_id",
+        "references": "null.null(null)"
+      }
+    ]
+  },
+  "letter_links": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "parent_id",
+        "type": "bigint",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "child_id",
+        "type": "bigint",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "id",
+        "type": "bigint",
+        "nullable": false,
+        "default": "nextval('letter_links_id_seq'::regclass)"
+      }
+    ],
+    "primary_keys": [
+      "child_id",
+      "parent_id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "child_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "parent_id",
+        "references": "null.null(null)"
+      }
+    ]
+  },
+  "letter_types": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "id",
+        "type": "bigint",
+        "nullable": false,
+        "default": "nextval('letter_types_id_seq'::regclass)"
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "nullable": false,
+        "default": null
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": []
+  },
+  "letter_units": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "letter_id",
+        "type": "bigint",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "unit_id",
+        "type": "integer",
+        "nullable": false,
+        "default": null
+      }
+    ],
+    "primary_keys": [
+      "letter_id",
+      "unit_id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "letter_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "unit_id",
+        "references": "null.null(null)"
+      }
+    ]
+  },
+  "letters": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "id",
+        "type": "bigint",
+        "nullable": false,
+        "default": "nextval('letters_id_seq'::regclass)"
+      },
+      {
+        "name": "project_id",
+        "type": "integer",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "number",
+        "type": "text",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "letter_type_id",
+        "type": "bigint",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "letter_date",
+        "type": "date",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "subject",
+        "type": "text",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "responsible_user_id",
+        "type": "uuid",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "content",
+        "type": "text",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "status_id",
+        "type": "bigint",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "sender_person_id",
+        "type": "bigint",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "sender_contractor_id",
+        "type": "integer",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "receiver_person_id",
+        "type": "bigint",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "receiver_contractor_id",
+        "type": "integer",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "direction",
+        "type": "text",
+        "nullable": false,
+        "default": "'incoming'::text"
+      },
+      {
+        "name": "created_by",
+        "type": "uuid",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "created_by",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "letter_type_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "project_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "receiver_contractor_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "receiver_person_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "sender_contractor_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "sender_person_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "status_id",
+        "references": "null.null(null)"
+      }
+    ]
+  },
+  "persons": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "id",
+        "type": "bigint",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "full_name",
+        "type": "text",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "phone",
+        "type": "text",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "email",
+        "type": "text",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "passport_series",
+        "type": "text",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "passport_number",
+        "type": "text",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": []
+  },
+  "profiles": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "role",
+        "type": "text",
+        "nullable": false,
+        "default": "'USER'::text"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "email",
+        "type": "text",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "is_active",
+        "type": "boolean",
+        "nullable": false,
+        "default": "true"
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "role",
+        "references": "null.null(null)"
+      }
+    ]
+  },
+  "profiles_projects": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "profile_id",
+        "type": "uuid",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "project_id",
+        "type": "integer",
+        "nullable": false,
+        "default": null
+      }
+    ],
+    "primary_keys": [
+      "profile_id",
+      "project_id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "profile_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "project_id",
+        "references": "null.null(null)"
+      }
+    ]
+  },
+  "projects": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer",
+        "nullable": false,
+        "default": "nextval('projects_id_seq'::regclass)"
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "nullable": false,
+        "default": null
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": []
+  },
+  "role_permissions": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "role_name",
+        "type": "text",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "pages",
+        "type": "jsonb",
+        "nullable": false,
+        "default": "'[]'::jsonb"
+      },
+      {
+        "name": "edit_tables",
+        "type": "jsonb",
+        "nullable": false,
+        "default": "'[]'::jsonb"
+      },
+      {
+        "name": "delete_tables",
+        "type": "jsonb",
+        "nullable": false,
+        "default": "'[]'::jsonb"
+      },
+      {
+        "name": "only_assigned_project",
+        "type": "boolean",
+        "nullable": false,
+        "default": "false"
+      },
+      {
+        "name": "can_lock_units",
+        "type": "boolean",
+        "nullable": false,
+        "default": "false"
+      },
+      {
+        "name": "can_upload_documents",
+        "type": "boolean",
+        "nullable": false,
+        "default": "false"
+      }
+    ],
+    "primary_keys": [
+      "role_name"
+    ],
+    "foreign_keys": [
+      {
+        "column": "role_name",
+        "references": "null.null(null)"
+      }
+    ]
+  },
+  "roles": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer",
+        "nullable": false,
+        "default": "nextval('roles_id_seq'::regclass)"
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "nullable": false,
+        "default": null
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": []
+  },
+  "statuses": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "entity",
+        "type": "text",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "color",
+        "type": "character varying",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "is_default",
+        "type": "boolean",
+        "nullable": true,
+        "default": "false"
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": []
+  },
+  "system_settings": {
+    "comment": "Глобальные настройки системы",
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer",
+        "nullable": false,
+        "default": "nextval('system_settings_id_seq'::regclass)"
+      },
+      {
+        "name": "setting_key",
+        "type": "character varying",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "setting_value",
+        "type": "text",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "updated_by",
+        "type": "uuid",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "updated_by",
+        "references": "null.null(null)"
+      }
+    ]
+  },
+  "unit_attachments": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "unit_id",
+        "type": "integer",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "attachment_id",
+        "type": "integer",
+        "nullable": false,
+        "default": null
+      }
+    ],
+    "primary_keys": [
+      "attachment_id",
+      "unit_id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "attachment_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "unit_id",
+        "references": "null.null(null)"
+      }
+    ]
+  },
+  "unit_sort_orders": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer",
+        "nullable": false,
+        "default": "nextval('unit_sort_orders_id_seq'::regclass)"
+      },
+      {
+        "name": "project_id",
+        "type": "integer",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "building",
+        "type": "text",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "floor",
+        "type": "text",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "sort_direction",
+        "type": "text",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": []
+  },
+  "units": {
+    "comment": "",
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer",
+        "nullable": false,
+        "default": "nextval('units_id_seq'::regclass)"
+      },
+      {
+        "name": "project_id",
+        "type": "integer",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "building",
+        "type": "text",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "floor",
+        "type": "integer",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "person_id",
+        "type": "uuid",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "locked",
+        "type": "boolean",
+        "nullable": false,
+        "default": "false"
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "person_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "project_id",
+        "references": "null.null(null)"
+      }
+    ]
+  }
+}

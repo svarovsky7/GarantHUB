@@ -1,10 +1,9 @@
 import { useMemo } from 'react';
 import { useClaimsSummary } from '@/entities/claim';
 import { useUsers } from '@/entities/user';
-import { useLockedUnitIds, useUnits } from '@/entities/unit';
+import { useLockedUnitIds } from '@/entities/unit';
 import { useVisibleProjects } from '@/entities/project';
 import type { ClaimWithNames } from '@/shared/types/claimWithNames';
-import formatUnitShortName from '@/shared/utils/formatUnitShortName';
 
 /**
  * 🚀 ОПТИМИЗИРОВАННЫЙ хук для загрузки данных страницы претензий
@@ -15,7 +14,6 @@ import formatUnitShortName from '@/shared/utils/formatUnitShortName';
  * 3. Использует новые агрегированные поля из VIEW (unit_ids, unit_names, building_names)
  * 4. Минимум обогащения на клиенте
  * 5. Параллельная загрузка всех справочников
- * 6. Загружает все units для корректной работы фильтров
  *
  * ЦЕЛЕВОЕ ВРЕМЯ: < 1 сек (вместо 3 сек)
  */
@@ -30,9 +28,6 @@ export function useClaimsDataOptimized() {
   const { data: users = [], isPending: usersLoading } = useUsers();
   const { data: lockedUnitIds = [] } = useLockedUnitIds();
   const { data: projects = [] } = useVisibleProjects();
-
-  // ✅ Загружаем все units для фильтров (параллельно с claims)
-  const { data: allUnits = [] } = useUnits();
 
   // ✅ Минимальное обогащение - только то, что НЕ пришло из VIEW
   const claimsWithNames: ClaimWithNames[] = useMemo(() => {
@@ -56,27 +51,25 @@ export function useClaimsDataOptimized() {
     })) as ClaimWithNames[];
   }, [claims, claimsLoading]);
 
-  // ✅ Оптимизированные опции фильтров
+  // ✅ Оптимизированные опции фильтров - используем данные из VIEW
   const filterOptions = useMemo(() => {
-    // Проекты из списка видимых проектов
+    // Создаем уникальные списки прямо из массивов VIEW
     const uniqueProjects = Array.from(
       new Set(projects.map(p => p.name).filter(Boolean))
     )
       .map(name => ({ value: name, label: name }))
       .sort((a, b) => a.label.localeCompare(b.label));
 
-    // ✅ Units из ВСЕХ загруженных units (не только из текущих claims)
-    const uniqueUnits = Array.from(
-      new Set(allUnits.map(u => formatUnitShortName(u)))
-    )
-      .map(name => ({ value: name, label: name }))
-      .sort((a, b) => a.label.localeCompare(b.label));
-
-    // ✅ Buildings из ВСЕХ загруженных units (не только из текущих claims)
     const uniqueBuildings = Array.from(
-      new Set(allUnits.map(u => u.building).filter(Boolean))
+      new Set(claimsWithNames.flatMap(c => c.building_names || []))
     )
       .map(building => ({ value: building, label: building }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+
+    const uniqueUnits = Array.from(
+      new Set(claimsWithNames.flatMap(c => c.unit_names || []))
+    )
+      .map(name => ({ value: name, label: name }))
       .sort((a, b) => a.label.localeCompare(b.label));
 
     const uniqueStatuses = Array.from(
@@ -120,7 +113,7 @@ export function useClaimsDataOptimized() {
       authors: uniqueAuthors,
       ids: uniqueIds,
     };
-  }, [projects, allUnits, claimsWithNames]);
+  }, [projects, claimsWithNames]);
 
   return {
     claims: claimsWithNames,

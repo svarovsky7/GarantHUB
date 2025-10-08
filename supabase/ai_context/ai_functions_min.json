@@ -1,0 +1,80 @@
+{
+  "batch_load_claim_defects(claim_ids integer[])": {
+    "name": "batch_load_claim_defects",
+    "arguments": "claim_ids integer[]",
+    "purpose": "Batch loading function for claim-defect relations",
+    "signature": "batch_load_claim_defects(claim_ids integer[])"
+  },
+  "batch_load_claim_units(claim_ids integer[])": {
+    "name": "batch_load_claim_units",
+    "arguments": "claim_ids integer[]",
+    "purpose": "Batch loading function for claim-unit relations",
+    "signature": "batch_load_claim_units(claim_ids integer[])"
+  },
+  "buildings_by_project(pid integer)": {
+    "name": "buildings_by_project",
+    "arguments": "pid integer",
+    "purpose": "No description",
+    "signature": "buildings_by_project(pid integer)"
+  },
+  "dashboard_stats(pid integer, closed_claim_id integer, closed_defect_id integer)": {
+    "name": "dashboard_stats",
+    "arguments": "pid integer, closed_claim_id integer, closed_defect_id integer",
+    "purpose": "No description",
+    "signature": "dashboard_stats(pid integer, closed_claim_id integer, closed_defect_id integer)"
+  },
+  "dashboard_stats_optimized(pid integer, closed_claim_id integer, closed_defect_id integer)": {
+    "name": "dashboard_stats_optimized",
+    "arguments": "pid integer, closed_claim_id integer, closed_defect_id integer",
+    "purpose": "Optimized version of dashboard_stats using CTEs for better performance",
+    "signature": "dashboard_stats_optimized(pid integer, closed_claim_id integer, closed_defect_id integer)"
+  },
+  "get_claims_with_relations(project_ids integer[], only_assigned boolean)": {
+    "name": "get_claims_with_relations",
+    "arguments": "project_ids integer[], only_assigned boolean",
+    "purpose": "Optimized function to fetch claims with relations, eliminates N+1 problem",
+    "signature": "get_claims_with_relations(project_ids integer[], only_assigned boolean)"
+  },
+  "get_dashboard_stats(p_project_id integer)": {
+    "name": "get_dashboard_stats",
+    "arguments": "p_project_id integer",
+    "purpose": "No description",
+    "signature": "get_dashboard_stats(p_project_id integer)"
+  },
+  "get_units_matrix(p_project_id integer)": {
+    "name": "get_units_matrix",
+    "arguments": "p_project_id integer",
+    "purpose": "No description",
+    "signature": "get_units_matrix(p_project_id integer)"
+  },
+  "get_user_stats_optimized(user_id uuid, from_date timestamp with time zone, to_date timestamp with time zone)": {
+    "name": "get_user_stats_optimized",
+    "arguments": "user_id uuid, from_date timestamp with time zone, to_date timestamp with time zone",
+    "purpose": "Optimized function to fetch user statistics, eliminates N+1 problem",
+    "signature": "get_user_stats_optimized(user_id uuid, from_date timestamp with time zone, to_date timestamp with time zone)"
+  },
+  "handle_new_user()": {
+    "name": "handle_new_user",
+    "arguments": "",
+    "purpose": "No description",
+    "signature": "handle_new_user()"
+  },
+  "update_counter(p_entity_type character varying, p_entity_id bigint, p_counter_type character varying, p_delta integer)": {
+    "name": "update_counter",
+    "arguments": "p_entity_type character varying, p_entity_id bigint, p_counter_type character varying, p_delta integer",
+    "purpose": "No description",
+    "signature": "update_counter(p_entity_type character varying, p_entity_id bigint, p_counter_type character varying, p_delta integer)"
+  },
+  "update_court_case_total_claim_amount()": {
+    "name": "update_court_case_total_claim_amount",
+    "arguments": "",
+    "purpose": "No description",
+    "signature": "update_court_case_total_claim_amount()"
+  },
+  "update_updated_at_column()": {
+    "name": "update_updated_at_column",
+    "arguments": "",
+    "purpose": "No description",
+    "signature": "update_updated_at_column()"
+  }
+}

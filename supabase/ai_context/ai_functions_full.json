@@ -1,0 +1,213 @@
+{
+  "batch_load_claim_defects(claim_ids integer[])": {
+    "name": "batch_load_claim_defects",
+    "arguments": "claim_ids integer[]",
+    "purpose": "Batch loading function for claim-defect relations",
+    "signature": "batch_load_claim_defects(claim_ids integer[])",
+    "related_tables": [
+      "claim_defects"
+    ],
+    "side_effects": [],
+    "is_trigger_function": false
+  },
+  "batch_load_claim_units(claim_ids integer[])": {
+    "name": "batch_load_claim_units",
+    "arguments": "claim_ids integer[]",
+    "purpose": "Batch loading function for claim-unit relations",
+    "signature": "batch_load_claim_units(claim_ids integer[])",
+    "related_tables": [
+      "claim_units"
+    ],
+    "side_effects": [],
+    "is_trigger_function": false
+  },
+  "buildings_by_project(pid integer)": {
+    "name": "buildings_by_project",
+    "arguments": "pid integer",
+    "purpose": "No description",
+    "signature": "buildings_by_project(pid integer)",
+    "related_tables": [
+      "units"
+    ],
+    "side_effects": [],
+    "is_trigger_function": false
+  },
+  "dashboard_stats(pid integer, closed_claim_id integer, closed_defect_id integer)": {
+    "name": "dashboard_stats",
+    "arguments": "pid integer, closed_claim_id integer, closed_defect_id integer",
+    "purpose": "No description",
+    "signature": "dashboard_stats(pid integer, closed_claim_id integer, closed_defect_id integer)",
+    "related_tables": [
+      "projects",
+      "units",
+      "defects",
+      "letters",
+      "claims",
+      "closed_claim_id",
+      "closed_defect_id",
+      "court_cases",
+      "claim_units",
+      "profiles",
+      "result"
+    ],
+    "side_effects": [],
+    "is_trigger_function": false
+  },
+  "dashboard_stats_optimized(pid integer, closed_claim_id integer, closed_defect_id integer)": {
+    "name": "dashboard_stats_optimized",
+    "arguments": "pid integer, closed_claim_id integer, closed_defect_id integer",
+    "purpose": "Optimized version of dashboard_stats using CTEs for better performance",
+    "signature": "dashboard_stats_optimized(pid integer, closed_claim_id integer, closed_defect_id integer)",
+    "related_tables": [
+      "projects",
+      "units",
+      "defects",
+      "letters",
+      "closed_claim_id",
+      "claims",
+      "closed_defect_id",
+      "court_cases",
+      "claim_units",
+      "profiles",
+      "project_data",
+      "unit_counts",
+      "defect_counts",
+      "letter_counts",
+      "claim_stats",
+      "defect_stats",
+      "court_case_counts",
+      "claims_by_unit_data",
+      "claims_by_engineer_data",
+      "defects_by_engineer_data",
+      "result"
+    ],
+    "side_effects": [],
+    "is_trigger_function": false
+  },
+  "get_claims_with_relations(project_ids integer[], only_assigned boolean)": {
+    "name": "get_claims_with_relations",
+    "arguments": "project_ids integer[], only_assigned boolean",
+    "purpose": "Optimized function to fetch claims with relations, eliminates N+1 problem",
+    "signature": "get_claims_with_relations(project_ids integer[], only_assigned boolean)",
+    "related_tables": [
+      "claims",
+      "projects",
+      "statuses",
+      "profiles",
+      "court_cases_uids",
+      "claim_units",
+      "claims_base",
+      "claim_defects",
+      "claim_units_agg",
+      "claim_defects_agg"
+    ],
+    "side_effects": [],
+    "is_trigger_function": false
+  },
+  "get_dashboard_stats(p_project_id integer)": {
+    "name": "get_dashboard_stats",
+    "arguments": "p_project_id integer",
+    "purpose": "No description",
+    "signature": "get_dashboard_stats(p_project_id integer)",
+    "related_tables": [
+      "project_statistics"
+    ],
+    "side_effects": [],
+    "is_trigger_function": false
+  },
+  "get_units_matrix(p_project_id integer)": {
+    "name": "get_units_matrix",
+    "arguments": "p_project_id integer",
+    "purpose": "No description",
+    "signature": "get_units_matrix(p_project_id integer)",
+    "related_tables": [
+      "units",
+      "claim_units",
+      "claims",
+      "defects",
+      "court_case_units",
+      "court_cases",
+      "letter_units",
+      "letters"
+    ],
+    "side_effects": [],
+    "is_trigger_function": false
+  },
+  "get_user_stats_optimized(user_id uuid, from_date timestamp with time zone, to_date timestamp with time zone)": {
+    "name": "get_user_stats_optimized",
+    "arguments": "user_id uuid, from_date timestamp with time zone, to_date timestamp with time zone",
+    "purpose": "Optimized function to fetch user statistics, eliminates N+1 problem",
+    "signature": "get_user_stats_optimized(user_id uuid, from_date timestamp with time zone, to_date timestamp with time zone)",
+    "related_tables": [
+      "claims",
+      "statuses",
+      "defects",
+      "court_cases",
+      "stats",
+      "stats_responsible",
+      "defects_stats",
+      "defects_responsible",
+      "court_cases_stats",
+      "court_cases_responsible"
+    ],
+    "side_effects": [],
+    "is_trigger_function": false
+  },
+  "handle_new_user()": {
+    "name": "handle_new_user",
+    "arguments": "",
+    "purpose": "No description",
+    "signature": "handle_new_user()",
+    "related_tables": [
+      "public",
+      "unnest"
+    ],
+    "side_effects": [
+      "INSERT",
+      "TRIGGER"
+    ],
+    "is_trigger_function": true
+  },
+  "update_counter(p_entity_type character varying, p_entity_id bigint, p_counter_type character varying, p_delta integer)": {
+    "name": "update_counter",
+    "arguments": "p_entity_type character varying, p_entity_id bigint, p_counter_type character varying, p_delta integer",
+    "purpose": "No description",
+    "signature": "update_counter(p_entity_type character varying, p_entity_id bigint, p_counter_type character varying, p_delta integer)",
+    "related_tables": [
+      "cached_counters",
+      "SET"
+    ],
+    "side_effects": [
+      "INSERT",
+      "UPDATE"
+    ],
+    "is_trigger_function": false
+  },
+  "update_court_case_total_claim_amount()": {
+    "name": "update_court_case_total_claim_amount",
+    "arguments": "",
+    "purpose": "No description",
+    "signature": "update_court_case_total_claim_amount()",
+    "related_tables": [
+      "court_cases",
+      "court_case_claims"
+    ],
+    "side_effects": [
+      "UPDATE",
+      "TRIGGER"
+    ],
+    "is_trigger_function": true
+  },
+  "update_updated_at_column()": {
+    "name": "update_updated_at_column",
+    "arguments": "",
+    "purpose": "No description",
+    "signature": "update_updated_at_column()",
+    "related_tables": [],
+    "side_effects": [
+      "UPDATE",
+      "TRIGGER"
+    ],
+    "is_trigger_function": true
+  }
+}
