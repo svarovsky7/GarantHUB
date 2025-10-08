@@ -1,6 +1,6 @@
 import {
   useStatuses,
-  useAddStatus,
+  useCreateStatus,
   useUpdateStatus,
   useDeleteStatus,
 } from '@/entities/status';
@@ -9,7 +9,7 @@ import type { DefectStatus } from '@/shared/types/defectStatus';
 const ENTITY = 'defect';
 export const useDefectStatuses = () => useStatuses(ENTITY);
 
-export const useAddDefectStatus = () => useAddStatus();
+export const useAddDefectStatus = () => useCreateStatus();
 
 export const useUpdateDefectStatus = () =>
   useUpdateStatus();

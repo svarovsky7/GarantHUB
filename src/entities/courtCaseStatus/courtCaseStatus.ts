@@ -4,7 +4,7 @@
 // -----------------------------------------------------------------------------
 import {
     useStatuses,
-    useAddStatus,
+    useCreateStatus,
     useUpdateStatus,
     useDeleteStatus,
 } from '@/entities/status';
@@ -18,7 +18,7 @@ export const useCourtCaseStatuses = () =>
 
 /** Добавить стадию судебного дела */
 export const useAddCourtCaseStatus = () =>
-    useAddStatus();
+    useCreateStatus();
 
 /** Обновить стадию судебного дела */
 export const useUpdateCourtCaseStatus = () =>

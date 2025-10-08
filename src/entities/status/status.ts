@@ -217,6 +217,3 @@ export function useSetDefaultStatus() {
     },
   });
 }
-
-// Алиас для совместимости со старым кодом
-export const useAddStatus = useCreateStatus;

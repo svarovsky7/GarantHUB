@@ -35,6 +35,12 @@ export interface ClaimSummary {
   defects_count: number | null;
   has_children: boolean | null;
   has_parent: boolean | null;
+
+  // 🚀 Новые агрегированные поля для оптимизации производительности
+  unit_ids: number[];
+  defect_ids: number[];
+  unit_names: string[];
+  building_names: string[];
 }
 
 /**
@@ -56,15 +62,11 @@ export interface ClaimSummaryWithDayjs extends Omit<ClaimSummary, 'claimed_on' |
   caseUid: string | null;
   createdByName: string | null;
   
-  // Дополнительные поля для UI
-  unitNames?: string;
-  unitNumbers?: string;
-  buildings?: string;
+  // Дополнительные поля для UI (уже есть в ClaimSummary: unit_ids, defect_ids, unit_names, building_names)
+  unitNames?: string;      // Comma-separated для обратной совместимости
+  unitNumbers?: string;    // Comma-separated для обратной совместимости
+  buildings?: string;      // Comma-separated для обратной совместимости
   attachments?: import('./claimFile').RemoteClaimFile[];
   hasCheckingDefect?: boolean;
-  
-  // ID массивы для совместимости
-  unit_ids?: number[];
-  defect_ids?: number[];
   parent_id?: number | null;
 }

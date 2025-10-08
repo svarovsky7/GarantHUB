@@ -1,0 +1,112 @@
+import { useMemo } from 'react';
+import { useDefectsSummary } from '@/entities/defect';
+import { useLockedUnitIds } from '@/entities/unit';
+import { useVisibleProjects } from '@/entities/project';
+import { useBrigades } from '@/entities/brigade';
+import { useContractors } from '@/entities/contractor';
+import { useUsers } from '@/entities/user';
+import type { DefectWithInfo } from '@/shared/types/defect';
+import { calculateDays } from '../lib/defectsHelpers';
+
+/**
+ * 🚀 ОПТИМИЗИРОВАННЫЙ хук для загрузки данных страницы дефектов
+ *
+ * УЛУЧШЕНИЯ:
+ * 1. Использует useDefectsSummary вместо useDefects (VIEW с агрегациями)
+ * 2. Устраняет водопадную загрузку: defects → unitIds → units → claims
+ * 3. Использует новые агрегированные поля из VIEW (claim_ids, unit_ids, unit_names, building_names, project_ids, project_names)
+ * 4. Минимум обогащения на клиенте (большая часть данных уже в VIEW)
+ * 5. Параллельная загрузка всех справочников
+ *
+ * ЦЕЛЕВОЕ ВРЕМЯ: < 1 сек (вместо ~3 сек)
+ */
+export function useDefectsDataOptimized() {
+  // ✅ Параллельная загрузка ВСЕХ данных (не ждем defects!)
+  const {
+    data: defects = [],
+    isPending,
+    isError,
+    error,
+  } = useDefectsSummary();
+
+  const { data: lockedUnitIds = [] } = useLockedUnitIds();
+  const { data: projects = [] } = useVisibleProjects();
+  const { data: brigades = [] } = useBrigades();
+  const { data: contractors = [] } = useContractors();
+  const { data: users = [] } = useUsers();
+
+  // ✅ Минимальные мапы - только для данных, которых НЕТ в VIEW
+  const userMap = useMemo(() => {
+    const map = new Map<string, string>();
+    users.forEach((u) => {
+      map.set(u.id, u.name);
+    });
+    return map;
+  }, [users]);
+
+  const brigadeMap = useMemo(
+    () => new Map(brigades.map((b) => [b.id, b.name])),
+    [brigades]
+  );
+
+  const contractorMap = useMemo(
+    () => new Map(contractors.map((c) => [c.id, c.name])),
+    [contractors]
+  );
+
+  // ✅ Минимальное обогащение - только то, что НЕ пришло из VIEW
+  const data: DefectWithInfo[] = useMemo(() => {
+    if (isPending || !defects.length) return [];
+
+    return defects.map((d) => {
+      // ✅ claim_ids, unit_ids, unit_names, building_names, project_ids, project_names УЖЕ есть в VIEW!
+      // ✅ has_pretrial_claim УЖЕ есть в VIEW!
+
+      // Только формируем fixByName из brigade или contractor
+      let fixByName = '—';
+      if (d.brigade_id) {
+        fixByName = brigadeMap.get(d.brigade_id) || d.brigade_name || 'Бригада';
+      } else if (d.contractor_id) {
+        fixByName = contractorMap.get(d.contractor_id) || d.contractor_name || 'Подрядчик';
+      }
+
+      return {
+        ...d,
+        // Данные из VIEW (уже есть как массивы)
+        claimIds: d.claim_ids || [],
+        unitIds: d.unit_ids || [],
+        projectIds: d.project_ids || [],
+        hasPretrialClaim: d.has_pretrial_claim || false,
+
+        // Преобразуем массивы в строки для обратной совместимости
+        unitNames: d.unit_names?.join(', ') ?? '',
+        unitNamesList: d.unit_names || [],
+        buildingNames: d.building_names?.join(', ') ?? '',
+        buildingNamesList: d.building_names || [],
+        projectNames: d.project_names?.join(', ') ?? '',
+
+        // Данные из пользователей (мапы)
+        createdByName: userMap.get(d.created_by as string) ?? null,
+        engineerName: d.engineer_name ?? null,
+
+        // Дополнительные UI поля
+        fixByName,
+        days: calculateDays(d.receivedAt, d.fixedAt),
+        defectTypeName: d.typeName ?? '',
+        defectStatusName: d.statusName ?? '',
+        defectStatusColor: d.statusColor ?? null,
+        filesCount: d.attachments_count ?? 0,
+      } as DefectWithInfo;
+    });
+  }, [defects, userMap, brigadeMap, contractorMap, isPending]);
+
+  return {
+    defects: data,
+    isLoading: isPending,
+    isError,
+    error,
+    lockedUnitIds,
+    units: [], // Не нужны - имена уже в VIEW
+    projects,
+  };
+}

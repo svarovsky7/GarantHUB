@@ -35,6 +35,15 @@ export interface DefectSummary {
   engineer_name: string | null;
   fixed_by_name: string | null;
   attachments_count: number | null;
+
+  // 🚀 Новые агрегированные поля для оптимизации производительности
+  claim_ids: number[];
+  unit_ids: number[];
+  unit_names: string[];
+  building_names: string[];
+  project_ids: number[];
+  project_names: string[];
+  has_pretrial_claim: boolean;
 }
 
 /**

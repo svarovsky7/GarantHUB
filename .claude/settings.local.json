@@ -50,7 +50,10 @@
       "mcp__supabase__execute_sql",
       "mcp__supabase__apply_migration",
       "mcp__supabase__list_branches",
-      "Bash(awk:*)"
+      "Bash(awk:*)",
+      "Bash(timeout 20s npm run dev)",
+      "Bash(findstr:*)",
+      "Bash(timeout 15s npm run dev)"
     ],
     "deny": [],
     "additionalDirectories": [

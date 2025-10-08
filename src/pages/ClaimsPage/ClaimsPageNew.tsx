@@ -18,7 +18,7 @@ import ClaimFormAntd from '@/features/claim/ClaimFormAntd';
 import ClaimViewModal from '@/features/claim/ClaimViewModal';
 import LinkClaimsDialog from '@/features/claim/LinkClaimsDialog';
 import ClaimsPageToolbar from './ui/ClaimsPageToolbar';
-import { useClaimsData } from './model/useClaimsData';
+import { useClaimsDataOptimized as useClaimsData } from './model/useClaimsDataOptimized';
 import { useClaimsFilters } from './model/useClaimsFilters';
 import { useClaimsColumns } from './model/useClaimsColumns';
 

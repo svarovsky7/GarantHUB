@@ -1,6 +1,6 @@
 import {
   useStatuses,
-  useAddStatus,
+  useCreateStatus,
   useUpdateStatus,
   useDeleteStatus,
 } from '@/entities/status';
@@ -9,7 +9,7 @@ const ENTITY = 'letter';
 
 export const useLetterStatuses = () => useStatuses(ENTITY);
 
-export const useAddLetterStatus = () => useAddStatus();
+export const useAddLetterStatus = () => useCreateStatus();
 
 export const useUpdateLetterStatus = () =>
   useUpdateStatus();

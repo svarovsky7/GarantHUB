@@ -12,10 +12,10 @@ import PageLoader from "@/shared/components/PageLoader";
 
 // Lazy loading для всех страниц
 const DashboardPage = React.lazy(() => import("@/pages/DashboardPage/DashboardPage"));
-const ClaimsPagePaginated = React.lazy(() => import("@/pages/ClaimsPage/ClaimsPagePaginated"));
+const ClaimsPage = React.lazy(() => import("@/pages/ClaimsPage/ClaimsPageNew"));
 const CourtCasesPage = React.lazy(() => import("@/pages/CourtCasesPage/CourtCasesPage"));
 const CorrespondencePage = React.lazy(() => import("@/pages/CorrespondencePage/CorrespondencePage"));
-const DefectsPage = React.lazy(() => import("@/pages/DefectsPage/DefectsPage"));
+const DefectsPage = React.lazy(() => import("@/pages/DefectsPage/DefectsPageNew"));
 const LoginPage = React.lazy(() => import("@/pages/UnitsPage/LoginPage"));
 const RegisterPage = React.lazy(() => import("@/pages/UnitsPage/RegisterPage"));
 const AdminPage = React.lazy(() => import("@/pages/UnitsPage/AdminPage"));
@@ -86,7 +86,7 @@ export default function AppRouter() {
         element={
           <RequireAuth>
             <RequirePermission page="claims">
-              <ClaimsPagePaginated />
+              <ClaimsPage />
             </RequirePermission>
           </RequireAuth>
         }

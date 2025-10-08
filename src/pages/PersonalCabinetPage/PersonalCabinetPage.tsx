@@ -996,7 +996,7 @@ export default function PersonalCabinetPage() {
               console.log('[PersonalCabinetPage] Closing engineer call modal');
               setViewEngineerCallId(null);
             }}
-            onSuccess={() => {
+            onSubmit={async () => {
               console.log('[PersonalCabinetPage] Engineer call updated successfully');
               queryClient.invalidateQueries({ queryKey: ['user-engineer-calls'] });
               setViewEngineerCallId(null);

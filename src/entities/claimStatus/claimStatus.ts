@@ -1,6 +1,6 @@
 import {
   useStatuses,
-  useAddStatus,
+  useCreateStatus,
   useUpdateStatus,
   useDeleteStatus,
 } from '@/entities/status';
@@ -22,7 +22,7 @@ export const useUpdateClaimStatus = () =>
 /**
  * Хук добавления статуса претензии.
  */
-export const useAddClaimStatus = () => useAddStatus();
+export const useAddClaimStatus = () => useCreateStatus();
 
 /**
  * Хук удаления статуса претензии.

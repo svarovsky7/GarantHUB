@@ -4,7 +4,7 @@ import ruRU from 'antd/locale/ru_RU';
 import DefectsTable from '@/widgets/DefectsTable';
 import DefectsFilters from '@/widgets/DefectsFilters';
 import DefectsPageToolbar from './ui/DefectsPageToolbar';
-import { useDefectsData } from './model/useDefectsData';
+import { useDefectsDataOptimized as useDefectsData } from './model/useDefectsDataOptimized';
 import { useDefectsFilters } from './model/useDefectsFilters';
 import { useDefectsColumns } from './model/useDefectsColumns';
 
@@ -73,6 +73,7 @@ export default function DefectsPageNew() {
         <DefectsPageToolbar
           showFilters={showFilters}
           filteredDefects={filteredDefects}
+          filters={filters}
           onToggleFilters={handleToggleFilters}
           onShowColumnsDrawer={handleShowColumnsDrawer}
         />
@@ -81,10 +82,8 @@ export default function DefectsPageNew() {
           <div style={{ marginBottom: 24 }}>
             <DefectsFilters
               options={filterOptions}
-              loading={isLoading}
               initialValues={filters}
-              onSubmit={handleSubmitFilters}
-              onReset={handleResetFilters}
+              onChange={handleSubmitFilters}
             />
           </div>
         )}
@@ -110,10 +109,10 @@ export default function DefectsPageNew() {
         ) : (
           <Card>
             <DefectsTable
-              data={filteredDefects}
+              defects={filteredDefects}
+              filters={filters}
               columns={columns}
               loading={isLoading}
-              onView={handleView}
             />
 
             <div style={{ marginTop: 16 }}>

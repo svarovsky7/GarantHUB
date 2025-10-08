@@ -71,7 +71,6 @@ import EngineerCallAttachments from './EngineerCallAttachments';
 import ClaimViewModal from '@/features/claim/ClaimViewModal';
 import type { EngineerCallFormData, EngineerCallWithNames } from '@/shared/types/engineerCall';
 import type { PreviewFile } from '@/shared/types/previewFile';
-import './EngineerCallModal.css';
 
 dayjs.locale('ru');
 
