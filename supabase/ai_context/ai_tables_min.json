@@ -393,6 +393,112 @@
       }
     ]
   },
+  "completion_defects": {
+    "comment": "Связь между выполнениями и дефектами",
+    "columns": [
+      {
+        "name": "id",
+        "type": "bigint",
+        "nullable": false,
+        "default": "nextval('completion_defects_id_seq'::regclass)"
+      },
+      {
+        "name": "completion_id",
+        "type": "bigint",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "defect_id",
+        "type": "bigint",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": false,
+        "default": "now()"
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "completion_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "defect_id",
+        "references": "null.null(null)"
+      }
+    ]
+  },
+  "contractor_completions": {
+    "comment": "Выполнения работ по подрядчикам",
+    "columns": [
+      {
+        "name": "id",
+        "type": "bigint",
+        "nullable": false,
+        "default": "nextval('contractor_completions_id_seq'::regclass)"
+      },
+      {
+        "name": "larix_number",
+        "type": "text",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "contractor_id",
+        "type": "bigint",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "project_id",
+        "type": "integer",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_by",
+        "type": "uuid",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": false,
+        "default": "now()"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "nullable": false,
+        "default": "now()"
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "contractor_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "created_by",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "project_id",
+        "references": "null.null(null)"
+      }
+    ]
+  },
   "contractors": {
     "comment": "",
     "columns": [

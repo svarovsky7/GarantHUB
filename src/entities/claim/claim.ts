@@ -30,7 +30,7 @@ const LINK_TABLE = 'claim_links';
  */
 function mapClaimSummary(r: ClaimSummary): ClaimSummaryWithDayjs {
   const toDayjs = (d: any) => (d ? (dayjs(d).isValid() ? dayjs(d) : null) : null);
-  
+
   return {
     ...r,
     // Преобразуем строковые даты в объекты Dayjs
@@ -39,7 +39,7 @@ function mapClaimSummary(r: ClaimSummary): ClaimSummaryWithDayjs {
     registeredOn: toDayjs(r.registered_on),
     resolvedOn: toDayjs(r.resolved_on),
     createdAt: toDayjs(r.created_at),
-    
+
     // Алиасы для совместимости
     projectName: r.project_name ?? '—',
     statusName: r.status_name ?? '—',
@@ -47,12 +47,12 @@ function mapClaimSummary(r: ClaimSummary): ClaimSummaryWithDayjs {
     responsibleEngineerName: r.engineer_name,
     caseUid: r.case_uid,
     createdByName: r.created_by_name,
-    
-    // Инициализируем пустые массивы (заполняются отдельно при необходимости)
-    unit_ids: [],
-    defect_ids: [],
-    parent_id: r.has_parent ? null : null, // Заполняется из отдельного запроса
-    
+
+    // ✅ СОХРАНЯЕМ данные из VIEW (не перезаписываем!)
+    unit_ids: r.unit_ids ?? [],
+    defect_ids: r.defect_ids ?? [],
+    parent_id: r.parent_id ?? null, // ✅ Теперь parent_id тоже в VIEW!
+
     // UI поля
     unitNames: '',
     unitNumbers: '',
@@ -180,58 +180,26 @@ export function useClaimsSummary() {
       const rows = await fetchPaged<ClaimSummary>((from, to) => {
         let q: any = supabase
           .from(SUMMARY_TABLE)
-          .select('*');
+          .select('*'); // VIEW содержит ВСЕ данные: unit_ids, defect_ids, unit_names, building_names, parent_id!
         q = filterByProjects(q, projectId, projectIds, onlyAssigned);
-        q = q.order('created_at', { ascending: false }).range(from, to);
+        q = q.order('created_at', { ascending: false}).range(from, to);
         return q as unknown as PromiseLike<PostgrestSingleResponse<ClaimSummary[]>>;
       });
-      
-      const ids = rows.map((r: ClaimSummary) => r.id);
-      
-      // Получаем связи претензий (с чанкингом для избежания лимита URL)
-      console.log(`[useClaimsSummary] Fetching links for ${ids.length} claims`);
-      const links = ids.length
-        ? await fetchByChunks(ids, (chunk) => {
-            console.log(`[useClaimsSummary] Fetching links chunk of ${chunk.length} IDs`);
-            return supabase
-              .from(LINK_TABLE)
-              .select('parent_id, child_id')
-              .in('child_id', chunk);
-          })
-        : [];
-      const linkMap = new Map<number, number>();
-      (links ?? []).forEach((l: any) => linkMap.set(l.child_id, l.parent_id));
-      
-      // Получаем unit_ids для претензий
-      const unitRows = ids.length
-        ? await fetchByChunks(ids, (chunk) =>
-            supabase.from('claim_units').select('claim_id, unit_id').in('claim_id', chunk),
-          )
-        : [];
-      const unitMap: Record<number, number[]> = {};
-      (unitRows ?? []).forEach((u: any) => {
-        if (!unitMap[u.claim_id]) unitMap[u.claim_id] = [];
-        unitMap[u.claim_id].push(u.unit_id);
-      });
-      
-      // Получаем defect_ids для претензий
-      const defectRows = ids.length
-        ? await fetchByChunks(ids, (chunk) =>
-            supabase.from('claim_defects').select('claim_id, defect_id').in('claim_id', chunk),
-          )
-        : [];
-      const defectMap: Record<number, number[]> = {};
-      (defectRows ?? []).forEach((d: any) => {
-        if (!defectMap[d.claim_id]) defectMap[d.claim_id] = [];
-        defectMap[d.claim_id].push(d.defect_id);
-      });
-      
+
+      // ✅ МАКСИМАЛЬНАЯ ОПТИМИЗАЦИЯ: ВСЕ данные уже в VIEW!
+      // - unit_ids ✅ в VIEW
+      // - defect_ids ✅ в VIEW
+      // - parent_id ✅ в VIEW (после миграции)
+      //
+      // Устранено:
+      // - 4 chunked запроса к claim_units/claim_defects
+      // - 6 chunked запросов к claim_links
+      // = 10 запросов меньше!
+
       return (rows ?? []).map((r: ClaimSummary) => {
-        const mapped = mapClaimSummary(r);
-        mapped.parent_id = linkMap.get(r.id) ?? null;
-        mapped.unit_ids = unitMap[r.id] ?? [];
-        mapped.defect_ids = defectMap[r.id] ?? [];
-        return mapped;
+        // ✅ mapClaimSummary уже извлекает ВСЕ данные из VIEW
+        // Включая parent_id, unit_ids, defect_ids!
+        return mapClaimSummary(r);
       });
     },
     staleTime: 5 * 60_000,
@@ -689,10 +657,12 @@ export function useClaimsAll(page = 0, pageSize = 50) {
 
 /**
  * Получить все претензии без пагинации (для обратной совместимости).
+ * @param enabled - Включить/выключить запрос (по умолчанию false для оптимизации)
  */
-export function useClaimsAllLegacy() {
+export function useClaimsAllLegacy(enabled = false) {
   return useQuery({
     queryKey: ['claims-all-legacy'],
+    enabled,  // ✅ Не делаем запрос по умолчанию!
     queryFn: async () => {
       const rows = await fetchPaged<any>((from, to) =>
         supabase

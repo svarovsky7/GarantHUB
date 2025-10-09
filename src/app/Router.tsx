@@ -25,6 +25,7 @@ const ProfilePage = React.lazy(() => import("@/pages/ProfilePage/ProfilePage"));
 const DocumentsPage = React.lazy(() => import("@/pages/DocumentsPage/DocumentsPage"));
 const EngineerCallsPage = React.lazy(() => import("@/pages/EngineerCallsPage/EngineerCallsPage"));
 const PersonalCabinetPage = React.lazy(() => import("@/pages/PersonalCabinetPage/PersonalCabinetPage"));
+const CompletionsPage = React.lazy(() => import("@/pages/CompletionsPage/CompletionsPage"));
 
 /** --------------------------------------------------------------------------
  *  Компонент-сторож
@@ -180,6 +181,17 @@ export default function AppRouter() {
           <RequireAuth>
             <RequirePermission page="engineer-calls">
               <EngineerCallsPage />
+            </RequirePermission>
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/completions"
+        element={
+          <RequireAuth>
+            <RequirePermission page="defects">
+              <CompletionsPage />
             </RequirePermission>
           </RequireAuth>
         }

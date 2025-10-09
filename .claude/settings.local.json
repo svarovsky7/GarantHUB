@@ -54,7 +54,16 @@
       "Bash(timeout 20s npm run dev)",
       "Bash(findstr:*)",
       "Bash(timeout 15s npm run dev)",
-      "Bash(node scripts/generate-ai-context.mjs:*)"
+      "Bash(node scripts/generate-ai-context.mjs:*)",
+      "mcp__chrome-devtools__navigate_page",
+      "mcp__chrome-devtools__take_snapshot",
+      "mcp__chrome-devtools__click",
+      "mcp__chrome-devtools__wait_for",
+      "mcp__chrome-devtools__list_pages",
+      "mcp__chrome-devtools__list_network_requests",
+      "mcp__chrome-devtools__performance_start_trace",
+      "mcp__chrome-devtools__performance_analyze_insight",
+      "mcp__chrome-devtools__evaluate_script"
     ],
     "deny": [],
     "additionalDirectories": [

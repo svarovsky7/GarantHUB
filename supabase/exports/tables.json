@@ -3462,6 +3462,280 @@
     ],
     "sql": "CREATE TABLE IF NOT EXISTS public.claims (\n    id bigint(64) NOT NULL,\n    project_id integer(32),\n    claim_status_id integer(32),\n    claim_no text NOT NULL,\n    claimed_on date,\n    accepted_on date,\n    registered_on date,\n    resolved_on date,\n    engineer_id uuid,\n    description text,\n    created_by uuid,\n    created_at timestamp with time zone DEFAULT now(),\n    updated_by uuid,\n    updated_at timestamp with time zone DEFAULT now(),\n    case_uid_id integer(32),\n    pre_trial_claim boolean NOT NULL DEFAULT false,\n    owner text,\n    CONSTRAINT claims_case_uid_id_fkey FOREIGN KEY (case_uid_id) REFERENCES None.None(None),\n    CONSTRAINT claims_claim_status_id_fkey FOREIGN KEY (claim_status_id) REFERENCES None.None(None),\n    CONSTRAINT claims_created_by_fkey FOREIGN KEY (created_by) REFERENCES None.None(None),\n    CONSTRAINT claims_engineer_id_fkey FOREIGN KEY (engineer_id) REFERENCES None.None(None),\n    CONSTRAINT claims_pkey PRIMARY KEY (id),\n    CONSTRAINT claims_project_id_fkey FOREIGN KEY (project_id) REFERENCES None.None(None),\n    CONSTRAINT claims_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES None.None(None)\n);"
   },
+  "public.completion_defects": {
+    "schema": "public",
+    "name": "completion_defects",
+    "comment": "Связь между выполнениями и дефектами",
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "bigint",
+        "max_length": null,
+        "numeric_precision": 64,
+        "numeric_scale": 0,
+        "is_nullable": "NO",
+        "default": "nextval('completion_defects_id_seq'::regclass)",
+        "comment": null
+      },
+      {
+        "name": "completion_id",
+        "data_type": "bigint",
+        "max_length": null,
+        "numeric_precision": 64,
+        "numeric_scale": 0,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "defect_id",
+        "data_type": "bigint",
+        "max_length": null,
+        "numeric_precision": 64,
+        "numeric_scale": 0,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      {
+        "name": "2200_226992_1_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_226992_2_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_226992_3_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_226992_4_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "completion_defects_completion_id_defect_id_key",
+        "type": "UNIQUE",
+        "column": "completion_id",
+        "foreign_table_schema": "public",
+        "foreign_table": "completion_defects",
+        "foreign_column": "completion_id"
+      },
+      {
+        "name": "completion_defects_completion_id_defect_id_key",
+        "type": "UNIQUE",
+        "column": "defect_id",
+        "foreign_table_schema": "public",
+        "foreign_table": "completion_defects",
+        "foreign_column": "completion_id"
+      },
+      {
+        "name": "completion_defects_completion_id_fkey",
+        "type": "FOREIGN KEY",
+        "column": "completion_id",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "completion_defects_defect_id_fkey",
+        "type": "FOREIGN KEY",
+        "column": "defect_id",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "completion_defects_pkey",
+        "type": "PRIMARY KEY",
+        "column": "id",
+        "foreign_table_schema": "public",
+        "foreign_table": "completion_defects",
+        "foreign_column": "id"
+      }
+    ],
+    "sql": "-- Связь между выполнениями и дефектами\nCREATE TABLE IF NOT EXISTS public.completion_defects (\n    id bigint(64) NOT NULL DEFAULT nextval('completion_defects_id_seq'::regclass),\n    completion_id bigint(64) NOT NULL,\n    defect_id bigint(64) NOT NULL,\n    created_at timestamp with time zone NOT NULL DEFAULT now(),\n    CONSTRAINT completion_defects_completion_id_defect_id_key UNIQUE (completion_id),\n    CONSTRAINT completion_defects_completion_id_defect_id_key UNIQUE (defect_id),\n    CONSTRAINT completion_defects_completion_id_fkey FOREIGN KEY (completion_id) REFERENCES None.None(None),\n    CONSTRAINT completion_defects_defect_id_fkey FOREIGN KEY (defect_id) REFERENCES None.None(None),\n    CONSTRAINT completion_defects_pkey PRIMARY KEY (id)\n);\n\nCOMMENT ON TABLE public.completion_defects IS 'Связь между выполнениями и дефектами';"
+  },
+  "public.contractor_completions": {
+    "schema": "public",
+    "name": "contractor_completions",
+    "comment": "Выполнения работ по подрядчикам",
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "bigint",
+        "max_length": null,
+        "numeric_precision": 64,
+        "numeric_scale": 0,
+        "is_nullable": "NO",
+        "default": "nextval('contractor_completions_id_seq'::regclass)",
+        "comment": null
+      },
+      {
+        "name": "larix_number",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": "Уникальный номер из системы Larix"
+      },
+      {
+        "name": "contractor_id",
+        "data_type": "bigint",
+        "max_length": null,
+        "numeric_precision": 64,
+        "numeric_scale": 0,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": "Подрядчик, выполнявший работы"
+      },
+      {
+        "name": "project_id",
+        "data_type": "integer",
+        "max_length": null,
+        "numeric_precision": 32,
+        "numeric_scale": 0,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": "Проект, к которому относится выполнение"
+      },
+      {
+        "name": "created_by",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      {
+        "name": "2200_226964_1_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_226964_2_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_226964_6_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_226964_7_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "contractor_completions_contractor_id_fkey",
+        "type": "FOREIGN KEY",
+        "column": "contractor_id",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "contractor_completions_created_by_fkey",
+        "type": "FOREIGN KEY",
+        "column": "created_by",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "contractor_completions_larix_number_key",
+        "type": "UNIQUE",
+        "column": "larix_number",
+        "foreign_table_schema": "public",
+        "foreign_table": "contractor_completions",
+        "foreign_column": "larix_number"
+      },
+      {
+        "name": "contractor_completions_pkey",
+        "type": "PRIMARY KEY",
+        "column": "id",
+        "foreign_table_schema": "public",
+        "foreign_table": "contractor_completions",
+        "foreign_column": "id"
+      },
+      {
+        "name": "contractor_completions_project_id_fkey",
+        "type": "FOREIGN KEY",
+        "column": "project_id",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      }
+    ],
+    "sql": "-- Выполнения работ по подрядчикам\nCREATE TABLE IF NOT EXISTS public.contractor_completions (\n    id bigint(64) NOT NULL DEFAULT nextval('contractor_completions_id_seq'::regclass),\n    larix_number text NOT NULL,\n    contractor_id bigint(64),\n    project_id integer(32),\n    created_by uuid,\n    created_at timestamp with time zone NOT NULL DEFAULT now(),\n    updated_at timestamp with time zone NOT NULL DEFAULT now(),\n    CONSTRAINT contractor_completions_contractor_id_fkey FOREIGN KEY (contractor_id) REFERENCES None.None(None),\n    CONSTRAINT contractor_completions_created_by_fkey FOREIGN KEY (created_by) REFERENCES None.None(None),\n    CONSTRAINT contractor_completions_larix_number_key UNIQUE (larix_number),\n    CONSTRAINT contractor_completions_pkey PRIMARY KEY (id),\n    CONSTRAINT contractor_completions_project_id_fkey FOREIGN KEY (project_id) REFERENCES None.None(None)\n);\n\nCOMMENT ON TABLE public.contractor_completions IS 'Выполнения работ по подрядчикам';\nCOMMENT ON COLUMN public.contractor_completions.larix_number IS 'Уникальный номер из системы Larix';\nCOMMENT ON COLUMN public.contractor_completions.contractor_id IS 'Подрядчик, выполнявший работы';\nCOMMENT ON COLUMN public.contractor_completions.project_id IS 'Проект, к которому относится выполнение';"
+  },
   "public.contractors": {
     "schema": "public",
     "name": "contractors",
@@ -7576,152 +7850,6 @@
     ],
     "sql": "CREATE TABLE IF NOT EXISTS realtime.messages (\n    topic text NOT NULL,\n    extension text NOT NULL,\n    payload jsonb,\n    event text,\n    private boolean DEFAULT false,\n    updated_at timestamp without time zone NOT NULL DEFAULT now(),\n    inserted_at timestamp without time zone NOT NULL DEFAULT now(),\n    id uuid NOT NULL DEFAULT gen_random_uuid(),\n    CONSTRAINT messages_pkey PRIMARY KEY (id),\n    CONSTRAINT messages_pkey PRIMARY KEY (inserted_at)\n);"
   },
-  "realtime.messages_2025_10_05": {
-    "schema": "realtime",
-    "name": "messages_2025_10_05",
-    "comment": null,
-    "columns": [
-      {
-        "name": "topic",
-        "data_type": "text",
-        "max_length": null,
-        "numeric_precision": null,
-        "numeric_scale": null,
-        "is_nullable": "NO",
-        "default": null,
-        "comment": null
-      },
-      {
-        "name": "extension",
-        "data_type": "text",
-        "max_length": null,
-        "numeric_precision": null,
-        "numeric_scale": null,
-        "is_nullable": "NO",
-        "default": null,
-        "comment": null
-      },
-      {
-        "name": "payload",
-        "data_type": "jsonb",
-        "max_length": null,
-        "numeric_precision": null,
-        "numeric_scale": null,
-        "is_nullable": "YES",
-        "default": null,
-        "comment": null
-      },
-      {
-        "name": "event",
-        "data_type": "text",
-        "max_length": null,
-        "numeric_precision": null,
-        "numeric_scale": null,
-        "is_nullable": "YES",
-        "default": null,
-        "comment": null
-      },
-      {
-        "name": "private",
-        "data_type": "boolean",
-        "max_length": null,
-        "numeric_precision": null,
-        "numeric_scale": null,
-        "is_nullable": "YES",
-        "default": "false",
-        "comment": null
-      },
-      {
-        "name": "updated_at",
-        "data_type": "timestamp without time zone",
-        "max_length": null,
-        "numeric_precision": null,
-        "numeric_scale": null,
-        "is_nullable": "NO",
-        "default": "now()",
-        "comment": null
-      },
-      {
-        "name": "inserted_at",
-        "data_type": "timestamp without time zone",
-        "max_length": null,
-        "numeric_precision": null,
-        "numeric_scale": null,
-        "is_nullable": "NO",
-        "default": "now()",
-        "comment": null
-      },
-      {
-        "name": "id",
-        "data_type": "uuid",
-        "max_length": null,
-        "numeric_precision": null,
-        "numeric_scale": null,
-        "is_nullable": "NO",
-        "default": "gen_random_uuid()",
-        "comment": null
-      }
-    ],
-    "constraints": [
-      {
-        "name": "16599_218987_1_not_null",
-        "type": "CHECK",
-        "column": null,
-        "foreign_table_schema": null,
-        "foreign_table": null,
-        "foreign_column": null
-      },
-      {
-        "name": "16599_218987_2_not_null",
-        "type": "CHECK",
-        "column": null,
-        "foreign_table_schema": null,
-        "foreign_table": null,
-        "foreign_column": null
-      },
-      {
-        "name": "16599_218987_6_not_null",
-        "type": "CHECK",
-        "column": null,
-        "foreign_table_schema": null,
-        "foreign_table": null,
-        "foreign_column": null
-      },
-      {
-        "name": "16599_218987_7_not_null",
-        "type": "CHECK",
-        "column": null,
-        "foreign_table_schema": null,
-        "foreign_table": null,
-        "foreign_column": null
-      },
-      {
-        "name": "16599_218987_8_not_null",
-        "type": "CHECK",
-        "column": null,
-        "foreign_table_schema": null,
-        "foreign_table": null,
-        "foreign_column": null
-      },
-      {
-        "name": "messages_2025_10_05_pkey",
-        "type": "PRIMARY KEY",
-        "column": "id",
-        "foreign_table_schema": null,
-        "foreign_table": null,
-        "foreign_column": null
-      },
-      {
-        "name": "messages_2025_10_05_pkey",
-        "type": "PRIMARY KEY",
-        "column": "inserted_at",
-        "foreign_table_schema": null,
-        "foreign_table": null,
-        "foreign_column": null
-      }
-    ],
-    "sql": "CREATE TABLE IF NOT EXISTS realtime.messages_2025_10_05 (\n    topic text NOT NULL,\n    extension text NOT NULL,\n    payload jsonb,\n    event text,\n    private boolean DEFAULT false,\n    updated_at timestamp without time zone NOT NULL DEFAULT now(),\n    inserted_at timestamp without time zone NOT NULL DEFAULT now(),\n    id uuid NOT NULL DEFAULT gen_random_uuid(),\n    CONSTRAINT messages_2025_10_05_pkey PRIMARY KEY (id),\n    CONSTRAINT messages_2025_10_05_pkey PRIMARY KEY (inserted_at)\n);"
-  },
   "realtime.messages_2025_10_06": {
     "schema": "realtime",
     "name": "messages_2025_10_06",
@@ -8597,6 +8725,152 @@
       }
     ],
     "sql": "CREATE TABLE IF NOT EXISTS realtime.messages_2025_10_11 (\n    topic text NOT NULL,\n    extension text NOT NULL,\n    payload jsonb,\n    event text,\n    private boolean DEFAULT false,\n    updated_at timestamp without time zone NOT NULL DEFAULT now(),\n    inserted_at timestamp without time zone NOT NULL DEFAULT now(),\n    id uuid NOT NULL DEFAULT gen_random_uuid(),\n    CONSTRAINT messages_2025_10_11_pkey PRIMARY KEY (id),\n    CONSTRAINT messages_2025_10_11_pkey PRIMARY KEY (inserted_at)\n);"
+  },
+  "realtime.messages_2025_10_12": {
+    "schema": "realtime",
+    "name": "messages_2025_10_12",
+    "comment": null,
+    "columns": [
+      {
+        "name": "topic",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "extension",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "payload",
+        "data_type": "jsonb",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "event",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "private",
+        "data_type": "boolean",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": "false",
+        "comment": null
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp without time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "inserted_at",
+        "data_type": "timestamp without time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "gen_random_uuid()",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      {
+        "name": "16599_226928_1_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16599_226928_2_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16599_226928_6_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16599_226928_7_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16599_226928_8_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "messages_2025_10_12_pkey",
+        "type": "PRIMARY KEY",
+        "column": "id",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "messages_2025_10_12_pkey",
+        "type": "PRIMARY KEY",
+        "column": "inserted_at",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      }
+    ],
+    "sql": "CREATE TABLE IF NOT EXISTS realtime.messages_2025_10_12 (\n    topic text NOT NULL,\n    extension text NOT NULL,\n    payload jsonb,\n    event text,\n    private boolean DEFAULT false,\n    updated_at timestamp without time zone NOT NULL DEFAULT now(),\n    inserted_at timestamp without time zone NOT NULL DEFAULT now(),\n    id uuid NOT NULL DEFAULT gen_random_uuid(),\n    CONSTRAINT messages_2025_10_12_pkey PRIMARY KEY (id),\n    CONSTRAINT messages_2025_10_12_pkey PRIMARY KEY (inserted_at)\n);"
   },
   "realtime.schema_migrations": {
     "schema": "realtime",

@@ -837,6 +837,252 @@
       }
     ]
   },
+  "completion_defects": {
+    "comment": "Связь между выполнениями и дефектами",
+    "columns": [
+      {
+        "name": "id",
+        "type": "bigint",
+        "nullable": false,
+        "default": "nextval('completion_defects_id_seq'::regclass)"
+      },
+      {
+        "name": "completion_id",
+        "type": "bigint",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "defect_id",
+        "type": "bigint",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": false,
+        "default": "now()"
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "completion_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "defect_id",
+        "references": "null.null(null)"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "completion_defects_completion_id_defect_id_key",
+        "columns": [],
+        "unique": false,
+        "type": "btree"
+      },
+      {
+        "name": "idx_completion_defects_completion",
+        "columns": [],
+        "unique": false,
+        "type": "btree"
+      },
+      {
+        "name": "idx_completion_defects_defect",
+        "columns": [],
+        "unique": false,
+        "type": "btree"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "2200_226992_1_not_null",
+        "type": "CHECK",
+        "column": null
+      },
+      {
+        "name": "2200_226992_2_not_null",
+        "type": "CHECK",
+        "column": null
+      },
+      {
+        "name": "2200_226992_3_not_null",
+        "type": "CHECK",
+        "column": null
+      },
+      {
+        "name": "2200_226992_4_not_null",
+        "type": "CHECK",
+        "column": null
+      },
+      {
+        "name": "completion_defects_completion_id_defect_id_key",
+        "type": "UNIQUE",
+        "column": "completion_id"
+      },
+      {
+        "name": "completion_defects_completion_id_defect_id_key",
+        "type": "UNIQUE",
+        "column": "defect_id"
+      },
+      {
+        "name": "completion_defects_completion_id_fkey",
+        "type": "FOREIGN KEY",
+        "column": "completion_id"
+      },
+      {
+        "name": "completion_defects_defect_id_fkey",
+        "type": "FOREIGN KEY",
+        "column": "defect_id"
+      },
+      {
+        "name": "completion_defects_pkey",
+        "type": "PRIMARY KEY",
+        "column": "id"
+      }
+    ]
+  },
+  "contractor_completions": {
+    "comment": "Выполнения работ по подрядчикам",
+    "columns": [
+      {
+        "name": "id",
+        "type": "bigint",
+        "nullable": false,
+        "default": "nextval('contractor_completions_id_seq'::regclass)"
+      },
+      {
+        "name": "larix_number",
+        "type": "text",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "contractor_id",
+        "type": "bigint",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "project_id",
+        "type": "integer",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_by",
+        "type": "uuid",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": false,
+        "default": "now()"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "nullable": false,
+        "default": "now()"
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "contractor_id",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "created_by",
+        "references": "null.null(null)"
+      },
+      {
+        "column": "project_id",
+        "references": "null.null(null)"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "contractor_completions_larix_number_key",
+        "columns": [],
+        "unique": false,
+        "type": "btree"
+      },
+      {
+        "name": "idx_contractor_completions_contractor",
+        "columns": [],
+        "unique": false,
+        "type": "btree"
+      },
+      {
+        "name": "idx_contractor_completions_created_by",
+        "columns": [],
+        "unique": false,
+        "type": "btree"
+      },
+      {
+        "name": "idx_contractor_completions_project",
+        "columns": [],
+        "unique": false,
+        "type": "btree"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "2200_226964_1_not_null",
+        "type": "CHECK",
+        "column": null
+      },
+      {
+        "name": "2200_226964_2_not_null",
+        "type": "CHECK",
+        "column": null
+      },
+      {
+        "name": "2200_226964_6_not_null",
+        "type": "CHECK",
+        "column": null
+      },
+      {
+        "name": "2200_226964_7_not_null",
+        "type": "CHECK",
+        "column": null
+      },
+      {
+        "name": "contractor_completions_contractor_id_fkey",
+        "type": "FOREIGN KEY",
+        "column": "contractor_id"
+      },
+      {
+        "name": "contractor_completions_created_by_fkey",
+        "type": "FOREIGN KEY",
+        "column": "created_by"
+      },
+      {
+        "name": "contractor_completions_larix_number_key",
+        "type": "UNIQUE",
+        "column": "larix_number"
+      },
+      {
+        "name": "contractor_completions_pkey",
+        "type": "PRIMARY KEY",
+        "column": "id"
+      },
+      {
+        "name": "contractor_completions_project_id_fkey",
+        "type": "FOREIGN KEY",
+        "column": "project_id"
+      }
+    ]
+  },
   "contractors": {
     "comment": "",
     "columns": [

@@ -134,18 +134,18 @@ export default function CorrespondenceTable({
     {
       title: '',
       dataIndex: 'treeIcon',
-      width: 40,
+      width: 35,
       render: (_: any, record: any) => {
         if (!record.parent_id) {
           return (
               <Tooltip title="Главное письмо">
-                <MailOutlined style={{ color: '#1890ff', fontSize: 17 }} />
+                <MailOutlined style={{ color: '#1890ff', fontSize: 14 }} />
               </Tooltip>
           );
         }
         return (
             <Tooltip title="Связанное письмо">
-              <BranchesOutlined style={{ color: '#52c41a', fontSize: 16 }} />
+              <BranchesOutlined style={{ color: '#52c41a', fontSize: 14 }} />
             </Tooltip>
         );
       },
@@ -153,14 +153,14 @@ export default function CorrespondenceTable({
     {
       title: 'ID',
       dataIndex: 'id',
-      width: 80,
+      width: 60,
       sorter: (a, b) => Number(a.id) - Number(b.id),
       defaultSortOrder: 'descend' as const,
     },
     {
       title: 'Тип',
       dataIndex: 'type',
-      width: 120,
+      width: 100,
       sorter: (a, b) => a.type.localeCompare(b.type),
       render: (_: string, row: CorrespondenceLetter) => (
         <LetterDirectionSelect letterId={row.id} type={row.type} />
@@ -169,7 +169,7 @@ export default function CorrespondenceTable({
     {
       title: 'Номер',
       dataIndex: 'number',
-      width: 120,
+      width: 100,
       sorter: (a, b) => a.number.localeCompare(b.number),
       render: (num: string, record: any) =>
           <b style={!record.parent_id ? { fontWeight: 600 } : {}}>{num}</b>,
@@ -177,15 +177,16 @@ export default function CorrespondenceTable({
     {
       title: 'Дата',
       dataIndex: 'date',
-      width: 120,
+      width: 90,
       sorter: (a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf(),
       render: (v: string) => dayjs(v).format('DD.MM.YYYY'),
     },
     {
       title: 'Отправитель',
       dataIndex: 'sender',
-      width: 160,
+      width: 130,
       sorter: (a, b) => (a.sender || '').localeCompare(b.sender || ''),
+      ellipsis: true,
       render: (val: string, record: any) => (
         <span style={record.parent_id ? { color: '#888' } : {}}>{val}</span>
       ),
@@ -193,8 +194,9 @@ export default function CorrespondenceTable({
     {
       title: 'Получатель',
       dataIndex: 'receiver',
-      width: 160,
+      width: 130,
       sorter: (a, b) => (a.receiver || '').localeCompare(b.receiver || ''),
+      ellipsis: true,
       render: (val: string, record: any) => (
         <span style={record.parent_id ? { color: '#888' } : {}}>{val}</span>
       ),
@@ -202,41 +204,49 @@ export default function CorrespondenceTable({
     {
       title: 'Тема',
       dataIndex: 'subject',
-      width: 600,
+      width: 300,
       sorter: (a, b) => a.subject.localeCompare(b.subject),
-      render: (val: string, record: any) =>
-          <span style={record.parent_id ? { color: '#888' } : {}}>{val}</span>,
+      ellipsis: { showTitle: false },
+      render: (val: string, record: any) => (
+        <Tooltip title={val} placement="topLeft">
+          <span style={record.parent_id ? { color: '#888' } : {}}>{val}</span>
+        </Tooltip>
+      ),
     },
     {
       title: 'Проект',
       dataIndex: 'projectName',
-      width: 180,
+      width: 110,
       sorter: (a, b) => (a.projectName || '').localeCompare(b.projectName || ''),
+      ellipsis: true,
     },
     {
       title: 'Корпус',
       dataIndex: 'building',
-      width: 120,
+      width: 80,
       sorter: (a, b) => (a.building || '').localeCompare(b.building || ''),
+      ellipsis: true,
       render: (building: string) => building || '—',
     },
     {
       title: 'Объекты',
       dataIndex: 'unitNames',
-      width: 200,
+      width: 130,
       sorter: (a, b) => (a.unitNames || '').localeCompare(b.unitNames || ''),
+      ellipsis: true,
     },
     {
       title: 'Категория',
       dataIndex: 'letterTypeName',
-      width: 160,
+      width: 110,
       sorter: (a, b) =>
           (a.letterTypeName || '').localeCompare(b.letterTypeName || ''),
+      ellipsis: true,
     },
     {
       title: 'Статус',
       dataIndex: 'statusName',
-      width: 160,
+      width: 120,
       sorter: (a, b) => (a.statusName || '').localeCompare(b.statusName || ''),
       render: (_: any, row: any) => (
         <LetterStatusSelect
@@ -247,17 +257,18 @@ export default function CorrespondenceTable({
       ),
     },
     {
-      title: 'Ответственный',
+      title: 'Ответств.',
       dataIndex: 'responsibleName',
-      width: 160,
+      width: 100,
       sorter: (a, b) =>
           (a.responsibleName || '').localeCompare(b.responsibleName || ''),
+      ellipsis: true,
       render: (name: string) => name || '—',
     },
     {
       title: 'Добавлено',
       dataIndex: 'created_at',
-      width: 160,
+      width: 110,
       sorter: (a, b) =>
         (a.created_at ? dayjs(a.created_at).valueOf() : 0) -
         (b.created_at ? dayjs(b.created_at).valueOf() : 0),
@@ -266,25 +277,28 @@ export default function CorrespondenceTable({
     {
       title: 'Автор',
       dataIndex: 'createdByName',
-      width: 160,
+      width: 100,
       sorter: (a, b) => (a.createdByName || '').localeCompare(b.createdByName || ''),
+      ellipsis: true,
     },
     {
       title: 'Действия',
       key: 'actions',
-      width: 150,
+      width: 120,
+      fixed: 'right' as const,
       render: (_: any, record: CorrespondenceLetter) => (
-          <Space size="middle">
+          <Space size={4}>
             {onView && (
               <Tooltip title="Просмотр">
-                <Button type="text" icon={<EyeOutlined />} onClick={() => onView(record.id)} />
+                <Button size="small" type="text" icon={<EyeOutlined />} onClick={() => onView(record.id)} />
               </Tooltip>
             )}
-            <Button type="text" icon={<PlusOutlined />} onClick={() => onAddChild(record)} />
+            <Button size="small" type="text" icon={<PlusOutlined />} onClick={() => onAddChild(record)} />
             {/* Только для связанных писем — показать кнопку "исключить" */}
             {record.parent_id && (
                 <Tooltip title="Исключить из связи">
                   <Button
+                      size="small"
                       type="text"
                       icon={
                         <LinkOutlined
@@ -300,12 +314,12 @@ export default function CorrespondenceTable({
                 </Tooltip>
             )}
             <Popconfirm
-                title="Удалить письмо?"
+                title="Удалить?"
                 okText="Да"
                 cancelText="Нет"
                 onConfirm={() => onDelete(record.id)}
             >
-              <Button type="text" danger icon={<DeleteOutlined />} />
+              <Button size="small" type="text" danger icon={<DeleteOutlined />} />
             </Popconfirm>
           </Space>
       ),
@@ -332,10 +346,10 @@ export default function CorrespondenceTable({
             showSizeChanger: true,
             onChange: (_p, size) => size && setPageSize(size),
           }}
-          size="middle"
+          size="small"
           expandable={{
             expandRowByClick: true,
-            indentSize: 24,
+            indentSize: 20,
             expandedRowKeys,
             onExpand: (expanded, record) => {
               setExpandedRowKeys((prev) => {
@@ -350,7 +364,7 @@ export default function CorrespondenceTable({
             },
           }}
           rowClassName={rowClassName}
-          style={{ background: '#fff' }}
+          style={{ background: '#fff', fontSize: '12px' }}
       />
   );
 }

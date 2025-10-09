@@ -25,6 +25,9 @@ npm run test            # Run tests (custom test file - no test framework curren
 npm run clean-cache     # Clear node_modules cache
 npm run audit:fix       # Fix npm vulnerabilities
 npm run analyze         # Analyze bundle size
+
+# Database AI Context
+npm run ai-context      # Regenerate AI-optimized database documentation
 ```
 
 ## Architecture: Feature-Sliced Design (FSD)
@@ -71,8 +74,8 @@ src/
 
 ### Routing & Permissions
 - **Router**: React Router v6 with lazy loading in `src/app/Router.tsx`
-- **Auth Guard**: `RequireAuth` component checks authentication
-- **Permissions**: `RequirePermission` component for role-based access
+- **Auth Guard**: `RequireAuth` component defined in `src/app/Router.tsx`
+- **Permissions**: `RequirePermission` component in `src/shared/components/RequirePermission.tsx` for role-based access
 - **Roles**: ADMIN, ENGINEER, USER with granular permissions
 
 ## Database Schema
@@ -273,8 +276,20 @@ const { data } = useQuery({
   enabled: !!projectId
 });
 
-// Use summary views for performance
-// Example: claims_summary instead of claims with joins
+// IMPORTANT: Use optimized summary views for performance
+// claims_summary: Pre-aggregated claims with units, defects, attachments count
+// defects_summary: Pre-aggregated defects with claims, units, projects
+// These views avoid expensive JOINs and significantly improve query performance
+const { data } = useQuery({
+  queryKey: ['claims', projectId],
+  queryFn: async () => {
+    const { data } = await supabase
+      .from('claims_summary')  // Use summary view instead of claims
+      .select('*')
+      .eq('project_id', projectId);
+    return data;
+  }
+});
 ```
 
 ## Environment Configuration
@@ -333,7 +348,7 @@ const mutation = useMutation({
 
 ### Authentication & Authorization
 - Auth store: `src/shared/store/authStore.ts`
-- Auth guard: `src/shared/components/RequireAuth.tsx`
+- Auth guard: `RequireAuth` component in `src/app/Router.tsx`
 - Permission guard: `src/shared/components/RequirePermission.tsx`
 
 ### API & Data Fetching
@@ -406,6 +421,7 @@ When working with the database via MCP tools:
 
 ## Recent Additions
 
+- **Contractor Completions**: New completion tracking system for defects (`src/pages/CompletionsPage/`, `src/entities/contractorCompletion/`, `src/features/completion/`)
 - **Engineer Calls**: Service call scheduling system with calendar views
 - **Russian Holidays**: Holiday calculation for scheduling (`src/shared/utils/russianHolidays.ts`)
 - **Court Cases Stats**: Statistics widget (`src/widgets/CourtCasesStatsBlock.tsx`)

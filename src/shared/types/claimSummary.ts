@@ -41,6 +41,9 @@ export interface ClaimSummary {
   defect_ids: number[];
   unit_names: string[];
   building_names: string[];
+
+  // ✅ OPTIMIZATION: parent_id теперь в VIEW (устраняет 6 запросов к claim_links)
+  parent_id: number | null;
 }
 
 /**

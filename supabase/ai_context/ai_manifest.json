@@ -1,13 +1,13 @@
 {
-  "generated_at": "2025-10-08T20:01:26.526Z",
+  "generated_at": "2025-10-09T19:37:17.624Z",
   "generator": "generate-ai-context.mjs",
   "source_files": {
-    "tables.json": "fc703b2dd8bd331e0086823089404428977a9fefc0a5f72d38a455075e422220",
-    "indexes.json": "9baaf06d2f4958bdf129848db3247f27ec9902a27fcf1f94f7911036a59e9ad3",
-    "triggers.json": "442bbdfbf193c0ffeebc1eca96a6155c3334cd23344f762c32f8389d6530b8a9",
-    "functions.json": "00550e5c670c929f7e834a432928c82a62862ae1a6924c4d614f5d0ec8078d78",
+    "tables.json": "d4a573a372d7d10f23e4afa0545e6af3993f91091cd6e5ecee30f26d72d43ffb",
+    "indexes.json": "a9864876a4d226ae2523dcc398722a5c44b5b1e5998c5d1bed61b6c24f391e8d",
+    "triggers.json": "0e5e74604e02656bea543f45bf19b25c63358e3450c9f72e2c9cca0892a23164",
+    "functions.json": "1e6d68b0c07c112c28c516e4e64175814d96477e0e745275ef2855cc7fa36213",
     "enums.json": "c60ace38277b355d57ac2dc446d75df5011382315aedd9d541bb3a0279dafb58",
-    "prod.sql": "f65581290e5e4e781a6c635b4aaef19c10451805808462630309056819a37e61"
+    "prod.sql": "2f870a47096b7d91451707fe6d1b3ffeb462de9e1f2c62c542a8f2e7e9f6586e"
   },
   "files": [
     "ai_manifest.json",

@@ -2,7 +2,7 @@
 export type { NewDefect } from './model/types';
 
 // Query hooks - optimized summary view
-export { useDefectsSummary } from './model/useDefects';
+export { useDefectsSummary, useDefectsSummaryPaginated } from './model/useDefects';
 
 // Query hooks - individual defects
 export {

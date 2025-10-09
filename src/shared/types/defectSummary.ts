@@ -44,6 +44,7 @@ export interface DefectSummary {
   project_ids: number[];
   project_names: string[];
   has_pretrial_claim: boolean;
+  has_completion: boolean;
 }
 
 /**

@@ -20,9 +20,9 @@ export interface ExportClaimsButtonProps {
 
 export default function ExportClaimsButton({ claims, useAllData = false }: ExportClaimsButtonProps) {
   const [loading, setLoading] = React.useState(false);
-  
-  // Хуки для получения всех данных, если необходимо
-  const allClaimsQuery = useClaimsAllLegacy();
+
+  // ✅ ОПТИМИЗАЦИЯ: Загружаем все претензии ТОЛЬКО когда useAllData = true
+  const allClaimsQuery = useClaimsAllLegacy(useAllData);
   const { data: users = [] } = useUsers();
   const { data: projects = [] } = useVisibleProjects();
   const { data: statuses = [] } = useClaimStatuses();

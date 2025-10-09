@@ -38,6 +38,11 @@
         "C:/Users/svarovsky/WebstormProjects/GarantHUB"
       ]
     },
+    "chrome-devtools": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "chrome-devtools-mcp@latest"]
+    },
     "sequential-thinking": {
       "type": "stdio",
       "command": "npx",

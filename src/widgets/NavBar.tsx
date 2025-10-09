@@ -29,6 +29,7 @@ const NavBar: React.FC = () => {
     perm?.pages.includes('structure')       && { key: 'structure',      label: 'Структура проекта', onClick: () => navigate('/structure') },
     perm?.pages.includes('claims')          && { key: 'claims',         label: 'Претензии', onClick: () => navigate('/claims') },
     perm?.pages.includes('defects')         && { key: 'defects',        label: 'Дефекты', onClick: () => navigate('/defects') },
+    perm?.pages.includes('defects')         && { key: 'completions',    label: 'Выполнения', onClick: () => navigate('/completions') },
     perm?.pages.includes('court-cases')     && { key: 'court-cases',    label: 'Судебные дела', onClick: () => navigate('/court-cases') },
     perm?.pages.includes('correspondence')  && { key: 'correspondence', label: 'Письма', onClick: () => navigate('/correspondence') },
     { key: 'engineer-calls', label: 'Календарь вызовов', onClick: () => navigate('/engineer-calls') },
@@ -126,7 +127,7 @@ const NavBar: React.FC = () => {
                   type="link"
                   icon={<LogoutOutlined />}
                   onClick={logout}
-                  style={{ color: '#fff' }}
+                  style={{ color: '#fff', marginRight: 16 }}
               >
                 Выйти
               </Button>

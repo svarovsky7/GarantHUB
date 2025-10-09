@@ -168,6 +168,18 @@
     ],
     "is_trigger_function": true
   },
+  "update_contractor_completions_updated_at()": {
+    "name": "update_contractor_completions_updated_at",
+    "arguments": "",
+    "purpose": "No description",
+    "signature": "update_contractor_completions_updated_at()",
+    "related_tables": [],
+    "side_effects": [
+      "UPDATE",
+      "TRIGGER"
+    ],
+    "is_trigger_function": true
+  },
   "update_counter(p_entity_type character varying, p_entity_id bigint, p_counter_type character varying, p_delta integer)": {
     "name": "update_counter",
     "arguments": "p_entity_type character varying, p_entity_id bigint, p_counter_type character varying, p_delta integer",

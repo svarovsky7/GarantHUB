@@ -1,5 +1,5 @@
 -- Database Schema Export
--- Generated: 2025-10-08T22:42:38.140708
+-- Generated: 2025-10-09T22:37:12.859402
 -- Database: postgres
 -- Host: aws-0-eu-central-1.pooler.supabase.com
 
@@ -403,6 +403,42 @@ CREATE TABLE IF NOT EXISTS public.claims (
     CONSTRAINT claims_project_id_fkey FOREIGN KEY (project_id) REFERENCES None.None(None),
     CONSTRAINT claims_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES None.None(None)
 );
+
+-- Связь между выполнениями и дефектами
+CREATE TABLE IF NOT EXISTS public.completion_defects (
+    id bigint(64) NOT NULL DEFAULT nextval('completion_defects_id_seq'::regclass),
+    completion_id bigint(64) NOT NULL,
+    defect_id bigint(64) NOT NULL,
+    created_at timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT completion_defects_completion_id_defect_id_key UNIQUE (completion_id),
+    CONSTRAINT completion_defects_completion_id_defect_id_key UNIQUE (defect_id),
+    CONSTRAINT completion_defects_completion_id_fkey FOREIGN KEY (completion_id) REFERENCES None.None(None),
+    CONSTRAINT completion_defects_defect_id_fkey FOREIGN KEY (defect_id) REFERENCES None.None(None),
+    CONSTRAINT completion_defects_pkey PRIMARY KEY (id)
+);
+
+COMMENT ON TABLE public.completion_defects IS 'Связь между выполнениями и дефектами';
+
+-- Выполнения работ по подрядчикам
+CREATE TABLE IF NOT EXISTS public.contractor_completions (
+    id bigint(64) NOT NULL DEFAULT nextval('contractor_completions_id_seq'::regclass),
+    larix_number text NOT NULL,
+    contractor_id bigint(64),
+    project_id integer(32),
+    created_by uuid,
+    created_at timestamp with time zone NOT NULL DEFAULT now(),
+    updated_at timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT contractor_completions_contractor_id_fkey FOREIGN KEY (contractor_id) REFERENCES None.None(None),
+    CONSTRAINT contractor_completions_created_by_fkey FOREIGN KEY (created_by) REFERENCES None.None(None),
+    CONSTRAINT contractor_completions_larix_number_key UNIQUE (larix_number),
+    CONSTRAINT contractor_completions_pkey PRIMARY KEY (id),
+    CONSTRAINT contractor_completions_project_id_fkey FOREIGN KEY (project_id) REFERENCES None.None(None)
+);
+
+COMMENT ON TABLE public.contractor_completions IS 'Выполнения работ по подрядчикам';
+COMMENT ON COLUMN public.contractor_completions.larix_number IS 'Уникальный номер из системы Larix';
+COMMENT ON COLUMN public.contractor_completions.contractor_id IS 'Подрядчик, выполнявший работы';
+COMMENT ON COLUMN public.contractor_completions.project_id IS 'Проект, к которому относится выполнение';
 
 CREATE TABLE IF NOT EXISTS public.contractors (
     id integer(32) NOT NULL DEFAULT nextval('contractors_id_seq'::regclass),
@@ -841,19 +877,6 @@ CREATE TABLE IF NOT EXISTS realtime.messages (
     CONSTRAINT messages_pkey PRIMARY KEY (inserted_at)
 );
 
-CREATE TABLE IF NOT EXISTS realtime.messages_2025_10_05 (
-    topic text NOT NULL,
-    extension text NOT NULL,
-    payload jsonb,
-    event text,
-    private boolean DEFAULT false,
-    updated_at timestamp without time zone NOT NULL DEFAULT now(),
-    inserted_at timestamp without time zone NOT NULL DEFAULT now(),
-    id uuid NOT NULL DEFAULT gen_random_uuid(),
-    CONSTRAINT messages_2025_10_05_pkey PRIMARY KEY (id),
-    CONSTRAINT messages_2025_10_05_pkey PRIMARY KEY (inserted_at)
-);
-
 CREATE TABLE IF NOT EXISTS realtime.messages_2025_10_06 (
     topic text NOT NULL,
     extension text NOT NULL,
@@ -930,6 +953,19 @@ CREATE TABLE IF NOT EXISTS realtime.messages_2025_10_11 (
     id uuid NOT NULL DEFAULT gen_random_uuid(),
     CONSTRAINT messages_2025_10_11_pkey PRIMARY KEY (id),
     CONSTRAINT messages_2025_10_11_pkey PRIMARY KEY (inserted_at)
+);
+
+CREATE TABLE IF NOT EXISTS realtime.messages_2025_10_12 (
+    topic text NOT NULL,
+    extension text NOT NULL,
+    payload jsonb,
+    event text,
+    private boolean DEFAULT false,
+    updated_at timestamp without time zone NOT NULL DEFAULT now(),
+    inserted_at timestamp without time zone NOT NULL DEFAULT now(),
+    id uuid NOT NULL DEFAULT gen_random_uuid(),
+    CONSTRAINT messages_2025_10_12_pkey PRIMARY KEY (id),
+    CONSTRAINT messages_2025_10_12_pkey PRIMARY KEY (inserted_at)
 );
 
 -- Auth: Manages updates to the auth system.
@@ -1168,7 +1204,11 @@ CREATE OR REPLACE VIEW public.claims_summary AS
     COALESCE(( SELECT array_agg(DISTINCT u.building ORDER BY u.building) AS array_agg
            FROM (claim_units cu4
              JOIN units u ON ((u.id = cu4.unit_id)))
-          WHERE ((cu4.claim_id = c.id) AND (u.building IS NOT NULL))), '{}'::text[]) AS building_names
+          WHERE ((cu4.claim_id = c.id) AND (u.building IS NOT NULL))), '{}'::text[]) AS building_names,
+    ( SELECT cl.parent_id
+           FROM claim_links cl
+          WHERE (cl.child_id = c.id)
+         LIMIT 1) AS parent_id
    FROM (((((claims c
      LEFT JOIN projects p ON ((c.project_id = p.id)))
      LEFT JOIN statuses s ON (((c.claim_status_id = s.id) AND (s.entity = 'claim'::text))))
@@ -1455,7 +1495,7 @@ AS '$libdir/pgcrypto', $function$pg_decrypt_iv$function$
 
 ;
 
-CREATE OR REPLACE FUNCTION extensions.digest(bytea, text)
+CREATE OR REPLACE FUNCTION extensions.digest(text, text)
  RETURNS bytea
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
@@ -1463,7 +1503,7 @@ AS '$libdir/pgcrypto', $function$pg_digest$function$
 
 ;
 
-CREATE OR REPLACE FUNCTION extensions.digest(text, text)
+CREATE OR REPLACE FUNCTION extensions.digest(bytea, text)
  RETURNS bytea
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
@@ -1503,19 +1543,19 @@ AS '$libdir/pgcrypto', $function$pg_random_uuid$function$
 
 ;
 
-CREATE OR REPLACE FUNCTION extensions.gen_salt(text, integer)
- RETURNS text
- LANGUAGE c
- PARALLEL SAFE STRICT
-AS '$libdir/pgcrypto', $function$pg_gen_salt_rounds$function$
-
-;
-
 CREATE OR REPLACE FUNCTION extensions.gen_salt(text)
  RETURNS text
  LANGUAGE c
  PARALLEL SAFE STRICT
 AS '$libdir/pgcrypto', $function$pg_gen_salt$function$
+
+;
+
+CREATE OR REPLACE FUNCTION extensions.gen_salt(text, integer)
+ RETURNS text
+ LANGUAGE c
+ PARALLEL SAFE STRICT
+AS '$libdir/pgcrypto', $function$pg_gen_salt_rounds$function$
 
 ;
 
@@ -1659,7 +1699,7 @@ $function$
 
 ;
 
-CREATE OR REPLACE FUNCTION extensions.hmac(text, text, text)
+CREATE OR REPLACE FUNCTION extensions.hmac(bytea, bytea, text)
  RETURNS bytea
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
@@ -1667,7 +1707,7 @@ AS '$libdir/pgcrypto', $function$pg_hmac$function$
 
 ;
 
-CREATE OR REPLACE FUNCTION extensions.hmac(bytea, bytea, text)
+CREATE OR REPLACE FUNCTION extensions.hmac(text, text, text)
  RETURNS bytea
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
@@ -1715,7 +1755,7 @@ AS '$libdir/pgcrypto', $function$pgp_key_id_w$function$
 
 ;
 
-CREATE OR REPLACE FUNCTION extensions.pgp_pub_decrypt(bytea, bytea, text, text)
+CREATE OR REPLACE FUNCTION extensions.pgp_pub_decrypt(bytea, bytea, text)
  RETURNS text
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
@@ -1723,7 +1763,7 @@ AS '$libdir/pgcrypto', $function$pgp_pub_decrypt_text$function$
 
 ;
 
-CREATE OR REPLACE FUNCTION extensions.pgp_pub_decrypt(bytea, bytea, text)
+CREATE OR REPLACE FUNCTION extensions.pgp_pub_decrypt(bytea, bytea, text, text)
  RETURNS text
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
@@ -1779,7 +1819,7 @@ AS '$libdir/pgcrypto', $function$pgp_pub_encrypt_text$function$
 
 ;
 
-CREATE OR REPLACE FUNCTION extensions.pgp_pub_encrypt_bytea(bytea, bytea)
+CREATE OR REPLACE FUNCTION extensions.pgp_pub_encrypt_bytea(bytea, bytea, text)
  RETURNS bytea
  LANGUAGE c
  PARALLEL SAFE STRICT
@@ -1787,7 +1827,7 @@ AS '$libdir/pgcrypto', $function$pgp_pub_encrypt_bytea$function$
 
 ;
 
-CREATE OR REPLACE FUNCTION extensions.pgp_pub_encrypt_bytea(bytea, bytea, text)
+CREATE OR REPLACE FUNCTION extensions.pgp_pub_encrypt_bytea(bytea, bytea)
  RETURNS bytea
  LANGUAGE c
  PARALLEL SAFE STRICT
@@ -1811,14 +1851,6 @@ AS '$libdir/pgcrypto', $function$pgp_sym_decrypt_text$function$
 
 ;
 
-CREATE OR REPLACE FUNCTION extensions.pgp_sym_decrypt_bytea(bytea, text)
- RETURNS bytea
- LANGUAGE c
- IMMUTABLE PARALLEL SAFE STRICT
-AS '$libdir/pgcrypto', $function$pgp_sym_decrypt_bytea$function$
-
-;
-
 CREATE OR REPLACE FUNCTION extensions.pgp_sym_decrypt_bytea(bytea, text, text)
  RETURNS bytea
  LANGUAGE c
@@ -1827,7 +1859,15 @@ AS '$libdir/pgcrypto', $function$pgp_sym_decrypt_bytea$function$
 
 ;
 
-CREATE OR REPLACE FUNCTION extensions.pgp_sym_encrypt(text, text, text)
+CREATE OR REPLACE FUNCTION extensions.pgp_sym_decrypt_bytea(bytea, text)
+ RETURNS bytea
+ LANGUAGE c
+ IMMUTABLE PARALLEL SAFE STRICT
+AS '$libdir/pgcrypto', $function$pgp_sym_decrypt_bytea$function$
+
+;
+
+CREATE OR REPLACE FUNCTION extensions.pgp_sym_encrypt(text, text)
  RETURNS bytea
  LANGUAGE c
  PARALLEL SAFE STRICT
@@ -1835,7 +1875,7 @@ AS '$libdir/pgcrypto', $function$pgp_sym_encrypt_text$function$
 
 ;
 
-CREATE OR REPLACE FUNCTION extensions.pgp_sym_encrypt(text, text)
+CREATE OR REPLACE FUNCTION extensions.pgp_sym_encrypt(text, text, text)
  RETURNS bytea
  LANGUAGE c
  PARALLEL SAFE STRICT
@@ -2790,6 +2830,18 @@ begin
 
   return new;
 end;
+$function$
+
+;
+
+CREATE OR REPLACE FUNCTION public.update_contractor_completions_updated_at()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
 $function$
 
 ;
@@ -4505,6 +4557,9 @@ $function$
 CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION handle_new_user()
 ;
 
+CREATE TRIGGER trigger_update_contractor_completions_updated_at BEFORE UPDATE ON public.contractor_completions FOR EACH ROW EXECUTE FUNCTION update_contractor_completions_updated_at()
+;
+
 CREATE TRIGGER trigger_update_court_case_total_claim_amount AFTER INSERT OR DELETE OR UPDATE ON public.court_case_claims FOR EACH ROW EXECUTE FUNCTION update_court_case_total_claim_amount()
 ;
 
@@ -4777,6 +4832,27 @@ CREATE INDEX idx_claims_registered_on ON public.claims USING btree (registered_o
 ;
 
 CREATE INDEX idx_claims_status_date ON public.claims USING btree (claim_status_id, created_at DESC) WHERE (claim_status_id IS NOT NULL)
+;
+
+CREATE UNIQUE INDEX completion_defects_completion_id_defect_id_key ON public.completion_defects USING btree (completion_id, defect_id)
+;
+
+CREATE INDEX idx_completion_defects_completion ON public.completion_defects USING btree (completion_id)
+;
+
+CREATE INDEX idx_completion_defects_defect ON public.completion_defects USING btree (defect_id)
+;
+
+CREATE UNIQUE INDEX contractor_completions_larix_number_key ON public.contractor_completions USING btree (larix_number)
+;
+
+CREATE INDEX idx_contractor_completions_contractor ON public.contractor_completions USING btree (contractor_id)
+;
+
+CREATE INDEX idx_contractor_completions_created_by ON public.contractor_completions USING btree (created_by)
+;
+
+CREATE INDEX idx_contractor_completions_project ON public.contractor_completions USING btree (project_id)
 ;
 
 CREATE INDEX idx_court_case_claim_links_case ON public.court_case_claim_links USING btree (case_id)
@@ -5058,9 +5134,6 @@ CREATE INDEX idx_units_project_floor ON public.units USING btree (project_id, fl
 CREATE INDEX messages_inserted_at_topic_index ON ONLY realtime.messages USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))
 ;
 
-CREATE INDEX messages_2025_10_05_inserted_at_topic_idx ON realtime.messages_2025_10_05 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))
-;
-
 CREATE INDEX messages_2025_10_06_inserted_at_topic_idx ON realtime.messages_2025_10_06 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))
 ;
 
@@ -5077,6 +5150,9 @@ CREATE INDEX messages_2025_10_10_inserted_at_topic_idx ON realtime.messages_2025
 ;
 
 CREATE INDEX messages_2025_10_11_inserted_at_topic_idx ON realtime.messages_2025_10_11 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))
+;
+
+CREATE INDEX messages_2025_10_12_inserted_at_topic_idx ON realtime.messages_2025_10_12 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))
 ;
 
 CREATE INDEX ix_realtime_subscription_entity ON realtime.subscription USING btree (entity)

@@ -6,13 +6,127 @@ import type { DefectRecord } from '@/shared/types/defect';
 import type { DefectWithNames } from '@/shared/types/defectWithNames';
 import type { DefectWithFiles } from '@/shared/types/defectWithFiles';
 import type { DefectSummary, DefectSummaryWithDayjs } from '@/shared/types/defectSummary';
+import type { DefectFilters } from '@/shared/types/defectFilters';
 import { mapDefectSummary } from '../lib/defectHelpers';
 
 const TABLE = 'defects';
 const SUMMARY_TABLE = 'defects_summary';
 
 /**
+ * 🚀 МАКСИМАЛЬНО ОПТИМИЗИРОВАННЫЙ хук с серверной пагинацией И фильтрацией
+ *
+ * УЛУЧШЕНИЯ v2:
+ * - Загружает только текущую страницу (50-100 записей вместо 6000+)
+ * - Получает точный count для пагинации
+ * - **СЕРВЕРНАЯ ФИЛЬТРАЦИЯ**: Фильтры применяются на уровне SQL (работают по всей БД!)
+ * - Устраняет водопадную загрузку данных
+ *
+ * @param page - номер страницы (начиная с 1)
+ * @param pageSize - размер страницы (по умолчанию 50)
+ * @param filters - фильтры для серверной фильтрации
+ */
+export function useDefectsSummaryPaginated(page = 1, pageSize = 50, filters?: DefectFilters) {
+  return useQuery<{ data: DefectSummaryWithDayjs[]; total: number }>({
+    queryKey: [SUMMARY_TABLE, 'paginated', page, pageSize, filters],
+    queryFn: async () => {
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+
+      let query = supabase
+        .from(SUMMARY_TABLE)
+        .select('*', { count: 'exact' })
+        .order('id', { ascending: false });
+
+      // 🚀 Применяем серверные фильтры
+      if (filters) {
+        // ID фильтры
+        if (filters.id && filters.id.length > 0) {
+          query = query.in('id', filters.id);
+        }
+        if (filters.projectId && filters.projectId.length > 0) {
+          query = query.in('project_id', filters.projectId);
+        }
+        if (filters.typeId && filters.typeId.length > 0) {
+          query = query.in('type_id', filters.typeId);
+        }
+        if (filters.statusId && filters.statusId.length > 0) {
+          query = query.in('status_id', filters.statusId);
+        }
+        if (filters.units && filters.units.length > 0) {
+          query = query.overlaps('unit_ids', filters.units);
+        }
+        if (filters.claimId && filters.claimId.length > 0) {
+          query = query.overlaps('claim_ids', filters.claimId);
+        }
+
+        // Текстовые фильтры
+        if (filters.author) {
+          query = query.eq('created_by', filters.author);
+        }
+        if (filters.engineer) {
+          query = query.eq('engineer_id', filters.engineer);
+        }
+        if (filters.building && filters.building.length > 0) {
+          query = query.overlaps('building_names', filters.building);
+        }
+        if (filters.fixBy && filters.fixBy.length > 0) {
+          // fixBy может быть бригадой или подрядчиком
+          query = query.or(`brigade_id.in.(${filters.fixBy.join(',')}),contractor_id.in.(${filters.fixBy.join(',')})`);
+        }
+
+        // Период получения
+        if (filters.period && filters.period.length === 2) {
+          const [start, end] = filters.period;
+          if (start) query = query.gte('received_at', start.format('YYYY-MM-DD'));
+          if (end) query = query.lte('received_at', end.format('YYYY-MM-DD'));
+        }
+
+        // Период создания
+        if (filters.createdPeriod && filters.createdPeriod.length === 2) {
+          const [start, end] = filters.createdPeriod;
+          if (start) query = query.gte('created_at', start.format('YYYY-MM-DD'));
+          if (end) query = query.lte('created_at', end.format('YYYY-MM-DD'));
+        }
+
+        // Период устранения
+        if (filters.fixedPeriod && filters.fixedPeriod.length === 2) {
+          const [start, end] = filters.fixedPeriod;
+          if (start) query = query.gte('fixed_at', start.format('YYYY-MM-DD'));
+          if (end) query = query.lte('fixed_at', end.format('YYYY-MM-DD'));
+        }
+
+        // Скрыть закрытые
+        if (filters.hideClosed) {
+          // Предполагаем, что закрытые дефекты имеют статус с "ЗАКРЫ" в названии
+          query = query.not('status_name', 'ilike', '%ЗАКРЫ%');
+        }
+
+        // Фильтр по наличию файлов
+        if (filters.hasFiles === 'with') {
+          query = query.gt('attachments_count', 0);
+        } else if (filters.hasFiles === 'without') {
+          query = query.eq('attachments_count', 0);
+        }
+      }
+
+      query = query.range(from, to);
+
+      const { data: rows, error, count } = await query;
+
+      if (error) throw error;
+
+      return {
+        data: (rows ?? []).map((r: DefectSummary) => mapDefectSummary(r)),
+        total: count ?? 0,
+      };
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
+/**
  * Хук получения списка дефектов с использованием представления defects_summary (оптимизированный).
+ * @deprecated Используйте useDefectsSummaryPaginated для лучшей производительности
  */
 export function useDefectsSummary() {
   return useQuery<DefectSummaryWithDayjs[]>({

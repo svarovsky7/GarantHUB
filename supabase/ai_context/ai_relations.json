@@ -1,5 +1,5 @@
 {
-  "total": 73,
+  "total": 78,
   "relations": [
     {
       "from_table": "attachments",
@@ -112,6 +112,41 @@
       "to_table": "profiles",
       "to_column": "id",
       "constraint_name": "claims_updated_by_fkey"
+    },
+    {
+      "from_table": "completion_defects",
+      "from_column": "completion_id",
+      "to_table": "completions",
+      "to_column": "id",
+      "constraint_name": "completion_defects_completion_id_fkey"
+    },
+    {
+      "from_table": "completion_defects",
+      "from_column": "defect_id",
+      "to_table": "defects",
+      "to_column": "id",
+      "constraint_name": "completion_defects_defect_id_fkey"
+    },
+    {
+      "from_table": "contractor_completions",
+      "from_column": "contractor_id",
+      "to_table": "contractors",
+      "to_column": "id",
+      "constraint_name": "contractor_completions_contractor_id_fkey"
+    },
+    {
+      "from_table": "contractor_completions",
+      "from_column": "created_by",
+      "to_table": "profiles",
+      "to_column": "id",
+      "constraint_name": "contractor_completions_created_by_fkey"
+    },
+    {
+      "from_table": "contractor_completions",
+      "from_column": "project_id",
+      "to_table": "projects",
+      "to_column": "id",
+      "constraint_name": "contractor_completions_project_id_fkey"
     },
     {
       "from_table": "court_case_attachments",

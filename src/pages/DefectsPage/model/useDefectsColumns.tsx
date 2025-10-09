@@ -51,16 +51,16 @@ export function useDefectsColumns({
   const baseColumns = useMemo(() => {
     const cols = {
       id: {
-        title: 'ID дефекта',
+        title: 'ID',
         dataIndex: 'id',
-        width: 80,
+        width: 60,
         sorter: (a: DefectWithInfo, b: DefectWithInfo) => a.id - b.id,
         defaultSortOrder: 'descend' as const,
       },
       claims: {
         title: 'ID претензии',
         dataIndex: 'claimIds',
-        width: 120,
+        width: 85,
         sorter: (a: DefectWithInfo, b: DefectWithInfo) => {
           const aIds = (a.claimIds || []).join(',');
           const bIds = (b.claimIds || []).join(',');
@@ -69,41 +69,38 @@ export function useDefectsColumns({
         render: (v: number[]) => v.join(', '),
       },
       days: {
-        title: (
-          <span>
-            Прошло дней
-            <br />с даты получения
-          </span>
-        ),
+        title: 'Дней',
         dataIndex: 'days',
-        width: 120,
+        width: 60,
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           (a.days ?? -1) - (b.days ?? -1),
       },
       project: {
         title: 'Проект',
         dataIndex: 'projectNames',
-        width: 180,
+        width: 110,
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           (a.projectNames || '').localeCompare(b.projectNames || ''),
+        ellipsis: true,
       },
       building: {
         title: 'Корпус',
         dataIndex: 'buildingNames',
-        width: 120,
+        width: 80,
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           (a.buildingNames || '').localeCompare(b.buildingNames || ''),
+        ellipsis: true,
       },
       units: {
         title: 'Объекты',
         dataIndex: 'unitNamesList',
-        width: 160,
+        width: 100,
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           (a.unitNames || '').localeCompare(b.unitNames || ''),
         render: (_: string[], row: DefectWithInfo) => (
           <>
             {row.unitNamesList?.map((n, i) => (
-              <div key={i} style={{ whiteSpace: 'nowrap' }}>
+              <div key={i} style={{ whiteSpace: 'nowrap', fontSize: '11px', lineHeight: '1.3' }}>
                 {n}
               </div>
             ))}
@@ -113,21 +110,28 @@ export function useDefectsColumns({
       description: {
         title: 'Описание',
         dataIndex: 'description',
-        width: 600,
+        width: 250,
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           a.description.localeCompare(b.description),
+        ellipsis: { showTitle: false },
+        render: (text: string) => (
+          <Tooltip title={text} placement="topLeft">
+            <span>{text}</span>
+          </Tooltip>
+        ),
       },
       type: {
         title: 'Тип',
         dataIndex: 'defectTypeName',
-        width: 120,
+        width: 80,
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           (a.defectTypeName || '').localeCompare(b.defectTypeName || ''),
+        ellipsis: true,
       },
       status: {
         title: 'Статус',
         dataIndex: 'status_id',
-        width: 160,
+        width: 120,
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           (a.defectStatusName || '').localeCompare(b.defectStatusName || ''),
         render: (_: number, row: DefectWithInfo) => (
@@ -141,31 +145,41 @@ export function useDefectsColumns({
         ),
       },
       warranty: {
-        title: 'Гарантия',
+        title: 'Гар.',
         dataIndex: 'is_warranty',
-        width: 100,
+        width: 50,
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           Number(a.is_warranty) - Number(b.is_warranty),
+        render: (v: boolean) => (v ? 'Да' : 'Нет'),
+      },
+      inCompletion: {
+        title: 'В выполн.',
+        dataIndex: 'has_completion',
+        width: 65,
+        sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
+          Number(a.has_completion ?? false) - Number(b.has_completion ?? false),
         render: (v: boolean) => (v ? 'Да' : 'Нет'),
       },
       fixBy: {
         title: 'Кем устраняется',
         dataIndex: 'fixByName',
-        width: 180,
+        width: 110,
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           (a.fixByName || '').localeCompare(b.fixByName || ''),
+        ellipsis: true,
       },
       engineer: {
-        title: 'Закрепленный инженер',
+        title: 'Инженер',
         dataIndex: 'engineerName',
-        width: 180,
+        width: 100,
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           (a.engineerName || '').localeCompare(b.engineerName || ''),
+        ellipsis: true,
       },
       received: {
-        title: 'Дата получения',
+        title: 'Получено',
         dataIndex: 'received_at',
-        width: 120,
+        width: 85,
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           (a.received_at ? dayjs(a.received_at).valueOf() : 0) -
           (b.received_at ? dayjs(b.received_at).valueOf() : 0),
@@ -174,7 +188,7 @@ export function useDefectsColumns({
       createdAt: {
         title: 'Добавлено',
         dataIndex: 'created_at',
-        width: 160,
+        width: 110,
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           (a.created_at ? dayjs(a.created_at).valueOf() : 0) -
           (b.created_at ? dayjs(b.created_at).valueOf() : 0),
@@ -183,14 +197,15 @@ export function useDefectsColumns({
       createdByName: {
         title: 'Автор',
         dataIndex: 'createdByName',
-        width: 160,
+        width: 100,
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           (a.createdByName || '').localeCompare(b.createdByName || ''),
+        ellipsis: true,
       },
       created: {
-        title: 'Дата устранения',
+        title: 'Устранено',
         dataIndex: 'fixed_at',
-        width: 120,
+        width: 85,
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           (a.fixed_at ? dayjs(a.fixed_at).valueOf() : 0) -
           (b.fixed_at ? dayjs(b.fixed_at).valueOf() : 0),
@@ -199,7 +214,7 @@ export function useDefectsColumns({
       files: {
         title: 'Файлы',
         dataIndex: 'filesCount',
-        width: 80,
+        width: 60,
         sorter: (a: DefectWithInfo, b: DefectWithInfo) =>
           (a.filesCount ?? 0) - (b.filesCount ?? 0),
         render: (count: number) => count > 0 ? count : '—',
@@ -207,7 +222,7 @@ export function useDefectsColumns({
       actions: {
         title: 'Действия',
         key: 'actions',
-        width: 100,
+        width: 110,
         render: (_: unknown, row: DefectWithInfo) => (
           <>
             <Tooltip title="Просмотр">
@@ -305,6 +320,7 @@ export function useDefectsColumns({
     'type',
     'status',
     'warranty',
+    'inCompletion',
     'fixBy',
     'received',
     'createdAt',

@@ -58,6 +58,8 @@ export interface DefectWithInfo extends DefectRecord {
   defectStatusColor?: string | null;
   /** Название исполнителя */
   fixByName?: string;
+  /** Дефект связан с выполнением */
+  has_completion?: boolean;
   /** Имя закрепленного инженера */
   engineerName?: string | null;
   /** Пользователь, подтвердивший устранение */

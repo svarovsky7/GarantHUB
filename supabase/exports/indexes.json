@@ -639,6 +639,62 @@
     "is_primary": false,
     "sql": "CREATE INDEX idx_claims_status_date ON public.claims USING btree (claim_status_id, created_at DESC) WHERE (claim_status_id IS NOT NULL)"
   },
+  "public.completion_defects.completion_defects_completion_id_defect_id_key": {
+    "schema": "public",
+    "name": "completion_defects_completion_id_defect_id_key",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE UNIQUE INDEX completion_defects_completion_id_defect_id_key ON public.completion_defects USING btree (completion_id, defect_id)"
+  },
+  "public.completion_defects.idx_completion_defects_completion": {
+    "schema": "public",
+    "name": "idx_completion_defects_completion",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_completion_defects_completion ON public.completion_defects USING btree (completion_id)"
+  },
+  "public.completion_defects.idx_completion_defects_defect": {
+    "schema": "public",
+    "name": "idx_completion_defects_defect",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_completion_defects_defect ON public.completion_defects USING btree (defect_id)"
+  },
+  "public.contractor_completions.contractor_completions_larix_number_key": {
+    "schema": "public",
+    "name": "contractor_completions_larix_number_key",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE UNIQUE INDEX contractor_completions_larix_number_key ON public.contractor_completions USING btree (larix_number)"
+  },
+  "public.contractor_completions.idx_contractor_completions_contractor": {
+    "schema": "public",
+    "name": "idx_contractor_completions_contractor",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_contractor_completions_contractor ON public.contractor_completions USING btree (contractor_id)"
+  },
+  "public.contractor_completions.idx_contractor_completions_created_by": {
+    "schema": "public",
+    "name": "idx_contractor_completions_created_by",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_contractor_completions_created_by ON public.contractor_completions USING btree (created_by)"
+  },
+  "public.contractor_completions.idx_contractor_completions_project": {
+    "schema": "public",
+    "name": "idx_contractor_completions_project",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_contractor_completions_project ON public.contractor_completions USING btree (project_id)"
+  },
   "public.court_case_claim_links.idx_court_case_claim_links_case": {
     "schema": "public",
     "name": "idx_court_case_claim_links_case",
@@ -1383,14 +1439,6 @@
     "is_primary": false,
     "sql": "CREATE INDEX messages_inserted_at_topic_index ON ONLY realtime.messages USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))"
   },
-  "realtime.messages_2025_10_05.messages_2025_10_05_inserted_at_topic_idx": {
-    "schema": "realtime",
-    "name": "messages_2025_10_05_inserted_at_topic_idx",
-    "table_name": null,
-    "is_unique": false,
-    "is_primary": false,
-    "sql": "CREATE INDEX messages_2025_10_05_inserted_at_topic_idx ON realtime.messages_2025_10_05 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))"
-  },
   "realtime.messages_2025_10_06.messages_2025_10_06_inserted_at_topic_idx": {
     "schema": "realtime",
     "name": "messages_2025_10_06_inserted_at_topic_idx",
@@ -1438,6 +1486,14 @@
     "is_unique": false,
     "is_primary": false,
     "sql": "CREATE INDEX messages_2025_10_11_inserted_at_topic_idx ON realtime.messages_2025_10_11 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))"
+  },
+  "realtime.messages_2025_10_12.messages_2025_10_12_inserted_at_topic_idx": {
+    "schema": "realtime",
+    "name": "messages_2025_10_12_inserted_at_topic_idx",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX messages_2025_10_12_inserted_at_topic_idx ON realtime.messages_2025_10_12 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))"
   },
   "realtime.subscription.ix_realtime_subscription_entity": {
     "schema": "realtime",

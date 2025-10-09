@@ -316,18 +316,18 @@ export default function CorrespondencePage() {
       treeIcon: {
         title: '',
         dataIndex: 'treeIcon',
-        width: 40,
+        width: 35,
         render: (_: any, record: any) => {
           if (!record.parent_id) {
             return (
               <Tooltip title="Главное письмо">
-                <MailOutlined style={{ color: '#1890ff', fontSize: 17 }} />
+                <MailOutlined style={{ color: '#1890ff', fontSize: 14 }} />
               </Tooltip>
             );
           }
           return (
             <Tooltip title="Связанное письмо">
-              <BranchesOutlined style={{ color: '#52c41a', fontSize: 16 }} />
+              <BranchesOutlined style={{ color: '#52c41a', fontSize: 14 }} />
             </Tooltip>
           );
         },
@@ -335,7 +335,7 @@ export default function CorrespondencePage() {
       id: {
         title: 'ID',
         dataIndex: 'id',
-        width: 80,
+        width: 60,
         sorter: (a: any, b: any) => Number(a.id) - Number(b.id),
         defaultSortOrder: 'descend' as const,
       },
@@ -353,7 +353,7 @@ export default function CorrespondencePage() {
       number: {
         title: 'Номер',
         dataIndex: 'number',
-        width: 120,
+        width: 100,
         sorter: (a: any, b: any) => a.number.localeCompare(b.number),
         render: (num: string, record: any) => (
           <b style={!record.parent_id ? { fontWeight: 600 } : {}}>{num}</b>
@@ -362,15 +362,16 @@ export default function CorrespondencePage() {
       date: {
         title: 'Дата',
         dataIndex: 'date',
-        width: 120,
+        width: 90,
         sorter: (a: any, b: any) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf(),
         render: (v: string) => dayjs(v).format('DD.MM.YYYY'),
       },
       sender: {
         title: 'Отправитель',
         dataIndex: 'sender',
-        width: 160,
+        width: 130,
         sorter: (a: any, b: any) => (a.sender || '').localeCompare(b.sender || ''),
+        ellipsis: true,
         render: (val: string, record: any) => (
           <span style={record.parent_id ? { color: '#888' } : {}}>{val}</span>
         ),
@@ -378,8 +379,9 @@ export default function CorrespondencePage() {
       receiver: {
         title: 'Получатель',
         dataIndex: 'receiver',
-        width: 160,
+        width: 130,
         sorter: (a: any, b: any) => (a.receiver || '').localeCompare(b.receiver || ''),
+        ellipsis: true,
         render: (val: string, record: any) => (
           <span style={record.parent_id ? { color: '#888' } : {}}>{val}</span>
         ),
@@ -387,23 +389,28 @@ export default function CorrespondencePage() {
       subject: {
         title: 'Тема',
         dataIndex: 'subject',
-        width: 600,
+        width: 300,
         sorter: (a: any, b: any) => a.subject.localeCompare(b.subject),
+        ellipsis: { showTitle: false },
         render: (val: string, record: any) => (
-          <span style={record.parent_id ? { color: '#888' } : {}}>{val}</span>
+          <Tooltip title={val} placement="topLeft">
+            <span style={record.parent_id ? { color: '#888' } : {}}>{val}</span>
+          </Tooltip>
         ),
       },
       projectName: {
         title: 'Проект',
         dataIndex: 'projectName',
-        width: 180,
+        width: 110,
         sorter: (a: any, b: any) => (a.projectName || '').localeCompare(b.projectName || ''),
+        ellipsis: true,
       },
       building: {
         title: 'Корпус',
         dataIndex: 'building',
-        width: 120,
+        width: 80,
         sorter: (a: any, b: any) => (a.building || '').localeCompare(b.building || ''),
+        ellipsis: true,
         render: (building: string, record: any) => {
           if (!building) {
             // Extract building from unit names if not directly available
@@ -417,35 +424,38 @@ export default function CorrespondencePage() {
       unitNames: {
         title: 'Объекты',
         dataIndex: 'unitNames',
-        width: 200,
+        width: 130,
         sorter: (a: any, b: any) => (a.unitNames || '').localeCompare(b.unitNames || ''),
+        ellipsis: true,
       },
       letterTypeName: {
         title: 'Категория',
         dataIndex: 'letterTypeName',
-        width: 160,
+        width: 110,
         sorter: (a: any, b: any) => (a.letterTypeName || '').localeCompare(b.letterTypeName || ''),
+        ellipsis: true,
       },
       statusName: {
         title: 'Статус',
         dataIndex: 'statusName',
-        width: 160,
+        width: 120,
         sorter: (a: any, b: any) => (a.statusName || '').localeCompare(b.statusName || ''),
         render: (_: any, row: any) => (
           <LetterStatusSelect letterId={row.id} statusId={row.status_id} statusName={row.statusName} />
         ),
       },
       responsibleName: {
-        title: 'Ответственный',
+        title: 'Ответств.',
         dataIndex: 'responsibleName',
-        width: 160,
+        width: 100,
         sorter: (a: any, b: any) => (a.responsibleName || '').localeCompare(b.responsibleName || ''),
+        ellipsis: true,
         render: (name: string) => name || '—',
       },
       createdAt: {
         title: 'Добавлено',
         dataIndex: 'created_at',
-        width: 160,
+        width: 110,
         sorter: (a: any, b: any) =>
           (a.created_at ? dayjs(a.created_at).valueOf() : 0) -
           (b.created_at ? dayjs(b.created_at).valueOf() : 0),
@@ -454,30 +464,33 @@ export default function CorrespondencePage() {
       createdByName: {
         title: 'Автор',
         dataIndex: 'createdByName',
-        width: 160,
+        width: 100,
         sorter: (a: any, b: any) => (a.createdByName || '').localeCompare(b.createdByName || ''),
+        ellipsis: true,
       },
       actions: {
         title: 'Действия',
         key: 'actions',
-        width: 150,
+        width: 120,
+        fixed: 'right' as const,
         render: (_: any, record: CorrespondenceLetter) => (
-          <Space size="middle">
+          <Space size={4}>
             <Tooltip title="Просмотр">
-              <Button type="text" icon={<EyeOutlined />} onClick={() => setViewId(record.id)} />
+              <Button size="small" type="text" icon={<EyeOutlined />} onClick={() => setViewId(record.id)} />
             </Tooltip>
-            <Button type="text" icon={<PlusOutlined />} onClick={() => setLinkFor(record)} />
+            <Button size="small" type="text" icon={<PlusOutlined />} onClick={() => setLinkFor(record)} />
             {record.parent_id && (
               <Tooltip title="Исключить из связи">
                 <Button
+                  size="small"
                   type="text"
                   icon={<LinkOutlined style={{ color: '#c41d7f', textDecoration: 'line-through', fontWeight: 700 }} />}
                   onClick={() => handleUnlink(record.id)}
                 />
               </Tooltip>
             )}
-            <Popconfirm title="Удалить письмо?" okText="Да" cancelText="Нет" onConfirm={() => handleDelete(record.id)}>
-              <Button type="text" danger icon={<DeleteOutlined />} />
+            <Popconfirm title="Удалить?" okText="Да" cancelText="Нет" onConfirm={() => handleDelete(record.id)}>
+              <Button size="small" type="text" danger icon={<DeleteOutlined />} />
             </Popconfirm>
           </Space>
         ),

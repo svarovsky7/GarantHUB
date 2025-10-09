@@ -8,6 +8,7 @@ import { useContractors } from "@/entities/contractor";
 import { useFixDefect, useDefect, signedUrl } from "@/entities/defect";
 import { useLockedUnitIds } from "@/entities/unit";
 import { useUsers } from "@/entities/user";
+import { useContractorCompletions, useAddCompletionDefects } from "@/entities/contractorCompletion";
 import { useNotify } from "@/shared/hooks/useNotify";
 import type {
   NewDefectFile,
@@ -28,7 +29,9 @@ export default function DefectFixModal({ defectId, open, onClose }: Props) {
   const { data: users = [] } = useUsers();
   const { data: defect } = useDefect(defectId ?? undefined);
   const { data: lockedUnitIds = [] } = useLockedUnitIds();
+  const { data: completions = [] } = useContractorCompletions();
   const fix = useFixDefect();
+  const addCompletionDefects = useAddCompletionDefects();
   const notify = useNotify();
 
   const [fixBy, setFixBy] = useState<FixByValue>({
@@ -40,6 +43,7 @@ export default function DefectFixModal({ defectId, open, onClose }: Props) {
   const [remoteFiles, setRemoteFiles] = useState<RemoteDefectFile[]>([]);
   const [removedIds, setRemovedIds] = useState<string[]>([]);
   const [engineer, setEngineer] = useState<string | null>(null);
+  const [completionId, setCompletionId] = useState<number | null>(null);
 
   useEffect(() => {
     if (defect && open) {
@@ -60,6 +64,7 @@ export default function DefectFixModal({ defectId, open, onClose }: Props) {
         })) ?? [];
       setRemoteFiles(atts);
       setRemovedIds([]);
+      setCompletionId(null);
     }
   }, [defect, open]);
 
@@ -120,10 +125,20 @@ export default function DefectFixModal({ defectId, open, onClose }: Props) {
       removedAttachmentIds: removedIds.map(Number),
       updatedAttachments: updated,
     });
+
+    // Link defect to completion if selected
+    if (completionId) {
+      await addCompletionDefects.mutateAsync([{
+        completion_id: completionId,
+        defect_id: defectId,
+      }]);
+    }
+
     setFiles([]);
     setFixBy({ brigade_id: null, contractor_id: null });
     setFixedAt(null);
     setEngineer(null);
+    setCompletionId(null);
     onClose();
   };
 
@@ -168,6 +183,22 @@ export default function DefectFixModal({ defectId, open, onClose }: Props) {
             options={users.map((u) => ({ value: u.id, label: u.name }))}
             value={engineer ?? undefined}
             onChange={(v) => setEngineer(v ?? null)}
+          />
+        </Form.Item>
+        <Form.Item label="Выполнение (Larix)">
+          <Select
+            allowClear
+            showSearch
+            placeholder="Выберите выполнение"
+            options={completions.map((c) => ({
+              value: c.id,
+              label: `${c.larix_number} - ${c.contractorName || 'Без контрагента'}`,
+            }))}
+            value={completionId ?? undefined}
+            onChange={(v) => setCompletionId(v ?? null)}
+            filterOption={(input, option) =>
+              (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+            }
           />
         </Form.Item>
         <Form.Item label="Дата устранения">

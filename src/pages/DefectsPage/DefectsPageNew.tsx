@@ -14,27 +14,32 @@ const DefectFixModal = React.lazy(() => import('@/features/defect/DefectFixModal
 const TableColumnsDrawer = React.lazy(() => import('@/widgets/TableColumnsDrawer'));
 
 export default function DefectsPageNew() {
-  // Загрузка данных
+  // 🚀 Состояние пагинации
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
+
+  // 🚀 Фильтрация (теперь управляется отдельно для серверной фильтрации)
+  const {
+    showFilters,
+    filters,
+    filteredDefects: _unused, // Не используем - фильтруется на сервере
+    filterOptions,
+    handleToggleFilters,
+    handleSubmitFilters,
+    handleResetFilters,
+  } = useDefectsFilters({ defects: [], units: [], projects: [] });
+
+  // Загрузка данных с серверной пагинацией И фильтрацией
   const {
     defects,
+    total,
     isLoading,
     isError,
     error,
     lockedUnitIds,
     units,
     projects,
-  } = useDefectsData();
-
-  // Фильтрация
-  const {
-    showFilters,
-    filters,
-    filteredDefects,
-    filterOptions,
-    handleToggleFilters,
-    handleSubmitFilters,
-    handleResetFilters,
-  } = useDefectsFilters({ defects, units, projects });
+  } = useDefectsData(page, pageSize, filters);
 
   // Состояние UI
   const [viewId, setViewId] = useState<number | null>(null);
@@ -64,15 +69,21 @@ export default function DefectsPageNew() {
     onFix: handleFix,
   });
 
-  const total = defects.length;
-  const filtered = filteredDefects.length;
+  // 🚀 Обработчики пагинации
+  const handlePageChange = useCallback((newPage: number, newPageSize?: number) => {
+    setPage(newPage);
+    if (newPageSize && newPageSize !== pageSize) {
+      setPageSize(newPageSize);
+      setPage(1); // Сбросить на первую страницу при изменении размера
+    }
+  }, [pageSize]);
 
   return (
     <ConfigProvider locale={ruRU}>
       <>
         <DefectsPageToolbar
           showFilters={showFilters}
-          filteredDefects={filteredDefects}
+          filteredDefects={defects}
           filters={filters}
           onToggleFilters={handleToggleFilters}
           onShowColumnsDrawer={handleShowColumnsDrawer}
@@ -109,18 +120,25 @@ export default function DefectsPageNew() {
         ) : (
           <Card>
             <DefectsTable
-              defects={filteredDefects}
+              defects={defects}
               filters={filters}
               columns={columns}
               loading={isLoading}
+              // 🚀 Серверная пагинация
+              pagination={{
+                current: page,
+                pageSize,
+                total,
+                onChange: handlePageChange,
+              }}
             />
 
             <div style={{ marginTop: 16 }}>
               <Typography.Text style={{ display: 'block' }}>
-                Всего дефектов: {total}
+                Найдено дефектов: {total}
               </Typography.Text>
               <Typography.Text style={{ display: 'block', marginTop: 4 }}>
-                Отфильтровано дефектов: {filtered}
+                Показано на странице: {defects.length}
               </Typography.Text>
             </div>
           </Card>
