@@ -19,23 +19,31 @@ const SUMMARY_TABLE = 'defects_summary';
  * - Загружает только текущую страницу (50-100 записей вместо 6000+)
  * - Получает точный count для пагинации
  * - **СЕРВЕРНАЯ ФИЛЬТРАЦИЯ**: Фильтры применяются на уровне SQL (работают по всей БД!)
+ * - **СЕРВЕРНАЯ СОРТИРОВКА**: Сортировка применяется на уровне SQL (работает по всей БД!)
  * - Устраняет водопадную загрузку данных
  *
  * @param page - номер страницы (начиная с 1)
  * @param pageSize - размер страницы (по умолчанию 50)
  * @param filters - фильтры для серверной фильтрации
+ * @param sortField - поле для сортировки (по умолчанию 'id')
+ * @param sortOrder - порядок сортировки ('ascend' | 'descend', по умолчанию 'descend')
  */
-export function useDefectsSummaryPaginated(page = 1, pageSize = 50, filters?: DefectFilters) {
+export function useDefectsSummaryPaginated(
+  page = 1,
+  pageSize = 50,
+  filters?: DefectFilters,
+  sortField = 'id',
+  sortOrder: 'ascend' | 'descend' = 'descend'
+) {
   return useQuery<{ data: DefectSummaryWithDayjs[]; total: number }>({
-    queryKey: [SUMMARY_TABLE, 'paginated', page, pageSize, filters],
+    queryKey: [SUMMARY_TABLE, 'paginated', page, pageSize, filters, sortField, sortOrder],
     queryFn: async () => {
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
 
       let query = supabase
         .from(SUMMARY_TABLE)
-        .select('*', { count: 'exact' })
-        .order('id', { ascending: false });
+        .select('*', { count: 'exact' });
 
       // 🚀 Применяем серверные фильтры
       if (filters) {
@@ -108,6 +116,9 @@ export function useDefectsSummaryPaginated(page = 1, pageSize = 50, filters?: De
           query = query.eq('attachments_count', 0);
         }
       }
+
+      // 🚀 Применяем серверную сортировку
+      query = query.order(sortField, { ascending: sortOrder === 'ascend' });
 
       query = query.range(from, to);
 

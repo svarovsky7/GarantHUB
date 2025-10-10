@@ -67,6 +67,7 @@ interface Filters {
   project?: number | '';
   building?: string | '';
   unit?: number | '';
+  number?: string;
   sender?: string;
   receiver?: string;
   subject?: string;
@@ -104,6 +105,7 @@ export default function CorrespondencePage() {
       project: prj ? Number(prj) : '',
       building: '',
       unit: unit ? Number(unit) : '',
+      number: '',
       sender: '',
       receiver: '',
       subject: '',
@@ -241,6 +243,7 @@ export default function CorrespondencePage() {
       project: values.project ?? '',
       building: values.building ?? '',
       unit: values.unit ?? '',
+      number: values.number ?? '',
       sender: values.sender ?? '',
       receiver: values.receiver ?? '',
       subject: values.subject ?? '',
@@ -266,6 +269,7 @@ export default function CorrespondencePage() {
       project: '',
       building: '',
       unit: '',
+      number: '',
       sender: '',
       receiver: '',
       subject: '',
@@ -604,11 +608,14 @@ export default function CorrespondencePage() {
     }
     if (filters.status && l.status_id !== Number(filters.status)) return false;
     if (filters.responsible && String(l.responsible_user_id) !== filters.responsible) return false;
+    const number = (l.number || '').toLowerCase();
     const sender = (l.sender || '').toLowerCase();
     const receiver = (l.receiver || '').toLowerCase();
     const subject = (l.subject || '').toLowerCase();
     const content = (l.content || '').toLowerCase();
 
+    if (filters.number && !number.includes(filters.number.toLowerCase()))
+      return false;
     if (filters.sender && !sender.includes(filters.sender.toLowerCase()))
       return false;
     if (filters.receiver && !receiver.includes(filters.receiver.toLowerCase()))

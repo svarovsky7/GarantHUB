@@ -1,21 +1,26 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import type { DefectFilters } from '@/shared/types/defectFilters';
 import type { DefectWithInfo } from '@/shared/types/defect';
-import { filterDefects } from '@/shared/utils/defectFilter';
-import { naturalCompare, naturalCompareArrays } from '@/shared/utils/naturalSort';
+import type { DefectSummaryWithDayjs } from '@/shared/types/defectSummary';
+import { naturalCompare } from '@/shared/utils/naturalSort';
 
 const LS_FILTERS_VISIBLE_KEY = 'defectsFiltersVisible';
 
 interface UseDefectsFiltersParams {
-  defects: DefectWithInfo[];
+  defects: DefectWithInfo[] | DefectSummaryWithDayjs[];
   units: any[];
   projects: any[];
+  currentFilters?: DefectFilters; // Текущие фильтры для каскадной фильтрации
 }
 
 /**
  * Хук для управления фильтрацией дефектов
+ * - Поддерживает упрощенную структуру фильтров (только 6 полей)
+ * - Принимает DefectWithInfo[] или DefectSummaryWithDayjs[] для опций
+ * - Для опций фильтров передавайте ВСЕ дефекты из базы (используйте useDefectsSummary)
+ * - Поддерживает каскадную фильтрацию опций на основе currentFilters
  */
-export function useDefectsFilters({ defects, units, projects }: UseDefectsFiltersParams) {
+export function useDefectsFilters({ defects, units, projects, currentFilters = {} }: UseDefectsFiltersParams) {
   const [showFilters, setShowFilters] = useState(() => {
     try {
       const saved = localStorage.getItem(LS_FILTERS_VISIBLE_KEY);
@@ -25,8 +30,6 @@ export function useDefectsFilters({ defects, units, projects }: UseDefectsFilter
     }
   });
 
-  const [filters, setFilters] = useState<DefectFilters>({});
-
   // Сохранение состояния видимости фильтров
   useEffect(() => {
     try {
@@ -34,20 +37,21 @@ export function useDefectsFilters({ defects, units, projects }: UseDefectsFilter
     } catch {}
   }, [showFilters]);
 
-  // Фильтрованные дефекты
-  const filteredDefects = useMemo(
-    () => filterDefects(defects, filters),
-    [defects, filters],
-  );
-
-  // Опции для фильтров
+  // Опции для фильтров - теперь только 6 полей
   const filterOptions = useMemo(() => {
+    console.group('🔍 ДИАГНОСТИКА ФИЛЬТРОВ - ДЕТАЛЬНОЕ ЛОГИРОВАНИЕ');
+    console.log('📊 Входные данные:', {
+      'Всего дефектов загружено': defects.length,
+      'Всего units загружено': units.length,
+      'Всего projects загружено': projects.length,
+      'Текущие фильтры (currentFilters)': currentFilters,
+    });
+
     const uniq = (values: (string | number | null | undefined)[]) =>
       Array.from(new Set(values.filter(Boolean) as (string | number)[])).sort(naturalCompare);
+
     const mapNumOptions = (vals: (number | null | undefined)[]) =>
       uniq(vals).map((v) => ({ label: String(v), value: Number(v) }));
-    const mapStrOptions = (vals: (string | null | undefined)[]) =>
-      uniq(vals).map((v) => ({ label: String(v), value: String(v) }));
 
     const uniqPairs = (pairs: [number | null, string | null][]) => {
       const map = new Map<number, string>();
@@ -60,49 +64,129 @@ export function useDefectsFilters({ defects, units, projects }: UseDefectsFilter
     };
 
     const unitOptionsMap = new Map(units.map((u) => [u.id, u.name]));
-    const projectOptionsMap = new Map(projects.map((p) => [p.id, p.name]));
+
+    console.log('📦 Созданные мапы:', {
+      'unitOptionsMap размер': unitOptionsMap.size,
+      'Первые 10 units': Array.from(unitOptionsMap.entries()).slice(0, 10),
+    });
+
+    console.log('🚀 Проекты для фильтра:', {
+      'Загружено проектов': projects.length,
+      'Первые 5': projects.slice(0, 5).map(p => p.name),
+      'Источник': 'Используем уже загруженный массив projects (быстро!)',
+    });
+
+    // 🔍 Проверка: есть ли в мапе объект 22007
+    if (unitOptionsMap.has(22007)) {
+      console.log('✅ Объект 22007 НАЙДЕН в unitOptionsMap:', unitOptionsMap.get(22007));
+    } else {
+      console.log('❌ Объект 22007 НЕ НАЙДЕН в unitOptionsMap');
+    }
+
+    // Фильтруем опции на основе текущих фильтров для каскадной фильтрации
+    let filteredForOptions = defects;
+
+    console.log('🎯 Каскадная фильтрация:');
+
+    // Если выбран проект, фильтруем объекты только для выбранных проектов
+    if (currentFilters.projectId && currentFilters.projectId.length > 0) {
+      console.log('  📌 Применяем фильтр по проектам:', currentFilters.projectId);
+      const beforeFilter = filteredForOptions.length;
+      filteredForOptions = filteredForOptions.filter(d =>
+        (d.projectIds || d.project_ids)?.some(pid => currentFilters.projectId?.includes(pid))
+      );
+      console.log(`  ✅ После фильтрации по проектам: ${beforeFilter} → ${filteredForOptions.length} дефектов`);
+    }
+
+    // Если выбран объект, фильтруем все остальное для выбранных объектов
+    if (currentFilters.units && currentFilters.units.length > 0) {
+      console.log('  📌 Применяем фильтр по объектам:', currentFilters.units);
+      const beforeFilter = filteredForOptions.length;
+      filteredForOptions = filteredForOptions.filter(d =>
+        (d.unitIds || d.unit_ids)?.some(uid => currentFilters.units?.includes(uid))
+      );
+      console.log(`  ✅ После фильтрации по объектам: ${beforeFilter} → ${filteredForOptions.length} дефектов`);
+    }
+
+    // Если выбран статус, фильтруем для выбранных статусов
+    if (currentFilters.statusId && currentFilters.statusId.length > 0) {
+      console.log('  📌 Применяем фильтр по статусам:', currentFilters.statusId);
+      const beforeFilter = filteredForOptions.length;
+      filteredForOptions = filteredForOptions.filter(d =>
+        currentFilters.statusId?.includes(d.status_id)
+      );
+      console.log(`  ✅ После фильтрации по статусам: ${beforeFilter} → ${filteredForOptions.length} дефектов`);
+    }
+
+    // Если выбран тип, фильтруем для выбранных типов
+    if (currentFilters.typeId && currentFilters.typeId.length > 0) {
+      console.log('  📌 Применяем фильтр по типам:', currentFilters.typeId);
+      const beforeFilter = filteredForOptions.length;
+      filteredForOptions = filteredForOptions.filter(d =>
+        currentFilters.typeId?.includes(d.type_id)
+      );
+      console.log(`  ✅ После фильтрации по типам: ${beforeFilter} → ${filteredForOptions.length} дефектов`);
+    }
+
+    // Формируем финальные опции для units
+    // Показываем ВСЕ unit_ids из дефектов, даже если они не загружены в unitOptionsMap
+    const finalUnitIds = Array.from(
+      new Set(filteredForOptions.flatMap((d) => d.unitIds || d.unit_ids || []))
+    );
+
+    const finalUnitsOptions = finalUnitIds
+      .map((id) => ({
+        label: unitOptionsMap.get(id) ?? `Объект #${id}`,
+        value: id
+      }))
+      .sort((a, b) => naturalCompare(a.label, b.label));
+
+    console.log('🎯 Финальные опции объектов:', {
+      'Всего опций': finalUnitsOptions.length,
+      'Первые 10': finalUnitsOptions.slice(0, 10),
+      'Опции с "Объект #"': finalUnitsOptions.filter(o => o.label.startsWith('Объект #')).length,
+      'Пример "Объект #"': finalUnitsOptions.filter(o => o.label.startsWith('Объект #')).slice(0, 5),
+    });
+
+    // 🔍 Проверка: есть ли объект 22007 в финальных опциях
+    const option22007 = finalUnitsOptions.find(o => o.value === 22007);
+    if (option22007) {
+      console.log('✅ Объект 22007 ЕСТЬ в финальных опциях:', option22007);
+    } else {
+      console.log('❌ Объект 22007 ОТСУТСТВУЕТ в финальных опциях');
+      console.log('   Проверка: есть ли 22007 в finalUnitIds?', finalUnitIds.includes(22007));
+    }
+
+    console.groupEnd();
 
     return {
-      ids: mapNumOptions(filteredDefects.map((d) => d.id)),
-      claimIds: mapNumOptions(filteredDefects.flatMap((d) => d.claimIds)),
-      units: Array.from(
-        new Set(filteredDefects.flatMap((d) => d.unitIds)),
-      )
-        .map((id) => ({ label: unitOptionsMap.get(id) ?? String(id), value: id }))
+      // Проекты - используем уже загруженный массив projects (быстро!)
+      projects: projects
+        .map((p) => ({ label: p.name, value: p.id }))
         .sort((a, b) => naturalCompare(a.label, b.label)),
-      buildings: mapStrOptions(
-        filteredDefects.flatMap((d) => d.buildingNamesList || []),
-      ),
-      projects: Array.from(
-        new Set(filteredDefects.flatMap((d) => d.projectIds || [])),
-      )
-        .map((id) => ({ label: projectOptionsMap.get(id) ?? String(id), value: id }))
-        .sort((a, b) => naturalCompare(a.label, b.label)),
-      types: uniqPairs(filteredDefects.map((d) => [d.type_id, d.defectTypeName])),
-      statuses: uniqPairs(
-        filteredDefects.map((d) => [d.status_id, d.defectStatusName]),
-      ),
-      fixBy: mapStrOptions(filteredDefects.map((d) => d.fixByName)),
-      engineers: mapStrOptions(filteredDefects.map((d) => d.engineerName)),
-      authors: mapStrOptions(filteredDefects.map((d) => d.createdByName)),
+
+      // Объекты - фильтруются по выбранным проектам
+      units: finalUnitsOptions,
+
+      // Статусы - фильтруются по другим выбранным фильтрам
+      statuses: uniqPairs(filteredForOptions.map((d) => [d.status_id, d.defectStatusName || d.statusName])),
+
+      // Типы - фильтруются по другим выбранным фильтрам
+      types: uniqPairs(filteredForOptions.map((d) => [d.type_id, d.defectTypeName || d.typeName])),
+
+      // ID дефектов - фильтруются по другим выбранным фильтрам
+      ids: mapNumOptions(filteredForOptions.map((d) => d.id)),
+
+      // ID претензий - фильтруются по другим выбранным фильтрам
+      claimIds: mapNumOptions(filteredForOptions.flatMap((d) => d.claimIds || d.claim_ids || [])),
     };
-  }, [filteredDefects, units, projects]);
+  }, [defects, units, projects, currentFilters]);
 
   const handleToggleFilters = useCallback(() => setShowFilters(p => !p), []);
-  const handleSubmitFilters = useCallback((newFilters: DefectFilters) => {
-    setFilters(newFilters);
-  }, []);
-  const handleResetFilters = useCallback(() => {
-    setFilters({});
-  }, []);
 
   return {
     showFilters,
-    filters,
-    filteredDefects,
     filterOptions,
     handleToggleFilters,
-    handleSubmitFilters,
-    handleResetFilters,
   };
 }

@@ -77,7 +77,7 @@ export default function CorrespondenceFilters({
   const [extraCount, setExtraCount] = useState(0);
 
   // Дополнительные фильтры
-  const extraKeys = ['id', 'period', 'building', 'sender', 'receiver', 'subject', 'content'];
+  const extraKeys = ['id', 'number', 'period', 'building', 'sender', 'receiver', 'subject', 'content'];
 
   useEffect(() => {
     const count = extraKeys.reduce((acc, key) => {
@@ -166,6 +166,15 @@ export default function CorrespondenceFilters({
                           </Form.Item>
                         </Col>
                         <Col span={5}>
+                          <Form.Item name="number" label="№ письма">
+                            <Input
+                              allowClear
+                              autoComplete="off"
+                              placeholder="Поиск по номеру..."
+                            />
+                          </Form.Item>
+                        </Col>
+                        <Col span={5}>
                           <Form.Item name="building" label="Корпус">
                             <MemoizedSelect
                               options={buildingOptions}
@@ -174,7 +183,7 @@ export default function CorrespondenceFilters({
                             />
                           </Form.Item>
                         </Col>
-                        <Col span={5}>
+                        <Col span={4}>
                           <Form.Item name="unit" label="Объект">
                             <MemoizedSelect
                               options={projectUnits}
@@ -185,16 +194,16 @@ export default function CorrespondenceFilters({
                         </Col>
                         <Col span={5}>
                           <Form.Item name="responsible" label="Ответственный">
-                            <MemoizedSelect 
+                            <MemoizedSelect
                               options={users}
                               placeholder="Ответственный"
                             />
                           </Form.Item>
                         </Col>
-                        <Col span={4}>
+                        <Col span={5}>
                           <Form.Item name="period" label="Период">
-                            <RangePicker 
-                              format="DD.MM.YYYY" 
+                            <RangePicker
+                              format="DD.MM.YYYY"
                               style={{ width: '100%' }}
                               size="small"
                               placeholder={['От', 'До']}

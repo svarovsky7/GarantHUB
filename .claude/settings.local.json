@@ -63,7 +63,10 @@
       "mcp__chrome-devtools__list_network_requests",
       "mcp__chrome-devtools__performance_start_trace",
       "mcp__chrome-devtools__performance_analyze_insight",
-      "mcp__chrome-devtools__evaluate_script"
+      "mcp__chrome-devtools__evaluate_script",
+      "mcp__chrome-devtools__take_screenshot",
+      "mcp__playwright-official__browser_close",
+      "mcp__chrome-devtools__list_console_messages"
     ],
     "deny": [],
     "additionalDirectories": [

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useDefectsSummaryPaginated } from '@/entities/defect';
-import { useLockedUnitIds } from '@/entities/unit';
+import { useLockedUnitIds, useUnits } from '@/entities/unit';
 import { useVisibleProjects } from '@/entities/project';
 import { useBrigades } from '@/entities/brigade';
 import { useContractors } from '@/entities/contractor';
@@ -15,11 +15,12 @@ import { calculateDays } from '../lib/defectsHelpers';
  * УЛУЧШЕНИЯ v3:
  * 1. **СЕРВЕРНАЯ ПАГИНАЦИЯ**: Загружает только текущую страницу (50-100 записей вместо 6000+)
  * 2. **СЕРВЕРНАЯ ФИЛЬТРАЦИЯ**: Фильтры применяются на уровне SQL (работают по всей БД!)
- * 3. Использует useDefectsSummaryPaginated с фильтрами (VIEW с пагинацией и фильтрацией)
- * 4. Устраняет водопадную загрузку: defects → unitIds → units → claims
- * 5. Использует агрегированные поля из VIEW (claim_ids, unit_ids, unit_names, building_names, project_ids, project_names)
- * 6. Минимум обогащения на клиенте (большая часть данных уже в VIEW)
- * 7. Параллельная загрузка всех справочников
+ * 3. **СЕРВЕРНАЯ СОРТИРОВКА**: Сортировка применяется на уровне SQL (работает по всей БД!)
+ * 4. Использует useDefectsSummaryPaginated с фильтрами (VIEW с пагинацией и фильтрацией)
+ * 5. Устраняет водопадную загрузку: defects → unitIds → units → claims
+ * 6. Использует агрегированные поля из VIEW (claim_ids, unit_ids, unit_names, building_names, project_ids, project_names)
+ * 7. Минимум обогащения на клиенте (большая часть данных уже в VIEW)
+ * 8. Параллельная загрузка всех справочников
  *
  * РЕЗУЛЬТАТ: 7 запросов → 1 запрос, 6337 записей → 50 отфильтрованных записей
  * ЦЕЛЕВОЕ ВРЕМЯ: < 100 мс (вместо ~600 мс)
@@ -27,21 +28,30 @@ import { calculateDays } from '../lib/defectsHelpers';
  * @param page - номер страницы (начиная с 1)
  * @param pageSize - размер страницы (по умолчанию 50)
  * @param filters - фильтры для серверной фильтрации
+ * @param sortField - поле для сортировки (по умолчанию 'id')
+ * @param sortOrder - порядок сортировки ('ascend' | 'descend', по умолчанию 'descend')
  */
-export function useDefectsDataOptimized(page = 1, pageSize = 50, filters?: DefectFilters) {
+export function useDefectsDataOptimized(
+  page = 1,
+  pageSize = 50,
+  filters?: DefectFilters,
+  sortField = 'id',
+  sortOrder: 'ascend' | 'descend' = 'descend'
+) {
   // ✅ Параллельная загрузка ВСЕХ данных (не ждем defects!)
   const {
     data: paginatedData,
     isPending,
     isError,
     error,
-  } = useDefectsSummaryPaginated(page, pageSize, filters);
+  } = useDefectsSummaryPaginated(page, pageSize, filters, sortField, sortOrder);
 
   const defects = paginatedData?.data ?? [];
   const total = paginatedData?.total ?? 0;
 
   const { data: lockedUnitIds = [] } = useLockedUnitIds();
   const { data: projects = [] } = useVisibleProjects();
+  const { data: units = [] } = useUnits();
   const { data: brigades = [] } = useBrigades();
   const { data: contractors = [] } = useContractors();
   const { data: users = [] } = useUsers();
@@ -118,7 +128,7 @@ export function useDefectsDataOptimized(page = 1, pageSize = 50, filters?: Defec
     isError,
     error,
     lockedUnitIds,
-    units: [], // Не нужны - имена уже в VIEW
+    units, // ✅ Нужны для формирования опций фильтров
     projects,
   };
 }

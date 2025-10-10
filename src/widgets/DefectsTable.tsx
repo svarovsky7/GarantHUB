@@ -37,6 +37,13 @@ interface Props {
     total: number;
     onChange: (page: number, pageSize?: number) => void;
   };
+  /** 🚀 Обработчик изменения таблицы (для серверной сортировки) */
+  onChange?: (pagination: any, filters: any, sorter: any) => void;
+  /** 🚀 Текущее состояние сортировки (для controlled mode) */
+  sortState?: {
+    field: string;
+    order: 'ascend' | 'descend';
+  };
 }
 
 /**
@@ -53,6 +60,8 @@ const DefectsTable = React.memo<Props>(({
   onView,
   lockedUnitIds = [],
   pagination: paginationProp,
+  onChange,
+  sortState,
 }) => {
   const { mutateAsync: remove, isPending } = useDeleteDefect();
   const filtered = useMemo(
@@ -65,43 +74,46 @@ const DefectsTable = React.memo<Props>(({
       title: "ID",
       dataIndex: "id",
       width: 60,
-      sorter: (a, b) => a.id - b.id,
-      defaultSortOrder: 'descend' as const,
+      sorter: true, // 🚀 Серверная сортировка
+      sortOrder: sortState?.field === 'id' ? sortState.order : undefined,
     },
     {
       title: "ID претензии",
       dataIndex: "claimIds",
       width: 85,
-      sorter: (a, b) => naturalCompareArrays(a.claimIds, b.claimIds),
+      sorter: true,
+      sortOrder: sortState?.field === 'claimIds' ? sortState.order : undefined,
       render: (v: number[]) => v.join(", "),
     },
     {
       title: "Дней",
       dataIndex: "days",
       width: 60,
-      sorter: (a, b) => (a.days ?? -1) - (b.days ?? -1),
+      sorter: true,
+      sortOrder: sortState?.field === 'days' ? sortState.order : undefined,
     },
     {
       title: "Проект",
       dataIndex: "projectNames",
       width: 110,
-      sorter: (a, b) =>
-        (a.projectNames || "").localeCompare(b.projectNames || ""),
+      sorter: true,
+      sortOrder: sortState?.field === 'projectNames' ? sortState.order : undefined,
       ellipsis: true,
     },
     {
       title: "Корпус",
       dataIndex: "buildingNames",
       width: 80,
-      sorter: (a, b) =>
-        (a.buildingNames || "").localeCompare(b.buildingNames || ""),
+      sorter: true,
+      sortOrder: sortState?.field === 'buildingNames' ? sortState.order : undefined,
       ellipsis: true,
     },
     {
       title: "Объекты",
       dataIndex: "unitNamesList",
       width: 100,
-      sorter: (a, b) => (a.unitNames || "").localeCompare(b.unitNames || ""),
+      sorter: true,
+      sortOrder: sortState?.field === 'unitNamesList' ? sortState.order : undefined,
       render: (_: string[], row) => (
         <>
           {row.unitNamesList?.map((n, i) => (
@@ -116,7 +128,8 @@ const DefectsTable = React.memo<Props>(({
       title: "Описание",
       dataIndex: "description",
       width: 250,
-      sorter: (a, b) => a.description.localeCompare(b.description),
+      sorter: true,
+      sortOrder: sortState?.field === 'description' ? sortState.order : undefined,
       ellipsis: { showTitle: false },
       render: (text: string) => (
         <Tooltip title={text} placement="topLeft">
@@ -128,16 +141,16 @@ const DefectsTable = React.memo<Props>(({
       title: "Тип",
       dataIndex: "defectTypeName",
       width: 80,
-      sorter: (a, b) =>
-        (a.defectTypeName || "").localeCompare(b.defectTypeName || ""),
+      sorter: true,
+      sortOrder: sortState?.field === 'defectTypeName' ? sortState.order : undefined,
       ellipsis: true,
     },
     {
       title: "Статус",
       dataIndex: "status_id",
       width: 120,
-      sorter: (a, b) =>
-        (a.defectStatusName || "").localeCompare(b.defectStatusName || ""),
+      sorter: true,
+      sortOrder: sortState?.field === 'status_id' ? sortState.order : undefined,
       render: (_: number, row) => (
         <DefectStatusSelect
           defectId={row.id}
@@ -152,49 +165,48 @@ const DefectsTable = React.memo<Props>(({
       title: "Гар.",
       dataIndex: "is_warranty",
       width: 50,
-      sorter: (a, b) => Number(a.is_warranty) - Number(b.is_warranty),
+      sorter: true,
+      sortOrder: sortState?.field === 'is_warranty' ? sortState.order : undefined,
       render: (v: boolean) => (v ? "Да" : "Нет"),
     },
     {
       title: "Кем устраняется",
       dataIndex: "fixByName",
       width: 110,
-      sorter: (a, b) => (a.fixByName || "").localeCompare(b.fixByName || ""),
+      sorter: true,
+      sortOrder: sortState?.field === 'fixByName' ? sortState.order : undefined,
       ellipsis: true,
     },
     {
       title: "Получено",
       dataIndex: "received_at",
       width: 85,
-      sorter: (a, b) =>
-        (a.received_at ? dayjs(a.received_at).valueOf() : 0) -
-        (b.received_at ? dayjs(b.received_at).valueOf() : 0),
+      sorter: true,
+      sortOrder: sortState?.field === 'received_at' ? sortState.order : undefined,
       render: fmt,
     },
     {
       title: "Добавлено",
       dataIndex: "created_at",
       width: 110,
-      sorter: (a, b) =>
-        (a.created_at ? dayjs(a.created_at).valueOf() : 0) -
-        (b.created_at ? dayjs(b.created_at).valueOf() : 0),
+      sorter: true,
+      sortOrder: sortState?.field === 'created_at' ? sortState.order : undefined,
       render: fmtDateTime,
     },
     {
       title: "Автор",
       dataIndex: "createdByName",
       width: 100,
-      sorter: (a, b) =>
-        (a.createdByName || "").localeCompare(b.createdByName || ""),
+      sorter: true,
+      sortOrder: sortState?.field === 'createdByName' ? sortState.order : undefined,
       ellipsis: true,
     },
     {
       title: "Устранено",
       dataIndex: "fixed_at",
       width: 85,
-      sorter: (a, b) =>
-        (a.fixed_at ? dayjs(a.fixed_at).valueOf() : 0) -
-        (b.fixed_at ? dayjs(b.fixed_at).valueOf() : 0),
+      sorter: true,
+      sortOrder: sortState?.field === 'fixed_at' ? sortState.order : undefined,
       render: fmt,
     },
     {
@@ -233,7 +245,7 @@ const DefectsTable = React.memo<Props>(({
         </Space>
       ),
     },
-  ], [onView, remove, isPending, lockedUnitIds]);
+  ], [onView, remove, isPending, lockedUnitIds, sortState]);
 
   const columnsWithResize = columnsProp ?? defaultColumns;
 
@@ -281,6 +293,8 @@ const DefectsTable = React.memo<Props>(({
       /** Стилизуем строки аналогично таблице писем */
       rowClassName={rowClassName}
       style={{ background: "#fff", fontSize: '12px' }}
+      /** 🚀 Обработчик изменения таблицы (для серверной сортировки) */
+      onChange={onChange}
     />
   );
 });

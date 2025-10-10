@@ -342,7 +342,7 @@ const mutation = useMutation({
 - **UI Feedback**: Show loading states, success/error notifications via notistack
 - **Date Handling**: Use dayjs for date operations (already configured)
 - **Memoization**: Use React.memo for list items, useCallback for event handlers
-- **ESLint**: Max warnings set to 0 - fix all warnings before committing
+- **ESLint**: Modern flat config format (`eslint.config.js`), max warnings set to 0 - fix all warnings before committing
 
 ## Key Files and Patterns
 
@@ -353,9 +353,9 @@ const mutation = useMutation({
 
 ### API & Data Fetching
 - Supabase client: `src/shared/api/supabaseClient.ts` (includes debug fetch wrapper)
-- Query keys: `src/shared/utils/queryKeys.ts`
+- Query keys: `src/shared/utils/queryKeys.ts` (centralized queryKeys object)
 - Real-time updates: `src/shared/hooks/useRealtimeUpdates.ts`
-- Batch fetching: `src/shared/api/fetchAll.ts`
+- Batch fetching: `src/shared/api/fetchAll.ts` (`fetchPaged`, `fetchByChunks`)
 
 ### Common Hooks
 - `useProjects` - Project selection and management
@@ -403,8 +403,9 @@ Entities follow a consistent pattern with:
 ## MCP Server Integration
 
 The project includes Model Context Protocol (MCP) servers configured in `.mcp.json`:
-- **supabase**: Database operations and migrations
+- **supabase**: Database operations and migrations (read-only mode)
 - **playwright-official**: Browser automation for testing
+- **chrome-devtools**: Browser DevTools protocol for advanced debugging
 - **context7**: Documentation retrieval for libraries
 - **sequential-thinking**: Problem-solving assistance
 - **filesystem**: File system operations
