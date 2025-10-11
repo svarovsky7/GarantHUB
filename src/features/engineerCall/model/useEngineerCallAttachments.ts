@@ -12,7 +12,7 @@ export const useEngineerCallAttachments = (callId: number | null, userId?: strin
   const [newFiles, setNewFiles] = useState<File[]>([]);
   const [previewFile, setPreviewFile] = useState<PreviewFile | null>(null);
 
-  const { data: remoteFiles = [], refetch: refetchAttachments } = useAttachments(callId);
+  const { data: remoteFiles = [], refetch: refetchAttachments } = useAttachments(callId ? String(callId) : null);
   const deleteAttachmentMutation = useDeleteEngineerCallAttachment();
   const updateAttachmentMutation = useUpdateEngineerCallAttachment();
 
@@ -27,7 +27,7 @@ export const useEngineerCallAttachments = (callId: number | null, userId?: strin
   const handleRemoveRemoteFile = async (id: string) => {
     if (!callId) return;
     try {
-      await deleteAttachmentMutation.mutateAsync({ attachmentId: id, callId });
+      await deleteAttachmentMutation.mutateAsync({ attachmentId: id, callId: String(callId) });
       refetchAttachments();
     } catch (error) {
       console.error('Error deleting attachment:', error);
@@ -55,7 +55,7 @@ export const useEngineerCallAttachments = (callId: number | null, userId?: strin
     if (newFiles.length > 0 && callId && userId) {
       try {
         const filesWithDescription = newFiles.map((file) => ({ file, description: '' }));
-        await addEngineerCallAttachments(callId, filesWithDescription, userId);
+        await addEngineerCallAttachments(String(callId), filesWithDescription, userId);
         setNewFiles([]);
         refetchAttachments();
       } catch (error) {

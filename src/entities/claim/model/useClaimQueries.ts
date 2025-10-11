@@ -312,8 +312,8 @@ export function useClaimsAllSummary(page = 0, pageSize = 50, filters?: any) {
         const chunkSize = 1000;
         let currentFrom = 0;
 
-        // First get the total count
-        const { count: totalCount, error: countError } = await query.select('*', { count: 'exact', head: true });
+        // First get the total count (reuse existing query)
+        const { count: totalCount, error: countError } = await query;
         if (countError) {
           error = countError;
         } else {

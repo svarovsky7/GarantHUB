@@ -71,5 +71,4 @@ export interface ClaimSummaryWithDayjs extends Omit<ClaimSummary, 'claimed_on' |
   buildings?: string;      // Comma-separated для обратной совместимости
   attachments?: import('./claimFile').RemoteClaimFile[];
   hasCheckingDefect?: boolean;
-  parent_id?: number | null;
 }

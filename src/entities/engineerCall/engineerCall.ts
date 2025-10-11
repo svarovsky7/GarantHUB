@@ -351,7 +351,8 @@ export function useEngineerCallAttachments(callId: string | null) {
         // Junction table exists, use it
         return junctionData.map((item: any) => ({
           id: item.attachments.id,
-          path: item.attachments.path,
+          file_path: item.attachments.path,
+          file_name: item.attachments.original_name || item.attachments.path.split('/').pop(),
           mime_type: item.attachments.mime_type,
           original_name: item.attachments.original_name || item.attachments.path.split('/').pop(),
           name: item.attachments.original_name || item.attachments.path.split('/').pop(),

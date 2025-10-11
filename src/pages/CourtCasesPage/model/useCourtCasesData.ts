@@ -155,7 +155,7 @@ export function useCourtCasesData() {
     projects,
     units: caseUnits,
     users,
-    stages,
+    stages: stages as import('@/shared/types/courtCaseStatus').CourtCaseStatus[],
     closedStageId,
     stats,
   };

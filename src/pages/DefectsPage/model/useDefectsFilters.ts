@@ -93,8 +93,8 @@ export function useDefectsFilters({ defects, units, projects, currentFilters = {
       console.log('  📌 Применяем фильтр по проектам:', currentFilters.projectId);
       const beforeFilter = filteredForOptions.length;
       filteredForOptions = filteredForOptions.filter(d =>
-        (d.projectIds || d.project_ids)?.some(pid => currentFilters.projectId?.includes(pid))
-      );
+        ((d as any).projectIds || (d as any).project_ids)?.some(pid => currentFilters.projectId?.includes(pid))
+      ) as DefectSummaryWithDayjs[] | DefectWithInfo[];
       console.log(`  ✅ После фильтрации по проектам: ${beforeFilter} → ${filteredForOptions.length} дефектов`);
     }
 
@@ -103,8 +103,8 @@ export function useDefectsFilters({ defects, units, projects, currentFilters = {
       console.log('  📌 Применяем фильтр по объектам:', currentFilters.units);
       const beforeFilter = filteredForOptions.length;
       filteredForOptions = filteredForOptions.filter(d =>
-        (d.unitIds || d.unit_ids)?.some(uid => currentFilters.units?.includes(uid))
-      );
+        ((d as any).unitIds || (d as any).unit_ids)?.some(uid => currentFilters.units?.includes(uid))
+      ) as DefectSummaryWithDayjs[] | DefectWithInfo[];
       console.log(`  ✅ После фильтрации по объектам: ${beforeFilter} → ${filteredForOptions.length} дефектов`);
     }
 
@@ -114,7 +114,7 @@ export function useDefectsFilters({ defects, units, projects, currentFilters = {
       const beforeFilter = filteredForOptions.length;
       filteredForOptions = filteredForOptions.filter(d =>
         currentFilters.statusId?.includes(d.status_id)
-      );
+      ) as DefectSummaryWithDayjs[] | DefectWithInfo[];
       console.log(`  ✅ После фильтрации по статусам: ${beforeFilter} → ${filteredForOptions.length} дефектов`);
     }
 
@@ -124,14 +124,14 @@ export function useDefectsFilters({ defects, units, projects, currentFilters = {
       const beforeFilter = filteredForOptions.length;
       filteredForOptions = filteredForOptions.filter(d =>
         currentFilters.typeId?.includes(d.type_id)
-      );
+      ) as DefectSummaryWithDayjs[] | DefectWithInfo[];
       console.log(`  ✅ После фильтрации по типам: ${beforeFilter} → ${filteredForOptions.length} дефектов`);
     }
 
     // Формируем финальные опции для units
     // Показываем ВСЕ unit_ids из дефектов, даже если они не загружены в unitOptionsMap
     const finalUnitIds = Array.from(
-      new Set(filteredForOptions.flatMap((d) => d.unitIds || d.unit_ids || []))
+      new Set(filteredForOptions.flatMap((d) => (d as any).unitIds || (d as any).unit_ids || []))
     );
 
     const finalUnitsOptions = finalUnitIds
@@ -169,16 +169,16 @@ export function useDefectsFilters({ defects, units, projects, currentFilters = {
       units: finalUnitsOptions,
 
       // Статусы - фильтруются по другим выбранным фильтрам
-      statuses: uniqPairs(filteredForOptions.map((d) => [d.status_id, d.defectStatusName || d.statusName])),
+      statuses: uniqPairs(filteredForOptions.map((d) => [d.status_id, (d as any).defectStatusName || (d as any).statusName]) as [number | null, string | null][]),
 
       // Типы - фильтруются по другим выбранным фильтрам
-      types: uniqPairs(filteredForOptions.map((d) => [d.type_id, d.defectTypeName || d.typeName])),
+      types: uniqPairs(filteredForOptions.map((d) => [d.type_id, (d as any).defectTypeName || (d as any).typeName]) as [number | null, string | null][]),
 
       // ID дефектов - фильтруются по другим выбранным фильтрам
       ids: mapNumOptions(filteredForOptions.map((d) => d.id)),
 
       // ID претензий - фильтруются по другим выбранным фильтрам
-      claimIds: mapNumOptions(filteredForOptions.flatMap((d) => d.claimIds || d.claim_ids || [])),
+      claimIds: mapNumOptions(filteredForOptions.flatMap((d) => (d as any).claimIds || (d as any).claim_ids || [])),
     };
   }, [defects, units, projects, currentFilters]);
 

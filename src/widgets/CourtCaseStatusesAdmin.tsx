@@ -102,12 +102,12 @@ export default function CourtCaseStatusesAdmin({
                         initialData={modal.mode === 'edit' ? modal.data : undefined}
                         onSubmit={(d) =>
                             (modal.mode === 'add'
-                                ? add.mutate(d, {
+                                ? add.mutate({ ...d, entity: 'court_case' }, {
                                       onSuccess: () => ok('Стадия создана'),
                                       onError: (e) => notify.error(e.message),
                                   })
                                 : update.mutate(
-                                      { id: modal.data.id, updates: d },
+                                      { id: modal.data.id, formData: d },
                                       {
                                           onSuccess: () => ok('Стадия обновлена'),
                                           onError: (e) => notify.error(e.message),

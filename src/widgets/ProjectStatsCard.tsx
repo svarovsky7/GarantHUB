@@ -55,9 +55,12 @@ export default function ProjectStatsCard({ projectId, allProjects }: Props) {
     );
   }
 
-  const totalUnits = data.projects.reduce((sum, p) => sum + (p?.unitCount ?? 0), 0);
-  const totalBuildings = data.projects.reduce((sum, p) => sum + (p?.buildingCount ?? 0), 0);
-  const totalLetters = data.projects.reduce((sum, p) => sum + (p?.letterCount ?? 0), 0);
+  // Type assertion для TypeScript
+  const statsData = data as import('@/shared/types/dashboardStats').DashboardStats;
+
+  const totalUnits = statsData.projects.reduce((sum, p) => sum + (p?.unitCount ?? 0), 0);
+  const totalBuildings = statsData.projects.reduce((sum, p) => sum + (p?.buildingCount ?? 0), 0);
+  const totalLetters = statsData.projects.reduce((sum, p) => sum + (p?.letterCount ?? 0), 0);
 
   return (
     <Card title={name} style={{ width: '100%' }}>
@@ -69,18 +72,18 @@ export default function ProjectStatsCard({ projectId, allProjects }: Props) {
           <Statistic title="Корпусов" value={totalBuildings} />
         </Col>
         <Col span={8}>
-          <Statistic title="Откр. претензий" value={data.claimsOpen} />
+          <Statistic title="Откр. претензий" value={statsData.claimsOpen} />
         </Col>
       </Row>
       <Row gutter={16} style={{ marginTop: 16 }}>
         <Col span={8}>
-          <Statistic title="Откр. дефектов" value={data.defectsOpen} />
+          <Statistic title="Откр. дефектов" value={statsData.defectsOpen} />
         </Col>
         <Col span={8}>
-          <Statistic title="Закр. претензий" value={data.claimsClosed} />
+          <Statistic title="Закр. претензий" value={statsData.claimsClosed} />
         </Col>
         <Col span={8}>
-          <Statistic title="Закр. дефектов" value={data.defectsClosed} />
+          <Statistic title="Закр. дефектов" value={statsData.defectsClosed} />
         </Col>
       </Row>
       <Row gutter={16} style={{ marginTop: 16 }}>
@@ -88,10 +91,10 @@ export default function ProjectStatsCard({ projectId, allProjects }: Props) {
           <Statistic title="Писем" value={totalLetters} />
         </Col>
         <Col span={8}>
-          <Statistic title="Откр. судебных дел" value={data.courtCasesOpen} />
+          <Statistic title="Откр. судебных дел" value={statsData.courtCasesOpen} />
         </Col>
         <Col span={8}>
-          <Statistic title="Закр. судебных дел" value={data.courtCasesClosed} />
+          <Statistic title="Закр. судебных дел" value={statsData.courtCasesClosed} />
         </Col>
       </Row>
     </Card>

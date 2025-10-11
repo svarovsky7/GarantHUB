@@ -67,7 +67,7 @@ export const useAllUnitsWithClaims = () => {
             
             const filteredUnits = units
                 .filter((u) => u.name && u.name.trim() !== '')
-                .sort(getUnitNameComparator());
+                .sort(getUnitNameComparator('asc'));
             
             console.log(`[useAllUnitsWithClaims] Returning ${filteredUnits.length} units`);
             console.log(`[useAllUnitsWithClaims] Sample units:`, filteredUnits.slice(0, 5).map(u => u.name));

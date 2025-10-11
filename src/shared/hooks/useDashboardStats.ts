@@ -90,6 +90,9 @@ export function useDashboardStats(pid?: number | number[] | null) {
           defectsClosed: acc.defectsClosed + stat.defectsClosed,
           courtCasesOpen: acc.courtCasesOpen + stat.courtCasesOpen,
           courtCasesClosed: acc.courtCasesClosed + stat.courtCasesClosed,
+          claimsByUnit: [...acc.claimsByUnit, ...stat.claimsByUnit],
+          claimsByEngineer: [...acc.claimsByEngineer, ...stat.claimsByEngineer],
+          defectsByEngineer: [...acc.defectsByEngineer, ...stat.defectsByEngineer],
         };
       }, {
         projects: [],
@@ -99,6 +102,9 @@ export function useDashboardStats(pid?: number | number[] | null) {
         defectsClosed: 0,
         courtCasesOpen: 0,
         courtCasesClosed: 0,
+        claimsByUnit: [],
+        claimsByEngineer: [],
+        defectsByEngineer: [],
       } as DashboardStats);
       
       return combined;

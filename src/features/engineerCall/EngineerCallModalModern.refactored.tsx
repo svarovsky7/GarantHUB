@@ -118,7 +118,7 @@ const EngineerCallModalModern: React.FC<EngineerCallModalProps> = ({
     uploadNewFiles,
     resetAttachments,
     refetchAttachments,
-  } = useEngineerCallAttachments(initialData?.id || null, profile?.id);
+  } = useEngineerCallAttachments(initialData?.id ? Number(initialData.id) : null, profile?.id);
 
   // Set building when units are loaded for edit mode
   useEffect(() => {

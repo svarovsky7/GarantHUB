@@ -4,6 +4,7 @@ import { useUsers } from '@/entities/user';
 import { useLockedUnitIds } from '@/entities/unit';
 import { useVisibleProjects } from '@/entities/project';
 import type { ClaimWithNames } from '@/shared/types/claimWithNames';
+import dayjs from 'dayjs';
 
 /**
  * 🚀 ОПТИМИЗИРОВАННЫЙ хук для загрузки данных страницы претензий
@@ -33,7 +34,8 @@ export function useClaimsDataOptimized() {
   const claimsWithNames: ClaimWithNames[] = useMemo(() => {
     if (claimsLoading || !claims.length) return [];
 
-    return claims.map((c) => ({
+    // Данные уже преобразованы в ClaimSummaryWithDayjs, просто добавляем недостающие поля
+    return claims.map((c: any) => ({
       ...c,
       // ✅ unit_names и building_names УЖЕ есть в VIEW как массивы
       // Преобразуем в строки для обратной совместимости
@@ -41,11 +43,7 @@ export function useClaimsDataOptimized() {
       unitNumbers: c.unit_names?.join(', ') ?? '', // TODO: добавить unit_numbers в VIEW если нужно
       buildings: c.building_names?.join(', ') ?? '',
 
-      // ✅ Имена пользователей УЖЕ есть в VIEW
-      responsibleEngineerName: c.engineer_name ?? null,
-      createdByName: c.created_by_name ?? null,
-
-      // Дополнительные UI поля
+      // Дополнительные UI поля (даты и имена уже есть из mapClaimSummary)
       attachments: [],
       hasCheckingDefect: false,
     })) as ClaimWithNames[];
@@ -61,13 +59,13 @@ export function useClaimsDataOptimized() {
       .sort((a, b) => a.label.localeCompare(b.label));
 
     const uniqueBuildings = Array.from(
-      new Set(claimsWithNames.flatMap(c => c.building_names || []))
+      new Set(claimsWithNames.flatMap(c => (c as any).building_names || []))
     )
       .map(building => ({ value: building, label: building }))
       .sort((a, b) => a.label.localeCompare(b.label));
 
     const uniqueUnits = Array.from(
-      new Set(claimsWithNames.flatMap(c => c.unit_names || []))
+      new Set(claimsWithNames.flatMap(c => (c as any).unit_names || []))
     )
       .map(name => ({ value: name, label: name }))
       .sort((a, b) => a.label.localeCompare(b.label));
@@ -75,8 +73,8 @@ export function useClaimsDataOptimized() {
     const uniqueStatuses = Array.from(
       new Set(
         claimsWithNames
-          .filter(c => c.status_name)
-          .map(c => ({ id: c.claim_status_id!, name: c.status_name! }))
+          .filter(c => c.statusName)
+          .map(c => ({ id: c.claim_status_id!, name: c.statusName! }))
       )
     )
       .map(s => ({ value: s.name, label: s.name }))

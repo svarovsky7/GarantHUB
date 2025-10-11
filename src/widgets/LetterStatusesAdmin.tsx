@@ -42,10 +42,10 @@ export default function LetterStatusesAdmin({
   const handleSubmit = async (values: { name: string; color: string }) => {
     try {
       if (editRow) {
-        await update.mutateAsync({ id: editRow.id, updates: values });
+        await update.mutateAsync({ id: editRow.id, formData: values });
         notify.success('Статус обновлён');
       } else {
-        await add.mutateAsync(values);
+        await add.mutateAsync({ ...values, entity: 'letter' });
         notify.success('Статус создан');
       }
       setOpen(false);

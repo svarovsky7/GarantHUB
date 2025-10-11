@@ -8,6 +8,7 @@ import { useUsers } from '@/entities/user';
 import type { DefectWithInfo } from '@/shared/types/defect';
 import type { DefectFilters } from '@/shared/types/defectFilters';
 import { calculateDays } from '../lib/defectsHelpers';
+import dayjs from 'dayjs';
 
 /**
  * 🚀 МАКСИМАЛЬНО ОПТИМИЗИРОВАННЫЙ хук для загрузки данных страницы дефектов
@@ -91,6 +92,7 @@ export function useDefectsDataOptimized(
         fixByName = contractorMap.get(d.contractor_id) || d.contractor_name || 'Подрядчик';
       }
 
+      // Данные уже преобразованы в DefectSummaryWithDayjs, добавляем недостающие поля
       return {
         ...d,
         // Данные из VIEW (уже есть как массивы)
@@ -112,12 +114,13 @@ export function useDefectsDataOptimized(
 
         // Дополнительные UI поля
         fixByName,
-        days: calculateDays(d.receivedAt, d.fixedAt),
-        defectTypeName: d.typeName ?? '',
-        defectStatusName: d.statusName ?? '',
-        defectStatusColor: d.statusColor ?? null,
+        // Используем snake_case поля из spread (они есть в runtime, но не в типе)
+        days: calculateDays((d as any).received_at, (d as any).fixed_at),
+        defectTypeName: (d as any).type_name ?? '',
+        defectStatusName: (d as any).status_name ?? '',
+        defectStatusColor: (d as any).status_color ?? null,
         filesCount: d.attachments_count ?? 0,
-      } as DefectWithInfo;
+      } as unknown as DefectWithInfo;
     });
   }, [defects, userMap, brigadeMap, contractorMap, isPending]);
 

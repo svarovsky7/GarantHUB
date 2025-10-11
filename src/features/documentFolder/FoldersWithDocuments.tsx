@@ -242,7 +242,7 @@ const FolderContent = React.memo<FolderContentProps>(({
         const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
         return dateA - dateB;
       },
-      defaultSortOrder: "descend",
+      defaultSortOrder: 'descend' as const,
       render: (createdAt: string) => (
         <Text type="secondary">
           {dayjs(createdAt).format("DD.MM.YYYY HH:mm")}

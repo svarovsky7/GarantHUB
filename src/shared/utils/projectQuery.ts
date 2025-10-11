@@ -14,7 +14,7 @@ import type { PostgrestFilterBuilder } from '@supabase/postgrest-js';
  * @param projectIds список проектов пользователя из profiles_projects
  * @param onlyAssigned true если у роли включено "Только свой проект"
  */
-export function filterByProjects<T extends PostgrestFilterBuilder<any, any, any>>(
+export function filterByProjects<T extends PostgrestFilterBuilder<any, any, any, any>>(
   query: T,
   projectId: number | null,
   projectIds: number[],
