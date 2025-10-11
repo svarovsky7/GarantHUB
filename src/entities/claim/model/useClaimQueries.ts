@@ -1,173 +1,14 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/shared/api/supabaseClient';
 import { useProjectFilter } from '@/shared/hooks/useProjectFilter';
-import { useProjectId } from '@/shared/hooks/useProjectId';
-import { useAuthStore } from '@/shared/store/authStore';
 import { filterByProjects } from '@/shared/utils/projectQuery';
-import { useNotify } from '@/shared/hooks/useNotify';
 import { fetchPaged, fetchByChunks } from '@/shared/api/fetchAll';
 import type { PostgrestSingleResponse } from '@supabase/supabase-js';
-import type { Claim } from '@/shared/types/claim';
-import type { ClaimWithNames } from '@/shared/types/claimWithNames';
-import type { ClaimDeleteParams } from '@/shared/types/claimDelete';
-import type { ClaimDefect } from '@/shared/types/claimDefect';
 import type { ClaimSimple } from '@/shared/types/claimSimple';
+import type { ClaimDefect } from '@/shared/types/claimDefect';
 import type { ClaimIdsMap } from '@/shared/types/claimIdsMap';
-import type { ClaimSummary, ClaimSummaryWithDayjs } from '@/shared/types/claimSummary';
-import {
-  addClaimAttachments,
-  getAttachmentsByIds,
-  ATTACH_BUCKET,
-} from '@/entities/attachment';
-import dayjs from 'dayjs';
-
-const TABLE = 'claims';
-const SUMMARY_TABLE = 'claims_summary';
-const LINK_TABLE = 'claim_links';
-
-/**
- * Преобразует запись из claims_summary в объект претензии с удобными полями.
- */
-function mapClaimSummary(r: ClaimSummary): ClaimSummaryWithDayjs {
-  const toDayjs = (d: any) => (d ? (dayjs(d).isValid() ? dayjs(d) : null) : null);
-
-  return {
-    ...r,
-    // Преобразуем строковые даты в объекты Dayjs
-    claimedOn: toDayjs(r.claimed_on),
-    acceptedOn: toDayjs(r.accepted_on),
-    registeredOn: toDayjs(r.registered_on),
-    resolvedOn: toDayjs(r.resolved_on),
-    createdAt: toDayjs(r.created_at),
-
-    // Алиасы для совместимости
-    projectName: r.project_name ?? '—',
-    statusName: r.status_name ?? '—',
-    statusColor: r.status_color,
-    responsibleEngineerName: r.engineer_name,
-    caseUid: r.case_uid,
-    createdByName: r.created_by_name,
-
-    // ✅ СОХРАНЯЕМ данные из VIEW (не перезаписываем!)
-    unit_ids: r.unit_ids ?? [],
-    defect_ids: r.defect_ids ?? [],
-    parent_id: r.parent_id ?? null, // ✅ Теперь parent_id тоже в VIEW!
-
-    // UI поля
-    unitNames: '',
-    unitNumbers: '',
-    buildings: '',
-    attachments: [],
-    hasCheckingDefect: false,
-  } as ClaimSummaryWithDayjs;
-}
-
-/**
- * Преобразует запись Supabase в объект претензии с удобными полями.
- * @deprecated Используйте mapClaimSummary для более быстрой работы
- */
-function mapClaim(r: any): ClaimWithNames {
-  const toDayjs = (d: any) => (d ? (dayjs(d).isValid() ? dayjs(d) : null) : null);
-  const attachments = Array.isArray(r.attachments)
-    ? r.attachments.map((a: any) => {
-        let name = a.original_name;
-        if (!name) {
-          try {
-            name = decodeURIComponent(
-              a.storage_path.split('/').pop()?.replace(/^\d+_/, '') ||
-                a.storage_path,
-            );
-          } catch {
-            name = a.storage_path;
-          }
-        }
-        return {
-          id: a.id,
-          path: a.storage_path,
-          original_name: a.original_name ?? null,
-          name,
-          url: a.file_url,
-          mime_type: a.mime_type,
-          description: a.description ?? null,
-        } as import('@/shared/types/claimFile').RemoteClaimFile;
-      })
-    : [];
-  return {
-    id: r.id,
-    parent_id: r.parent_id ?? null,
-    project_id: r.project_id,
-    unit_ids: r.unit_ids || [],
-    claim_status_id: r.claim_status_id ?? null,
-    claim_no: r.claim_no,
-    claimed_on: r.claimed_on,
-    accepted_on: r.accepted_on,
-    registered_on: r.registered_on,
-    resolved_on: r.resolved_on,
-    engineer_id: r.engineer_id,
-    owner: r.owner ?? null,
-    case_uid_id: r.case_uid_id ?? null,
-    pre_trial_claim: r.pre_trial_claim ?? false,
-    defect_ids: r.defect_ids ?? [],
-    description: r.description ?? '',
-    created_by: r.created_by ?? null,
-    createdAt: toDayjs(r.created_at),
-    projectName: r.projects?.name ?? '—',
-    statusName: r.statuses?.name ?? '—',
-    statusColor: r.statuses?.color ?? null,
-    responsibleEngineerName: null,
-    caseUid: r.court_cases_uids?.uid ?? null,
-    unitNames: '',
-    // convert strings to dayjs for consumer convenience
-    claimedOn: toDayjs(r.claimed_on),
-    acceptedOn: toDayjs(r.accepted_on),
-    registeredOn: toDayjs(r.registered_on),
-    resolvedOn: toDayjs(r.resolved_on),
-    attachments,
-  } as unknown as ClaimWithNames;
-}
-
-/**
- * Проверяет статус претензии и при необходимости переводит связанные
- * дефекты в статус "Закрыто".
- */
-async function closeDefectsForClaim(claimId: number, statusId: number | null) {
-  if (!statusId) return;
-  const { data: claimStatus } = await supabase
-    .from('statuses')
-    .select('name')
-    .eq('id', statusId)
-    .maybeSingle();
-  if (!claimStatus || !/закры/i.test(claimStatus.name)) return;
-
-  const { data: closedDefStatus } = await supabase
-    .from('statuses')
-    .select('id')
-    .eq('entity', 'defect')
-    .ilike('name', '%закры%')
-    .maybeSingle();
-  if (!closedDefStatus?.id) return;
-
-  const { data: defectRows } = await supabase
-    .from('claim_defects')
-    .select('defect_id')
-    .eq('claim_id', claimId);
-  const defectIds = (defectRows ?? []).map((d: any) => d.defect_id);
-  if (!defectIds.length) return;
-
-  await supabase.from('defects').update({ status_id: closedDefStatus.id }).in('id', defectIds);
-}
-
-/**
- * Помечает все дефекты претензии как относящиеся к досудебной.
- * @param claimId идентификатор претензии
- */
-async function markClaimDefectsPreTrial(claimId: number) {
-  await supabase
-    .from('claim_defects')
-    .update({ pre_trial_claim: true })
-    .eq('claim_id', claimId)
-    .eq('pre_trial_claim', false);
-}
+import type { ClaimSummary } from '@/shared/types/claimSummary';
+import { mapClaimSummary, mapClaim, TABLE, SUMMARY_TABLE, LINK_TABLE } from './mappers';
 
 /**
  * Хук получения списка претензий с использованием представления claims_summary (оптимизированный).
@@ -212,7 +53,7 @@ export function useClaimsSummary() {
  */
 export function useClaims() {
   const { projectId, projectIds, onlyAssigned } = useProjectFilter();
-  
+
   return useQuery({
     queryKey: [TABLE, projectId, projectIds.join(',')],
     queryFn: async () => {
@@ -235,11 +76,11 @@ export function useClaims() {
         return q as unknown as PromiseLike<PostgrestSingleResponse<any[]>>;
       });
       const ids = rows.map((r: any) => r.id);
-      
+
       // Chunk IDs to avoid URL length limit (max 100 IDs per request)
       const chunkSize = 100;
       let allLinks: any[] = [];
-      
+
       if (ids.length > 0) {
         for (let i = 0; i < ids.length; i += chunkSize) {
           const chunk = ids.slice(i, i + chunkSize);
@@ -252,11 +93,11 @@ export function useClaims() {
           }
         }
       }
-      
+
       const links = allLinks;
       const linkMap = new Map<number, number>();
       (links ?? []).forEach((l: any) => linkMap.set(l.child_id, l.parent_id));
-      
+
       const result = (rows ?? []).map((r: any) =>
         mapClaim({
           ...r,
@@ -266,7 +107,7 @@ export function useClaims() {
           attachments: (r.claim_attachments ?? []).map((a: any) => a.attachments),
         }),
       );
-      
+
       return result;
     },
     staleTime: 5 * 60_000,
@@ -366,18 +207,18 @@ export function useClaimAll(id?: number | string) {
  * Получить список претензий по всем проектам с пагинацией (оптимизированный).
  */
 export function useClaimsAllSummary(page = 0, pageSize = 50, filters?: any) {
-  
+
   return useQuery({
     queryKey: [SUMMARY_TABLE + '-all', page, pageSize, filters],
     queryFn: async () => {
       console.log(`[useClaimsAllSummary] Called with page=${page}, pageSize=${pageSize}`);
       const from = page * pageSize;
       const to = from + pageSize - 1;
-      
+
       let query = supabase
         .from(SUMMARY_TABLE)
         .select('*', { count: 'exact' });
-      
+
       // Применяем фильтры на сервере
       if (filters) {
         if (filters.project && Array.isArray(filters.project) && filters.project.length > 0) {
@@ -395,7 +236,7 @@ export function useClaimsAllSummary(page = 0, pageSize = 50, filters?: any) {
             .from('units')
             .select('id')
             .in('name', filters.units);
-          
+
           // Если есть фильтр по проектам, ограничиваем поиск объектов только этими проектами
           if (filters.project && Array.isArray(filters.project) && filters.project.length > 0) {
             // Сначала получаем ID проектов по их названиям
@@ -403,7 +244,7 @@ export function useClaimsAllSummary(page = 0, pageSize = 50, filters?: any) {
               .from('projects')
               .select('id')
               .in('name', filters.project);
-            
+
             if (projectIds && projectIds.length > 0) {
               unitsQuery = unitsQuery.in('project_id', projectIds.map(p => p.id));
             } else {
@@ -412,15 +253,15 @@ export function useClaimsAllSummary(page = 0, pageSize = 50, filters?: any) {
               return { data: [], count: 0, hasMore: false };
             }
           }
-          
+
           const { data: unitIds } = await unitsQuery;
-          
+
           if (unitIds && unitIds.length > 0) {
             const { data: claimIds } = await supabase
               .from('claim_units')
               .select('claim_id')
               .in('unit_id', unitIds.map(u => u.id));
-            
+
             if (claimIds && claimIds.length > 0) {
               const claimIdsList = claimIds.map(c => c.claim_id);
               query = query.in('id', claimIdsList);
@@ -439,13 +280,13 @@ export function useClaimsAllSummary(page = 0, pageSize = 50, filters?: any) {
             .from('units')
             .select('id')
             .in('building', filters.building);
-          
+
           if (unitIds && unitIds.length > 0) {
             const { data: claimIds } = await supabase
               .from('claim_units')
               .select('claim_id')
               .in('unit_id', unitIds.map(u => u.id));
-            
+
             if (claimIds && claimIds.length > 0) {
               query = query.in('id', claimIds.map(c => c.claim_id));
             } else {
@@ -458,19 +299,19 @@ export function useClaimsAllSummary(page = 0, pageSize = 50, filters?: any) {
                        .not('status_name', 'ilike', '%не%гаран%');
         }
       }
-      
+
       // For large page sizes (client-side filtering), fetch all records using pagination
       let rows: ClaimSummary[] = [];
       let count = 0;
       let error = null;
-      
+
       if (pageSize >= 10000) {
         // Fetch all records in chunks to bypass Supabase's 1000 row limit
         console.log('[useClaimsAllSummary] Fetching all records in chunks...');
         const allRows: ClaimSummary[] = [];
         const chunkSize = 1000;
         let currentFrom = 0;
-        
+
         // First get the total count
         const { count: totalCount, error: countError } = await query.select('*', { count: 'exact', head: true });
         if (countError) {
@@ -478,17 +319,17 @@ export function useClaimsAllSummary(page = 0, pageSize = 50, filters?: any) {
         } else {
           count = totalCount || 0;
           console.log(`[useClaimsAllSummary] Total records to fetch: ${count}`);
-          
+
           // Fetch all records in chunks
           while (currentFrom < count) {
             const currentTo = currentFrom + chunkSize - 1;
             console.log(`[useClaimsAllSummary] Fetching chunk: ${currentFrom}-${currentTo}`);
-            
+
             // Create a fresh query for each chunk to avoid state issues
             let chunkQuery = supabase
               .from(SUMMARY_TABLE)
               .select('*');
-            
+
             // Re-apply the same filters
             if (filters) {
               if (filters.project && Array.isArray(filters.project) && filters.project.length > 0) {
@@ -505,24 +346,24 @@ export function useClaimsAllSummary(page = 0, pageSize = 50, filters?: any) {
                                        .not('status_name', 'ilike', '%не%гаран%');
               }
             }
-            
+
             const { data: chunk, error: chunkError } = await chunkQuery
               .order('created_at', { ascending: false })
               .range(currentFrom, currentTo);
-            
+
             if (chunkError) {
               error = chunkError;
               break;
             }
-            
+
             if (chunk) {
               allRows.push(...chunk);
             }
-            
+
             if (!chunk || chunk.length < chunkSize) {
               break; // No more records
             }
-            
+
             currentFrom += chunkSize;
           }
           rows = allRows;
@@ -535,11 +376,11 @@ export function useClaimsAllSummary(page = 0, pageSize = 50, filters?: any) {
         count = result.count || 0;
         error = result.error;
       }
-        
+
       if (error) throw error;
-      
+
       const ids = (rows ?? []).map((r: ClaimSummary) => r.id);
-      
+
       // Получаем связи претензий (с чанкингом для избежания лимита URL)
       console.log(`[useClaimsAllSummary] Fetching links for ${ids.length} claims`);
       const links = ids.length
@@ -553,7 +394,7 @@ export function useClaimsAllSummary(page = 0, pageSize = 50, filters?: any) {
         : [];
       const linkMap = new Map<number, number>();
       (links ?? []).forEach((l: any) => linkMap.set(l.child_id, l.parent_id));
-      
+
       // Получаем unit_ids
       const unitRows = ids.length
         ? await fetchByChunks(ids, (chunk) =>
@@ -565,7 +406,7 @@ export function useClaimsAllSummary(page = 0, pageSize = 50, filters?: any) {
         if (!unitMap[u.claim_id]) unitMap[u.claim_id] = [];
         unitMap[u.claim_id].push(u.unit_id);
       });
-      
+
       // Получаем defect_ids
       const defectRows = ids.length
         ? await fetchByChunks(ids, (chunk) =>
@@ -577,7 +418,7 @@ export function useClaimsAllSummary(page = 0, pageSize = 50, filters?: any) {
         if (!defectMap[d.claim_id]) defectMap[d.claim_id] = [];
         defectMap[d.claim_id].push(d.defect_id);
       });
-      
+
       return {
         data: (rows ?? []).map((r: ClaimSummary) => {
           const mapped = mapClaimSummary(r);
@@ -604,7 +445,7 @@ export function useClaimsAll(page = 0, pageSize = 50) {
     queryFn: async () => {
       const from = page * pageSize;
       const to = from + pageSize - 1;
-      
+
       const { data: rows, error, count } = await supabase
         .from(TABLE)
         .select(
@@ -619,9 +460,9 @@ export function useClaimsAll(page = 0, pageSize = 50) {
         )
         .order('created_at', { ascending: false })
         .range(from, to);
-        
+
       if (error) throw error;
-      
+
       const ids = (rows ?? []).map((r: any) => r.id);
       console.log(`[useClaimsAll] Fetching links for ${ids.length} claims`);
       const links = ids.length
@@ -633,10 +474,10 @@ export function useClaimsAll(page = 0, pageSize = 50) {
               .in('child_id', chunk);
           })
         : [];
-      
+
       const linkMap = new Map<number, number>();
       (links ?? []).forEach((l: any) => linkMap.set(l.child_id, l.parent_id));
-      
+
       return {
         data: (rows ?? []).map((r: any) =>
           mapClaim({
@@ -824,396 +665,6 @@ export function useClaimsSimple() {
 }
 
 /**
- * Хук создания новой претензии.
- */
-export function useCreateClaim() {
-  const projectId = useProjectId();
-  const userId = useAuthStore((s) => s.profile?.id ?? null);
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (
-      payload: Omit<Claim, 'id' | 'created_at' | 'created_by' | 'updated_at' | 'updated_by'> & {
-        attachments?: Array<File | { file: File; type_id?: number | null }>;
-      },
-    ) => {
-      const { unit_ids = [], defect_ids = [], attachments = [], ...rest } = payload as any;
-
-      if (unit_ids.length) {
-        const { data: locked } = await supabase
-          .from('units')
-          .select('id')
-          .in('id', unit_ids)
-          .eq('locked', true);
-        if (locked && locked.length) {
-          throw new Error('Объект заблокирован. Обратитесь в юридический отдел');
-        }
-      }
-
-      const insertData: any = {
-        ...rest,
-        project_id: rest.project_id ?? projectId,
-        created_by: userId,
-      };
-
-      const { data: created, error } = await supabase
-        .from(TABLE)
-        .insert(insertData)
-        .select('id, project_id')
-        .single();
-      if (error) throw error;
-
-      if (unit_ids.length) {
-        const rows = unit_ids.map((uid: number) => ({ claim_id: created.id, unit_id: uid }));
-        await supabase.from('claim_units').insert(rows);
-      }
-
-      if (defect_ids.length) {
-        const rows = defect_ids.map((did: number) => ({
-          claim_id: created.id,
-          defect_id: did,
-          pre_trial_claim: insertData.pre_trial_claim ?? false,
-        }));
-        await supabase.from('claim_defects').insert(rows);
-      }
-
-      if (attachments.length) {
-        const uploaded = await addClaimAttachments(
-          attachments.map((f: any) =>
-            'file' in f
-              ? { file: f.file, type_id: f.type_id ?? null, description: f.description }
-              : { file: f, type_id: null, description: undefined },
-          ),
-          created.id,
-        );
-        const ids = uploaded.map((u: any) => u.id);
-        if (ids.length) {
-          const rows = ids.map((aid) => ({ claim_id: created.id, attachment_id: aid }));
-          await supabase.from('claim_attachments').insert(rows);
-        }
-      }
-
-      await closeDefectsForClaim(created.id, insertData.claim_status_id ?? null);
-
-      return {
-        id: created.id,
-        project_id: created.project_id,
-      } as Claim;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: [TABLE] });
-      qc.invalidateQueries({ queryKey: [SUMMARY_TABLE] });
-      qc.invalidateQueries({ queryKey: [SUMMARY_TABLE + '-all'] });
-      qc.invalidateQueries({ queryKey: ['defects'] });
-      qc.invalidateQueries({ queryKey: ['claims-simple'] });
-      qc.invalidateQueries({ queryKey: ['claims-simple-all'] });
-      qc.invalidateQueries({ queryKey: ['claims-all'] });
-      qc.invalidateQueries({ queryKey: ['claims-all-legacy'] });
-      qc.invalidateQueries({ queryKey: ['claims-optimized'] });
-      qc.invalidateQueries({ queryKey: ['claims-stats'] });
-      qc.invalidateQueries({ queryKey: ['claims-all-stats'] });
-    },
-  });
-}
-
-/**
- * Хук обновления данных претензии.
- */
-export function useUpdateClaim() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ id, updates }: { id: number; updates: Partial<Claim>; }) => {
-      const { unit_ids, ...rest } = updates as Partial<Claim> & { unit_ids?: number[] };
-
-      const { data, error } = await supabase
-        .from(TABLE)
-        .update(rest)
-        .eq('id', id)
-        .select('*')
-        .maybeSingle();
-      if (error) throw error;
-
-      if (Array.isArray(unit_ids)) {
-        await supabase.from('claim_units').delete().eq('claim_id', id);
-        if (unit_ids.length) {
-          const rows = unit_ids.map((uid) => ({ claim_id: id, unit_id: uid }));
-          await supabase.from('claim_units').insert(rows);
-        }
-      }
-
-      await closeDefectsForClaim(id, rest.claim_status_id ?? data.claim_status_id ?? null);
-
-      return data as Claim;
-    },
-    onSuccess: (_, vars) => {
-      // Инвалидируем все возможные варианты queryKey для претензий
-      qc.invalidateQueries({ queryKey: [TABLE], exact: false });
-      qc.invalidateQueries({ queryKey: [SUMMARY_TABLE], exact: false });
-      qc.invalidateQueries({ queryKey: ['claims-simple'], exact: false });
-      qc.invalidateQueries({ queryKey: ['claims-simple-all'] });
-      qc.invalidateQueries({ queryKey: ['claims-all'], exact: false });
-      qc.invalidateQueries({ queryKey: ['claims-all-legacy'] });
-      qc.invalidateQueries({ queryKey: ['defects'] });
-    },
-  });
-}
-
-/**
- * Хук удаления претензии.
- */
-export function useDeleteClaim() {
-  const qc = useQueryClient();
-  return useMutation<number, Error, ClaimDeleteParams>({
-    /**
-   * Удаляет претензию вместе с её файлами, всеми связанными дефектами
-   * и записями из таблицы связей претензий. При удалении дефектов
-   * учитываются права доступа к проектам.
-   * @param payload объект с идентификатором претензии
-   */
-    mutationFn: async ({ id }) => {
-      const { data: attachRows } = await supabase
-        .from('claim_attachments')
-        .select('attachment_id, attachments(storage_path)')
-        .eq('claim_id', id);
-      const claimFiles = (attachRows ?? []).map((r: any) => r.attachment_id);
-      const paths = (attachRows ?? [])
-        .map((r: any) => r.attachments?.storage_path)
-        .filter(Boolean);
-
-
-      if (paths.length) {
-        await supabase.storage.from(ATTACH_BUCKET).remove(paths);
-        await supabase.from('attachments').delete().in('id', claimFiles);
-      }
-      if (claimFiles.length) {
-        await supabase.from('claim_attachments').delete().eq('claim_id', id);
-      }
-
-      const { data: defectRows } = await supabase
-        .from('claim_defects')
-        .select('defect_id')
-        .eq('claim_id', id);
-      const defectIds = (defectRows ?? []).map((d: any) => d.defect_id);
-
-      if (defectIds.length) {
-        const { data: defAttachRows } = await supabase
-          .from('defect_attachments')
-          .select('attachment_id, attachments(storage_path)')
-          .in('defect_id', defectIds);
-        const defFiles = (defAttachRows ?? []).map((r: any) => r.attachment_id);
-        const defPaths = (defAttachRows ?? [])
-          .map((r: any) => r.attachments?.storage_path)
-          .filter(Boolean);
-        if (defPaths.length) {
-          await supabase.storage.from(ATTACH_BUCKET).remove(defPaths);
-          await supabase.from('attachments').delete().in('id', defFiles);
-        }
-        if (defFiles.length) {
-          await supabase
-            .from('defect_attachments')
-            .delete()
-            .in('attachment_id', defFiles);
-        }
-        const dq = await supabase.from('defects').delete().in('id', defectIds);
-        if (dq.error) throw dq.error;
-        await supabase.from('claim_defects').delete().eq('claim_id', id);
-      }
-
-      await supabase.from('claim_units').delete().eq('claim_id', id);
-
-      await supabase
-        .from(LINK_TABLE)
-        .delete()
-        .or(`child_id.eq.${id},parent_id.eq.${id}`);
-
-      const { error } = await supabase.from(TABLE).delete().eq('id', id);
-      if (error) throw error;
-      return id;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: [TABLE] });
-      qc.invalidateQueries({ queryKey: [SUMMARY_TABLE] });
-      qc.invalidateQueries({ queryKey: [SUMMARY_TABLE + '-all'] });
-      qc.invalidateQueries({ queryKey: ['defects'] });
-      qc.invalidateQueries({ queryKey: ['claims-simple'] });
-      qc.invalidateQueries({ queryKey: ['claims-simple-all'] });
-      qc.invalidateQueries({ queryKey: ['claims-all'] });
-      qc.invalidateQueries({ queryKey: ['claims-all-legacy'] });
-      qc.invalidateQueries({ queryKey: ['claims-optimized'] });
-      qc.invalidateQueries({ queryKey: ['claims-stats'] });
-      qc.invalidateQueries({ queryKey: ['claims-all-stats'] });
-    },
-  });
-}
-
-/** Получить вложения претензии по её идентификатору */
-export function useClaimAttachments(id?: number) {
-  return useQuery({
-    queryKey: ['claim-attachments', id],
-    enabled: !!id,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('claim_attachments')
-        .select('attachments(id, storage_path, file_url:path, file_type:mime_type, original_name, description, created_at, created_by, uploaded_by)')
-        .eq('claim_id', id as number);
-      return (data ?? []).map((r: any) => r.attachments);
-    },
-    staleTime: 5 * 60_000,
-  });
-}
-
-/** Удалить одно вложение претензии */
-export function useRemoveClaimAttachment() {
-  const qc = useQueryClient();
-  const { projectId, projectIds, onlyAssigned } = useProjectFilter();
-  return useMutation<void, Error, { claimId: number; attachmentId: number }>({
-    mutationFn: async ({ claimId, attachmentId }) => {
-      const { data: att } = await supabase
-        .from('attachments')
-        .select('storage_path')
-        .eq('id', attachmentId)
-        .single();
-      if (att?.storage_path) {
-        await supabase.storage.from(ATTACH_BUCKET).remove([att.storage_path]);
-      }
-      await supabase.from('attachments').delete().eq('id', attachmentId);
-      await supabase
-        .from('claim_attachments')
-        .delete()
-        .eq('claim_id', claimId)
-        .eq('attachment_id', attachmentId);
-    },
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: [TABLE, vars.claimId] });
-      qc.invalidateQueries({ queryKey: [TABLE] });
-      qc.invalidateQueries({ queryKey: [SUMMARY_TABLE] });
-    },
-  });
-}
-
-/**
- * Удаляет несколько вложений претензии за один запрос.
- */
-export async function removeClaimAttachmentsBulk(
-  claimId: number,
-  attachmentIds: number[],
-): Promise<void> {
-  if (attachmentIds.length === 0) return;
-  const { data: atts } = await supabase
-    .from('attachments')
-    .select('storage_path')
-    .in('id', attachmentIds);
-  const paths = (atts ?? [])
-    .map((a: any) => a.storage_path)
-    .filter(Boolean);
-  if (paths.length) {
-    await supabase.storage.from(ATTACH_BUCKET).remove(paths);
-  }
-  await supabase.from('attachments').delete().in('id', attachmentIds);
-  await supabase
-    .from('claim_attachments')
-    .delete()
-    .eq('claim_id', claimId)
-    .in('attachment_id', attachmentIds);
-}
-
-/** Добавить вложения к существующей претензии */
-export function useAddClaimAttachments() {
-  const qc = useQueryClient();
-  const notify = useNotify();
-  return useMutation({
-    mutationFn: async ({ claimId, files }: { claimId: number; files: File[] }) => {
-      const uploaded = await addClaimAttachments(
-        files.map((f) => ({ file: f, type_id: null, description: undefined })),
-        claimId,
-      );
-      if (uploaded.length) {
-        const rows = uploaded.map((u) => ({ claim_id: claimId, attachment_id: u.id }));
-        await supabase.from('claim_attachments').insert(rows);
-      }
-      return uploaded;
-    },
-    onSuccess: (_res, vars) => {
-      qc.invalidateQueries({ queryKey: [TABLE, vars.claimId] });
-      qc.invalidateQueries({ queryKey: [TABLE] });
-      qc.invalidateQueries({ queryKey: [SUMMARY_TABLE] });
-      notify.success('Файлы загружены');
-    },
-    onError: (e) => notify.error(`Ошибка загрузки файлов: ${e.message}`),
-  });
-}
-
-export async function signedUrl(path: string, filename = ''): Promise<string> {
-  const { data, error } = await supabase.storage
-    .from(ATTACH_BUCKET)
-    .createSignedUrl(path, 60, { download: filename || undefined });
-  if (error) throw error;
-  return data.signedUrl;
-}
-
-export async function signedUrlForPreview(path: string): Promise<string> {
-  const { data, error } = await supabase.storage
-    .from(ATTACH_BUCKET)
-    .createSignedUrl(path, 60);
-  if (error) throw error;
-  return data.signedUrl;
-}
-
-export function useClaimLinks() {
-  return useQuery({
-    queryKey: [LINK_TABLE],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from(LINK_TABLE)
-        .select('id, parent_id, child_id');
-      if (error) throw error;
-      return (data ?? []) as import('@/shared/types/claimLink').ClaimLink[];
-    },
-    staleTime: 5 * 60_000,
-  });
-}
-
-export function useLinkClaims() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ parentId, childIds }: { parentId: string; childIds: string[] }) => {
-      const ids = childIds.map((c) => Number(c));
-      if (ids.length === 0) return;
-      
-      // Delete existing links with chunking for large ID arrays
-      console.log(`[useLinkClaims] Deleting links for ${ids.length} child claims`);
-      for (let i = 0; i < ids.length; i += 1000) {
-        const chunk = ids.slice(i, i + 1000);
-        console.log(`[useLinkClaims] Deleting links chunk of ${chunk.length} IDs`);
-        await supabase.from(LINK_TABLE).delete().in('child_id', chunk);
-      }
-      
-      const rows = ids.map((child_id) => ({ parent_id: Number(parentId), child_id }));
-      await supabase.from(LINK_TABLE).insert(rows);
-      qc.invalidateQueries({ queryKey: [LINK_TABLE] });
-      qc.invalidateQueries({ queryKey: [TABLE], exact: false });
-      qc.invalidateQueries({ queryKey: [SUMMARY_TABLE], exact: false });
-      qc.invalidateQueries({ queryKey: [SUMMARY_TABLE + '-all'], exact: false });
-      qc.invalidateQueries({ queryKey: ['claims-optimized'], exact: false });
-    },
-  });
-}
-
-export function useUnlinkClaim() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (id: number | string) => {
-      const childId = Number(id);
-      await supabase.from(LINK_TABLE).delete().eq('child_id', childId);
-      qc.invalidateQueries({ queryKey: [LINK_TABLE] });
-      qc.invalidateQueries({ queryKey: [TABLE], exact: false });
-      qc.invalidateQueries({ queryKey: [SUMMARY_TABLE], exact: false });
-      qc.invalidateQueries({ queryKey: [SUMMARY_TABLE + '-all'], exact: false });
-      qc.invalidateQueries({ queryKey: ['claims-optimized'], exact: false });
-    },
-  });
-}
-
-/**
  * Получить связанные с дефектами идентификаторы претензий.
  * @param defectIds массив идентификаторов дефектов
  */
@@ -1240,100 +691,3 @@ export function useClaimIdsByDefectIds(defectIds?: number[]) {
     staleTime: 5 * 60_000,
   });
 }
-
-/**
- * Получить статистику по всем претензиям (общее количество, закрытые, открытые).
- */
-export function useClaimsAllStats() {
-  return useQuery({
-    queryKey: ['claims-all-stats'],
-    queryFn: async () => {
-      // Получаем общее количество претензий
-      const { count: totalCount } = await supabase
-        .from(TABLE)
-        .select('*', { count: 'exact', head: true });
-
-      // Получаем все статусы для претензий
-      const { data: allStatuses } = await supabase
-        .from('statuses')
-        .select('id, name')
-        .eq('entity', 'claim');
-      
-      // Фильтруем статусы по тем же критериям что и в фильтре hideClosed
-      const closedStatusIds = allStatuses
-        ?.filter(s => /(закры|не\s*гаран)/i.test(s.name))
-        .map(s => s.id) || [];
-
-      let closedCount = 0;
-      if (closedStatusIds.length > 0) {
-        // Получаем количество закрытых/не гарантийных претензий
-        const { count } = await supabase
-          .from(TABLE)
-          .select('*', { count: 'exact', head: true })
-          .in('claim_status_id', closedStatusIds);
-        closedCount = count || 0;
-      }
-
-      return {
-        total: totalCount || 0,
-        closed: closedCount,
-        open: (totalCount || 0) - closedCount,
-      };
-    },
-    staleTime: 30_000, // Кешировать на 30 секунд
-  });
-}
-
-/**
- * Получить статистику по претензиям проекта (общее количество, закрытые, открытые).
- */
-export function useClaimsStats() {
-  const { projectId, projectIds, onlyAssigned, enabled } = useProjectFilter();
-  
-  return useQuery({
-    queryKey: ['claims-stats', projectId, projectIds.join(',')],
-    enabled,
-    queryFn: async () => {
-      // Строим базовый запрос
-      let baseQuery: any = supabase.from(TABLE).select('*', { count: 'exact', head: true });
-      baseQuery = filterByProjects(baseQuery, projectId, projectIds, onlyAssigned);
-      
-      // Получаем общее количество претензий
-      const { count: totalCount } = await baseQuery;
-
-      // Получаем все статусы для претензий
-      const { data: allStatuses } = await supabase
-        .from('statuses')
-        .select('id, name')
-        .eq('entity', 'claim');
-      
-      // Фильтруем статусы по тем же критериям что и в фильтре hideClosed
-      const closedStatusIds = allStatuses
-        ?.filter(s => /(закры|не\s*гаран)/i.test(s.name))
-        .map(s => s.id) || [];
-
-      let closedCount = 0;
-      if (closedStatusIds.length > 0) {
-        // Получаем количество закрытых/не гарантийных претензий
-        let closedQuery: any = supabase
-          .from(TABLE)
-          .select('*', { count: 'exact', head: true })
-          .in('claim_status_id', closedStatusIds);
-        closedQuery = filterByProjects(closedQuery, projectId, projectIds, onlyAssigned);
-        
-        const { count } = await closedQuery;
-        closedCount = count || 0;
-      }
-
-      return {
-        total: totalCount || 0,
-        closed: closedCount,
-        open: (totalCount || 0) - closedCount,
-      };
-    },
-    staleTime: 30_000, // Кешировать на 30 секунд
-  });
-}
-
-export { closeDefectsForClaim, markClaimDefectsPreTrial };
-

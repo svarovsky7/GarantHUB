@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { SlotInfo } from 'react-big-calendar';
 import { message } from 'antd';
 import EngineerCallsCalendar from '@/widgets/EngineerCallsCalendarModern';
-import EngineerCallModal from '@/features/engineerCall/EngineerCallModalModern';
+import EngineerCallModal from '@/features/engineerCall/EngineerCallModalModern.refactored';
 import {
   useCreateEngineerCall,
   useUpdateEngineerCall,

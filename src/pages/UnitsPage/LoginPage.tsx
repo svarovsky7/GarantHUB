@@ -1,6 +1,6 @@
 // src/pages/UnitsPage/LoginPage.js
 import React, { useState, useEffect } from "react";
-import { supabase } from "@shared/api/supabaseClient";
+import { supabase } from "@/shared/api/supabaseClient";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/shared/store/authStore";
 import {

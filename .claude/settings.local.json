@@ -66,7 +66,8 @@
       "mcp__chrome-devtools__evaluate_script",
       "mcp__chrome-devtools__take_screenshot",
       "mcp__playwright-official__browser_close",
-      "mcp__chrome-devtools__list_console_messages"
+      "mcp__chrome-devtools__list_console_messages",
+      "Bash(wc:*)"
     ],
     "deny": [],
     "additionalDirectories": [

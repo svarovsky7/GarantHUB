@@ -13,8 +13,8 @@ import PageLoader from "@/shared/components/PageLoader";
 // Lazy loading для всех страниц
 const DashboardPage = React.lazy(() => import("@/pages/DashboardPage/DashboardPage"));
 const ClaimsPage = React.lazy(() => import("@/pages/ClaimsPage/ClaimsPageNew"));
-const CourtCasesPage = React.lazy(() => import("@/pages/CourtCasesPage/CourtCasesPage"));
-const CorrespondencePage = React.lazy(() => import("@/pages/CorrespondencePage/CorrespondencePage"));
+const CourtCasesPage = React.lazy(() => import("@/pages/CourtCasesPage")); // Refactored: uses index.ts default export
+const CorrespondencePage = React.lazy(() => import("@/pages/CorrespondencePage")); // Refactored: uses index.ts default export
 const DefectsPage = React.lazy(() => import("@/pages/DefectsPage/DefectsPageNew"));
 const LoginPage = React.lazy(() => import("@/pages/UnitsPage/LoginPage"));
 const RegisterPage = React.lazy(() => import("@/pages/UnitsPage/RegisterPage"));
@@ -24,7 +24,7 @@ const ObjectArchivePage = React.lazy(() => import("@/pages/ObjectArchivePage/Obj
 const ProfilePage = React.lazy(() => import("@/pages/ProfilePage/ProfilePage"));
 const DocumentsPage = React.lazy(() => import("@/pages/DocumentsPage/DocumentsPage"));
 const EngineerCallsPage = React.lazy(() => import("@/pages/EngineerCallsPage/EngineerCallsPage"));
-const PersonalCabinetPage = React.lazy(() => import("@/pages/PersonalCabinetPage/PersonalCabinetPage"));
+const PersonalCabinetPage = React.lazy(() => import("@/pages/PersonalCabinetPage")); // Refactored: uses index.ts default export
 const CompletionsPage = React.lazy(() => import("@/pages/CompletionsPage/CompletionsPage"));
 
 /** --------------------------------------------------------------------------
