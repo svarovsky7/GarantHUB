@@ -7850,298 +7850,6 @@
     ],
     "sql": "CREATE TABLE IF NOT EXISTS realtime.messages (\n    topic text NOT NULL,\n    extension text NOT NULL,\n    payload jsonb,\n    event text,\n    private boolean DEFAULT false,\n    updated_at timestamp without time zone NOT NULL DEFAULT now(),\n    inserted_at timestamp without time zone NOT NULL DEFAULT now(),\n    id uuid NOT NULL DEFAULT gen_random_uuid(),\n    CONSTRAINT messages_pkey PRIMARY KEY (id),\n    CONSTRAINT messages_pkey PRIMARY KEY (inserted_at)\n);"
   },
-  "realtime.messages_2025_10_06": {
-    "schema": "realtime",
-    "name": "messages_2025_10_06",
-    "comment": null,
-    "columns": [
-      {
-        "name": "topic",
-        "data_type": "text",
-        "max_length": null,
-        "numeric_precision": null,
-        "numeric_scale": null,
-        "is_nullable": "NO",
-        "default": null,
-        "comment": null
-      },
-      {
-        "name": "extension",
-        "data_type": "text",
-        "max_length": null,
-        "numeric_precision": null,
-        "numeric_scale": null,
-        "is_nullable": "NO",
-        "default": null,
-        "comment": null
-      },
-      {
-        "name": "payload",
-        "data_type": "jsonb",
-        "max_length": null,
-        "numeric_precision": null,
-        "numeric_scale": null,
-        "is_nullable": "YES",
-        "default": null,
-        "comment": null
-      },
-      {
-        "name": "event",
-        "data_type": "text",
-        "max_length": null,
-        "numeric_precision": null,
-        "numeric_scale": null,
-        "is_nullable": "YES",
-        "default": null,
-        "comment": null
-      },
-      {
-        "name": "private",
-        "data_type": "boolean",
-        "max_length": null,
-        "numeric_precision": null,
-        "numeric_scale": null,
-        "is_nullable": "YES",
-        "default": "false",
-        "comment": null
-      },
-      {
-        "name": "updated_at",
-        "data_type": "timestamp without time zone",
-        "max_length": null,
-        "numeric_precision": null,
-        "numeric_scale": null,
-        "is_nullable": "NO",
-        "default": "now()",
-        "comment": null
-      },
-      {
-        "name": "inserted_at",
-        "data_type": "timestamp without time zone",
-        "max_length": null,
-        "numeric_precision": null,
-        "numeric_scale": null,
-        "is_nullable": "NO",
-        "default": "now()",
-        "comment": null
-      },
-      {
-        "name": "id",
-        "data_type": "uuid",
-        "max_length": null,
-        "numeric_precision": null,
-        "numeric_scale": null,
-        "is_nullable": "NO",
-        "default": "gen_random_uuid()",
-        "comment": null
-      }
-    ],
-    "constraints": [
-      {
-        "name": "16599_220113_1_not_null",
-        "type": "CHECK",
-        "column": null,
-        "foreign_table_schema": null,
-        "foreign_table": null,
-        "foreign_column": null
-      },
-      {
-        "name": "16599_220113_2_not_null",
-        "type": "CHECK",
-        "column": null,
-        "foreign_table_schema": null,
-        "foreign_table": null,
-        "foreign_column": null
-      },
-      {
-        "name": "16599_220113_6_not_null",
-        "type": "CHECK",
-        "column": null,
-        "foreign_table_schema": null,
-        "foreign_table": null,
-        "foreign_column": null
-      },
-      {
-        "name": "16599_220113_7_not_null",
-        "type": "CHECK",
-        "column": null,
-        "foreign_table_schema": null,
-        "foreign_table": null,
-        "foreign_column": null
-      },
-      {
-        "name": "16599_220113_8_not_null",
-        "type": "CHECK",
-        "column": null,
-        "foreign_table_schema": null,
-        "foreign_table": null,
-        "foreign_column": null
-      },
-      {
-        "name": "messages_2025_10_06_pkey",
-        "type": "PRIMARY KEY",
-        "column": "id",
-        "foreign_table_schema": null,
-        "foreign_table": null,
-        "foreign_column": null
-      },
-      {
-        "name": "messages_2025_10_06_pkey",
-        "type": "PRIMARY KEY",
-        "column": "inserted_at",
-        "foreign_table_schema": null,
-        "foreign_table": null,
-        "foreign_column": null
-      }
-    ],
-    "sql": "CREATE TABLE IF NOT EXISTS realtime.messages_2025_10_06 (\n    topic text NOT NULL,\n    extension text NOT NULL,\n    payload jsonb,\n    event text,\n    private boolean DEFAULT false,\n    updated_at timestamp without time zone NOT NULL DEFAULT now(),\n    inserted_at timestamp without time zone NOT NULL DEFAULT now(),\n    id uuid NOT NULL DEFAULT gen_random_uuid(),\n    CONSTRAINT messages_2025_10_06_pkey PRIMARY KEY (id),\n    CONSTRAINT messages_2025_10_06_pkey PRIMARY KEY (inserted_at)\n);"
-  },
-  "realtime.messages_2025_10_07": {
-    "schema": "realtime",
-    "name": "messages_2025_10_07",
-    "comment": null,
-    "columns": [
-      {
-        "name": "topic",
-        "data_type": "text",
-        "max_length": null,
-        "numeric_precision": null,
-        "numeric_scale": null,
-        "is_nullable": "NO",
-        "default": null,
-        "comment": null
-      },
-      {
-        "name": "extension",
-        "data_type": "text",
-        "max_length": null,
-        "numeric_precision": null,
-        "numeric_scale": null,
-        "is_nullable": "NO",
-        "default": null,
-        "comment": null
-      },
-      {
-        "name": "payload",
-        "data_type": "jsonb",
-        "max_length": null,
-        "numeric_precision": null,
-        "numeric_scale": null,
-        "is_nullable": "YES",
-        "default": null,
-        "comment": null
-      },
-      {
-        "name": "event",
-        "data_type": "text",
-        "max_length": null,
-        "numeric_precision": null,
-        "numeric_scale": null,
-        "is_nullable": "YES",
-        "default": null,
-        "comment": null
-      },
-      {
-        "name": "private",
-        "data_type": "boolean",
-        "max_length": null,
-        "numeric_precision": null,
-        "numeric_scale": null,
-        "is_nullable": "YES",
-        "default": "false",
-        "comment": null
-      },
-      {
-        "name": "updated_at",
-        "data_type": "timestamp without time zone",
-        "max_length": null,
-        "numeric_precision": null,
-        "numeric_scale": null,
-        "is_nullable": "NO",
-        "default": "now()",
-        "comment": null
-      },
-      {
-        "name": "inserted_at",
-        "data_type": "timestamp without time zone",
-        "max_length": null,
-        "numeric_precision": null,
-        "numeric_scale": null,
-        "is_nullable": "NO",
-        "default": "now()",
-        "comment": null
-      },
-      {
-        "name": "id",
-        "data_type": "uuid",
-        "max_length": null,
-        "numeric_precision": null,
-        "numeric_scale": null,
-        "is_nullable": "NO",
-        "default": "gen_random_uuid()",
-        "comment": null
-      }
-    ],
-    "constraints": [
-      {
-        "name": "16599_221237_1_not_null",
-        "type": "CHECK",
-        "column": null,
-        "foreign_table_schema": null,
-        "foreign_table": null,
-        "foreign_column": null
-      },
-      {
-        "name": "16599_221237_2_not_null",
-        "type": "CHECK",
-        "column": null,
-        "foreign_table_schema": null,
-        "foreign_table": null,
-        "foreign_column": null
-      },
-      {
-        "name": "16599_221237_6_not_null",
-        "type": "CHECK",
-        "column": null,
-        "foreign_table_schema": null,
-        "foreign_table": null,
-        "foreign_column": null
-      },
-      {
-        "name": "16599_221237_7_not_null",
-        "type": "CHECK",
-        "column": null,
-        "foreign_table_schema": null,
-        "foreign_table": null,
-        "foreign_column": null
-      },
-      {
-        "name": "16599_221237_8_not_null",
-        "type": "CHECK",
-        "column": null,
-        "foreign_table_schema": null,
-        "foreign_table": null,
-        "foreign_column": null
-      },
-      {
-        "name": "messages_2025_10_07_pkey",
-        "type": "PRIMARY KEY",
-        "column": "id",
-        "foreign_table_schema": null,
-        "foreign_table": null,
-        "foreign_column": null
-      },
-      {
-        "name": "messages_2025_10_07_pkey",
-        "type": "PRIMARY KEY",
-        "column": "inserted_at",
-        "foreign_table_schema": null,
-        "foreign_table": null,
-        "foreign_column": null
-      }
-    ],
-    "sql": "CREATE TABLE IF NOT EXISTS realtime.messages_2025_10_07 (\n    topic text NOT NULL,\n    extension text NOT NULL,\n    payload jsonb,\n    event text,\n    private boolean DEFAULT false,\n    updated_at timestamp without time zone NOT NULL DEFAULT now(),\n    inserted_at timestamp without time zone NOT NULL DEFAULT now(),\n    id uuid NOT NULL DEFAULT gen_random_uuid(),\n    CONSTRAINT messages_2025_10_07_pkey PRIMARY KEY (id),\n    CONSTRAINT messages_2025_10_07_pkey PRIMARY KEY (inserted_at)\n);"
-  },
   "realtime.messages_2025_10_08": {
     "schema": "realtime",
     "name": "messages_2025_10_08",
@@ -8871,6 +8579,298 @@
       }
     ],
     "sql": "CREATE TABLE IF NOT EXISTS realtime.messages_2025_10_12 (\n    topic text NOT NULL,\n    extension text NOT NULL,\n    payload jsonb,\n    event text,\n    private boolean DEFAULT false,\n    updated_at timestamp without time zone NOT NULL DEFAULT now(),\n    inserted_at timestamp without time zone NOT NULL DEFAULT now(),\n    id uuid NOT NULL DEFAULT gen_random_uuid(),\n    CONSTRAINT messages_2025_10_12_pkey PRIMARY KEY (id),\n    CONSTRAINT messages_2025_10_12_pkey PRIMARY KEY (inserted_at)\n);"
+  },
+  "realtime.messages_2025_10_13": {
+    "schema": "realtime",
+    "name": "messages_2025_10_13",
+    "comment": null,
+    "columns": [
+      {
+        "name": "topic",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "extension",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "payload",
+        "data_type": "jsonb",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "event",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "private",
+        "data_type": "boolean",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": "false",
+        "comment": null
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp without time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "inserted_at",
+        "data_type": "timestamp without time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "gen_random_uuid()",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      {
+        "name": "16599_228210_1_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16599_228210_2_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16599_228210_6_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16599_228210_7_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16599_228210_8_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "messages_2025_10_13_pkey",
+        "type": "PRIMARY KEY",
+        "column": "id",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "messages_2025_10_13_pkey",
+        "type": "PRIMARY KEY",
+        "column": "inserted_at",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      }
+    ],
+    "sql": "CREATE TABLE IF NOT EXISTS realtime.messages_2025_10_13 (\n    topic text NOT NULL,\n    extension text NOT NULL,\n    payload jsonb,\n    event text,\n    private boolean DEFAULT false,\n    updated_at timestamp without time zone NOT NULL DEFAULT now(),\n    inserted_at timestamp without time zone NOT NULL DEFAULT now(),\n    id uuid NOT NULL DEFAULT gen_random_uuid(),\n    CONSTRAINT messages_2025_10_13_pkey PRIMARY KEY (id),\n    CONSTRAINT messages_2025_10_13_pkey PRIMARY KEY (inserted_at)\n);"
+  },
+  "realtime.messages_2025_10_14": {
+    "schema": "realtime",
+    "name": "messages_2025_10_14",
+    "comment": null,
+    "columns": [
+      {
+        "name": "topic",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "extension",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "payload",
+        "data_type": "jsonb",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "event",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "private",
+        "data_type": "boolean",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": "false",
+        "comment": null
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp without time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "inserted_at",
+        "data_type": "timestamp without time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "gen_random_uuid()",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      {
+        "name": "16599_229362_1_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16599_229362_2_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16599_229362_6_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16599_229362_7_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16599_229362_8_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "messages_2025_10_14_pkey",
+        "type": "PRIMARY KEY",
+        "column": "id",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "messages_2025_10_14_pkey",
+        "type": "PRIMARY KEY",
+        "column": "inserted_at",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      }
+    ],
+    "sql": "CREATE TABLE IF NOT EXISTS realtime.messages_2025_10_14 (\n    topic text NOT NULL,\n    extension text NOT NULL,\n    payload jsonb,\n    event text,\n    private boolean DEFAULT false,\n    updated_at timestamp without time zone NOT NULL DEFAULT now(),\n    inserted_at timestamp without time zone NOT NULL DEFAULT now(),\n    id uuid NOT NULL DEFAULT gen_random_uuid(),\n    CONSTRAINT messages_2025_10_14_pkey PRIMARY KEY (id),\n    CONSTRAINT messages_2025_10_14_pkey PRIMARY KEY (inserted_at)\n);"
   },
   "realtime.schema_migrations": {
     "schema": "realtime",

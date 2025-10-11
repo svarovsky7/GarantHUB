@@ -13,10 +13,17 @@ import {
     DialogActions,
     Button,
     CircularProgress,
+    TextField,
+    InputAdornment,
+    List,
+    ListItem,
+    ListItemButton,
+    ListItemText,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutline from "@mui/icons-material/DeleteOutline";
 import EditIcon from "@mui/icons-material/Edit";
+import SearchIcon from "@mui/icons-material/Search";
 import AddBuildingDialog from "@/features/addBuilding/AddBuildingDialog";
 import RenameBuildingDialog from "@/features/renameBuilding/RenameBuildingDialog";
 import StatusLegend from "@/widgets/StatusLegend";
@@ -25,7 +32,7 @@ import StatusLegend from "@/widgets/StatusLegend";
 const UnitsMatrix = React.lazy(() => import("@/widgets/UnitsMatrix/UnitsMatrix"));
 import useProjectStructure, { LS_KEY } from "@/shared/hooks/useProjectStructure";
 import { useProjectId } from '@/shared/hooks/useProjectId';
-import { useDeleteUnitsByBuilding } from '@/entities/unit';
+import { useDeleteUnitsByBuilding, useUnitsByProject } from '@/entities/unit';
 import { useUnitsCount } from '@/shared/hooks/useUnitsCount';
 // Новое:
 
@@ -58,9 +65,19 @@ export default function ProjectStructurePage() {
         value: '',
     });
 
+    // Поиск объектов по номеру
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchDialog, setSearchDialog] = useState({
+        open: false,
+        results: [] as Array<{ building: string; count: number }>,
+    });
+
     const { projectCount, buildingCount } = useUnitsCount(projectId, building);
 
     const deleteBuildingMutation = useDeleteUnitsByBuilding();
+
+    // Загрузка всех объектов текущего проекта для поиска
+    const { data: allUnits = [] } = useUnitsByProject(projectId ? Number(projectId) : null);
 
     // Автоматический выбор проекта и корпуса при загрузке
     useEffect(() => {
@@ -118,6 +135,55 @@ export default function ProjectStructurePage() {
         refreshAll();
     };
     const handleCancelDelete = () => setConfirmDialog({ open: false, value: '' });
+
+    // Функция поиска объекта по номеру
+    const handleSearch = () => {
+        if (!searchQuery.trim()) return;
+
+        // Поиск объектов с точным совпадением номера
+        const foundUnits = allUnits.filter(
+            (unit) => unit.name && unit.name.toLowerCase() === searchQuery.trim().toLowerCase()
+        );
+
+        if (foundUnits.length === 0) {
+            alert(`Объект с номером "${searchQuery}" не найден в текущем проекте`);
+            return;
+        }
+
+        // Группировка по корпусам
+        const buildingGroups: Record<string, number> = foundUnits.reduce((acc, unit) => {
+            const bld = unit.building || '';
+            acc[bld] = (acc[bld] || 0) + 1;
+            return acc;
+        }, {} as Record<string, number>);
+
+        const buildingsWithUnits = Object.entries(buildingGroups).map(([building, count]) => ({
+            building,
+            count,
+        }));
+
+        // Если найден только один корпус - сразу открываем его
+        if (buildingsWithUnits.length === 1) {
+            setBuilding(buildingsWithUnits[0].building);
+            setSearchQuery('');
+        } else {
+            // Если несколько корпусов - показываем диалог выбора
+            setSearchDialog({
+                open: true,
+                results: buildingsWithUnits,
+            });
+        }
+    };
+
+    const handleSelectBuilding = (selectedBuilding: string) => {
+        setBuilding(selectedBuilding);
+        setSearchDialog({ open: false, results: [] });
+        setSearchQuery('');
+    };
+
+    const handleCloseSearchDialog = () => {
+        setSearchDialog({ open: false, results: [] });
+    };
 
     const countProject = projectCount;
     const countBuilding = buildingCount;
@@ -312,7 +378,69 @@ export default function ProjectStructurePage() {
                 </Box>
             </Box>
 
-
+            {/* Поле поиска объекта */}
+            <Box
+                sx={{
+                    background: "#fff",
+                    borderRadius: "16px",
+                    padding: "20px 24px",
+                    boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
+                    maxWidth: 630,
+                    width: "100%",
+                    mx: "auto",
+                }}
+            >
+                <Typography
+                    variant="h6"
+                    sx={{
+                        mb: 2,
+                        fontWeight: 600,
+                        color: "#1976d2",
+                    }}
+                >
+                    Поиск объекта по номеру
+                </Typography>
+                <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+                    <TextField
+                        fullWidth
+                        size="small"
+                        placeholder="Введите номер объекта (например: 101)"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                                handleSearch();
+                            }
+                        }}
+                        InputProps={{
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <SearchIcon sx={{ color: "#1976d2" }} />
+                                </InputAdornment>
+                            ),
+                        }}
+                        sx={{
+                            "& .MuiOutlinedInput-root": {
+                                borderRadius: "12px",
+                            },
+                        }}
+                    />
+                    <Button
+                        variant="contained"
+                        onClick={handleSearch}
+                        disabled={!searchQuery.trim() || !projectId}
+                        sx={{
+                            borderRadius: "12px",
+                            px: 3,
+                            minWidth: 120,
+                            textTransform: "none",
+                            fontWeight: 600,
+                        }}
+                    >
+                        Найти
+                    </Button>
+                </Box>
+            </Box>
 
             {/* Диалог добавления корпуса */}
             <AddBuildingDialog
@@ -354,6 +482,54 @@ export default function ProjectStructurePage() {
                         onClick={handleConfirmDelete}
                     >
                         Удалить
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Диалог выбора корпуса при множественных результатах */}
+            <Dialog
+                open={searchDialog.open}
+                onClose={handleCloseSearchDialog}
+                maxWidth="sm"
+                fullWidth
+            >
+                <DialogTitle>
+                    Выберите корпус
+                </DialogTitle>
+                <DialogContent>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        Объект с номером &quot;{searchQuery}&quot; найден в нескольких корпусах:
+                    </Typography>
+                    <List sx={{ pt: 0 }}>
+                        {searchDialog.results.map((result) => (
+                            <ListItem key={result.building} disablePadding>
+                                <ListItemButton
+                                    onClick={() => handleSelectBuilding(result.building)}
+                                    sx={{
+                                        borderRadius: "8px",
+                                        mb: 1,
+                                        border: "1px solid #e0e0e0",
+                                        "&:hover": {
+                                            bgcolor: "#f5f5f5",
+                                        },
+                                    }}
+                                >
+                                    <ListItemText
+                                        primary={`Корпус ${result.building}`}
+                                        secondary={`Найдено объектов: ${result.count}`}
+                                        primaryTypographyProps={{
+                                            fontWeight: 600,
+                                            color: "#1976d2",
+                                        }}
+                                    />
+                                </ListItemButton>
+                            </ListItem>
+                        ))}
+                    </List>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseSearchDialog}>
+                        Отмена
                     </Button>
                 </DialogActions>
             </Dialog>

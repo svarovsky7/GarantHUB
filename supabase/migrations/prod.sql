@@ -1,5 +1,5 @@
 -- Database Schema Export
--- Generated: 2025-10-09T22:37:12.859402
+-- Generated: 2025-10-11T10:10:36.672050
 -- Database: postgres
 -- Host: aws-0-eu-central-1.pooler.supabase.com
 
@@ -877,32 +877,6 @@ CREATE TABLE IF NOT EXISTS realtime.messages (
     CONSTRAINT messages_pkey PRIMARY KEY (inserted_at)
 );
 
-CREATE TABLE IF NOT EXISTS realtime.messages_2025_10_06 (
-    topic text NOT NULL,
-    extension text NOT NULL,
-    payload jsonb,
-    event text,
-    private boolean DEFAULT false,
-    updated_at timestamp without time zone NOT NULL DEFAULT now(),
-    inserted_at timestamp without time zone NOT NULL DEFAULT now(),
-    id uuid NOT NULL DEFAULT gen_random_uuid(),
-    CONSTRAINT messages_2025_10_06_pkey PRIMARY KEY (id),
-    CONSTRAINT messages_2025_10_06_pkey PRIMARY KEY (inserted_at)
-);
-
-CREATE TABLE IF NOT EXISTS realtime.messages_2025_10_07 (
-    topic text NOT NULL,
-    extension text NOT NULL,
-    payload jsonb,
-    event text,
-    private boolean DEFAULT false,
-    updated_at timestamp without time zone NOT NULL DEFAULT now(),
-    inserted_at timestamp without time zone NOT NULL DEFAULT now(),
-    id uuid NOT NULL DEFAULT gen_random_uuid(),
-    CONSTRAINT messages_2025_10_07_pkey PRIMARY KEY (id),
-    CONSTRAINT messages_2025_10_07_pkey PRIMARY KEY (inserted_at)
-);
-
 CREATE TABLE IF NOT EXISTS realtime.messages_2025_10_08 (
     topic text NOT NULL,
     extension text NOT NULL,
@@ -966,6 +940,32 @@ CREATE TABLE IF NOT EXISTS realtime.messages_2025_10_12 (
     id uuid NOT NULL DEFAULT gen_random_uuid(),
     CONSTRAINT messages_2025_10_12_pkey PRIMARY KEY (id),
     CONSTRAINT messages_2025_10_12_pkey PRIMARY KEY (inserted_at)
+);
+
+CREATE TABLE IF NOT EXISTS realtime.messages_2025_10_13 (
+    topic text NOT NULL,
+    extension text NOT NULL,
+    payload jsonb,
+    event text,
+    private boolean DEFAULT false,
+    updated_at timestamp without time zone NOT NULL DEFAULT now(),
+    inserted_at timestamp without time zone NOT NULL DEFAULT now(),
+    id uuid NOT NULL DEFAULT gen_random_uuid(),
+    CONSTRAINT messages_2025_10_13_pkey PRIMARY KEY (id),
+    CONSTRAINT messages_2025_10_13_pkey PRIMARY KEY (inserted_at)
+);
+
+CREATE TABLE IF NOT EXISTS realtime.messages_2025_10_14 (
+    topic text NOT NULL,
+    extension text NOT NULL,
+    payload jsonb,
+    event text,
+    private boolean DEFAULT false,
+    updated_at timestamp without time zone NOT NULL DEFAULT now(),
+    inserted_at timestamp without time zone NOT NULL DEFAULT now(),
+    id uuid NOT NULL DEFAULT gen_random_uuid(),
+    CONSTRAINT messages_2025_10_14_pkey PRIMARY KEY (id),
+    CONSTRAINT messages_2025_10_14_pkey PRIMARY KEY (inserted_at)
 );
 
 -- Auth: Manages updates to the auth system.
@@ -1347,7 +1347,10 @@ CREATE OR REPLACE VIEW public.defects_summary AS
              JOIN projects p2 ON ((p2.id = all_projects.project_id)))), '{}'::text[]) AS project_names,
     COALESCE(( SELECT bool_or(cd.pre_trial_claim) AS bool_or
            FROM claim_defects cd
-          WHERE (cd.defect_id = d.id)), false) AS has_pretrial_claim
+          WHERE (cd.defect_id = d.id)), false) AS has_pretrial_claim,
+    COALESCE(( SELECT (count(*) > 0)
+           FROM completion_defects compd
+          WHERE (compd.defect_id = d.id)), false) AS has_completion
    FROM ((((((((defects d
      LEFT JOIN projects p ON ((d.project_id = p.id)))
      LEFT JOIN units u ON ((d.unit_id = u.id)))
@@ -5134,12 +5137,6 @@ CREATE INDEX idx_units_project_floor ON public.units USING btree (project_id, fl
 CREATE INDEX messages_inserted_at_topic_index ON ONLY realtime.messages USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))
 ;
 
-CREATE INDEX messages_2025_10_06_inserted_at_topic_idx ON realtime.messages_2025_10_06 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))
-;
-
-CREATE INDEX messages_2025_10_07_inserted_at_topic_idx ON realtime.messages_2025_10_07 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))
-;
-
 CREATE INDEX messages_2025_10_08_inserted_at_topic_idx ON realtime.messages_2025_10_08 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))
 ;
 
@@ -5153,6 +5150,12 @@ CREATE INDEX messages_2025_10_11_inserted_at_topic_idx ON realtime.messages_2025
 ;
 
 CREATE INDEX messages_2025_10_12_inserted_at_topic_idx ON realtime.messages_2025_10_12 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))
+;
+
+CREATE INDEX messages_2025_10_13_inserted_at_topic_idx ON realtime.messages_2025_10_13 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))
+;
+
+CREATE INDEX messages_2025_10_14_inserted_at_topic_idx ON realtime.messages_2025_10_14 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))
 ;
 
 CREATE INDEX ix_realtime_subscription_entity ON realtime.subscription USING btree (entity)
